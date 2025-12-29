@@ -1,0 +1,7 @@
+sk/tany/rest/api/domain/category/Category.class
+sk/tany/rest/api/controller/CategoryController.class
+sk/tany/rest/api/domain/product/ProductRepository.class
+sk/tany/rest/api/TanyRestApiApplication.class
+sk/tany/rest/api/domain/category/CategoryRepository.class
+sk/tany/rest/api/domain/product/Product.class
+sk/tany/rest/api/controller/ProductController.class

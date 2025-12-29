@@ -1,0 +1,7 @@
+/app/src/main/java/sk/tany/rest/api/domain/category/Category.java
+/app/src/main/java/sk/tany/rest/api/domain/product/Product.java
+/app/src/main/java/sk/tany/rest/api/controller/ProductController.java
+/app/src/main/java/sk/tany/rest/api/controller/CategoryController.java
+/app/src/main/java/sk/tany/rest/api/domain/product/ProductRepository.java
+/app/src/main/java/sk/tany/rest/api/domain/category/CategoryRepository.java
+/app/src/main/java/sk/tany/rest/api/TanyRestApiApplication.java
