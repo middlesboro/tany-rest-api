@@ -5,6 +5,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
@@ -57,6 +61,19 @@ class CustomerServiceTest {
         when(customerMapper.toDto(any(Customer.class))).thenReturn(new CustomerDto());
 
         assertEquals(1, customerService.findAll().size());
+    }
+
+    @Test
+    void findAllPaged() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Customer> customerPage = new PageImpl<>(Collections.singletonList(new Customer()));
+        when(customerRepository.findAll(pageable)).thenReturn(customerPage);
+        when(customerMapper.toDto(any(Customer.class))).thenReturn(new CustomerDto());
+
+        Page<CustomerDto> result = customerService.findAll(pageable);
+
+        assertEquals(1, result.getTotalElements());
+        verify(customerRepository, times(1)).findAll(pageable);
     }
 
     @Test

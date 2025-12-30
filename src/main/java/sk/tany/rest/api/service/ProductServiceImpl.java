@@ -1,6 +1,8 @@
 package sk.tany.rest.api.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.ProductDto;
@@ -14,6 +16,11 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+
+    @Override
+    public Page<ProductDto> findAll(Pageable pageable) {
+        return productRepository.findAll(pageable).map(productMapper::toDto);
+    }
 
     @Override
     public Optional<ProductDto> findById(String id) {

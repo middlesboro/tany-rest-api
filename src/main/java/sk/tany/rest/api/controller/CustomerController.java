@@ -1,13 +1,13 @@
 package sk.tany.rest.api.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.service.CustomerService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -23,8 +23,8 @@ public class CustomerController {
     }
 
     @GetMapping
-    public List<CustomerDto> getAllCustomers() {
-        return customerService.findAll();
+    public Page<CustomerDto> getAllCustomers(Pageable pageable) {
+        return customerService.findAll(pageable);
     }
 
     @GetMapping("/{id}")

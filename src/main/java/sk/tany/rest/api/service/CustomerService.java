@@ -1,6 +1,8 @@
 package sk.tany.rest.api.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.customer.Customer;
@@ -28,6 +30,10 @@ public class CustomerService {
 
     public List<CustomerDto> findAll() {
         return customerRepository.findAll().stream().map(customerMapper::toDto).collect(Collectors.toList());
+    }
+
+    public Page<CustomerDto> findAll(Pageable pageable) {
+        return customerRepository.findAll(pageable).map(customerMapper::toDto);
     }
 
     public Optional<CustomerDto> findById(String id) {
