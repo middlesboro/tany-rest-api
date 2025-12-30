@@ -18,6 +18,14 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <lombok.version>1.18.30</lombok.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.mapstruct</groupId>
@@ -50,6 +58,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.imagekit-developer</groupId>
+            <artifactId>imagekit-java</artifactId>
+            <version>2.0.0</version>
         </dependency>
     </dependencies>
 

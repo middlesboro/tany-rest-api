@@ -6,8 +6,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.service.ImageService;
 import sk.tany.rest.api.service.ProductService;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
@@ -15,6 +21,7 @@ import sk.tany.rest.api.service.ProductService;
 public class ProductController {
 
     private final ProductService productService;
+    private final ImageService imageService;
 
     @PostMapping
     public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto product) {
@@ -49,5 +56,24 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
         productService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/images")
+    public ResponseEntity<ProductDto> uploadImages(@PathVariable String id, @RequestParam("files") MultipartFile[] files) {
+        return productService.findById(id)
+                .map(product -> {
+                    List<String> imageUrls = Arrays.stream(files)
+                            .map(imageService::upload)
+                            .toList();
+
+                    if (product.getImages() == null) {
+                        product.setImages(new ArrayList<>());
+                    }
+                    product.getImages().addAll(imageUrls);
+
+                    ProductDto updatedProduct = productService.update(id, product);
+                    return ResponseEntity.ok(updatedProduct);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }
