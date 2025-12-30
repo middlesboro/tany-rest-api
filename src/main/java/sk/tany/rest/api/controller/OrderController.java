@@ -1,6 +1,8 @@
 package sk.tany.rest.api.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,11 @@ public class OrderController {
     public ResponseEntity<OrderDto> createOrder(@RequestBody OrderDto order) {
         OrderDto savedOrder = orderService.save(order);
         return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public Page<OrderDto> getOrders(Pageable pageable) {
+        return orderService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
