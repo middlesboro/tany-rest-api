@@ -18,4 +18,5 @@ public class ProductDto {
     private String ean;
     private String slug;
     private List<String> categoryIds;
+    private List<String> images;
 }
