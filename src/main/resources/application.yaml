@@ -2,8 +2,12 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/tany-ecommerce
+  servlet:
+    multipart:
+      max-file-size: 3MB
 
 imagekit:
   url-endpoint: ${IMAGEKIT_URL_ENDPOINT:your_url_endpoint}
   public-key: ${IMAGEKIT_PUBLIC_KEY:your_public_key}
   private-key: ${IMAGEKIT_PRIVATE_KEY:your_private_key}
+
