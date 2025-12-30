@@ -1,6 +1,8 @@
 package sk.tany.rest.api.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,11 @@ public class ProductController {
     public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto product) {
         ProductDto savedProduct = productService.save(product);
         return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public Page<ProductDto> getProducts(Pageable pageable) {
+        return productService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
