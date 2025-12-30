@@ -45,4 +45,21 @@ class ProductControllerTest {
         assertEquals("Test Product", result.getContent().get(0).getTitle());
         verify(productService, times(1)).findAll(pageable);
     }
+
+    @Test
+    void search_ShouldReturnPagedProducts_WhenCategoryIdIsProvided() {
+        Pageable pageable = PageRequest.of(0, 10);
+        String categoryId = "cat123";
+        ProductDto productDto = new ProductDto();
+        productDto.setTitle("Search Result Product");
+        Page<ProductDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
+
+        when(productService.search(categoryId, pageable)).thenReturn(productPage);
+
+        Page<ProductDto> result = productController.search(categoryId, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Search Result Product", result.getContent().get(0).getTitle());
+        verify(productService, times(1)).search(categoryId, pageable);
+    }
 }

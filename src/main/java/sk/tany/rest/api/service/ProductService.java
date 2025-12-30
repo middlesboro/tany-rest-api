@@ -12,4 +12,5 @@ public interface ProductService {
     ProductDto save(ProductDto productDto);
     ProductDto update(String id, ProductDto productDto);
     void deleteById(String id);
+    Page<ProductDto> search(String categoryId, Pageable pageable);
 }
