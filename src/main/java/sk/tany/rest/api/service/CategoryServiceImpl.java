@@ -1,6 +1,8 @@
 package sk.tany.rest.api.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.CategoryDto;
@@ -14,6 +16,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+
+    @Override
+    public Page<CategoryDto> findAll(Pageable pageable) {
+        return categoryRepository.findAll(pageable).map(categoryMapper::toDto);
+    }
 
     @Override
     public Optional<CategoryDto> findById(String id) {

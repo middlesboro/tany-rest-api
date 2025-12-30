@@ -1,6 +1,8 @@
 package sk.tany.rest.api.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,11 @@ public class CategoryController {
     public ResponseEntity<CategoryDto> createCategory(@RequestBody CategoryDto category) {
         CategoryDto savedCategory = categoryService.save(category);
         return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public Page<CategoryDto> getCategories(Pageable pageable) {
+        return categoryService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
