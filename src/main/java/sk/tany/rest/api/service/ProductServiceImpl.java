@@ -46,4 +46,9 @@ public class ProductServiceImpl implements ProductService {
     public void deleteById(String id) {
         productRepository.deleteById(id);
     }
+
+    @Override
+    public Page<ProductDto> search(String categoryId, Pageable pageable) {
+        return productRepository.findByCategoryIds(categoryId, pageable).map(productMapper::toDto);
+    }
 }

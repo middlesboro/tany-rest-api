@@ -27,6 +27,11 @@ public class ProductController {
         return productService.findAll(pageable);
     }
 
+    @GetMapping("/search")
+    public Page<ProductDto> search(@RequestParam String categoryId, Pageable pageable) {
+        return productService.search(categoryId, pageable);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductDto> getProduct(@PathVariable String id) {
         return productService.findById(id)
