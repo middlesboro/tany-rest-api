@@ -21,6 +21,7 @@ jwt:
 
 eshop:
   base-url: ${ESHOP_BASE_URL:http://localhost:8080}
+  frontend-url: ${ESHOP_FRONTEND_URL:http://localhost:3000}
 
 security:
   excluded-urls:

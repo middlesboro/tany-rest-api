@@ -7,9 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import sk.tany.rest.api.component.JwtUtil;
-import sk.tany.rest.api.domain.auth.MagicLinkToken;
-import sk.tany.rest.api.domain.auth.MagicLinkTokenRepository;
-import sk.tany.rest.api.domain.auth.MagicLinkTokenState;
+import sk.tany.rest.api.domain.auth.*;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.exception.InvalidTokenException;
@@ -19,6 +17,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -30,6 +29,8 @@ class AuthenticationServiceImplTest {
     private CustomerRepository customerRepository;
     @Mock
     private MagicLinkTokenRepository magicLinkTokenRepository;
+    @Mock
+    private AuthorizationCodeRepository authorizationCodeRepository;
     @Mock
     private JwtUtil jwtUtil;
     @Mock
@@ -55,7 +56,7 @@ class AuthenticationServiceImplTest {
     }
 
     @Test
-    void verifyLogin_ValidToken_ReturnsSessionToken() {
+    void verifyAndGenerateCode_ValidToken_ReturnsAuthorizationCode() {
         String token = "valid-token";
         String jti = "uuid-jti";
         String email = "test@example.com";
@@ -72,22 +73,23 @@ class AuthenticationServiceImplTest {
         when(magicLinkTokenRepository.findByJti(jti)).thenReturn(Optional.of(magicLinkToken));
         when(jwtUtil.generateSessionToken(email)).thenReturn(sessionToken);
 
-        String result = authenticationService.verifyLogin(token);
+        String result = authenticationService.verifyAndGenerateCode(token);
 
-        assertEquals(sessionToken, result);
+        assertNotNull(result);
         assertEquals(MagicLinkTokenState.VERIFIED, magicLinkToken.getState());
         verify(magicLinkTokenRepository).save(magicLinkToken);
+        verify(authorizationCodeRepository).save(any(AuthorizationCode.class));
     }
 
     @Test
-    void verifyLogin_InvalidToken_ThrowsException() {
+    void verifyAndGenerateCode_InvalidToken_ThrowsException() {
         when(jwtUtil.validateToken("invalid")).thenReturn(false);
 
-        assertThrows(InvalidTokenException.class, () -> authenticationService.verifyLogin("invalid"));
+        assertThrows(InvalidTokenException.class, () -> authenticationService.verifyAndGenerateCode("invalid"));
     }
 
     @Test
-    void verifyLogin_VerifiedToken_ThrowsException() {
+    void verifyAndGenerateCode_VerifiedToken_ThrowsException() {
         String token = "valid-token";
         String jti = "uuid-jti";
         MagicLinkToken magicLinkToken = new MagicLinkToken();
@@ -98,6 +100,28 @@ class AuthenticationServiceImplTest {
         when(jwtUtil.extractJti(token)).thenReturn(jti);
         when(magicLinkTokenRepository.findByJti(jti)).thenReturn(Optional.of(magicLinkToken));
 
-        assertThrows(InvalidTokenException.class, () -> authenticationService.verifyLogin(token));
+        assertThrows(InvalidTokenException.class, () -> authenticationService.verifyAndGenerateCode(token));
+    }
+
+    @Test
+    void exchangeCode_ValidCode_ReturnsJwt() {
+        String code = "valid-code";
+        String jwt = "jwt-token";
+        AuthorizationCode authorizationCode = new AuthorizationCode(code, jwt, null);
+
+        when(authorizationCodeRepository.findById(code)).thenReturn(Optional.of(authorizationCode));
+
+        String result = authenticationService.exchangeCode(code);
+
+        assertEquals(jwt, result);
+        verify(authorizationCodeRepository).delete(authorizationCode);
+    }
+
+    @Test
+    void exchangeCode_InvalidCode_ThrowsException() {
+        String code = "invalid-code";
+        when(authorizationCodeRepository.findById(code)).thenReturn(Optional.empty());
+
+        assertThrows(InvalidTokenException.class, () -> authenticationService.exchangeCode(code));
     }
 }
