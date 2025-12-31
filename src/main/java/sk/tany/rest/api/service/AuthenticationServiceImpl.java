@@ -7,8 +7,10 @@ import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.domain.auth.*;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.customer.Role;
 import sk.tany.rest.api.exception.InvalidTokenException;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,6 +36,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (existingCustomer.isEmpty()) {
             Customer newCustomer = new Customer();
             newCustomer.setEmail(email);
+            newCustomer.setRole(Role.CUSTOMER);
             customerRepository.save(newCustomer);
         }
 
@@ -81,8 +84,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         magicLinkToken.setState(MagicLinkTokenState.VERIFIED);
         magicLinkTokenRepository.save(magicLinkToken);
 
+        // Get Customer Role
+        Customer customer = customerRepository.findByEmail(magicLinkToken.getCustomerEmail())
+                .orElseThrow(() -> new InvalidTokenException("Customer not found"));
+
+        String role = "ROLE_" + (customer.getRole() != null ? customer.getRole().name() : Role.CUSTOMER.name());
+
         // Generate Session Token
-        String sessionToken = jwtUtil.generateSessionToken(magicLinkToken.getCustomerEmail());
+        String sessionToken = jwtUtil.generateSessionToken(magicLinkToken.getCustomerEmail(), Collections.singletonList(role));
 
         // Generate Authorization Code
         String code = UUID.randomUUID().toString();

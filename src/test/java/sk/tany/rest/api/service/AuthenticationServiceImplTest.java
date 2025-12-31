@@ -71,7 +71,8 @@ class AuthenticationServiceImplTest {
         when(jwtUtil.hasClaim(token, "magic_link", true)).thenReturn(true);
         when(jwtUtil.extractJti(token)).thenReturn(jti);
         when(magicLinkTokenRepository.findByJti(jti)).thenReturn(Optional.of(magicLinkToken));
-        when(jwtUtil.generateSessionToken(email)).thenReturn(sessionToken);
+        when(customerRepository.findByEmail(email)).thenReturn(Optional.of(new Customer()));
+        when(jwtUtil.generateSessionToken(eq(email), anyList())).thenReturn(sessionToken);
 
         String result = authenticationService.verifyAndGenerateCode(token);
 

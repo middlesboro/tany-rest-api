@@ -14,4 +14,5 @@ public class Customer {
     private String lastname;
     private String email;
     private String cartId;
+    private Role role;
 }
