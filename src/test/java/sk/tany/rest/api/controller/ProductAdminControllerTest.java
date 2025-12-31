@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import sk.tany.rest.api.controller.admin.ProductAdminController;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.service.ProductService;
 
@@ -17,13 +18,13 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-class ProductControllerTest {
+class ProductAdminControllerTest {
 
     @Mock
     private ProductService productService;
 
     @InjectMocks
-    private ProductController productController;
+    private ProductAdminController productAdminController;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +40,7 @@ class ProductControllerTest {
 
         when(productService.findAll(pageable)).thenReturn(productPage);
 
-        Page<ProductDto> result = productController.getProducts(pageable);
+        Page<ProductDto> result = productAdminController.getProducts(pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test Product", result.getContent().get(0).getTitle());
@@ -56,7 +57,7 @@ class ProductControllerTest {
 
         when(productService.search(categoryId, pageable)).thenReturn(productPage);
 
-        Page<ProductDto> result = productController.search(categoryId, pageable);
+        Page<ProductDto> result = productAdminController.search(categoryId, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Search Result Product", result.getContent().get(0).getTitle());

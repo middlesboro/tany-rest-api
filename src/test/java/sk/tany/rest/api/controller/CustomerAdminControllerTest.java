@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import sk.tany.rest.api.controller.admin.CustomerAdminController;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.service.CustomerService;
 
@@ -17,13 +18,13 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-class CustomerControllerTest {
+class CustomerAdminControllerTest {
 
     @Mock
     private CustomerService customerService;
 
     @InjectMocks
-    private CustomerController customerController;
+    private CustomerAdminController customerAdminController;
 
     @BeforeEach
     void setUp() {
@@ -40,7 +41,7 @@ class CustomerControllerTest {
 
         when(customerService.findAll(pageable)).thenReturn(customerPage);
 
-        Page<CustomerDto> result = customerController.getAllCustomers(pageable);
+        Page<CustomerDto> result = customerAdminController.getAllCustomers(pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test", result.getContent().get(0).getFirstname());

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import sk.tany.rest.api.controller.admin.OrderAdminController;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.service.OrderService;
 
@@ -17,13 +18,13 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-class OrderControllerTest {
+class OrderAdminControllerTest {
 
     @Mock
     private OrderService orderService;
 
     @InjectMocks
-    private OrderController orderController;
+    private OrderAdminController orderAdminController;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +40,7 @@ class OrderControllerTest {
 
         when(orderService.findAll(pageable)).thenReturn(orderPage);
 
-        Page<OrderDto> result = orderController.getOrders(pageable);
+        Page<OrderDto> result = orderAdminController.getOrders(pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("123", result.getContent().get(0).getId());
