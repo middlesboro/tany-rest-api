@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -20,10 +19,10 @@ public class JwtUtil {
     private String secret;
 
     // 5 minutes in milliseconds
-    private static final long MAGIC_LINK_EXPIRATION_TIME = 5 * 60 * 1000;
+    private static final long MAGIC_LINK_EXPIRATION_TIME = 300000;
 
     // 24 hours in milliseconds
-    private static final long SESSION_EXPIRATION_TIME = 24 * 60 * 60 * 1000;
+    private static final long SESSION_EXPIRATION_TIME = 86400000;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
