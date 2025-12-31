@@ -9,7 +9,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.CustomerDto;
@@ -30,21 +29,15 @@ class CustomerServiceTest {
     @Mock
     private CustomerMapper customerMapper;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
     @InjectMocks
     private CustomerService customerService;
 
     @Test
     void save() {
         CustomerDto customerDto = new CustomerDto();
-        customerDto.setPassword("password");
         Customer customer = new Customer();
-        customer.setPassword("password");
 
         when(customerMapper.toEntity(customerDto)).thenReturn(customer);
-        when(passwordEncoder.encode("password")).thenReturn("hashedPassword");
         when(customerRepository.save(customer)).thenReturn(customer);
         when(customerMapper.toDto(customer)).thenReturn(customerDto);
 
@@ -52,7 +45,6 @@ class CustomerServiceTest {
 
         assertEquals(customerDto, result);
         verify(customerRepository, times(1)).save(customer);
-        verify(passwordEncoder, times(1)).encode("password");
     }
 
     @Test
