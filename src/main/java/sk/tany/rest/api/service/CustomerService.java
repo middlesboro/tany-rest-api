@@ -20,11 +20,9 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
-    private final PasswordEncoder passwordEncoder;
 
     public CustomerDto save(CustomerDto customerDto) {
         Customer customer = customerMapper.toEntity(customerDto);
-        customer.setPassword(passwordEncoder.encode(customer.getPassword()));
         return customerMapper.toDto(customerRepository.save(customer));
     }
 
