@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.JwtUtil;
-import sk.tany.rest.api.domain.auth.MagicLinkToken;
-import sk.tany.rest.api.domain.auth.MagicLinkTokenRepository;
-import sk.tany.rest.api.domain.auth.MagicLinkTokenState;
+import sk.tany.rest.api.domain.auth.*;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.exception.InvalidTokenException;
@@ -21,6 +19,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final CustomerRepository customerRepository;
     private final MagicLinkTokenRepository magicLinkTokenRepository;
+    private final AuthorizationCodeRepository authorizationCodeRepository;
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
 
@@ -60,7 +59,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public String verifyLogin(String token) {
+    public String verifyAndGenerateCode(String token) {
         if (!jwtUtil.validateToken(token)) {
             throw new InvalidTokenException("Invalid token");
         }
@@ -83,6 +82,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         magicLinkTokenRepository.save(magicLinkToken);
 
         // Generate Session Token
-        return jwtUtil.generateSessionToken(magicLinkToken.getCustomerEmail());
+        String sessionToken = jwtUtil.generateSessionToken(magicLinkToken.getCustomerEmail());
+
+        // Generate Authorization Code
+        String code = UUID.randomUUID().toString();
+        AuthorizationCode authorizationCode = new AuthorizationCode(code, sessionToken, new Date());
+        authorizationCodeRepository.save(authorizationCode);
+
+        return code;
+    }
+
+    @Override
+    public String exchangeCode(String code) {
+        AuthorizationCode authorizationCode = authorizationCodeRepository.findById(code)
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired authorization code"));
+
+        String jwt = authorizationCode.getJwt();
+        authorizationCodeRepository.delete(authorizationCode);
+        return jwt;
     }
 }
