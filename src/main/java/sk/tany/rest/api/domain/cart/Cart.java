@@ -12,5 +12,6 @@ public class Cart {
 
     @Id
     private String cartId;
+    private String customerId;
     private List<String> productIds;
 }
