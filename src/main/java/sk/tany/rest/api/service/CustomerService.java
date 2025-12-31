@@ -4,8 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.mapper.CustomerMapper;
 
@@ -18,6 +22,29 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final CartService cartService;
+
+    public CustomerContextDto getCustomerContext(String cartId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomerDto customerDto = null;
+        String customerId = null;
+
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof String) {
+            String email = (String) authentication.getPrincipal();
+            customerDto = findByEmail(email);
+            if (customerDto != null) {
+                customerId = customerDto.getId();
+            }
+        }
+
+        CartDto cartDto = cartService.getOrCreateCart(cartId, customerId);
+
+        return new CustomerContextDto(customerDto, cartDto);
+    }
+
+    public CustomerDto findByEmail(String email) {
+        return customerRepository.findByEmail(email).map(customerMapper::toDto).orElse(null);
+    }
 
     public CustomerDto save(CustomerDto customerDto) {
         Customer customer = customerMapper.toEntity(customerDto);
