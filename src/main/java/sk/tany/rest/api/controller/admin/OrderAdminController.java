@@ -1,18 +1,20 @@
-package sk.tany.rest.api.controller;
+package sk.tany.rest.api.controller.admin;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.service.OrderService;
 
 @RestController
-@RequestMapping("/api/orders")
+@PreAuthorize("hasAnyRole('ADMIN')")
+@RequestMapping("/api/admin/orders")
 @RequiredArgsConstructor
-public class OrderController {
+public class OrderAdminController {
 
     private final OrderService orderService;
 

@@ -38,10 +38,11 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String generateSessionToken(String email) {
+    public String generateSessionToken(String email, java.util.List<String> roles) {
         return Jwts.builder()
                 .setSubject(email)
                 .claim("session_token", true)
+                .claim("roles", roles)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + SESSION_EXPIRATION_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)

@@ -1,7 +1,7 @@
 package sk.tany.rest.api.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import sk.tany.rest.api.domain.customer.Role;
 
 @Data
 public class CustomerDto {
@@ -11,4 +11,5 @@ public class CustomerDto {
     private String lastname;
     private String email;
     private String cartId;
+    private Role role;
 }

@@ -8,12 +8,12 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import sk.tany.rest.api.controller.admin.ProductAdminController;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.service.ImageService;
 import sk.tany.rest.api.service.ProductService;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-public class ProductImageUploadTest {
+class ProductImageUploadTest {
 
     @Mock
     private ProductService productService;
@@ -32,7 +32,7 @@ public class ProductImageUploadTest {
     private ImageService imageService;
 
     @InjectMocks
-    private ProductController productController;
+    private ProductAdminController productAdminController;
 
     @BeforeEach
     void setUp() {
@@ -58,11 +58,11 @@ public class ProductImageUploadTest {
         when(productService.update(eq(productId), any(ProductDto.class))).thenAnswer(invocation -> invocation.getArgument(1));
 
         // Act
-        ResponseEntity<ProductDto> response = productController.uploadImages(productId, files);
+        ResponseEntity<ProductDto> response = productAdminController.uploadImages(productId, files);
 
         // Assert
         assertNotNull(response);
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals(2, response.getBody().getImages().size());
         assertEquals("http://imagekit.io/image1.jpg", response.getBody().getImages().get(0));
@@ -83,10 +83,10 @@ public class ProductImageUploadTest {
         when(productService.findById(productId)).thenReturn(Optional.empty());
 
         // Act
-        ResponseEntity<ProductDto> response = productController.uploadImages(productId, files);
+        ResponseEntity<ProductDto> response = productAdminController.uploadImages(productId, files);
 
         // Assert
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(404, response.getStatusCode().value());
         verify(productService).findById(productId);
         verify(imageService, never()).upload(any());
         verify(productService, never()).update(anyString(), any());

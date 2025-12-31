@@ -25,5 +25,4 @@ eshop:
 
 security:
   excluded-urls:
-    - GET /api/products
     - /api/login/**

@@ -1,8 +1,9 @@
-package sk.tany.rest.api.controller;
+package sk.tany.rest.api.controller.admin;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.service.CartService;
@@ -10,9 +11,10 @@ import sk.tany.rest.api.service.CartService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/carts")
+@PreAuthorize("hasAnyRole('ADMIN')")
+@RequestMapping("/api/admin/carts")
 @RequiredArgsConstructor
-public class CartController {
+public class CartAdminController {
 
     private final CartService cartService;
 

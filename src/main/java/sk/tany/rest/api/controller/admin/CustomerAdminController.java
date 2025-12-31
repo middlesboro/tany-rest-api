@@ -1,18 +1,20 @@
-package sk.tany.rest.api.controller;
+package sk.tany.rest.api.controller.admin;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.service.CustomerService;
 
 @RestController
-@RequestMapping("/api/customers")
+@PreAuthorize("hasAnyRole('ADMIN')")
+@RequestMapping("/api/admin/customers")
 @RequiredArgsConstructor
-public class CustomerController {
+public class CustomerAdminController {
 
     private final CustomerService customerService;
 
