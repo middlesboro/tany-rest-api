@@ -24,11 +24,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/api/products").authenticated()
-                        .requestMatchers(securityProperties.getExcludedUrls().toArray(new String[0])).permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(authorize -> {
+                    securityProperties.getExcludedUrls().forEach(url -> {
+                        String[] parts = url.split(" ");
+                        if (parts.length > 1) {
+                            authorize.requestMatchers(HttpMethod.valueOf(parts[0]), parts[1]).permitAll();
+                        } else {
+                            authorize.requestMatchers(url).permitAll();
+                        }
+                    });
+                    authorize.anyRequest().authenticated();
+                })
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
