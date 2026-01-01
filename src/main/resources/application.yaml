@@ -29,6 +29,8 @@ security:
     - /api/customer/**
     - /api/cart/**
     - /api/products/**
+    - /api/carriers/**
+    - /api/payments/**
     - /v3/api-docs/**
     - /swagger-ui/**
 
