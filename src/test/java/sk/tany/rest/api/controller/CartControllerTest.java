@@ -46,11 +46,11 @@ public class CartControllerTest {
 
         given(cartService.addProductToCart(cartId, productId, quantity)).willReturn(cartId);
 
-        mockMvc.perform(post("/api/carts/items")
+        mockMvc.perform(post("/api/cart/items")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(cartId));
+                .andExpect(content().json("{\"cartId\":\"cart-123\"}"));
     }
 }

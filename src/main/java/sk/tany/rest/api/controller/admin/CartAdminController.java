@@ -5,10 +5,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import sk.tany.rest.api.domain.customer.Customer;
+import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.dto.CartAdminResponse;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.service.CartService;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -17,6 +24,7 @@ import java.util.List;
 public class CartAdminController {
 
     private final CartService cartService;
+    private final CustomerRepository customerRepository;
 
     @PostMapping
     public ResponseEntity<CartDto> createCart(@RequestBody CartDto cartDto) {
@@ -25,8 +33,29 @@ public class CartAdminController {
     }
 
     @GetMapping
-    public List<CartDto> getAllCarts() {
-        return cartService.findAll();
+    public List<CartAdminResponse> getAllCarts() {
+        List<CartDto> carts = cartService.findAll();
+        Set<String> customerIds = carts.stream()
+                .map(CartDto::getCustomerId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        List<Customer> customers = customerRepository.findAllById(customerIds);
+        Map<String, Customer> customerMap = customers.stream()
+                .collect(Collectors.toMap(Customer::getId, c -> c));
+
+        return carts.stream().map(cart -> {
+            CartAdminResponse response = new CartAdminResponse();
+            response.setCartId(cart.getCartId());
+            response.setCreateDate(cart.getCreateDate());
+            response.setUpdateDate(cart.getUpdateDate());
+            response.setCustomerId(cart.getCustomerId());
+            if (cart.getCustomerId() != null && customerMap.containsKey(cart.getCustomerId())) {
+                Customer c = customerMap.get(cart.getCustomerId());
+                response.setCustomerName(c.getFirstname() + " " + c.getLastname());
+            }
+            return response;
+        }).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")

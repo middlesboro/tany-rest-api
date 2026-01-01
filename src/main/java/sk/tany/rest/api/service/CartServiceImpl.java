@@ -40,7 +40,14 @@ public class CartServiceImpl implements CartService {
     }
 
     public CartDto save(CartDto cartDto) {
-        return cartMapper.toDto(cartRepository.save(cartMapper.toEntity(cartDto)));
+        sk.tany.rest.api.domain.cart.Cart cart;
+        if (cartDto.getCartId() != null) {
+            cart = cartRepository.findById(cartDto.getCartId()).orElse(new sk.tany.rest.api.domain.cart.Cart());
+        } else {
+            cart = new sk.tany.rest.api.domain.cart.Cart();
+        }
+        cartMapper.updateEntityFromDto(cartDto, cart);
+        return cartMapper.toDto(cartRepository.save(cart));
     }
 
     public List<CartDto> findAll() {
