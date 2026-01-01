@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface CategoryService {
     Page<CategoryDto> findAll(Pageable pageable);
+    java.util.List<CategoryDto> findAll();
     Optional<CategoryDto> findById(String id);
     CategoryDto save(CategoryDto categoryDto);
     CategoryDto update(String id, CategoryDto categoryDto);

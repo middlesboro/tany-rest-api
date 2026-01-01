@@ -17,8 +17,8 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public Page<CategoryDto> getCategories(Pageable pageable) {
-        return categoryService.findAll(pageable);
+    public java.util.List<CategoryDto> getCategories() {
+        return categoryService.findAll();
     }
 
 }
