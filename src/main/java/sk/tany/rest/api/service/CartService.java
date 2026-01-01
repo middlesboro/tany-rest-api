@@ -51,4 +51,23 @@ public class CartService {
     public void deleteById(String id) {
         cartRepository.deleteById(id);
     }
+
+    public String addProductToCart(String cartId, String productId) {
+        CartDto cartDto = null;
+        if (cartId != null) {
+            cartDto = findById(cartId).orElse(null);
+        }
+
+        if (cartDto == null) {
+            cartDto = new CartDto();
+            cartDto.setProductIds(new ArrayList<>());
+        }
+
+        if (cartDto.getProductIds() == null) {
+            cartDto.setProductIds(new ArrayList<>());
+        }
+        cartDto.getProductIds().add(productId);
+
+        return save(cartDto).getCartId();
+    }
 }
