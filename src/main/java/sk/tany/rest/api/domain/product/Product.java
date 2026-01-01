@@ -24,6 +24,8 @@ public class Product {
     private String ean;
     private String slug;
     private List<String> categoryIds;
+    private String supplierId;
+    private String brandId;
     private List<String> images;
 
 }
