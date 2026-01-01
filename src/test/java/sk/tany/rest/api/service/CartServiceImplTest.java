@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class CartServiceTest {
+class CartServiceImplTest {
 
     @Mock
     private CartRepository cartRepository;
@@ -26,7 +26,7 @@ class CartServiceTest {
     private CartMapper cartMapper;
 
     @InjectMocks
-    private CartService cartService;
+    private CartServiceImpl cartService;
 
     @Test
     void save() {
@@ -68,5 +68,33 @@ class CartServiceTest {
     void deleteById() {
         cartService.deleteById("1");
         verify(cartRepository, times(1)).deleteById("1");
+    }
+
+    @Test
+    void addProductToCart_withQuantity() {
+        String cartId = "cart1";
+        String productId = "prod1";
+        Integer quantity = 2;
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        // Ensure productIds is initialized to empty list or let service handle it if it mocks repo correctly
+        // But here we mock mapper
+        Cart cart = new Cart();
+        cart.setCartId(cartId);
+
+        when(cartRepository.findById(cartId)).thenReturn(Optional.of(cart));
+        when(cartMapper.toDto(cart)).thenReturn(cartDto);
+
+        // Mock save
+        when(cartMapper.toEntity(cartDto)).thenReturn(cart);
+        when(cartRepository.save(cart)).thenReturn(cart);
+        when(cartMapper.toDto(cart)).thenReturn(cartDto);
+
+        String resultId = cartService.addProductToCart(cartId, productId, quantity);
+
+        assertEquals(cartId, resultId);
+        assertEquals(2, cartDto.getProductIds().size());
+        assertEquals("prod1", cartDto.getProductIds().get(0));
+        assertEquals("prod1", cartDto.getProductIds().get(1));
     }
 }
