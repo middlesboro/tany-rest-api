@@ -6,7 +6,9 @@ import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.mapper.CartMapper;
 
-import java.util.HashMap;
+import sk.tany.rest.api.dto.CartItem;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,7 +28,7 @@ public class CartServiceImpl implements CartService {
 
         if (cartDto == null) {
             cartDto = new CartDto();
-            cartDto.setProducts(new HashMap<>());
+            cartDto.setItems(new ArrayList<>());
         }
 
         if (customerId != null) {
@@ -60,14 +62,24 @@ public class CartServiceImpl implements CartService {
 
         if (cartDto == null) {
             cartDto = new CartDto();
-            cartDto.setProducts(new HashMap<>());
+            cartDto.setItems(new ArrayList<>());
         }
 
-        if (cartDto.getProducts() == null) {
-            cartDto.setProducts(new HashMap<>());
+        if (cartDto.getItems() == null) {
+            cartDto.setItems(new ArrayList<>());
         }
+
         int qty = (quantity == null || quantity <= 0) ? 1 : quantity;
-        cartDto.getProducts().merge(productId, qty, Integer::sum);
+        Optional<CartItem> existingItem = cartDto.getItems().stream()
+                .filter(item -> item.getProductId().equals(productId))
+                .findFirst();
+
+        if (existingItem.isPresent()) {
+            CartItem item = existingItem.get();
+            item.setQuantity(item.getQuantity() + qty);
+        } else {
+            cartDto.getItems().add(new CartItem(productId, qty));
+        }
 
         return save(cartDto).getCartId();
     }

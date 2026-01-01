@@ -2,12 +2,12 @@ package sk.tany.rest.api.dto;
 
 import lombok.Data;
 
-import java.util.Map;
+import java.util.List;
 
 @Data
 public class CartDto {
 
     private String cartId;
     private String customerId;
-    private Map<String, Integer> products;
+    private List<CartItem> items;
 }

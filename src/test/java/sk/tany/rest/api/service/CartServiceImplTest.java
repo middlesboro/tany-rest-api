@@ -10,8 +10,9 @@ import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.mapper.CartMapper;
 
-import java.util.HashMap;
-import java.util.Map;
+import sk.tany.rest.api.dto.CartItem;
+
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,23 +42,23 @@ class CartServiceImplTest {
         String productId = "prod1";
         CartDto cartDto = new CartDto();
         cartDto.setCartId(cartId);
-        cartDto.setProducts(new HashMap<>());
-        cartDto.getProducts().put(productId, 1);
+        cartDto.setItems(new ArrayList<>());
+        cartDto.getItems().add(new CartItem(productId, 1));
 
         Cart cartEntity = new Cart();
         cartEntity.setCartId(cartId);
-        cartEntity.setProducts(new HashMap<>());
-        cartEntity.getProducts().put(productId, 1);
+        cartEntity.setItems(new ArrayList<>());
+        cartEntity.getItems().add(new sk.tany.rest.api.domain.cart.CartItem(productId, 1));
 
         Cart savedEntity = new Cart();
         savedEntity.setCartId(cartId);
-        savedEntity.setProducts(new HashMap<>());
-        savedEntity.getProducts().put(productId, 2);
+        savedEntity.setItems(new ArrayList<>());
+        savedEntity.getItems().add(new sk.tany.rest.api.domain.cart.CartItem(productId, 2));
 
         CartDto savedDto = new CartDto();
         savedDto.setCartId(cartId);
-        savedDto.setProducts(new HashMap<>());
-        savedDto.getProducts().put(productId, 2);
+        savedDto.setItems(new ArrayList<>());
+        savedDto.getItems().add(new CartItem(productId, 2));
 
         when(cartRepository.findById(cartId)).thenReturn(Optional.of(cartEntity));
         when(cartMapper.toDto(cartEntity)).thenReturn(cartDto);
@@ -70,8 +71,8 @@ class CartServiceImplTest {
 
         // Assert
         assertThat(resultId).isEqualTo(cartId);
-        // We verify that the logic inside addProductToCart correctly modifies the map
-        assertThat(cartDto.getProducts().get(productId)).isEqualTo(2);
+        // We verify that the logic inside addProductToCart correctly modifies the item
+        assertThat(cartDto.getItems().get(0).getQuantity()).isEqualTo(2);
     }
 
     @Test
@@ -81,21 +82,21 @@ class CartServiceImplTest {
         String productId = "prod1";
         CartDto cartDto = new CartDto();
         cartDto.setCartId(cartId);
-        cartDto.setProducts(new HashMap<>());
+        cartDto.setItems(new ArrayList<>());
 
         Cart cartEntity = new Cart();
         cartEntity.setCartId(cartId);
-        cartEntity.setProducts(new HashMap<>());
+        cartEntity.setItems(new ArrayList<>());
 
         Cart savedEntity = new Cart();
         savedEntity.setCartId(cartId);
-        savedEntity.setProducts(new HashMap<>());
-        savedEntity.getProducts().put(productId, 1);
+        savedEntity.setItems(new ArrayList<>());
+        savedEntity.getItems().add(new sk.tany.rest.api.domain.cart.CartItem(productId, 1));
 
         CartDto savedDto = new CartDto();
         savedDto.setCartId(cartId);
-        savedDto.setProducts(new HashMap<>());
-        savedDto.getProducts().put(productId, 1);
+        savedDto.setItems(new ArrayList<>());
+        savedDto.getItems().add(new CartItem(productId, 1));
 
 
         when(cartRepository.findById(cartId)).thenReturn(Optional.of(cartEntity));
@@ -109,6 +110,8 @@ class CartServiceImplTest {
 
         // Assert
         assertThat(resultId).isEqualTo(cartId);
-        assertThat(cartDto.getProducts().get(productId)).isEqualTo(1);
+        assertThat(cartDto.getItems()).hasSize(1);
+        assertThat(cartDto.getItems().get(0).getProductId()).isEqualTo(productId);
+        assertThat(cartDto.getItems().get(0).getQuantity()).isEqualTo(1);
     }
 }

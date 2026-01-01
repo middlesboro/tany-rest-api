@@ -43,15 +43,20 @@ public class CustomerService {
         customerContextCartDto.setCartId(cartDto.getCartId());
         customerContextCartDto.setCustomerId(cartDto.getCustomerId());
 
-        List<CartItemDto> items = new ArrayList<>();
-        if (cartDto.getProducts() != null && !cartDto.getProducts().isEmpty()) {
-            List<ProductDto> products = productService.findAllByIds(new ArrayList<>(cartDto.getProducts().keySet()));
-            for (ProductDto product : products) {
-                Integer quantity = cartDto.getProducts().get(product.getId());
-                items.add(new CartItemDto(product, quantity));
+        List<ProductDto> products = new ArrayList<>();
+        if (cartDto.getItems() != null && !cartDto.getItems().isEmpty()) {
+            List<String> productIds = cartDto.getItems().stream().map(CartItem::getProductId).toList();
+            List<ProductDto> fetchedProducts = productService.findAllByIds(productIds);
+
+            for (ProductDto product : fetchedProducts) {
+                cartDto.getItems().stream()
+                        .filter(item -> item.getProductId().equals(product.getId()))
+                        .findFirst()
+                        .ifPresent(item -> product.setQuantity(item.getQuantity()));
+                products.add(product);
             }
         }
-        customerContextCartDto.setItems(items);
+        customerContextCartDto.setProducts(products);
 
         return new CustomerContextDto(customerDto, customerContextCartDto);
     }

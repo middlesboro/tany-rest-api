@@ -1,6 +1,8 @@
 package sk.tany.rest.api.dto;
 
 import lombok.Data;
+import sk.tany.rest.api.domain.product.ProductStatus;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -21,5 +23,5 @@ public class ProductDto {
     private String supplierId;
     private String brandId;
     private List<String> images;
-    private sk.tany.rest.api.domain.product.ProductStatus status;
+    private ProductStatus status;
 }
