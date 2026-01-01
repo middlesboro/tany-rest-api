@@ -14,6 +14,7 @@ public class Brand {
     @Id
     private String id;
     private String name;
+    private String image;
     @CreatedDate
     private Instant createdDate;
     @LastModifiedDate

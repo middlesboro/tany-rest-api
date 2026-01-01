@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.service.BrandService;
+import sk.tany.rest.api.service.ImageService;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -17,6 +19,7 @@ import sk.tany.rest.api.service.BrandService;
 public class BrandAdminController {
 
     private final BrandService brandService;
+    private final ImageService imageService;
 
     @PostMapping
     public ResponseEntity<BrandDto> createBrand(@RequestBody BrandDto brand) {
@@ -46,5 +49,17 @@ public class BrandAdminController {
     public ResponseEntity<Void> deleteBrand(@PathVariable String id) {
         brandService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/image")
+    public ResponseEntity<BrandDto> uploadImage(@PathVariable String id, @RequestParam("file") MultipartFile file) {
+        return brandService.findById(id)
+                .map(brand -> {
+                    String imageUrl = imageService.upload(file);
+                    brand.setImage(imageUrl);
+                    BrandDto updatedBrand = brandService.update(id, brand);
+                    return ResponseEntity.ok(updatedBrand);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }
