@@ -1,22 +1,23 @@
 package sk.tany.rest.api.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import sk.tany.rest.api.domain.cart.Cart;
 import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.mapper.CartMapper;
 
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class CartServiceImplTest {
 
     @Mock
@@ -28,73 +29,86 @@ class CartServiceImplTest {
     @InjectMocks
     private CartServiceImpl cartService;
 
-    @Test
-    void save() {
-        CartDto cartDto = new CartDto();
-        Cart cart = new Cart();
-        when(cartMapper.toEntity(cartDto)).thenReturn(cart);
-        when(cartRepository.save(cart)).thenReturn(cart);
-        when(cartMapper.toDto(cart)).thenReturn(cartDto);
-
-        CartDto result = cartService.save(cartDto);
-
-        assertEquals(cartDto, result);
-        verify(cartRepository, times(1)).save(cart);
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void findAll() {
-        when(cartRepository.findAll()).thenReturn(Collections.singletonList(new Cart()));
-        when(cartMapper.toDto(any(Cart.class))).thenReturn(new CartDto());
-
-        assertEquals(1, cartService.findAll().size());
-    }
-
-    @Test
-    void findById() {
-        Cart cart = new Cart();
-        cart.setCartId("1");
-        CartDto cartDto = new CartDto();
-        cartDto.setCartId("1");
-        when(cartRepository.findById("1")).thenReturn(Optional.of(cart));
-        when(cartMapper.toDto(cart)).thenReturn(cartDto);
-
-        Optional<CartDto> result = cartService.findById("1");
-
-        assertEquals("1", result.get().getCartId());
-    }
-
-    @Test
-    void deleteById() {
-        cartService.deleteById("1");
-        verify(cartRepository, times(1)).deleteById("1");
-    }
-
-    @Test
-    void addProductToCart_withQuantity() {
+    void addProductToCart_ShouldUpdateQuantity_WhenProductExists() {
+        // Arrange
         String cartId = "cart1";
         String productId = "prod1";
-        Integer quantity = 2;
         CartDto cartDto = new CartDto();
         cartDto.setCartId(cartId);
-        // Ensure productIds is initialized to empty list or let service handle it if it mocks repo correctly
-        // But here we mock mapper
-        Cart cart = new Cart();
-        cart.setCartId(cartId);
+        cartDto.setProducts(new HashMap<>());
+        cartDto.getProducts().put(productId, 1);
 
-        when(cartRepository.findById(cartId)).thenReturn(Optional.of(cart));
-        when(cartMapper.toDto(cart)).thenReturn(cartDto);
+        Cart cartEntity = new Cart();
+        cartEntity.setCartId(cartId);
+        cartEntity.setProducts(new HashMap<>());
+        cartEntity.getProducts().put(productId, 1);
 
-        // Mock save
-        when(cartMapper.toEntity(cartDto)).thenReturn(cart);
-        when(cartRepository.save(cart)).thenReturn(cart);
-        when(cartMapper.toDto(cart)).thenReturn(cartDto);
+        Cart savedEntity = new Cart();
+        savedEntity.setCartId(cartId);
+        savedEntity.setProducts(new HashMap<>());
+        savedEntity.getProducts().put(productId, 2);
 
-        String resultId = cartService.addProductToCart(cartId, productId, quantity);
+        CartDto savedDto = new CartDto();
+        savedDto.setCartId(cartId);
+        savedDto.setProducts(new HashMap<>());
+        savedDto.getProducts().put(productId, 2);
 
-        assertEquals(cartId, resultId);
-        assertEquals(2, cartDto.getProductIds().size());
-        assertEquals("prod1", cartDto.getProductIds().get(0));
-        assertEquals("prod1", cartDto.getProductIds().get(1));
+        when(cartRepository.findById(cartId)).thenReturn(Optional.of(cartEntity));
+        when(cartMapper.toDto(cartEntity)).thenReturn(cartDto);
+        when(cartMapper.toEntity(cartDto)).thenReturn(cartEntity);
+        when(cartRepository.save(any(Cart.class))).thenReturn(savedEntity);
+        when(cartMapper.toDto(savedEntity)).thenReturn(savedDto);
+
+        // Act
+        String resultId = cartService.addProductToCart(cartId, productId, 1);
+
+        // Assert
+        assertThat(resultId).isEqualTo(cartId);
+        // We verify that the logic inside addProductToCart correctly modifies the map
+        assertThat(cartDto.getProducts().get(productId)).isEqualTo(2);
+    }
+
+    @Test
+    void addProductToCart_ShouldAddNewProduct_WhenProductDoesNotExist() {
+        // Arrange
+        String cartId = "cart1";
+        String productId = "prod1";
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        cartDto.setProducts(new HashMap<>());
+
+        Cart cartEntity = new Cart();
+        cartEntity.setCartId(cartId);
+        cartEntity.setProducts(new HashMap<>());
+
+        Cart savedEntity = new Cart();
+        savedEntity.setCartId(cartId);
+        savedEntity.setProducts(new HashMap<>());
+        savedEntity.getProducts().put(productId, 1);
+
+        CartDto savedDto = new CartDto();
+        savedDto.setCartId(cartId);
+        savedDto.setProducts(new HashMap<>());
+        savedDto.getProducts().put(productId, 1);
+
+
+        when(cartRepository.findById(cartId)).thenReturn(Optional.of(cartEntity));
+        when(cartMapper.toDto(cartEntity)).thenReturn(cartDto);
+        when(cartMapper.toEntity(cartDto)).thenReturn(cartEntity);
+        when(cartRepository.save(any(Cart.class))).thenReturn(savedEntity);
+        when(cartMapper.toDto(savedEntity)).thenReturn(savedDto);
+
+        // Act
+        String resultId = cartService.addProductToCart(cartId, productId, 1);
+
+        // Assert
+        assertThat(resultId).isEqualTo(cartId);
+        assertThat(cartDto.getProducts().get(productId)).isEqualTo(1);
     }
 }

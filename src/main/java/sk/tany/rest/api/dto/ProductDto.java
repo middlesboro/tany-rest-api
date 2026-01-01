@@ -21,4 +21,5 @@ public class ProductDto {
     private String supplierId;
     private String brandId;
     private List<String> images;
+    private sk.tany.rest.api.domain.product.ProductStatus status;
 }

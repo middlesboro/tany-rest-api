@@ -6,7 +6,7 @@ import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.mapper.CartMapper;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,7 +26,7 @@ public class CartServiceImpl implements CartService {
 
         if (cartDto == null) {
             cartDto = new CartDto();
-            cartDto.setProductIds(new ArrayList<>());
+            cartDto.setProducts(new HashMap<>());
         }
 
         if (customerId != null) {
@@ -60,16 +60,14 @@ public class CartServiceImpl implements CartService {
 
         if (cartDto == null) {
             cartDto = new CartDto();
-            cartDto.setProductIds(new ArrayList<>());
+            cartDto.setProducts(new HashMap<>());
         }
 
-        if (cartDto.getProductIds() == null) {
-            cartDto.setProductIds(new ArrayList<>());
+        if (cartDto.getProducts() == null) {
+            cartDto.setProducts(new HashMap<>());
         }
         int qty = (quantity == null || quantity <= 0) ? 1 : quantity;
-        for (int i = 0; i < qty; i++) {
-            cartDto.getProductIds().add(productId);
-        }
+        cartDto.getProducts().merge(productId, qty, Integer::sum);
 
         return save(cartDto).getCartId();
     }

@@ -8,12 +8,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.dto.CartDto;
-import sk.tany.rest.api.dto.CustomerContextCartDto;
-import sk.tany.rest.api.dto.CustomerContextDto;
-import sk.tany.rest.api.dto.CustomerDto;
+import sk.tany.rest.api.dto.*;
 import sk.tany.rest.api.mapper.CustomerMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +42,16 @@ public class CustomerService {
         CustomerContextCartDto customerContextCartDto = new CustomerContextCartDto();
         customerContextCartDto.setCartId(cartDto.getCartId());
         customerContextCartDto.setCustomerId(cartDto.getCustomerId());
-        customerContextCartDto.setProducts(productService.findAllByIds(cartDto.getProductIds()));
+
+        List<CartItemDto> items = new ArrayList<>();
+        if (cartDto.getProducts() != null && !cartDto.getProducts().isEmpty()) {
+            List<ProductDto> products = productService.findAllByIds(new ArrayList<>(cartDto.getProducts().keySet()));
+            for (ProductDto product : products) {
+                Integer quantity = cartDto.getProducts().get(product.getId());
+                items.add(new CartItemDto(product, quantity));
+            }
+        }
+        customerContextCartDto.setItems(items);
 
         return new CustomerContextDto(customerDto, customerContextCartDto);
     }

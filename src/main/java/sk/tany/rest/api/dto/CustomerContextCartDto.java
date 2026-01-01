@@ -9,5 +9,5 @@ public class CustomerContextCartDto {
 
     private String cartId;
     private String customerId;
-    private List<ProductDto> products;
+    private List<CartItemDto> items;
 }

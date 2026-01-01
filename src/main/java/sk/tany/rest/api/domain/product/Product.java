@@ -34,5 +34,6 @@ public class Product {
     private String supplierId;
     private String brandId;
     private List<String> images;
+    private ProductStatus status;
 
 }
