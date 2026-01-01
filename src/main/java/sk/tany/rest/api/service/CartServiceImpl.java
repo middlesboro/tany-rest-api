@@ -19,6 +19,7 @@ public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
     private final CartMapper cartMapper;
+    private final ProductService productService;
 
     public CartDto getOrCreateCart(String cartId, String customerId) {
         CartDto cartDto = null;
@@ -69,6 +70,13 @@ public class CartServiceImpl implements CartService {
             cartDto.setItems(new ArrayList<>());
         }
 
+        sk.tany.rest.api.dto.ProductDto productDto = productService.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        String image = (productDto.getImages() != null && !productDto.getImages().isEmpty())
+                ? productDto.getImages().get(0)
+                : null;
+
         int qty = (quantity == null || quantity <= 0) ? 1 : quantity;
         Optional<CartItem> existingItem = cartDto.getItems().stream()
                 .filter(item -> item.getProductId().equals(productId))
@@ -77,8 +85,15 @@ public class CartServiceImpl implements CartService {
         if (existingItem.isPresent()) {
             CartItem item = existingItem.get();
             item.setQuantity(item.getQuantity() + qty);
+            item.setTitle(productDto.getTitle());
+            item.setPrice(productDto.getPrice());
+            item.setImage(image);
         } else {
-            cartDto.getItems().add(new CartItem(productId, qty));
+            CartItem newItem = new CartItem(productId, qty);
+            newItem.setTitle(productDto.getTitle());
+            newItem.setPrice(productDto.getPrice());
+            newItem.setImage(image);
+            cartDto.getItems().add(newItem);
         }
 
         return save(cartDto).getCartId();
