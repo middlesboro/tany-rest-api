@@ -27,10 +27,11 @@ security:
   excluded-urls:
     - /api/login/**
     - /api/customer/**
-    - /api/carts/**
+    - /api/cart/**
+    - /api/products/**
     - /v3/api-docs/**
     - /swagger-ui/**
 
 logging:
   level:
-    org.springframework.security: TRACE
+    org.springframework.security: DEBUG
