@@ -13,7 +13,7 @@ import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.service.ProductService;
 
 @RestController
-@PreAuthorize("hasAnyRole('CUSTOMER', 'GUEST')")
+@PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'GUEST')")
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
