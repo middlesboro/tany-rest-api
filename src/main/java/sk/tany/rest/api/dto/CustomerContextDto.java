@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CustomerContextDto {
     private CustomerDto customerDto;
-    private CartDto cartDto;
+    private CustomerContextCartDto cartDto;
 }

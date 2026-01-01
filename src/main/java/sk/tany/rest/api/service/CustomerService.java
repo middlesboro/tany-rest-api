@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.mapper.CustomerMapper;
@@ -23,6 +24,7 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final CartService cartService;
+    private final ProductService productService;
 
     public CustomerContextDto getCustomerContext(String cartId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -39,7 +41,12 @@ public class CustomerService {
 
         CartDto cartDto = cartService.getOrCreateCart(cartId, customerId);
 
-        return new CustomerContextDto(customerDto, cartDto);
+        CustomerContextCartDto customerContextCartDto = new CustomerContextCartDto();
+        customerContextCartDto.setCartId(cartDto.getCartId());
+        customerContextCartDto.setCustomerId(cartDto.getCustomerId());
+        customerContextCartDto.setProducts(productService.findAllByIds(cartDto.getProductIds()));
+
+        return new CustomerContextDto(customerDto, customerContextCartDto);
     }
 
     public CustomerDto findByEmail(String email) {
