@@ -28,6 +28,8 @@ security:
     - /api/login/**
     - /api/customer/**
     - /api/carts/**
+    - /v3/api-docs/**
+    - /swagger-ui/**
 
 logging:
   level:
