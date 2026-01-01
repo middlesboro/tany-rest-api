@@ -84,19 +84,18 @@ public class CartServiceImpl implements CartService {
                 ? productDto.getImages().get(0)
                 : null;
 
-        int qty = (quantity == null || quantity <= 0) ? 1 : quantity;
         Optional<CartItem> existingItem = cartDto.getItems().stream()
                 .filter(item -> item.getProductId().equals(productId))
                 .findFirst();
 
         if (existingItem.isPresent()) {
             CartItem item = existingItem.get();
-            item.setQuantity(item.getQuantity() + qty);
+            item.setQuantity(quantity);
             item.setTitle(productDto.getTitle());
             item.setPrice(productDto.getPrice());
             item.setImage(image);
         } else {
-            CartItem newItem = new CartItem(productId, qty);
+            CartItem newItem = new CartItem(productId, quantity);
             newItem.setTitle(productDto.getTitle());
             newItem.setPrice(productDto.getPrice());
             newItem.setImage(image);
