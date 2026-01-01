@@ -3,14 +3,12 @@ package sk.tany.rest.api.dto;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.List;
 
 @Data
-public class CartDto {
-
-    private String cartId;
+public class CartAdminResponse {
+    private String customerName;
     private String customerId;
-    private List<CartItem> items;
+    private String cartId;
     private Instant createDate;
     private Instant updateDate;
 }
