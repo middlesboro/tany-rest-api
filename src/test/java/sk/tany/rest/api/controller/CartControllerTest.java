@@ -38,11 +38,13 @@ public class CartControllerTest {
     public void addProduct_shouldReturnCartId() throws Exception {
         String cartId = "cart-123";
         String productId = "prod-456";
+        Integer quantity = 1;
         CartItemRequest request = new CartItemRequest();
         request.setCartId(cartId);
         request.setProductId(productId);
+        request.setQuantity(quantity);
 
-        given(cartService.addProductToCart(cartId, productId)).willReturn(cartId);
+        given(cartService.addProductToCart(cartId, productId, quantity)).willReturn(cartId);
 
         mockMvc.perform(post("/api/carts/items")
                 .contentType(MediaType.APPLICATION_JSON)
