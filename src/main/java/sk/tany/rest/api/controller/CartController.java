@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import sk.tany.rest.api.dto.CartAddProductResponse;
 import sk.tany.rest.api.dto.CartItemRequest;
 import sk.tany.rest.api.service.CartService;
 
@@ -17,8 +18,10 @@ public class CartController {
     private final CartService cartService;
 
     @PostMapping("/items")
-    public ResponseEntity<String> addProduct(@RequestBody CartItemRequest request) {
+    public ResponseEntity<CartAddProductResponse> addProduct(@RequestBody CartItemRequest request) {
         String cartId = cartService.addProductToCart(request.getCartId(), request.getProductId(), request.getQuantity());
-        return ResponseEntity.ok(cartId);
+        CartAddProductResponse response = new CartAddProductResponse();
+        response.setCartId(cartId);
+        return ResponseEntity.ok(response);
     }
 }

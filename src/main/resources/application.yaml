@@ -26,3 +26,9 @@ eshop:
 security:
   excluded-urls:
     - /api/login/**
+    - /api/customer/**
+    - /api/carts/**
+
+logging:
+  level:
+    org.springframework.security: TRACE
