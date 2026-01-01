@@ -9,5 +9,5 @@ public class CartDto {
 
     private String cartId;
     private String customerId;
-    private List<String> productIds;
+    private List<CartItem> items;
 }

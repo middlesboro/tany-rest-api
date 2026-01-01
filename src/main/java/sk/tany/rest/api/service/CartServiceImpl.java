@@ -6,6 +6,8 @@ import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.mapper.CartMapper;
 
+import sk.tany.rest.api.dto.CartItem;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +19,7 @@ public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
     private final CartMapper cartMapper;
+    private final ProductService productService;
 
     public CartDto getOrCreateCart(String cartId, String customerId) {
         CartDto cartDto = null;
@@ -26,7 +29,7 @@ public class CartServiceImpl implements CartService {
 
         if (cartDto == null) {
             cartDto = new CartDto();
-            cartDto.setProductIds(new ArrayList<>());
+            cartDto.setItems(new ArrayList<>());
         }
 
         if (customerId != null) {
@@ -60,15 +63,37 @@ public class CartServiceImpl implements CartService {
 
         if (cartDto == null) {
             cartDto = new CartDto();
-            cartDto.setProductIds(new ArrayList<>());
+            cartDto.setItems(new ArrayList<>());
         }
 
-        if (cartDto.getProductIds() == null) {
-            cartDto.setProductIds(new ArrayList<>());
+        if (cartDto.getItems() == null) {
+            cartDto.setItems(new ArrayList<>());
         }
+
+        sk.tany.rest.api.dto.ProductDto productDto = productService.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        String image = (productDto.getImages() != null && !productDto.getImages().isEmpty())
+                ? productDto.getImages().get(0)
+                : null;
+
         int qty = (quantity == null || quantity <= 0) ? 1 : quantity;
-        for (int i = 0; i < qty; i++) {
-            cartDto.getProductIds().add(productId);
+        Optional<CartItem> existingItem = cartDto.getItems().stream()
+                .filter(item -> item.getProductId().equals(productId))
+                .findFirst();
+
+        if (existingItem.isPresent()) {
+            CartItem item = existingItem.get();
+            item.setQuantity(item.getQuantity() + qty);
+            item.setTitle(productDto.getTitle());
+            item.setPrice(productDto.getPrice());
+            item.setImage(image);
+        } else {
+            CartItem newItem = new CartItem(productId, qty);
+            newItem.setTitle(productDto.getTitle());
+            newItem.setPrice(productDto.getPrice());
+            newItem.setImage(image);
+            cartDto.getItems().add(newItem);
         }
 
         return save(cartDto).getCartId();

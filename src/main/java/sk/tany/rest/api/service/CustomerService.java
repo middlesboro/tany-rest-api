@@ -8,12 +8,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.dto.CartDto;
-import sk.tany.rest.api.dto.CustomerContextCartDto;
-import sk.tany.rest.api.dto.CustomerContextDto;
-import sk.tany.rest.api.dto.CustomerDto;
+import sk.tany.rest.api.dto.*;
 import sk.tany.rest.api.mapper.CustomerMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +42,21 @@ public class CustomerService {
         CustomerContextCartDto customerContextCartDto = new CustomerContextCartDto();
         customerContextCartDto.setCartId(cartDto.getCartId());
         customerContextCartDto.setCustomerId(cartDto.getCustomerId());
-        customerContextCartDto.setProducts(productService.findAllByIds(cartDto.getProductIds()));
+
+        List<ProductDto> products = new ArrayList<>();
+        if (cartDto.getItems() != null && !cartDto.getItems().isEmpty()) {
+            List<String> productIds = cartDto.getItems().stream().map(CartItem::getProductId).toList();
+            List<ProductDto> fetchedProducts = productService.findAllByIds(productIds);
+
+            for (ProductDto product : fetchedProducts) {
+                cartDto.getItems().stream()
+                        .filter(item -> item.getProductId().equals(product.getId()))
+                        .findFirst()
+                        .ifPresent(item -> product.setQuantity(item.getQuantity()));
+                products.add(product);
+            }
+        }
+        customerContextCartDto.setProducts(products);
 
         return new CustomerContextDto(customerDto, customerContextCartDto);
     }
