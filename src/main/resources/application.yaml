@@ -27,8 +27,9 @@ security:
   excluded-urls:
     - /api/login/**
     - /api/customer/**
-    - /api/carts/**
+    - /api/cart/**
+    - /api/products/**
 
 logging:
   level:
-    org.springframework.security: TRACE
+    org.springframework.security: DEBUG
