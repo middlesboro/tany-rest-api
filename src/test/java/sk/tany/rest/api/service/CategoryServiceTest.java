@@ -48,4 +48,19 @@ class CategoryServiceTest {
         verify(categoryRepository, times(1)).findAll(pageable);
         verify(categoryMapper, times(1)).toDto(any(Category.class));
     }
+
+    @Test
+    void findAll_ShouldReturnListOfCategories() {
+        Category category = new Category();
+        CategoryDto categoryDto = new CategoryDto();
+
+        when(categoryRepository.findAll()).thenReturn(Collections.singletonList(category));
+        when(categoryMapper.toDto(any(Category.class))).thenReturn(categoryDto);
+
+        java.util.List<CategoryDto> result = categoryService.findAll();
+
+        assertEquals(1, result.size());
+        verify(categoryRepository, times(1)).findAll();
+        verify(categoryMapper, times(1)).toDto(any(Category.class));
+    }
 }

@@ -23,6 +23,11 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public java.util.List<CategoryDto> findAll() {
+        return categoryRepository.findAll().stream().map(categoryMapper::toDto).toList();
+    }
+
+    @Override
     public Optional<CategoryDto> findById(String id) {
         return categoryRepository.findById(id).map(categoryMapper::toDto);
     }

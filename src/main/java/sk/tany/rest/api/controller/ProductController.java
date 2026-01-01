@@ -30,4 +30,9 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/category/{categoryId}")
+    public Page<ProductDto> getProductsByCategory(@PathVariable String categoryId, Pageable pageable) {
+        return productService.search(categoryId, pageable);
+    }
+
 }
