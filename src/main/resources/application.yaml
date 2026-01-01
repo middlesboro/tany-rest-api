@@ -29,6 +29,8 @@ security:
     - /api/customer/**
     - /api/cart/**
     - /api/products/**
+    - /v3/api-docs/**
+    - /swagger-ui/**
 
 logging:
   level:
