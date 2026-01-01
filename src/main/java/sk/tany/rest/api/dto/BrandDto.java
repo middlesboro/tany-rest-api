@@ -7,6 +7,7 @@ import java.time.Instant;
 public class BrandDto {
     private String id;
     private String name;
+    private String image;
     private Instant createdDate;
     private Instant updateDate;
 }
