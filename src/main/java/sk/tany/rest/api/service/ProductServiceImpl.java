@@ -51,4 +51,9 @@ public class ProductServiceImpl implements ProductService {
     public Page<ProductDto> search(String categoryId, Pageable pageable) {
         return productRepository.findByCategoryIds(categoryId, pageable).map(productMapper::toDto);
     }
+
+    @Override
+    public java.util.List<ProductDto> findAllByIds(Iterable<String> ids) {
+        return productRepository.findAllById(ids).stream().map(productMapper::toDto).toList();
+    }
 }

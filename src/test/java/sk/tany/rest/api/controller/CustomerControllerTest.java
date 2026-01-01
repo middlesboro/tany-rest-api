@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.service.CustomerService;
@@ -39,7 +39,7 @@ class CustomerControllerTest {
         String cartId = "test-cart-id";
         CustomerContextDto customerContextDto = new CustomerContextDto();
         customerContextDto.setCustomerDto(new CustomerDto());
-        customerContextDto.setCartDto(new CartDto());
+        customerContextDto.setCartDto(new CustomerContextCartDto());
 
         when(customerService.getCustomerContext(cartId)).thenReturn(customerContextDto);
 
@@ -54,7 +54,7 @@ class CustomerControllerTest {
     void getCustomerContext_WithNullCartId_ReturnsOk() throws Exception {
         CustomerContextDto customerContextDto = new CustomerContextDto();
         customerContextDto.setCustomerDto(new CustomerDto());
-        customerContextDto.setCartDto(new CartDto());
+        customerContextDto.setCartDto(new CustomerContextCartDto());
 
         when(customerService.getCustomerContext(null)).thenReturn(customerContextDto);
 
