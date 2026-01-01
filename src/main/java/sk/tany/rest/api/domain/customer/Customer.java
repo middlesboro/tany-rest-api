@@ -13,7 +13,7 @@ public class Customer {
     private String firstname;
     private String lastname;
     private String email;
-    // toto remove cartId from this
-    private String cartId;
     private Role role;
+    private Address invoiceAddress;
+    private Address deliveryAddress;
 }
