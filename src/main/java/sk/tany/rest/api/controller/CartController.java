@@ -11,7 +11,7 @@ import sk.tany.rest.api.dto.CartItemRequest;
 import sk.tany.rest.api.service.CartService;
 
 @RestController
-@RequestMapping("/api/carts")
+@RequestMapping("/api/cart")
 @RequiredArgsConstructor
 public class CartController {
 
