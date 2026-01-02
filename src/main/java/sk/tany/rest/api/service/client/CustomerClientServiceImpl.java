@@ -65,12 +65,35 @@ public class CustomerClientServiceImpl implements CustomerClientService {
                         .reduce(BigDecimal.ZERO, BigDecimal::add)
         );
 
+        BigDecimal totalWeight = products.stream()
+                .map(p -> (p.getWeight() != null ? p.getWeight() : BigDecimal.ZERO)
+                        .multiply(BigDecimal.valueOf(p.getQuantity() != null ? p.getQuantity() : 0)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         List<CarrierDto> carriers = carrierService.findAll(Pageable.unpaged()).getContent();
-        carriers.forEach(carrier -> carrier.setSelected(carrier.getId().equals(cartDto.getSelectedCarrierId())));
+        carriers.forEach(carrier -> {
+            carrier.setSelected(carrier.getId().equals(cartDto.getSelectedCarrierId()));
+            if (carrier.getRanges() != null) {
+                carrier.getRanges().stream()
+                        .filter(range ->
+                                (range.getWeightFrom() == null || totalWeight.compareTo(range.getWeightFrom()) >= 0) &&
+                                        (range.getWeightTo() == null || totalWeight.compareTo(range.getWeightTo()) <= 0)
+                        )
+                        .findFirst()
+                        .ifPresent(range -> carrier.setPrice(range.getPrice()));
+            }
+            carrier.setRanges(null);
+        });
+        if (carriers.stream().noneMatch(CarrierDto::isSelected) && !carriers.isEmpty()) {
+            carriers.getFirst().setSelected(true);
+        }
         customerContextCartDto.setCarriers(carriers);
 
         List<PaymentDto> payments = paymentService.findAll(Pageable.unpaged()).getContent();
         payments.forEach(payment -> payment.setSelected(payment.getId().equals(cartDto.getSelectedPaymentId())));
+        if (payments.stream().noneMatch(PaymentDto::isSelected) && !payments.isEmpty()) {
+            payments.getFirst().setSelected(true);
+        }
         customerContextCartDto.setPayments(payments);
 
         return new CustomerContextDto(customerDto, customerContextCartDto);

@@ -79,12 +79,25 @@ class CustomerClientServiceImplTest {
         ProductDto productDto = new ProductDto();
         productDto.setId("prod1");
         productDto.setPrice(BigDecimal.valueOf(10.0));
+        productDto.setWeight(BigDecimal.valueOf(2.5)); // Total weight = 2 * 2.5 = 5.0
         when(productService.findAllByIds(List.of("prod1"))).thenReturn(List.of(productDto));
 
         CarrierDto carrier1 = new CarrierDto();
         carrier1.setId("carrier1");
+        CarrierPriceRangeDto range1 = new CarrierPriceRangeDto();
+        range1.setWeightFrom(BigDecimal.ZERO);
+        range1.setWeightTo(BigDecimal.valueOf(10));
+        range1.setPrice(BigDecimal.valueOf(5.0));
+        carrier1.setRanges(List.of(range1));
+
         CarrierDto carrier2 = new CarrierDto();
         carrier2.setId("carrier2");
+        CarrierPriceRangeDto range2 = new CarrierPriceRangeDto();
+        range2.setWeightFrom(BigDecimal.valueOf(10.1));
+        range2.setWeightTo(BigDecimal.valueOf(20));
+        range2.setPrice(BigDecimal.valueOf(10.0));
+        carrier2.setRanges(List.of(range2)); // Should not fit
+
         when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(carrier1, carrier2)));
 
         PaymentDto payment1 = new PaymentDto();
@@ -104,12 +117,51 @@ class CustomerClientServiceImplTest {
 
         // Verify Carriers
         assertEquals(2, contextCart.getCarriers().size());
-        assertTrue(contextCart.getCarriers().stream().anyMatch(c -> c.getId().equals("carrier1") && c.isSelected()));
-        assertTrue(contextCart.getCarriers().stream().anyMatch(c -> c.getId().equals("carrier2") && !c.isSelected()));
+        assertTrue(contextCart.getCarriers().stream().anyMatch(c -> c.getId().equals("carrier1") && c.isSelected() && BigDecimal.valueOf(5.0).compareTo(c.getPrice()) == 0));
+        assertTrue(contextCart.getCarriers().stream().anyMatch(c -> c.getId().equals("carrier2") && !c.isSelected() && c.getPrice() == null));
+
+        // Verify ranges are cleared
+        assertTrue(contextCart.getCarriers().stream().allMatch(c -> c.getRanges() == null));
 
         // Verify Payments
         assertEquals(2, contextCart.getPayments().size());
         assertTrue(contextCart.getPayments().stream().anyMatch(p -> p.getId().equals("payment1") && p.isSelected()));
         assertTrue(contextCart.getPayments().stream().anyMatch(p -> p.getId().equals("payment2") && !p.isSelected()));
+    }
+
+    @Test
+    void getCustomerContext_SelectsFirstOption_WhenNoneSelected() {
+        // Arrange
+        String cartId = "cart1";
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        // selectedCarrierId and selectedPaymentId are null
+
+        when(cartService.getOrCreateCart(cartId, null)).thenReturn(cartDto);
+
+        CarrierDto carrier1 = new CarrierDto();
+        carrier1.setId("carrier1");
+        CarrierDto carrier2 = new CarrierDto();
+        carrier2.setId("carrier2");
+        when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(carrier1, carrier2)));
+
+        PaymentDto payment1 = new PaymentDto();
+        payment1.setId("payment1");
+        PaymentDto payment2 = new PaymentDto();
+        payment2.setId("payment2");
+        when(paymentService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(payment1, payment2)));
+
+        // Act
+        CustomerContextDto result = customerClientService.getCustomerContext(cartId);
+        CustomerContextCartDto contextCart = result.getCartDto();
+
+        // Assert
+        // First carrier should be selected
+        assertTrue(contextCart.getCarriers().get(0).isSelected());
+        assertFalse(contextCart.getCarriers().get(1).isSelected());
+
+        // First payment should be selected
+        assertTrue(contextCart.getPayments().get(0).isSelected());
+        assertFalse(contextCart.getPayments().get(1).isSelected());
     }
 }

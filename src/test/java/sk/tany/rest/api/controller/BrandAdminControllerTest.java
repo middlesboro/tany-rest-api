@@ -49,11 +49,11 @@ class BrandAdminControllerTest {
 
         BrandDto brandDto = new BrandDto();
         brandDto.setId(brandId);
-        brandDto.setTitle("Test Brand");
+        brandDto.setName("Test Brand");
 
         BrandDto updatedBrandDto = new BrandDto();
         updatedBrandDto.setId(brandId);
-        updatedBrandDto.setTitle("Test Brand");
+        updatedBrandDto.setName("Test Brand");
         updatedBrandDto.setImage(imageUrl);
 
         when(brandService.findById(brandId)).thenReturn(Optional.of(brandDto));
