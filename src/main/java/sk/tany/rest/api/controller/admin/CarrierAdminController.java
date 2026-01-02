@@ -9,8 +9,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.CarrierDto;
-import sk.tany.rest.api.service.CarrierService;
-import sk.tany.rest.api.service.ImageService;
+import sk.tany.rest.api.service.admin.CarrierAdminService;
+import sk.tany.rest.api.service.common.ImageService;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -18,7 +18,7 @@ import sk.tany.rest.api.service.ImageService;
 @RequiredArgsConstructor
 public class CarrierAdminController {
 
-    private final CarrierService carrierService;
+    private final CarrierAdminService carrierService;
     private final ImageService imageService;
 
     @PostMapping

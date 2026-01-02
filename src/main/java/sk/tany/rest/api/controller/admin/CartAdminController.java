@@ -9,7 +9,7 @@ import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.CartAdminResponse;
 import sk.tany.rest.api.dto.CartDto;
-import sk.tany.rest.api.service.CartService;
+import sk.tany.rest.api.service.admin.CartAdminService;
 
 import java.util.List;
 import java.util.Map;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CartAdminController {
 
-    private final CartService cartService;
+    private final CartAdminService cartService;
     private final CustomerRepository customerRepository;
 
     @PostMapping
@@ -64,6 +64,7 @@ public class CartAdminController {
                 .map(cart -> new ResponseEntity<>(cart, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<CartDto> updateCart(@PathVariable String id, @RequestBody CartDto cartDto) {

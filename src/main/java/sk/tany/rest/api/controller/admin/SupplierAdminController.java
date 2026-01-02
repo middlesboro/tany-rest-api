@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.SupplierDto;
-import sk.tany.rest.api.service.SupplierService;
+import sk.tany.rest.api.service.admin.SupplierAdminService;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -16,7 +16,7 @@ import sk.tany.rest.api.service.SupplierService;
 @RequiredArgsConstructor
 public class SupplierAdminController {
 
-    private final SupplierService supplierService;
+    private final SupplierAdminService supplierService;
 
     @PostMapping
     public ResponseEntity<SupplierDto> createSupplier(@RequestBody SupplierDto supplier) {

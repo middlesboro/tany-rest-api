@@ -10,7 +10,7 @@ import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.CartAdminResponse;
 import sk.tany.rest.api.dto.CartDto;
-import sk.tany.rest.api.service.CartService;
+import sk.tany.rest.api.service.admin.CartAdminService;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 class CartAdminControllerTest {
 
     @Mock
-    private CartService cartService;
+    private CartAdminService cartService;
 
     @Mock
     private CustomerRepository customerRepository;

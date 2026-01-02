@@ -11,7 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.controller.admin.OrderAdminController;
 import sk.tany.rest.api.dto.OrderDto;
-import sk.tany.rest.api.service.OrderService;
+import sk.tany.rest.api.service.admin.OrderAdminService;
 
 import java.util.Collections;
 
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class OrderAdminControllerTest {
 
     @Mock
-    private OrderService orderService;
+    private OrderAdminService orderService;
 
     @InjectMocks
     private OrderAdminController orderAdminController;

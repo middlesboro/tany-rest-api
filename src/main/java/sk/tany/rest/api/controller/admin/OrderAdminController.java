@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.OrderDto;
-import sk.tany.rest.api.service.OrderService;
+import sk.tany.rest.api.service.admin.OrderAdminService;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -16,7 +16,7 @@ import sk.tany.rest.api.service.OrderService;
 @RequiredArgsConstructor
 public class OrderAdminController {
 
-    private final OrderService orderService;
+    private final OrderAdminService orderService;
 
     @PostMapping
     public ResponseEntity<OrderDto> createOrder(@RequestBody OrderDto order) {

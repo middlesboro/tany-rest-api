@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.CartAddProductResponse;
 import sk.tany.rest.api.dto.CartItemRequest;
-import sk.tany.rest.api.service.CartService;
+import sk.tany.rest.api.service.client.CartClientService;
 
 @RestController
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
 public class CartController {
 
-    private final CartService cartService;
+    private final CartClientService cartService;
 
     @PostMapping("/items")
     public ResponseEntity<CartAddProductResponse> addProduct(@RequestBody CartItemRequest request) {

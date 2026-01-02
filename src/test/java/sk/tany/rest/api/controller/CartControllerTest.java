@@ -9,8 +9,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.dto.CartItemRequest;
-import sk.tany.rest.api.service.CartService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import sk.tany.rest.api.service.client.CartClientService;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -25,7 +25,7 @@ public class CartControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private CartService cartService;
+    private CartClientService cartService;
 
     @MockBean
     private JwtUtil jwtUtil;

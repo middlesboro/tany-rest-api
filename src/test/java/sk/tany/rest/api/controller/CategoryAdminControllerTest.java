@@ -11,7 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.controller.admin.CategoryAdminController;
 import sk.tany.rest.api.dto.CategoryDto;
-import sk.tany.rest.api.service.CategoryService;
+import sk.tany.rest.api.service.admin.CategoryAdminService;
 
 import java.util.Collections;
 
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class CategoryAdminControllerTest {
 
     @Mock
-    private CategoryService categoryService;
+    private CategoryAdminService categoryService;
 
     @InjectMocks
     private CategoryAdminController categoryAdminController;

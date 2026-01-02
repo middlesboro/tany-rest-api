@@ -11,7 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.controller.admin.ProductAdminController;
 import sk.tany.rest.api.dto.ProductDto;
-import sk.tany.rest.api.service.ProductService;
+import sk.tany.rest.api.service.admin.ProductAdminService;
 
 import java.util.Collections;
 
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class ProductAdminControllerTest {
 
     @Mock
-    private ProductService productService;
+    private ProductAdminService productService;
 
     @InjectMocks
     private ProductAdminController productAdminController;

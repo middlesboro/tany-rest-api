@@ -10,7 +10,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.PaymentDto;
-import sk.tany.rest.api.service.PaymentService;
+import sk.tany.rest.api.service.client.PaymentClientService;
 
 import java.util.Collections;
 
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 class PaymentControllerTest {
 
     @Mock
-    private PaymentService paymentService;
+    private PaymentClientService paymentService;
 
     @InjectMocks
     private PaymentController paymentController;

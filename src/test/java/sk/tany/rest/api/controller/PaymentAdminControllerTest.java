@@ -13,8 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import sk.tany.rest.api.controller.admin.PaymentAdminController;
 import sk.tany.rest.api.dto.PaymentDto;
-import sk.tany.rest.api.service.ImageService;
-import sk.tany.rest.api.service.PaymentService;
+import sk.tany.rest.api.service.admin.PaymentAdminService;
+import sk.tany.rest.api.service.common.ImageService;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 class PaymentAdminControllerTest {
 
     @Mock
-    private PaymentService paymentService;
+    private PaymentAdminService paymentService;
 
     @Mock
     private ImageService imageService;

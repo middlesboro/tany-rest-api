@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import sk.tany.rest.api.dto.ProductDto;
-import sk.tany.rest.api.service.ProductService;
+import sk.tany.rest.api.service.client.ProductClientService;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 class ProductControllerTest {
 
     @Mock
-    private ProductService productService;
+    private ProductClientService productService;
 
     @InjectMocks
     private ProductController productController;
