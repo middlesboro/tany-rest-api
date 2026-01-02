@@ -1,4 +1,4 @@
-package sk.tany.rest.api.service;
+package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CarrierServiceImpl implements CarrierService {
+public class CarrierAdminServiceImpl implements CarrierAdminService {
 
     private final CarrierRepository carrierRepository;
     private final CarrierMapper carrierMapper;
@@ -36,9 +36,8 @@ public class CarrierServiceImpl implements CarrierService {
 
     @Override
     public CarrierDto update(String id, CarrierDto carrierDto) {
-        var carrier = carrierRepository.findById(id).orElseThrow(() -> new RuntimeException("Carrier not found"));
         carrierDto.setId(id);
-        carrierMapper.updateEntityFromDto(carrierDto, carrier);
+        var carrier = carrierMapper.toEntity(carrierDto);
         var savedCarrier = carrierRepository.save(carrier);
         return carrierMapper.toDto(savedCarrier);
     }

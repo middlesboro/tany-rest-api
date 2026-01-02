@@ -1,11 +1,9 @@
-package sk.tany.rest.api.service;
+package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.*;
@@ -17,12 +15,12 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CustomerService {
+public class CustomerClientServiceImpl implements CustomerClientService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
-    private final CartService cartService;
-    private final ProductService productService;
+    private final CartClientService cartService;
+    private final ProductClientService productService;
 
     public CustomerContextDto getCustomerContext(String cartId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -70,19 +68,7 @@ public class CustomerService {
         return customerMapper.toDto(customerRepository.save(customer));
     }
 
-    public List<CustomerDto> findAll() {
-        return customerRepository.findAll().stream().map(customerMapper::toDto).toList();
-    }
-
-    public Page<CustomerDto> findAll(Pageable pageable) {
-        return customerRepository.findAll(pageable).map(customerMapper::toDto);
-    }
-
     public Optional<CustomerDto> findById(String id) {
         return customerRepository.findById(id).map(customerMapper::toDto);
-    }
-
-    public void deleteById(String id) {
-        customerRepository.deleteById(id);
     }
 }

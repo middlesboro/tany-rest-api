@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.service.ImageService;
-import sk.tany.rest.api.service.ProductService;
+import sk.tany.rest.api.service.admin.ProductAdminService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductAdminController {
 
-    private final ProductService productService;
+    private final ProductAdminService productService;
     private final ImageService imageService;
 
     @PostMapping

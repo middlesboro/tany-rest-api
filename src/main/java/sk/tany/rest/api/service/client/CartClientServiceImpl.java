@@ -1,25 +1,23 @@
-package sk.tany.rest.api.service;
+package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.CartItem;
+import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.mapper.CartMapper;
 
-import sk.tany.rest.api.dto.CartItem;
-
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class CartServiceImpl implements CartService {
+public class CartClientServiceImpl implements CartClientService {
 
     private final CartRepository cartRepository;
     private final CartMapper cartMapper;
-    private final ProductService productService;
+    private final ProductClientService productService;
 
     public CartDto getOrCreateCart(String cartId, String customerId) {
         CartDto cartDto = null;
@@ -50,16 +48,8 @@ public class CartServiceImpl implements CartService {
         return cartMapper.toDto(cartRepository.save(cart));
     }
 
-    public List<CartDto> findAll() {
-        return cartRepository.findAll().stream().map(cartMapper::toDto).collect(Collectors.toList());
-    }
-
-    public Optional<CartDto> findById(String id) {
+    private Optional<CartDto> findById(String id) {
         return cartRepository.findById(id).map(cartMapper::toDto);
-    }
-
-    public void deleteById(String id) {
-        cartRepository.deleteById(id);
     }
 
     public String addProductToCart(String cartId, String productId, Integer quantity) {
@@ -77,7 +67,7 @@ public class CartServiceImpl implements CartService {
             cartDto.setItems(new ArrayList<>());
         }
 
-        sk.tany.rest.api.dto.ProductDto productDto = productService.findById(productId)
+        ProductDto productDto = productService.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         String image = (productDto.getImages() != null && !productDto.getImages().isEmpty())

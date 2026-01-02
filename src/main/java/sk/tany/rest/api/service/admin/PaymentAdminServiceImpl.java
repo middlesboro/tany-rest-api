@@ -1,4 +1,4 @@
-package sk.tany.rest.api.service;
+package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class PaymentServiceImpl implements PaymentService {
+public class PaymentAdminServiceImpl implements PaymentAdminService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
@@ -36,9 +36,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentDto update(String id, PaymentDto paymentDto) {
-        var payment = paymentRepository.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));
         paymentDto.setId(id);
-        paymentMapper.updateEntityFromDto(paymentDto, payment);
+        var payment = paymentMapper.toEntity(paymentDto);
         var savedPayment = paymentRepository.save(payment);
         return paymentMapper.toDto(savedPayment);
     }

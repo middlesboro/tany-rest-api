@@ -1,4 +1,4 @@
-package sk.tany.rest.api.service;
+package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class ProductServiceImpl implements ProductService {
+public class ProductAdminServiceImpl implements ProductAdminService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;

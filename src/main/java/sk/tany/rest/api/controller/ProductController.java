@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.ProductDto;
-import sk.tany.rest.api.service.ProductService;
+import sk.tany.rest.api.service.client.ProductClientService;
 
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductService productService;
+    private final ProductClientService productService;
 
     @GetMapping
     public Page<ProductDto> getProducts(Pageable pageable) {

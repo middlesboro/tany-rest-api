@@ -1,4 +1,4 @@
-package sk.tany.rest.api.service;
+package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class BrandServiceImpl implements BrandService {
+public class BrandAdminServiceImpl implements BrandAdminService {
 
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;

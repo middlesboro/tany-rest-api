@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.service.ImageService;
-import sk.tany.rest.api.service.PaymentService;
+import sk.tany.rest.api.service.admin.PaymentAdminService;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -18,7 +18,7 @@ import sk.tany.rest.api.service.PaymentService;
 @RequiredArgsConstructor
 public class PaymentAdminController {
 
-    private final PaymentService paymentService;
+    private final PaymentAdminService paymentService;
     private final ImageService imageService;
 
     @PostMapping

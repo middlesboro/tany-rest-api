@@ -1,4 +1,4 @@
-package sk.tany.rest.api.service;
+package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CategoryServiceImpl implements CategoryService {
+public class CategoryAdminServiceImpl implements CategoryAdminService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -20,11 +20,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Page<CategoryDto> findAll(Pageable pageable) {
         return categoryRepository.findAll(pageable).map(categoryMapper::toDto);
-    }
-
-    @Override
-    public java.util.List<CategoryDto> findAll() {
-        return categoryRepository.findAll().stream().map(categoryMapper::toDto).toList();
     }
 
     @Override

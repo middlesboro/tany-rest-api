@@ -9,7 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.BrandDto;
-import sk.tany.rest.api.service.BrandService;
+import sk.tany.rest.api.service.admin.BrandAdminService;
 import sk.tany.rest.api.service.ImageService;
 
 @RestController
@@ -18,7 +18,7 @@ import sk.tany.rest.api.service.ImageService;
 @RequiredArgsConstructor
 public class BrandAdminController {
 
-    private final BrandService brandService;
+    private final BrandAdminService brandService;
     private final ImageService imageService;
 
     @PostMapping

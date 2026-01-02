@@ -7,14 +7,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.PaymentDto;
-import sk.tany.rest.api.service.PaymentService;
+import sk.tany.rest.api.service.client.PaymentClientService;
 
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    private final PaymentClientService paymentService;
 
     @GetMapping
     public Page<PaymentDto> getPayments(Pageable pageable) {

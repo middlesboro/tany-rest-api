@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.CarrierDto;
-import sk.tany.rest.api.service.CarrierService;
+import sk.tany.rest.api.service.client.CarrierClientService;
 
 @RestController
 @RequestMapping("/api/carriers")
 @RequiredArgsConstructor
 public class CarrierController {
 
-    private final CarrierService carrierService;
+    private final CarrierClientService carrierService;
 
     @GetMapping
     public Page<CarrierDto> getCarriers(Pageable pageable) {

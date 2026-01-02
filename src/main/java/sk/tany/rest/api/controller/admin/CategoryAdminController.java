@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.CategoryDto;
-import sk.tany.rest.api.service.CategoryService;
+import sk.tany.rest.api.service.admin.CategoryAdminService;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -16,7 +16,7 @@ import sk.tany.rest.api.service.CategoryService;
 @RequiredArgsConstructor
 public class CategoryAdminController {
 
-    private final CategoryService categoryService;
+    private final CategoryAdminService categoryService;
 
     @PostMapping
     public ResponseEntity<CategoryDto> createCategory(@RequestBody CategoryDto category) {

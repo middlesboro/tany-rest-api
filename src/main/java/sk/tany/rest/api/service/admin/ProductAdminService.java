@@ -1,4 +1,4 @@
-package sk.tany.rest.api.service;
+package sk.tany.rest.api.service.admin;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -6,7 +6,7 @@ import sk.tany.rest.api.dto.ProductDto;
 
 import java.util.Optional;
 
-public interface ProductService {
+public interface ProductAdminService {
     Page<ProductDto> findAll(Pageable pageable);
     Optional<ProductDto> findById(String id);
     ProductDto save(ProductDto productDto);

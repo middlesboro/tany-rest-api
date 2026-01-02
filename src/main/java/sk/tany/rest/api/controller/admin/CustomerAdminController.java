@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.CustomerDto;
-import sk.tany.rest.api.service.CustomerService;
+import sk.tany.rest.api.service.admin.CustomerAdminService;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -16,7 +16,7 @@ import sk.tany.rest.api.service.CustomerService;
 @RequiredArgsConstructor
 public class CustomerAdminController {
 
-    private final CustomerService customerService;
+    private final CustomerAdminService customerService;
 
     @PostMapping
     public ResponseEntity<CustomerDto> createCustomer(@RequestBody CustomerDto customerDto) {
