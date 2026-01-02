@@ -16,6 +16,8 @@ public class Cart {
     @Id
     private String cartId;
     private String customerId;
+    private String selectedCarrierId;
+    private String selectedPaymentId;
     private List<CartItem> items;
     @CreatedDate
     private Instant createDate;

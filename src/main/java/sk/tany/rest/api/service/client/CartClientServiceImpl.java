@@ -94,4 +94,20 @@ public class CartClientServiceImpl implements CartClientService {
 
         return save(cartDto).getCartId();
     }
+
+    @Override
+    public CartDto addCarrier(String cartId, String carrierId) {
+        CartDto cartDto = findById(cartId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        cartDto.setSelectedCarrierId(carrierId);
+        return save(cartDto);
+    }
+
+    @Override
+    public CartDto addPayment(String cartId, String paymentId) {
+        CartDto cartDto = findById(cartId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        cartDto.setSelectedPaymentId(paymentId);
+        return save(cartDto);
+    }
 }

@@ -6,8 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import sk.tany.rest.api.dto.CartAddProductResponse;
-import sk.tany.rest.api.dto.CartItemRequest;
+import sk.tany.rest.api.dto.*;
 import sk.tany.rest.api.service.client.CartClientService;
 
 @RestController
@@ -23,5 +22,15 @@ public class CartClientController {
         CartAddProductResponse response = new CartAddProductResponse();
         response.setCartId(cartId);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/carrier")
+    public ResponseEntity<CartDto> addCarrier(@RequestBody CartCarrierRequest request) {
+        return ResponseEntity.ok(cartService.addCarrier(request.getCartId(), request.getCarrierId()));
+    }
+
+    @PostMapping("/payment")
+    public ResponseEntity<CartDto> addPayment(@RequestBody CartPaymentRequest request) {
+        return ResponseEntity.ok(cartService.addPayment(request.getCartId(), request.getPaymentId()));
     }
 }

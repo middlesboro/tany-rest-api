@@ -9,7 +9,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.controller.client.CartClientController;
-import sk.tany.rest.api.dto.CartItemRequest;
+import sk.tany.rest.api.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import sk.tany.rest.api.service.client.CartClientService;
 
@@ -17,6 +17,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CartClientController.class)
@@ -53,5 +54,53 @@ public class CartClientControllerTest {
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"cartId\":\"cart-123\"}"));
+    }
+
+    @Test
+    @WithMockUser
+    public void addCarrier_shouldReturnUpdatedCart() throws Exception {
+        String cartId = "cart-123";
+        String carrierId = "carrier-456";
+        CartCarrierRequest request = new CartCarrierRequest();
+        request.setCartId(cartId);
+        request.setCarrierId(carrierId);
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        cartDto.setSelectedCarrierId(carrierId);
+
+        given(cartService.addCarrier(cartId, carrierId)).willReturn(cartDto);
+
+        mockMvc.perform(post("/api/cart/carrier")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cartId").value(cartId))
+                .andExpect(jsonPath("$.selectedCarrierId").value(carrierId));
+    }
+
+    @Test
+    @WithMockUser
+    public void addPayment_shouldReturnUpdatedCart() throws Exception {
+        String cartId = "cart-123";
+        String paymentId = "payment-789";
+        CartPaymentRequest request = new CartPaymentRequest();
+        request.setCartId(cartId);
+        request.setPaymentId(paymentId);
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        cartDto.setSelectedPaymentId(paymentId);
+
+        given(cartService.addPayment(cartId, paymentId)).willReturn(cartDto);
+
+        mockMvc.perform(post("/api/cart/payment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cartId").value(cartId))
+                .andExpect(jsonPath("$.selectedPaymentId").value(paymentId));
     }
 }
