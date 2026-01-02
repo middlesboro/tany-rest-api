@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import sk.tany.rest.api.controller.client.ProductClientController;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.service.client.ProductClientService;
 
@@ -20,13 +21,13 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-class ProductControllerTest {
+class ProductClientControllerTest {
 
     @Mock
     private ProductClientService productService;
 
     @InjectMocks
-    private ProductController productController;
+    private ProductClientController productClientController;
 
     @BeforeEach
     void setUp() {
@@ -42,7 +43,7 @@ class ProductControllerTest {
 
         when(productService.findAll(pageable)).thenReturn(productPage);
 
-        Page<ProductDto> result = productController.getProducts(pageable);
+        Page<ProductDto> result = productClientController.getProducts(pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test Product", result.getContent().get(0).getTitle());
@@ -57,7 +58,7 @@ class ProductControllerTest {
 
         when(productService.findById(productId)).thenReturn(Optional.of(productDto));
 
-        ResponseEntity<ProductDto> result = productController.getProduct(productId);
+        ResponseEntity<ProductDto> result = productClientController.getProduct(productId);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("Found Product", result.getBody().getTitle());
@@ -70,7 +71,7 @@ class ProductControllerTest {
 
         when(productService.findById(productId)).thenReturn(Optional.empty());
 
-        ResponseEntity<ProductDto> result = productController.getProduct(productId);
+        ResponseEntity<ProductDto> result = productClientController.getProduct(productId);
 
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
         verify(productService, times(1)).findById(productId);
@@ -86,7 +87,7 @@ class ProductControllerTest {
 
         when(productService.search(categoryId, pageable)).thenReturn(productPage);
 
-        Page<ProductDto> result = productController.getProductsByCategory(categoryId, pageable);
+        Page<ProductDto> result = productClientController.getProductsByCategory(categoryId, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Category Product", result.getContent().get(0).getTitle());

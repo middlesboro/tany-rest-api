@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import sk.tany.rest.api.controller.client.PaymentClientController;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.service.client.PaymentClientService;
 
@@ -17,13 +18,13 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-class PaymentControllerTest {
+class PaymentClientControllerTest {
 
     @Mock
     private PaymentClientService paymentService;
 
     @InjectMocks
-    private PaymentController paymentController;
+    private PaymentClientController paymentClientController;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +40,7 @@ class PaymentControllerTest {
 
         when(paymentService.findAll(pageable)).thenReturn(paymentPage);
 
-        Page<PaymentDto> result = paymentController.getPayments(pageable);
+        Page<PaymentDto> result = paymentClientController.getPayments(pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test Payment", result.getContent().get(0).getName());

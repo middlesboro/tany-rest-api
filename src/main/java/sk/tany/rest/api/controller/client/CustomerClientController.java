@@ -1,4 +1,4 @@
-package sk.tany.rest.api.controller;
+package sk.tany.rest.api.controller.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +12,7 @@ import sk.tany.rest.api.service.client.CustomerClientService;
 @RestController
 @RequestMapping("/api/customer")
 @RequiredArgsConstructor
-public class CustomerController {
+public class CustomerClientController {
 
     private final CustomerClientService customerService;
 

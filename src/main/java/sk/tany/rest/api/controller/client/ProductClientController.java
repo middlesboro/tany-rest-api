@@ -1,4 +1,4 @@
-package sk.tany.rest.api.controller;
+package sk.tany.rest.api.controller.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -14,7 +14,7 @@ import sk.tany.rest.api.service.client.ProductClientService;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
-public class ProductController {
+public class ProductClientController {
 
     private final ProductClientService productService;
 

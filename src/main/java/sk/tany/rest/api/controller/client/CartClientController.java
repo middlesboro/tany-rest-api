@@ -1,4 +1,4 @@
-package sk.tany.rest.api.controller;
+package sk.tany.rest.api.controller.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ import sk.tany.rest.api.service.client.CartClientService;
 @RestController
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
-public class CartController {
+public class CartClientController {
 
     private final CartClientService cartService;
 

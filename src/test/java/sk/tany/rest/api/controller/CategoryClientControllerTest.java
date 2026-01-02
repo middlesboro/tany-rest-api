@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import sk.tany.rest.api.controller.client.CategoryClientController;
 import sk.tany.rest.api.dto.CategoryDto;
 import sk.tany.rest.api.service.client.CategoryClientService;
 
@@ -14,13 +15,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-class CategoryControllerTest {
+class CategoryClientControllerTest {
 
     @Mock
     private CategoryClientService categoryService;
 
     @InjectMocks
-    private CategoryController categoryController;
+    private CategoryClientController categoryClientController;
 
     @BeforeEach
     void setUp() {
@@ -35,7 +36,7 @@ class CategoryControllerTest {
 
         when(categoryService.findAll()).thenReturn(categoryList);
 
-        List<CategoryDto> result = categoryController.getCategories();
+        List<CategoryDto> result = categoryClientController.getCategories();
 
         assertEquals(1, result.size());
         assertEquals("Test Category", result.get(0).getTitle());

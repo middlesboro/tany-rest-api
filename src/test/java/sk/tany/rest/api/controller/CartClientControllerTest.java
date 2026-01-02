@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import sk.tany.rest.api.component.JwtUtil;
+import sk.tany.rest.api.controller.client.CartClientController;
 import sk.tany.rest.api.dto.CartItemRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import sk.tany.rest.api.service.client.CartClientService;
@@ -18,8 +19,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(CartController.class)
-public class CartControllerTest {
+@WebMvcTest(CartClientController.class)
+public class CartClientControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

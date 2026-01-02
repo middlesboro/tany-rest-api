@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import sk.tany.rest.api.controller.client.CarrierClientController;
 import sk.tany.rest.api.dto.CarrierDto;
 import sk.tany.rest.api.service.client.CarrierClientService;
 
@@ -17,13 +18,13 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-class CarrierControllerTest {
+class CarrierClientControllerTest {
 
     @Mock
     private CarrierClientService carrierService;
 
     @InjectMocks
-    private CarrierController carrierController;
+    private CarrierClientController carrierClientController;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +40,7 @@ class CarrierControllerTest {
 
         when(carrierService.findAll(pageable)).thenReturn(carrierPage);
 
-        Page<CarrierDto> result = carrierController.getCarriers(pageable);
+        Page<CarrierDto> result = carrierClientController.getCarriers(pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test Carrier", result.getContent().get(0).getName());

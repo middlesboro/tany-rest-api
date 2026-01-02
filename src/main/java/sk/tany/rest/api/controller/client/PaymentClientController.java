@@ -1,4 +1,4 @@
-package sk.tany.rest.api.controller;
+package sk.tany.rest.api.controller.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -6,19 +6,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import sk.tany.rest.api.dto.CategoryDto;
-import sk.tany.rest.api.service.client.CategoryClientService;
+import sk.tany.rest.api.dto.PaymentDto;
+import sk.tany.rest.api.service.client.PaymentClientService;
 
 @RestController
-@RequestMapping("/api/categories")
+@RequestMapping("/api/payments")
 @RequiredArgsConstructor
-public class CategoryController {
+public class PaymentClientController {
 
-    private final CategoryClientService categoryService;
+    private final PaymentClientService paymentService;
 
     @GetMapping
-    public java.util.List<CategoryDto> getCategories() {
-        return categoryService.findAll();
+    public Page<PaymentDto> getPayments(Pageable pageable) {
+        return paymentService.findAll(pageable);
     }
-
 }
