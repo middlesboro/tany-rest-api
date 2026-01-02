@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.service.admin.BrandAdminService;
-import sk.tany.rest.api.service.ImageService;
+import sk.tany.rest.api.service.common.ImageService;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")

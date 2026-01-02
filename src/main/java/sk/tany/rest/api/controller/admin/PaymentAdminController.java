@@ -9,7 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.PaymentDto;
-import sk.tany.rest.api.service.ImageService;
+import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.admin.PaymentAdminService;
 
 @RestController

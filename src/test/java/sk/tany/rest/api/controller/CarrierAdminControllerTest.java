@@ -13,8 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import sk.tany.rest.api.controller.admin.CarrierAdminController;
 import sk.tany.rest.api.dto.CarrierDto;
-import sk.tany.rest.api.service.CarrierService;
-import sk.tany.rest.api.service.ImageService;
+import sk.tany.rest.api.service.admin.CarrierAdminService;
+import sk.tany.rest.api.service.common.ImageService;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 class CarrierAdminControllerTest {
 
     @Mock
-    private CarrierService carrierService;
+    private CarrierAdminService carrierService;
 
     @Mock
     private ImageService imageService;

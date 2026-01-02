@@ -11,7 +11,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
-import sk.tany.rest.api.service.CustomerService;
+import sk.tany.rest.api.service.client.CustomerClientService;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,7 +24,7 @@ class CustomerControllerTest {
     private MockMvc mockMvc;
 
     @Mock
-    private CustomerService customerService;
+    private CustomerClientService customerService;
 
     @InjectMocks
     private CustomerController customerController;

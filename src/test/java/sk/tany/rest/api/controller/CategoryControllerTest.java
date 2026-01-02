@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import sk.tany.rest.api.dto.CategoryDto;
-import sk.tany.rest.api.service.CategoryService;
+import sk.tany.rest.api.service.client.CategoryClientService;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,7 +17,7 @@ import static org.mockito.Mockito.*;
 class CategoryControllerTest {
 
     @Mock
-    private CategoryService categoryService;
+    private CategoryClientService categoryService;
 
     @InjectMocks
     private CategoryController categoryController;

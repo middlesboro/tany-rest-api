@@ -1,4 +1,4 @@
-package sk.tany.rest.api.service;
+package sk.tany.rest.api.service.common;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
