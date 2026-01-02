@@ -10,6 +10,8 @@ public class CartDto {
 
     private String cartId;
     private String customerId;
+    private String selectedCarrierId;
+    private String selectedPaymentId;
     private List<CartItem> items;
     private Instant createDate;
     private Instant updateDate;
