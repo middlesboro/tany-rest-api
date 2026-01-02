@@ -17,4 +17,5 @@ public class CarrierDto {
     private List<CarrierPriceRangeDto> ranges;
     private Instant createdDate;
     private Instant updateDate;
+    private boolean selected;
 }
