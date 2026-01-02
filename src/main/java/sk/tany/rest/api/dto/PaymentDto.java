@@ -16,4 +16,5 @@ public class PaymentDto {
     private PaymentType type;
     private Instant createdDate;
     private Instant updateDate;
+    private boolean selected;
 }

@@ -1,6 +1,7 @@
 package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.*;
 import sk.tany.rest.api.mapper.CustomerMapper;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +23,8 @@ public class CustomerClientServiceImpl implements CustomerClientService {
     private final CustomerMapper customerMapper;
     private final CartClientService cartService;
     private final ProductClientService productService;
+    private final CarrierClientService carrierService;
+    private final PaymentClientService paymentService;
 
     public CustomerContextDto getCustomerContext(String cartId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -55,6 +59,19 @@ public class CustomerClientServiceImpl implements CustomerClientService {
             }
         }
         customerContextCartDto.setProducts(products);
+        customerContextCartDto.setTotalProductPrice(
+                products.stream()
+                        .map(p -> p.getPrice().multiply(BigDecimal.valueOf(p.getQuantity())))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+        );
+
+        List<CarrierDto> carriers = carrierService.findAll(Pageable.unpaged()).getContent();
+        carriers.forEach(carrier -> carrier.setSelected(carrier.getId().equals(cartDto.getSelectedCarrierId())));
+        customerContextCartDto.setCarriers(carriers);
+
+        List<PaymentDto> payments = paymentService.findAll(Pageable.unpaged()).getContent();
+        payments.forEach(payment -> payment.setSelected(payment.getId().equals(cartDto.getSelectedPaymentId())));
+        customerContextCartDto.setPayments(payments);
 
         return new CustomerContextDto(customerDto, customerContextCartDto);
     }
