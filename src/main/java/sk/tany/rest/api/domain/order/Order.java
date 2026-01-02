@@ -6,6 +6,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import sk.tany.rest.api.domain.customer.Address;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -22,7 +24,12 @@ public class Order {
     private Instant updateDate;
     private String cartId;
     private BigDecimal finalPrice;
-    private List<String> productIds;
+    private List<OrderItem> items;
+    private String carrierId;
+    private String paymentId;
+    private Address deliveryAddress;
+    private Address invoiceAddress;
+    private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
 
 }
