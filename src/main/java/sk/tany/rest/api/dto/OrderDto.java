@@ -9,6 +9,11 @@ public class OrderDto {
     private String id;
     private String cartId;
     private BigDecimal finalPrice;
-    private List<String> productIds;
+    private List<OrderItemDto> items;
+    private String carrierId;
+    private String paymentId;
+    private AddressDto deliveryAddress;
+    private AddressDto invoiceAddress;
+    private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
 }
