@@ -128,4 +128,40 @@ class CustomerClientServiceImplTest {
         assertTrue(contextCart.getPayments().stream().anyMatch(p -> p.getId().equals("payment1") && p.isSelected()));
         assertTrue(contextCart.getPayments().stream().anyMatch(p -> p.getId().equals("payment2") && !p.isSelected()));
     }
+
+    @Test
+    void getCustomerContext_SelectsFirstOption_WhenNoneSelected() {
+        // Arrange
+        String cartId = "cart1";
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        // selectedCarrierId and selectedPaymentId are null
+
+        when(cartService.getOrCreateCart(cartId, null)).thenReturn(cartDto);
+
+        CarrierDto carrier1 = new CarrierDto();
+        carrier1.setId("carrier1");
+        CarrierDto carrier2 = new CarrierDto();
+        carrier2.setId("carrier2");
+        when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(carrier1, carrier2)));
+
+        PaymentDto payment1 = new PaymentDto();
+        payment1.setId("payment1");
+        PaymentDto payment2 = new PaymentDto();
+        payment2.setId("payment2");
+        when(paymentService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(payment1, payment2)));
+
+        // Act
+        CustomerContextDto result = customerClientService.getCustomerContext(cartId);
+        CustomerContextCartDto contextCart = result.getCartDto();
+
+        // Assert
+        // First carrier should be selected
+        assertTrue(contextCart.getCarriers().get(0).isSelected());
+        assertFalse(contextCart.getCarriers().get(1).isSelected());
+
+        // First payment should be selected
+        assertTrue(contextCart.getPayments().get(0).isSelected());
+        assertFalse(contextCart.getPayments().get(1).isSelected());
+    }
 }
