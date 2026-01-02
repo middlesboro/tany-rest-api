@@ -65,8 +65,24 @@ public class CustomerClientServiceImpl implements CustomerClientService {
                         .reduce(BigDecimal.ZERO, BigDecimal::add)
         );
 
+        BigDecimal totalWeight = products.stream()
+                .map(p -> (p.getWeight() != null ? p.getWeight() : BigDecimal.ZERO).multiply(BigDecimal.valueOf(p.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         List<CarrierDto> carriers = carrierService.findAll(Pageable.unpaged()).getContent();
-        carriers.forEach(carrier -> carrier.setSelected(carrier.getId().equals(cartDto.getSelectedCarrierId())));
+        carriers.forEach(carrier -> {
+            carrier.setSelected(carrier.getId().equals(cartDto.getSelectedCarrierId()));
+            if (carrier.getRanges() != null) {
+                carrier.getRanges().stream()
+                        .filter(range ->
+                                (range.getWeightFrom() == null || totalWeight.compareTo(range.getWeightFrom()) >= 0) &&
+                                        (range.getWeightTo() == null || totalWeight.compareTo(range.getWeightTo()) <= 0)
+                        )
+                        .findFirst()
+                        .ifPresent(range -> carrier.setPrice(range.getPrice()));
+            }
+            carrier.setRanges(null);
+        });
         customerContextCartDto.setCarriers(carriers);
 
         List<PaymentDto> payments = paymentService.findAll(Pageable.unpaged()).getContent();
