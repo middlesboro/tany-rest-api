@@ -1,0 +1,27 @@
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 7.0.0
+
+jwt:
+  secret: secret123456789012345678901234567890
+
+imagekit:
+  url-endpoint: http://localhost:8080/imagekit
+  public-key: test-public-key
+  private-key: test-private-key
+
+mailersend:
+  api-token: test-token
+  from-email: test@test.com
+  from-name: Test Name
+
+eshop:
+  base-url: http://localhost:8080
+  frontend-url: http://localhost:3000
+
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/test
