@@ -10,6 +10,12 @@
       "description": "Generated server url"
     }
   ],
+  "tags": [
+    {
+      "name": "Order",
+      "description": "Order API"
+    }
+  ],
   "paths": {
     "/api/admin/suppliers/{id}": {
       "get": {
@@ -812,6 +818,59 @@
         }
       }
     },
+    "/api/orders": {
+      "get": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "Get current user's orders",
+        "operationId": "getOrders",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "Create order",
+        "operationId": "createOrder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/login": {
       "post": {
         "tags": [
@@ -874,6 +933,36 @@
         }
       }
     },
+    "/api/cart/payment": {
+      "post": {
+        "tags": [
+          "cart-client-controller"
+        ],
+        "operationId": "addPayment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CartPaymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/cart/items": {
       "post": {
         "tags": [
@@ -897,6 +986,36 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CartAddProductResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cart/carrier": {
+      "post": {
+        "tags": [
+          "cart-client-controller"
+        ],
+        "operationId": "addCarrier",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CartCarrierRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartDto"
                 }
               }
             }
@@ -1173,7 +1292,7 @@
         "tags": [
           "order-admin-controller"
         ],
-        "operationId": "getOrders",
+        "operationId": "getOrders_1",
         "parameters": [
           {
             "name": "pageable",
@@ -1201,7 +1320,7 @@
         "tags": [
           "order-admin-controller"
         ],
-        "operationId": "createOrder",
+        "operationId": "createOrder_1",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1733,6 +1852,37 @@
         }
       }
     },
+    "/api/orders/{id}": {
+      "get": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "Get order details",
+        "operationId": "getOrder_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/login/verify": {
       "get": {
         "tags": [
@@ -1917,6 +2067,9 @@
           "price": {
             "type": "number"
           },
+          "weight": {
+            "type": "number"
+          },
           "quantity": {
             "type": "integer",
             "format": "int32"
@@ -1998,6 +2151,23 @@
           "updateDate": {
             "type": "string",
             "format": "date-time"
+          },
+          "selected": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AddressDto": {
+        "type": "object",
+        "properties": {
+          "street": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "zip": {
+            "type": "string"
           }
         }
       },
@@ -2013,27 +2183,49 @@
           "finalPrice": {
             "type": "number"
           },
-          "productIds": {
+          "items": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/OrderItemDto"
             }
+          },
+          "carrierId": {
+            "type": "string"
+          },
+          "paymentId": {
+            "type": "string"
+          },
+          "deliveryAddress": {
+            "$ref": "#/components/schemas/AddressDto"
+          },
+          "invoiceAddress": {
+            "$ref": "#/components/schemas/AddressDto"
+          },
+          "deliveryAddressSameAsInvoiceAddress": {
+            "type": "boolean"
           },
           "customerId": {
             "type": "string"
           }
         }
       },
-      "AddressDto": {
+      "OrderItemDto": {
         "type": "object",
         "properties": {
-          "street": {
+          "id": {
             "type": "string"
           },
-          "city": {
+          "name": {
             "type": "string"
           },
-          "zip": {
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "price": {
+            "type": "number"
+          },
+          "image": {
             "type": "string"
           }
         }
@@ -2104,6 +2296,12 @@
           "customerId": {
             "type": "string"
           },
+          "selectedCarrierId": {
+            "type": "string"
+          },
+          "selectedPaymentId": {
+            "type": "string"
+          },
           "items": {
             "type": "array",
             "items": {
@@ -2167,6 +2365,9 @@
               "COURIER"
             ]
           },
+          "price": {
+            "type": "number"
+          },
           "ranges": {
             "type": "array",
             "items": {
@@ -2180,6 +2381,9 @@
           "updateDate": {
             "type": "string",
             "format": "date-time"
+          },
+          "selected": {
+            "type": "boolean"
           }
         }
       },
@@ -2219,6 +2423,17 @@
           }
         }
       },
+      "CartPaymentRequest": {
+        "type": "object",
+        "properties": {
+          "cartId": {
+            "type": "string"
+          },
+          "paymentId": {
+            "type": "string"
+          }
+        }
+      },
       "CartItemRequest": {
         "type": "object",
         "properties": {
@@ -2238,6 +2453,17 @@
         "type": "object",
         "properties": {
           "cartId": {
+            "type": "string"
+          }
+        }
+      },
+      "CartCarrierRequest": {
+        "type": "object",
+        "properties": {
+          "cartId": {
+            "type": "string"
+          },
+          "carrierId": {
             "type": "string"
           }
         }
@@ -2274,6 +2500,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -2295,15 +2530,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "empty": {
             "type": "boolean"
           }
@@ -2312,16 +2538,6 @@
       "PageableObject": {
         "type": "object",
         "properties": {
-          "offset": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sort": {
-            "$ref": "#/components/schemas/SortObject"
-          },
-          "paged": {
-            "type": "boolean"
-          },
           "pageNumber": {
             "type": "integer",
             "format": "int32"
@@ -2330,21 +2546,31 @@
             "type": "integer",
             "format": "int32"
           },
+          "paged": {
+            "type": "boolean"
+          },
           "unpaged": {
             "type": "boolean"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
           }
         }
       },
       "SortObject": {
         "type": "object",
         "properties": {
-          "empty": {
-            "type": "boolean"
-          },
           "sorted": {
             "type": "boolean"
           },
           "unsorted": {
+            "type": "boolean"
+          },
+          "empty": {
             "type": "boolean"
           }
         }
@@ -2359,6 +2585,15 @@
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "size": {
             "type": "integer",
@@ -2381,15 +2616,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "empty": {
             "type": "boolean"
           }
@@ -2408,6 +2634,21 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ProductDto"
+            }
+          },
+          "totalProductPrice": {
+            "type": "number"
+          },
+          "carriers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CarrierDto"
+            }
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentDto"
             }
           }
         }
@@ -2434,6 +2675,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -2455,15 +2705,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "empty": {
             "type": "boolean"
           }
@@ -2479,6 +2720,15 @@
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "size": {
             "type": "integer",
@@ -2501,15 +2751,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "empty": {
             "type": "boolean"
           }
@@ -2525,6 +2766,15 @@
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "size": {
             "type": "integer",
@@ -2547,15 +2797,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "empty": {
             "type": "boolean"
           }
@@ -2571,6 +2812,15 @@
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "size": {
             "type": "integer",
@@ -2593,15 +2843,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
-          },
           "empty": {
             "type": "boolean"
           }
@@ -2617,6 +2858,15 @@
           "totalPages": {
             "type": "integer",
             "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
           },
           "size": {
             "type": "integer",
@@ -2638,15 +2888,6 @@
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
@@ -2686,6 +2927,15 @@
             "type": "integer",
             "format": "int32"
           },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
           "size": {
             "type": "integer",
             "format": "int32"
@@ -2706,15 +2956,6 @@
           "numberOfElements": {
             "type": "integer",
             "format": "int32"
-          },
-          "first": {
-            "type": "boolean"
-          },
-          "last": {
-            "type": "boolean"
-          },
-          "pageable": {
-            "$ref": "#/components/schemas/PageableObject"
           },
           "empty": {
             "type": "boolean"
