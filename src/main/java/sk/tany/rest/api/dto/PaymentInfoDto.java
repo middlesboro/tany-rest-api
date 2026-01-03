@@ -1,8 +1,8 @@
 package sk.tany.rest.api.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 @Data
@@ -15,5 +15,4 @@ public class PaymentInfoDto {
     private String variableSymbol;
     private String iban;
     private String swift;
-    private String besteronPaymentLink;
 }

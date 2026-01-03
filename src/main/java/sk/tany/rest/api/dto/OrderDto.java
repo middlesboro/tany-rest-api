@@ -1,8 +1,6 @@
 package sk.tany.rest.api.dto;
 
 import lombok.Data;
-import sk.tany.rest.api.domain.order.OrderState;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -11,7 +9,6 @@ public class OrderDto {
     private String id;
     private Long orderIdentifier;
     private String cartId;
-    private OrderState state;
     private BigDecimal finalPrice;
     private BigDecimal carrierPrice;
     private BigDecimal paymentPrice;

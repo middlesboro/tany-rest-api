@@ -5,6 +5,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 import sk.tany.rest.api.domain.customer.Address;
 
 import java.math.BigDecimal;
@@ -23,7 +24,6 @@ public class Order {
     private Instant updateDate;
     private Long orderIdentifier;
     private String cartId;
-    private OrderState state;
     private BigDecimal finalPrice;
     private BigDecimal carrierPrice;
     private BigDecimal paymentPrice;
