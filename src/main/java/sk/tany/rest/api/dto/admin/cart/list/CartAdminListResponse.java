@@ -1,11 +1,11 @@
-package sk.tany.rest.api.dto;
+package sk.tany.rest.api.dto.admin.cart.list;
 
 import lombok.Data;
 
 import java.time.Instant;
 
 @Data
-public class CartAdminResponse {
+public class CartAdminListResponse {
     private String customerName;
     private String customerId;
     private String cartId;

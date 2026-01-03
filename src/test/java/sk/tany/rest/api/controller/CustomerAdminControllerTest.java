@@ -11,6 +11,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.controller.admin.CustomerAdminController;
 import sk.tany.rest.api.dto.CustomerDto;
+import sk.tany.rest.api.dto.admin.customer.list.CustomerAdminListResponse;
+import sk.tany.rest.api.mapper.CustomerAdminApiMapper;
 import sk.tany.rest.api.service.admin.CustomerAdminService;
 
 import java.util.Collections;
@@ -22,6 +24,9 @@ class CustomerAdminControllerTest {
 
     @Mock
     private CustomerAdminService customerService;
+
+    @Mock
+    private CustomerAdminApiMapper customerAdminApiMapper;
 
     @InjectMocks
     private CustomerAdminController customerAdminController;
@@ -39,9 +44,13 @@ class CustomerAdminControllerTest {
         customerDto.setLastname("Customer");
         Page<CustomerDto> customerPage = new PageImpl<>(Collections.singletonList(customerDto));
 
-        when(customerService.findAll(pageable)).thenReturn(customerPage);
+        CustomerAdminListResponse response = new CustomerAdminListResponse();
+        response.setFirstname("Test");
 
-        Page<CustomerDto> result = customerAdminController.getAllCustomers(pageable);
+        when(customerService.findAll(pageable)).thenReturn(customerPage);
+        when(customerAdminApiMapper.toListResponse(customerDto)).thenReturn(response);
+
+        Page<CustomerAdminListResponse> result = customerAdminController.getAllCustomers(pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test", result.getContent().get(0).getFirstname());
