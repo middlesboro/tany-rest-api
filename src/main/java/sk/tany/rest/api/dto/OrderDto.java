@@ -17,6 +17,8 @@ public class OrderDto {
     private List<OrderItemDto> items;
     private String carrierId;
     private String paymentId;
+    private sk.tany.rest.api.domain.carrier.CarrierType carrierType;
+    private sk.tany.rest.api.domain.payment.PaymentType paymentType;
     private AddressDto deliveryAddress;
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
