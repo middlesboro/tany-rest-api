@@ -12,14 +12,13 @@ import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
-import sk.tany.rest.api.dto.OrderDto;
-import sk.tany.rest.api.dto.PaymentDto;
-import sk.tany.rest.api.dto.PaymentInfoDto;
+import sk.tany.rest.api.dto.*;
 import sk.tany.rest.api.dto.besteron.BesteronIntentRequest;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,6 +57,12 @@ class BesteronPaymentTypeServiceTest {
         order.setCustomerId("customer1");
         order.setFinalPrice(new BigDecimal("10.50"));
         order.setOrderIdentifier(12345L);
+
+        OrderItemDto item = new OrderItemDto();
+        item.setName("Test Product");
+        item.setPrice(new BigDecimal("10.50"));
+        item.setQuantity(1);
+        order.setItems(Collections.singletonList(item));
 
         Customer customer = new Customer();
         customer.setId("customer1");

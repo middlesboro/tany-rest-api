@@ -20,6 +20,7 @@ public class BesteronIntentRequest {
     private List<String> paymentMethods;
     private Callback callback;
     private Buyer buyer;
+    private List<Item> items;
 
     @Data
     @Builder
@@ -38,5 +39,16 @@ public class BesteronIntentRequest {
         private String email;
         private String firstName;
         private String lastName;
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Item {
+        private String name;
+        private String type;
+        private int amount;
+        private int count;
     }
 }

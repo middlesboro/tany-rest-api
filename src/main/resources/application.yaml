@@ -26,13 +26,6 @@ eshop:
     iban: ${ESHOP_BANK_IBAN:SK52 8360 5207 0042 0571 4953}
     bic: ${ESHOP_BANK_BIC:BREXSKBX}
 
-besteron:
-    client-id: ${BESTERON_CLIENT_ID}
-    client-secret: ${BESTERON_CLIENT_SECRET}
-    base-url: ${BESTERON_BASE_URL:https://gate.besteron.com}
-    return-url: ${BESTERON_RETURN_URL:http://localhost:8080/api/payments/besteron/return}
-    notification-url: ${BESTERON_NOTIFICATION_URL:http://localhost:8080/api/payments/besteron/return}
-
 security:
   excluded-urls:
     - /api/login/**

@@ -11,18 +11,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.domain.payment.PaymentType;
-import sk.tany.rest.api.dto.OrderDto;
-import sk.tany.rest.api.dto.PaymentDto;
-import sk.tany.rest.api.dto.PaymentInfoDto;
+import sk.tany.rest.api.dto.*;
 import sk.tany.rest.api.dto.besteron.BesteronIntentRequest;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -104,12 +103,25 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
 
         int totalAmount = order.getFinalPrice().multiply(BigDecimal.valueOf(100)).intValue();
 
+        List<BesteronIntentRequest.Item> items = new ArrayList<>();
+        if (order.getItems() != null) {
+            for (OrderItemDto item : order.getItems()) {
+                items.add(BesteronIntentRequest.Item.builder()
+                        .name(item.getName())
+                        .type("ITEM")
+                        .amount(item.getPrice().multiply(BigDecimal.valueOf(100)).intValue())
+                        .count(item.getQuantity())
+                        .build());
+            }
+        }
+
         BesteronIntentRequest intentRequest = BesteronIntentRequest.builder()
                 .totalAmount(totalAmount)
                 .currencyCode("EUR")
                 .orderNumber(order.getOrderIdentifier() != null ? String.valueOf(order.getOrderIdentifier()) : order.getId())
                 .language("SK")
-                .paymentMethods(List.of("GIBASKBX"))
+                .paymentMethods(null)
+                .items(items)
                 .callback(BesteronIntentRequest.Callback.builder()
                         .returnUrl(returnUrl)
                         .notificationUrl(notificationUrl)
