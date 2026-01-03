@@ -24,6 +24,10 @@ public class Order {
     private Instant updateDate;
     private String cartId;
     private BigDecimal finalPrice;
+    private BigDecimal carrierPrice;
+    private BigDecimal paymentPrice;
+    private BigDecimal deliveryPrice;
+    private BigDecimal productsPrice;
     private List<OrderItem> items;
     private String carrierId;
     private String paymentId;

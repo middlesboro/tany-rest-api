@@ -9,6 +9,10 @@ public class OrderDto {
     private String id;
     private String cartId;
     private BigDecimal finalPrice;
+    private BigDecimal carrierPrice;
+    private BigDecimal paymentPrice;
+    private BigDecimal deliveryPrice;
+    private BigDecimal productsPrice;
     private List<OrderItemDto> items;
     private String carrierId;
     private String paymentId;
