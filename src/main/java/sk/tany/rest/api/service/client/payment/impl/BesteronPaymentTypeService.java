@@ -11,10 +11,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.dto.*;
+import sk.tany.rest.api.domain.payment.PaymentType;
+import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.OrderItemDto;
+import sk.tany.rest.api.dto.PaymentDto;
+import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentRequest;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
@@ -120,7 +123,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
                 .currencyCode("EUR")
                 .orderNumber(order.getOrderIdentifier() != null ? String.valueOf(order.getOrderIdentifier()) : order.getId())
                 .language("SK")
-                .paymentMethods(null)
+                .paymentMethods(List.of("GIBASKBX", "POBNSKBA", "SUBASKBX", "TATRSKBX", "UNCRSKBX", "VIAMO"))
                 .items(items)
                 .callback(BesteronIntentRequest.Callback.builder()
                         .returnUrl(returnUrl)
