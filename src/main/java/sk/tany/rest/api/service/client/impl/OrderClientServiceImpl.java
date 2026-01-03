@@ -59,11 +59,17 @@ public class OrderClientServiceImpl implements OrderClientService {
                     OrderDto dto = orderMapper.toDto(order);
                     if (dto.getCarrierId() != null) {
                         carrierRepository.findById(dto.getCarrierId())
-                                .ifPresent(carrier -> dto.setCarrierType(carrier.getType()));
+                                .ifPresent(carrier -> {
+                                    dto.setCarrierType(carrier.getType());
+                                    dto.setCarrierName(carrier.getName());
+                                });
                     }
                     if (dto.getPaymentId() != null) {
                         paymentRepository.findById(dto.getPaymentId())
-                                .ifPresent(payment -> dto.setPaymentType(payment.getType()));
+                                .ifPresent(payment -> {
+                                    dto.setPaymentType(payment.getType());
+                                    dto.setPaymentName(payment.getName());
+                                });
                     }
                     return dto;
                 })
