@@ -12,14 +12,14 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.domain.payment.PaymentType;
-import sk.tany.rest.api.dto.CustomerDto;
+import sk.tany.rest.api.domain.customer.Customer;
+import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentRequest;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
-import sk.tany.rest.api.service.client.CustomerClientService;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 
 import java.math.BigDecimal;
@@ -31,7 +31,7 @@ import java.util.Collections;
 public class BesteronPaymentTypeService implements PaymentTypeService {
 
     private final RestTemplate restTemplate;
-    private final CustomerClientService customerClientService;
+    private final CustomerRepository customerRepository;
 
     @Value("${besteron.client-id}")
     private String clientId;
@@ -93,7 +93,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     }
 
     private String createPaymentIntent(OrderDto order, String token) {
-        CustomerDto customer = customerClientService.findById(order.getCustomerId())
+        Customer customer = customerRepository.findById(order.getCustomerId())
                 .orElseThrow(() -> new IllegalStateException("Customer not found for order: " + order.getId()));
 
         HttpHeaders headers = new HttpHeaders();

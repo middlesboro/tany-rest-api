@@ -9,15 +9,15 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
+import sk.tany.rest.api.domain.customer.Customer;
+import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
-import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentRequest;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
-import sk.tany.rest.api.service.client.CustomerClientService;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -34,7 +34,7 @@ class BesteronPaymentTypeServiceTest {
     private RestTemplate restTemplate;
 
     @Mock
-    private CustomerClientService customerClientService;
+    private CustomerRepository customerRepository;
 
     @InjectMocks
     private BesteronPaymentTypeService service;
@@ -59,13 +59,13 @@ class BesteronPaymentTypeServiceTest {
         order.setFinalPrice(new BigDecimal("10.50"));
         order.setOrderIdentifier(12345L);
 
-        CustomerDto customer = new CustomerDto();
+        Customer customer = new Customer();
         customer.setId("customer1");
         customer.setEmail("test@test.com");
         customer.setFirstname("John");
         customer.setLastname("Doe");
 
-        when(customerClientService.findById("customer1")).thenReturn(Optional.of(customer));
+        when(customerRepository.findById("customer1")).thenReturn(Optional.of(customer));
 
         PaymentDto payment = new PaymentDto();
 
