@@ -27,4 +27,9 @@ public class PaymentClientController {
     public PaymentInfoDto getPaymentInfo(@PathVariable String orderId) {
         return paymentService.getPaymentInfo(orderId);
     }
+
+    @GetMapping("/status/{orderId}")
+    public String getPaymentStatus(@PathVariable String orderId) {
+        return paymentService.getPaymentStatus(orderId);
+    }
 }

@@ -43,4 +43,15 @@ public class PaymentClientServiceImpl implements PaymentClientService {
                 .map(service -> service.getPaymentInfo(order, payment))
                 .orElse(PaymentInfoDto.builder().build());
     }
+
+    @Override
+    public String getPaymentStatus(String orderId) {
+        OrderDto order = orderClientService.getOrder(orderId);
+        PaymentDto payment = findById(order.getPaymentId())
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+
+        return paymentTypeServiceFactory.getService(payment.getType())
+                .map(service -> service.checkStatus(orderId))
+                .orElse(null);
+    }
 }
