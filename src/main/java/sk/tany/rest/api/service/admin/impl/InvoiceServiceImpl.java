@@ -133,7 +133,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         supplierCell.addElement(new Paragraph("SWIFT:           BREXSKBX", getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("IBAN:            SK52 8360 5207 0042 0571 4953", getSlovakFont(10, Font.NORMAL)));
         // Variable symbol usually Order Number
-        supplierCell.addElement(new Paragraph("Variabilný symbol: " + order.getId().replaceAll("[^0-9]", ""), getSlovakFont(10, Font.BOLD))); // Simple cleanup for numeric
+        supplierCell.addElement(new Paragraph("Variabilný symbol: " + order.getOrderIdentifier(), getSlovakFont(10, Font.BOLD))); // Simple cleanup for numeric
 
         mainTable.addCell(supplierCell);
 
@@ -145,7 +145,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         // Header
         PdfPTable headerTable = new PdfPTable(1);
         headerTable.setWidthPercentage(100);
-        PdfPCell headerCell = new PdfPCell(new Paragraph("Daňový doklad č. 2026/" + order.getId(), getSlovakFont(12, Font.BOLD)));
+        PdfPCell headerCell = new PdfPCell(new Paragraph("Daňový doklad č. 2026/" + order.getOrderIdentifier(), getSlovakFont(12, Font.BOLD)));
         headerCell.setBackgroundColor(new Color(230, 230, 230));
         headerCell.setPadding(10);
         headerCell.setBorder(Rectangle.BOTTOM);
@@ -198,7 +198,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         Paragraph orderExtra = new Paragraph();
         orderExtra.setSpacingBefore(10);
         orderExtra.setIndentationLeft(10);
-        orderExtra.add(new Chunk("Číslo objednávky:\t\t#" + order.getId() + "\n", getSlovakFont(9, Font.NORMAL)));
+        orderExtra.add(new Chunk("Číslo objednávky:\t\t#" + order.getOrderIdentifier() + "\n", getSlovakFont(9, Font.NORMAL)));
         orderExtra.add(new Chunk("Spôsob platby:\t\t" + paymentName + "\n", getSlovakFont(9, Font.NORMAL)));
         orderExtra.add(new Chunk("Spôsob dopravy:\t\t" + carrierName + "\n", getSlovakFont(9, Font.NORMAL)));
 
