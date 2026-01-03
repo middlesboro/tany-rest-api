@@ -10,6 +10,7 @@ import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.client.OrderClientService;
+import sk.tany.rest.api.service.common.SequenceService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final CustomerRepository customerRepository;
+    private final SequenceService sequenceService;
 
     private String getCurrentCustomerId() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -33,6 +35,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     public OrderDto createOrder(OrderDto orderDto) {
         Order order = orderMapper.toEntity(orderDto);
         order.setCustomerId(getCurrentCustomerId());
+        order.setOrderIdentifier(sequenceService.getNextSequence("order_identifier"));
         return orderMapper.toDto(orderRepository.save(order));
     }
 
