@@ -22,6 +22,7 @@ public class Order {
     private Instant createDate;
     @LastModifiedDate
     private Instant updateDate;
+    private Long orderIdentifier;
     private String cartId;
     private BigDecimal finalPrice;
     private BigDecimal carrierPrice;
