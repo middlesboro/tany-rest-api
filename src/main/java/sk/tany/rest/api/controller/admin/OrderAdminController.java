@@ -15,6 +15,7 @@ import sk.tany.rest.api.dto.admin.order.list.OrderAdminListResponse;
 import sk.tany.rest.api.dto.admin.order.update.OrderAdminUpdateRequest;
 import sk.tany.rest.api.dto.admin.order.update.OrderAdminUpdateResponse;
 import sk.tany.rest.api.mapper.OrderAdminApiMapper;
+import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.admin.OrderAdminService;
 
 @RestController
@@ -24,6 +25,7 @@ import sk.tany.rest.api.service.admin.OrderAdminService;
 public class OrderAdminController {
 
     private final OrderAdminService orderService;
+    private final InvoiceService invoiceService;
     private final OrderAdminApiMapper orderAdminApiMapper;
 
     @PostMapping
@@ -44,6 +46,16 @@ public class OrderAdminController {
                 .map(orderAdminApiMapper::toGetResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/invoice")
+    public ResponseEntity<byte[]> getOrderInvoice(@PathVariable String id) {
+        byte[] pdfBytes = invoiceService.generateInvoice(id);
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=invoice_" + id + ".pdf")
+                .body(pdfBytes);
     }
 
     @PutMapping("/{id}")

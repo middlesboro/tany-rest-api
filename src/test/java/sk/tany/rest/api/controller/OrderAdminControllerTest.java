@@ -13,17 +13,23 @@ import sk.tany.rest.api.controller.admin.OrderAdminController;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.admin.order.list.OrderAdminListResponse;
 import sk.tany.rest.api.mapper.OrderAdminApiMapper;
+import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.admin.OrderAdminService;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 class OrderAdminControllerTest {
 
     @Mock
     private OrderAdminService orderService;
+
+    @Mock
+    private InvoiceService invoiceService;
 
     @Mock
     private OrderAdminApiMapper orderAdminApiMapper;
@@ -54,5 +60,20 @@ class OrderAdminControllerTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("123", result.getContent().get(0).getId());
         verify(orderService, times(1)).findAll(pageable);
+    }
+
+    @Test
+    void getOrderInvoice_ShouldReturnPdf() {
+        String orderId = "123";
+        byte[] pdfContent = "PDF".getBytes();
+
+        when(invoiceService.generateInvoice(orderId)).thenReturn(pdfContent);
+
+        ResponseEntity<byte[]> response = orderAdminController.getOrderInvoice(orderId);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(pdfContent, response.getBody());
+        verify(invoiceService).generateInvoice(orderId);
     }
 }
