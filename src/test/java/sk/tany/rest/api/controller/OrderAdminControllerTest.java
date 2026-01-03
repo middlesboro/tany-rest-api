@@ -11,6 +11,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.controller.admin.OrderAdminController;
 import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.admin.order.list.OrderAdminListResponse;
+import sk.tany.rest.api.mapper.OrderAdminApiMapper;
 import sk.tany.rest.api.service.admin.OrderAdminService;
 
 import java.util.Collections;
@@ -22,6 +24,9 @@ class OrderAdminControllerTest {
 
     @Mock
     private OrderAdminService orderService;
+
+    @Mock
+    private OrderAdminApiMapper orderAdminApiMapper;
 
     @InjectMocks
     private OrderAdminController orderAdminController;
@@ -38,9 +43,13 @@ class OrderAdminControllerTest {
         orderDto.setId("123");
         Page<OrderDto> orderPage = new PageImpl<>(Collections.singletonList(orderDto));
 
-        when(orderService.findAll(pageable)).thenReturn(orderPage);
+        OrderAdminListResponse response = new OrderAdminListResponse();
+        response.setId("123");
 
-        Page<OrderDto> result = orderAdminController.getOrders(pageable);
+        when(orderService.findAll(pageable)).thenReturn(orderPage);
+        when(orderAdminApiMapper.toListResponse(orderDto)).thenReturn(response);
+
+        Page<OrderAdminListResponse> result = orderAdminController.getOrders(pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("123", result.getContent().get(0).getId());

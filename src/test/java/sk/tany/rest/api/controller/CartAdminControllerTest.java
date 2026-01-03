@@ -8,8 +8,8 @@ import org.mockito.MockitoAnnotations;
 import sk.tany.rest.api.controller.admin.CartAdminController;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.dto.CartAdminResponse;
 import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.admin.cart.list.CartAdminListResponse;
 import sk.tany.rest.api.service.admin.CartAdminService;
 
 import java.time.Instant;
@@ -58,11 +58,11 @@ class CartAdminControllerTest {
         when(customerRepository.findAllById(any())).thenReturn(Collections.singletonList(customer));
 
         // Act
-        List<CartAdminResponse> response = cartAdminController.getAllCarts();
+        List<CartAdminListResponse> response = cartAdminController.getAllCarts();
 
         // Assert
         assertEquals(1, response.size());
-        CartAdminResponse item = response.get(0);
+        CartAdminListResponse item = response.get(0);
         assertEquals(cartId, item.getCartId());
         assertEquals(customerId, item.getCustomerId());
         assertEquals("John Doe", item.getCustomerName());

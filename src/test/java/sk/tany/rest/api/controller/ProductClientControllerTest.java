@@ -13,6 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import sk.tany.rest.api.controller.client.ProductClientController;
 import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
+import sk.tany.rest.api.dto.client.product.list.ProductClientListResponse;
+import sk.tany.rest.api.mapper.ProductClientApiMapper;
 import sk.tany.rest.api.service.client.ProductClientService;
 
 import java.util.Collections;
@@ -25,6 +28,9 @@ class ProductClientControllerTest {
 
     @Mock
     private ProductClientService productService;
+
+    @Mock
+    private ProductClientApiMapper productClientApiMapper;
 
     @InjectMocks
     private ProductClientController productClientController;
@@ -41,9 +47,13 @@ class ProductClientControllerTest {
         productDto.setTitle("Test Product");
         Page<ProductDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
 
-        when(productService.findAll(pageable)).thenReturn(productPage);
+        ProductClientListResponse response = new ProductClientListResponse();
+        response.setTitle("Test Product");
 
-        Page<ProductDto> result = productClientController.getProducts(pageable);
+        when(productService.findAll(pageable)).thenReturn(productPage);
+        when(productClientApiMapper.toListResponse(productDto)).thenReturn(response);
+
+        Page<ProductClientListResponse> result = productClientController.getProducts(pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test Product", result.getContent().get(0).getTitle());
@@ -56,9 +66,13 @@ class ProductClientControllerTest {
         ProductDto productDto = new ProductDto();
         productDto.setTitle("Found Product");
 
-        when(productService.findById(productId)).thenReturn(Optional.of(productDto));
+        ProductClientGetResponse response = new ProductClientGetResponse();
+        response.setTitle("Found Product");
 
-        ResponseEntity<ProductDto> result = productClientController.getProduct(productId);
+        when(productService.findById(productId)).thenReturn(Optional.of(productDto));
+        when(productClientApiMapper.toGetResponse(productDto)).thenReturn(response);
+
+        ResponseEntity<ProductClientGetResponse> result = productClientController.getProduct(productId);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("Found Product", result.getBody().getTitle());
@@ -71,7 +85,7 @@ class ProductClientControllerTest {
 
         when(productService.findById(productId)).thenReturn(Optional.empty());
 
-        ResponseEntity<ProductDto> result = productClientController.getProduct(productId);
+        ResponseEntity<ProductClientGetResponse> result = productClientController.getProduct(productId);
 
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
         verify(productService, times(1)).findById(productId);
@@ -85,9 +99,13 @@ class ProductClientControllerTest {
         productDto.setTitle("Category Product");
         Page<ProductDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
 
-        when(productService.search(categoryId, pageable)).thenReturn(productPage);
+        ProductClientListResponse response = new ProductClientListResponse();
+        response.setTitle("Category Product");
 
-        Page<ProductDto> result = productClientController.getProductsByCategory(categoryId, pageable);
+        when(productService.search(categoryId, pageable)).thenReturn(productPage);
+        when(productClientApiMapper.toListResponse(productDto)).thenReturn(response);
+
+        Page<ProductClientListResponse> result = productClientController.getProductsByCategory(categoryId, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Category Product", result.getContent().get(0).getTitle());

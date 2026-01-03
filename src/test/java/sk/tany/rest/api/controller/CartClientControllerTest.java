@@ -9,7 +9,13 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.controller.client.CartClientController;
-import sk.tany.rest.api.dto.*;
+import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.client.cart.add.CartClientAddItemRequest;
+import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierRequest;
+import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierResponse;
+import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentRequest;
+import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentResponse;
+import sk.tany.rest.api.mapper.CartClientApiMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import sk.tany.rest.api.service.client.CartClientService;
 
@@ -19,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.any;
 
 @WebMvcTest(CartClientController.class)
 public class CartClientControllerTest {
@@ -32,6 +39,9 @@ public class CartClientControllerTest {
     @MockBean
     private JwtUtil jwtUtil;
 
+    @MockBean
+    private CartClientApiMapper cartClientApiMapper;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -41,7 +51,7 @@ public class CartClientControllerTest {
         String cartId = "cart-123";
         String productId = "prod-456";
         Integer quantity = 1;
-        CartItemRequest request = new CartItemRequest();
+        CartClientAddItemRequest request = new CartClientAddItemRequest();
         request.setCartId(cartId);
         request.setProductId(productId);
         request.setQuantity(quantity);
@@ -61,7 +71,7 @@ public class CartClientControllerTest {
     public void addCarrier_shouldReturnUpdatedCart() throws Exception {
         String cartId = "cart-123";
         String carrierId = "carrier-456";
-        CartCarrierRequest request = new CartCarrierRequest();
+        CartClientSetCarrierRequest request = new CartClientSetCarrierRequest();
         request.setCartId(cartId);
         request.setCarrierId(carrierId);
 
@@ -69,7 +79,12 @@ public class CartClientControllerTest {
         cartDto.setCartId(cartId);
         cartDto.setSelectedCarrierId(carrierId);
 
+        CartClientSetCarrierResponse response = new CartClientSetCarrierResponse();
+        response.setCartId(cartId);
+        response.setSelectedCarrierId(carrierId);
+
         given(cartService.addCarrier(cartId, carrierId)).willReturn(cartDto);
+        given(cartClientApiMapper.toSetCarrierResponse(any(CartDto.class))).willReturn(response);
 
         mockMvc.perform(post("/api/cart/carrier")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -85,7 +100,7 @@ public class CartClientControllerTest {
     public void addPayment_shouldReturnUpdatedCart() throws Exception {
         String cartId = "cart-123";
         String paymentId = "payment-789";
-        CartPaymentRequest request = new CartPaymentRequest();
+        CartClientSetPaymentRequest request = new CartClientSetPaymentRequest();
         request.setCartId(cartId);
         request.setPaymentId(paymentId);
 
@@ -93,7 +108,12 @@ public class CartClientControllerTest {
         cartDto.setCartId(cartId);
         cartDto.setSelectedPaymentId(paymentId);
 
+        CartClientSetPaymentResponse response = new CartClientSetPaymentResponse();
+        response.setCartId(cartId);
+        response.setSelectedPaymentId(paymentId);
+
         given(cartService.addPayment(cartId, paymentId)).willReturn(cartDto);
+        given(cartClientApiMapper.toSetPaymentResponse(any(CartDto.class))).willReturn(response);
 
         mockMvc.perform(post("/api/cart/payment")
                 .contentType(MediaType.APPLICATION_JSON)

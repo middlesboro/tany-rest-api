@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
+import sk.tany.rest.api.dto.client.product.list.ProductClientListResponse;
+import sk.tany.rest.api.mapper.ProductClientApiMapper;
 import sk.tany.rest.api.service.client.ProductClientService;
 
 @RestController
@@ -17,22 +20,26 @@ import sk.tany.rest.api.service.client.ProductClientService;
 public class ProductClientController {
 
     private final ProductClientService productService;
+    private final ProductClientApiMapper productClientApiMapper;
 
     @GetMapping
-    public Page<ProductDto> getProducts(Pageable pageable) {
-        return productService.findAll(pageable);
+    public Page<ProductClientListResponse> getProducts(Pageable pageable) {
+        return productService.findAll(pageable)
+                .map(productClientApiMapper::toListResponse);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDto> getProduct(@PathVariable String id) {
+    public ResponseEntity<ProductClientGetResponse> getProduct(@PathVariable String id) {
         return productService.findById(id)
+                .map(productClientApiMapper::toGetResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/category/{categoryId}")
-    public Page<ProductDto> getProductsByCategory(@PathVariable String categoryId, Pageable pageable) {
-        return productService.search(categoryId, pageable);
+    public Page<ProductClientListResponse> getProductsByCategory(@PathVariable String categoryId, Pageable pageable) {
+        return productService.search(categoryId, pageable)
+                .map(productClientApiMapper::toListResponse);
     }
 
 }

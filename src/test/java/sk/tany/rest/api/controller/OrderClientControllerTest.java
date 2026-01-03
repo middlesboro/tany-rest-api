@@ -7,6 +7,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import sk.tany.rest.api.controller.client.OrderClientController;
 import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.client.order.create.OrderClientCreateRequest;
+import sk.tany.rest.api.dto.client.order.create.OrderClientCreateResponse;
+import sk.tany.rest.api.dto.client.order.get.OrderClientGetResponse;
+import sk.tany.rest.api.dto.client.order.list.OrderClientListResponse;
+import sk.tany.rest.api.mapper.OrderClientApiMapper;
 import sk.tany.rest.api.service.client.OrderClientService;
 
 import java.util.Collections;
@@ -20,6 +25,9 @@ class OrderClientControllerTest {
     @Mock
     private OrderClientService orderService;
 
+    @Mock
+    private OrderClientApiMapper orderClientApiMapper;
+
     @InjectMocks
     private OrderClientController orderClientController;
 
@@ -30,12 +38,17 @@ class OrderClientControllerTest {
 
     @Test
     void createOrder_ShouldReturnCreatedOrder() {
+        OrderClientCreateRequest request = new OrderClientCreateRequest();
         OrderDto orderDto = new OrderDto();
         orderDto.setId("1");
+        OrderClientCreateResponse response = new OrderClientCreateResponse();
+        response.setId("1");
 
-        when(orderService.createOrder(any(OrderDto.class))).thenReturn(orderDto);
+        when(orderClientApiMapper.toDto(request)).thenReturn(orderDto);
+        when(orderService.createOrder(orderDto)).thenReturn(orderDto);
+        when(orderClientApiMapper.toCreateResponse(orderDto)).thenReturn(response);
 
-        OrderDto result = orderClientController.createOrder(orderDto);
+        OrderClientCreateResponse result = orderClientController.createOrder(request);
 
         assertEquals("1", result.getId());
         verify(orderService, times(1)).createOrder(orderDto);
@@ -47,9 +60,13 @@ class OrderClientControllerTest {
         orderDto.setId("1");
         List<OrderDto> orders = Collections.singletonList(orderDto);
 
-        when(orderService.getOrders()).thenReturn(orders);
+        OrderClientListResponse response = new OrderClientListResponse();
+        response.setId("1");
 
-        List<OrderDto> result = orderClientController.getOrders();
+        when(orderService.getOrders()).thenReturn(orders);
+        when(orderClientApiMapper.toListResponse(orderDto)).thenReturn(response);
+
+        List<OrderClientListResponse> result = orderClientController.getOrders();
 
         assertEquals(1, result.size());
         assertEquals("1", result.get(0).getId());
@@ -60,10 +77,13 @@ class OrderClientControllerTest {
     void getOrder_ShouldReturnOrder() {
         OrderDto orderDto = new OrderDto();
         orderDto.setId("1");
+        OrderClientGetResponse response = new OrderClientGetResponse();
+        response.setId("1");
 
         when(orderService.getOrder("1")).thenReturn(orderDto);
+        when(orderClientApiMapper.toGetResponse(orderDto)).thenReturn(response);
 
-        OrderDto result = orderClientController.getOrder("1");
+        OrderClientGetResponse result = orderClientController.getOrder("1");
 
         assertEquals("1", result.getId());
         verify(orderService, times(1)).getOrder("1");

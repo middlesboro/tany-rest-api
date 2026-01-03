@@ -11,6 +11,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.controller.admin.ProductAdminController;
 import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.admin.product.list.ProductListResponse;
+import sk.tany.rest.api.dto.admin.product.search.ProductSearchResponse;
+import sk.tany.rest.api.mapper.ProductAdminApiMapper;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 
 import java.util.Collections;
@@ -22,6 +25,9 @@ class ProductAdminControllerTest {
 
     @Mock
     private ProductAdminService productService;
+
+    @Mock
+    private ProductAdminApiMapper productAdminApiMapper;
 
     @InjectMocks
     private ProductAdminController productAdminController;
@@ -38,9 +44,13 @@ class ProductAdminControllerTest {
         productDto.setTitle("Test Product");
         Page<ProductDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
 
-        when(productService.findAll(pageable)).thenReturn(productPage);
+        ProductListResponse response = new ProductListResponse();
+        response.setTitle("Test Product");
 
-        Page<ProductDto> result = productAdminController.getProducts(pageable);
+        when(productService.findAll(pageable)).thenReturn(productPage);
+        when(productAdminApiMapper.toListResponse(productDto)).thenReturn(response);
+
+        Page<ProductListResponse> result = productAdminController.getProducts(pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test Product", result.getContent().get(0).getTitle());
@@ -55,9 +65,13 @@ class ProductAdminControllerTest {
         productDto.setTitle("Search Result Product");
         Page<ProductDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
 
-        when(productService.search(categoryId, pageable)).thenReturn(productPage);
+        ProductSearchResponse response = new ProductSearchResponse();
+        response.setTitle("Search Result Product");
 
-        Page<ProductDto> result = productAdminController.search(categoryId, pageable);
+        when(productService.search(categoryId, pageable)).thenReturn(productPage);
+        when(productAdminApiMapper.toSearchResponse(productDto)).thenReturn(response);
+
+        Page<ProductSearchResponse> result = productAdminController.search(categoryId, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Search Result Product", result.getContent().get(0).getTitle());

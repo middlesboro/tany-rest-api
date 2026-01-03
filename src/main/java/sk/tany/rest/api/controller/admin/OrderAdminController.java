@@ -8,6 +8,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.admin.order.create.OrderAdminCreateRequest;
+import sk.tany.rest.api.dto.admin.order.create.OrderAdminCreateResponse;
+import sk.tany.rest.api.dto.admin.order.get.OrderAdminGetResponse;
+import sk.tany.rest.api.dto.admin.order.list.OrderAdminListResponse;
+import sk.tany.rest.api.dto.admin.order.update.OrderAdminUpdateRequest;
+import sk.tany.rest.api.dto.admin.order.update.OrderAdminUpdateResponse;
+import sk.tany.rest.api.mapper.OrderAdminApiMapper;
 import sk.tany.rest.api.service.admin.OrderAdminService;
 
 @RestController
@@ -17,29 +24,33 @@ import sk.tany.rest.api.service.admin.OrderAdminService;
 public class OrderAdminController {
 
     private final OrderAdminService orderService;
+    private final OrderAdminApiMapper orderAdminApiMapper;
 
     @PostMapping
-    public ResponseEntity<OrderDto> createOrder(@RequestBody OrderDto order) {
-        OrderDto savedOrder = orderService.save(order);
-        return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
+    public ResponseEntity<OrderAdminCreateResponse> createOrder(@RequestBody OrderAdminCreateRequest order) {
+        OrderDto savedOrder = orderService.save(orderAdminApiMapper.toDto(order));
+        return new ResponseEntity<>(orderAdminApiMapper.toCreateResponse(savedOrder), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public Page<OrderDto> getOrders(Pageable pageable) {
-        return orderService.findAll(pageable);
+    public Page<OrderAdminListResponse> getOrders(Pageable pageable) {
+        return orderService.findAll(pageable)
+                .map(orderAdminApiMapper::toListResponse);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDto> getOrder(@PathVariable String id) {
+    public ResponseEntity<OrderAdminGetResponse> getOrder(@PathVariable String id) {
         return orderService.findById(id)
+                .map(orderAdminApiMapper::toGetResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<OrderDto> updateOrder(@PathVariable String id, @RequestBody OrderDto order) {
-        OrderDto updatedOrder = orderService.update(id, order);
-        return ResponseEntity.ok(updatedOrder);
+    public ResponseEntity<OrderAdminUpdateResponse> updateOrder(@PathVariable String id, @RequestBody OrderAdminUpdateRequest order) {
+        OrderDto orderDto = orderAdminApiMapper.toDto(order);
+        OrderDto updatedOrder = orderService.update(id, orderDto);
+        return ResponseEntity.ok(orderAdminApiMapper.toUpdateResponse(updatedOrder));
     }
 
     @DeleteMapping("/{id}")

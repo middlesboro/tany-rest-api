@@ -12,6 +12,8 @@ import sk.tany.rest.api.controller.client.CustomerClientController;
 import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
+import sk.tany.rest.api.dto.client.customer.get.CustomerClientGetResponse;
+import sk.tany.rest.api.mapper.CustomerClientApiMapper;
 import sk.tany.rest.api.service.client.CustomerClientService;
 
 import static org.mockito.Mockito.verify;
@@ -26,6 +28,9 @@ class CustomerClientControllerTest {
 
     @Mock
     private CustomerClientService customerService;
+
+    @Mock
+    private CustomerClientApiMapper customerClientApiMapper;
 
     @InjectMocks
     private CustomerClientController customerClientController;
@@ -42,7 +47,12 @@ class CustomerClientControllerTest {
         customerContextDto.setCustomerDto(new CustomerDto());
         customerContextDto.setCartDto(new CustomerContextCartDto());
 
+        CustomerClientGetResponse response = new CustomerClientGetResponse();
+        response.setCustomerDto(new CustomerDto());
+        response.setCartDto(new CustomerContextCartDto());
+
         when(customerService.getCustomerContext(cartId)).thenReturn(customerContextDto);
+        when(customerClientApiMapper.toGetResponse(customerContextDto)).thenReturn(response);
 
         mockMvc.perform(get("/api/customer/context")
                         .param("cartId", cartId))
@@ -57,7 +67,12 @@ class CustomerClientControllerTest {
         customerContextDto.setCustomerDto(new CustomerDto());
         customerContextDto.setCartDto(new CustomerContextCartDto());
 
+        CustomerClientGetResponse response = new CustomerClientGetResponse();
+        response.setCustomerDto(new CustomerDto());
+        response.setCartDto(new CustomerContextCartDto());
+
         when(customerService.getCustomerContext(null)).thenReturn(customerContextDto);
+        when(customerClientApiMapper.toGetResponse(customerContextDto)).thenReturn(response);
 
         mockMvc.perform(get("/api/customer/context"))
                 .andExpect(status().isOk());

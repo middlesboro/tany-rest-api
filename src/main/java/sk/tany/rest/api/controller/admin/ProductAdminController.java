@@ -9,6 +9,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.admin.product.create.ProductCreateRequest;
+import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
+import sk.tany.rest.api.dto.admin.product.get.ProductGetResponse;
+import sk.tany.rest.api.dto.admin.product.list.ProductListResponse;
+import sk.tany.rest.api.dto.admin.product.search.ProductSearchResponse;
+import sk.tany.rest.api.dto.admin.product.update.ProductUpdateRequest;
+import sk.tany.rest.api.dto.admin.product.update.ProductUpdateResponse;
+import sk.tany.rest.api.dto.admin.product.upload.ProductUploadImageResponse;
+import sk.tany.rest.api.mapper.ProductAdminApiMapper;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 
@@ -24,34 +33,40 @@ public class ProductAdminController {
 
     private final ProductAdminService productService;
     private final ImageService imageService;
+    private final ProductAdminApiMapper productAdminApiMapper;
 
     @PostMapping
-    public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto product) {
-        ProductDto savedProduct = productService.save(product);
-        return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
+    public ResponseEntity<ProductCreateResponse> createProduct(@RequestBody ProductCreateRequest product) {
+        ProductDto productDto = productAdminApiMapper.toDto(product);
+        ProductDto savedProduct = productService.save(productDto);
+        return new ResponseEntity<>(productAdminApiMapper.toCreateResponse(savedProduct), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public Page<ProductDto> getProducts(Pageable pageable) {
-        return productService.findAll(pageable);
+    public Page<ProductListResponse> getProducts(Pageable pageable) {
+        return productService.findAll(pageable)
+                .map(productAdminApiMapper::toListResponse);
     }
 
     @GetMapping("/search")
-    public Page<ProductDto> search(@RequestParam String categoryId, Pageable pageable) {
-        return productService.search(categoryId, pageable);
+    public Page<ProductSearchResponse> search(@RequestParam String categoryId, Pageable pageable) {
+        return productService.search(categoryId, pageable)
+                .map(productAdminApiMapper::toSearchResponse);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDto> getProduct(@PathVariable String id) {
+    public ResponseEntity<ProductGetResponse> getProduct(@PathVariable String id) {
         return productService.findById(id)
+                .map(productAdminApiMapper::toGetResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDto> updateProduct(@PathVariable String id, @RequestBody ProductDto product) {
-        ProductDto updatedProduct = productService.update(id, product);
-        return ResponseEntity.ok(updatedProduct);
+    public ResponseEntity<ProductUpdateResponse> updateProduct(@PathVariable String id, @RequestBody ProductUpdateRequest product) {
+        ProductDto productDto = productAdminApiMapper.toDto(product);
+        ProductDto updatedProduct = productService.update(id, productDto);
+        return ResponseEntity.ok(productAdminApiMapper.toUpdateResponse(updatedProduct));
     }
 
     @DeleteMapping("/{id}")
@@ -61,7 +76,7 @@ public class ProductAdminController {
     }
 
     @PostMapping("/{id}/images")
-    public ResponseEntity<ProductDto> uploadImages(@PathVariable String id, @RequestParam("files") MultipartFile[] files) {
+    public ResponseEntity<ProductUploadImageResponse> uploadImages(@PathVariable String id, @RequestParam("files") MultipartFile[] files) {
         return productService.findById(id)
                 .map(product -> {
                     List<String> imageUrls = Arrays.stream(files)
@@ -74,7 +89,7 @@ public class ProductAdminController {
                     product.getImages().addAll(imageUrls);
 
                     ProductDto updatedProduct = productService.update(id, product);
-                    return ResponseEntity.ok(updatedProduct);
+                    return ResponseEntity.ok(productAdminApiMapper.toUploadImageResponse(updatedProduct));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
