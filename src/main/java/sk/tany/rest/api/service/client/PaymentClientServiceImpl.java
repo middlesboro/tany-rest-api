@@ -11,6 +11,7 @@ import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.mapper.PaymentMapper;
 import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.payment.PaymentTypeServiceFactory;
+import sk.tany.rest.api.service.common.PaymentDetailsProvider;
 
 import java.util.Optional;
 
@@ -22,6 +23,7 @@ public class PaymentClientServiceImpl implements PaymentClientService {
     private final PaymentMapper paymentMapper;
     private final OrderClientService orderClientService;
     private final PaymentTypeServiceFactory paymentTypeServiceFactory;
+    private final PaymentDetailsProvider paymentDetailsProvider;
 
     @Override
     public Page<PaymentDto> findAll(Pageable pageable) {
@@ -39,9 +41,24 @@ public class PaymentClientServiceImpl implements PaymentClientService {
         PaymentDto payment = findById(order.getPaymentId())
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 
-        return paymentTypeServiceFactory.getService(payment.getType())
+        PaymentInfoDto paymentInfo = paymentTypeServiceFactory.getService(payment.getType())
                 .map(service -> service.getPaymentInfo(order, payment))
                 .orElse(PaymentInfoDto.builder().build());
+
+        if (paymentInfo.getQrCode() == null) {
+            paymentInfo.setQrCode(paymentDetailsProvider.generateQrCodeBase64(order));
+        }
+        if (paymentInfo.getVariableSymbol() == null) {
+            paymentInfo.setVariableSymbol(paymentDetailsProvider.getVariableSymbol(order));
+        }
+        if (paymentInfo.getIban() == null) {
+            paymentInfo.setIban(paymentDetailsProvider.getIban());
+        }
+        if (paymentInfo.getSwift() == null) {
+            paymentInfo.setSwift(paymentDetailsProvider.getSwift());
+        }
+
+        return paymentInfo;
     }
 
     @Override
