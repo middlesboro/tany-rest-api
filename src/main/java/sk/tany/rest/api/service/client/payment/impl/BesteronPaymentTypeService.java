@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
@@ -24,6 +24,7 @@ import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -108,7 +109,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
                 .currencyCode("EUR")
                 .orderNumber(order.getOrderIdentifier() != null ? String.valueOf(order.getOrderIdentifier()) : order.getId())
                 .language("SK")
-                .paymentMethods(null)
+                .paymentMethods(List.of("GIBASKBX"))
                 .callback(BesteronIntentRequest.Callback.builder()
                         .returnUrl(returnUrl)
                         .notificationUrl(notificationUrl)
