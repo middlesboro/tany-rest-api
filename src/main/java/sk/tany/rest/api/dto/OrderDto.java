@@ -1,6 +1,9 @@
 package sk.tany.rest.api.dto;
 
 import lombok.Data;
+import sk.tany.rest.api.domain.carrier.CarrierType;
+import sk.tany.rest.api.domain.payment.PaymentType;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -17,6 +20,10 @@ public class OrderDto {
     private List<OrderItemDto> items;
     private String carrierId;
     private String paymentId;
+    private CarrierType carrierType;
+    private PaymentType paymentType;
+    private String carrierName;
+    private String paymentName;
     private AddressDto deliveryAddress;
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
