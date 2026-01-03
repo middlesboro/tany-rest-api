@@ -36,5 +36,6 @@ public class Order {
     private Address invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+    private OrderStatus status = OrderStatus.CREATED;
 
 }

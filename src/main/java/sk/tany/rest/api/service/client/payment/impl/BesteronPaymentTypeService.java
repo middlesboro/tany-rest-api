@@ -13,6 +13,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.order.Order;
+import sk.tany.rest.api.domain.order.OrderRepository;
+import sk.tany.rest.api.domain.order.OrderStatus;
+import sk.tany.rest.api.domain.payment.BesteronPayment;
+import sk.tany.rest.api.domain.payment.BesteronPaymentRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
@@ -21,12 +26,14 @@ import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentRequest;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
+import sk.tany.rest.api.dto.besteron.BesteronTransactionResponse;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -35,6 +42,8 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
 
     private final RestTemplate restTemplate;
     private final CustomerRepository customerRepository;
+    private final BesteronPaymentRepository besteronPaymentRepository;
+    private final OrderRepository orderRepository;
 
     @Value("${besteron.client-id}")
     private String clientId;
@@ -68,6 +77,44 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
             log.error("Failed to create Besteron payment link for order {}", order.getId(), e);
             throw new RuntimeException("Failed to generate Besteron payment link", e);
         }
+    }
+
+    @Override
+    public String checkStatus(String orderId) {
+        Optional<BesteronPayment> paymentOpt = besteronPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId);
+        if (paymentOpt.isEmpty()) {
+            return null;
+        }
+        BesteronPayment payment = paymentOpt.get();
+        try {
+            String token = getAuthToken();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
+            HttpEntity<Void> request = new HttpEntity<>(headers);
+
+            ResponseEntity<BesteronTransactionResponse> response = restTemplate.postForEntity(
+                    baseUrl + "/api/payment-intents/" + payment.getTransactionId(),
+                    request,
+                    BesteronTransactionResponse.class
+            );
+
+            if (response.getBody() != null && response.getBody().getTransaction() != null) {
+                String status = response.getBody().getTransaction().getStatus();
+                payment.setStatus(status);
+                besteronPaymentRepository.save(payment);
+
+                if ("Completed".equalsIgnoreCase(status)) {
+                    orderRepository.findById(orderId).ifPresent(order -> {
+                        order.setStatus(OrderStatus.PAYED);
+                        orderRepository.save(order);
+                    });
+                }
+                return status;
+            }
+        } catch (Exception e) {
+            log.error("Failed to check status for order {}", orderId, e);
+        }
+        return payment.getStatus();
     }
 
     private String getAuthToken() {
@@ -147,6 +194,13 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
         if (response.getBody() == null || response.getBody().getRedirectUrl() == null) {
             throw new IllegalStateException("Failed to retrieve redirect URL from Besteron");
         }
+
+        BesteronPayment payment = new BesteronPayment();
+        payment.setOrderId(order.getId());
+        payment.setTransactionId(response.getBody().getTransactionId());
+        payment.setRedirectUrl(response.getBody().getRedirectUrl());
+        payment.setStatus("Created");
+        besteronPaymentRepository.save(payment);
 
         return response.getBody().getRedirectUrl();
     }

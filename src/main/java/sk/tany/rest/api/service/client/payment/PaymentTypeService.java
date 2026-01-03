@@ -8,4 +8,7 @@ import sk.tany.rest.api.dto.PaymentInfoDto;
 public interface PaymentTypeService {
     PaymentType getSupportedType();
     PaymentInfoDto getPaymentInfo(OrderDto order, PaymentDto payment);
+    default String checkStatus(String orderId) {
+        return null;
+    }
 }

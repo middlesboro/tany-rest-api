@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
+import sk.tany.rest.api.dto.PaymentStatusResponse;
 import sk.tany.rest.api.service.client.PaymentClientService;
 
 @RestController
@@ -26,5 +27,10 @@ public class PaymentClientController {
     @GetMapping("/info/{orderId}")
     public PaymentInfoDto getPaymentInfo(@PathVariable String orderId) {
         return paymentService.getPaymentInfo(orderId);
+    }
+
+    @GetMapping("/status/{orderId}")
+    public PaymentStatusResponse getPaymentStatus(@PathVariable String orderId) {
+        return new PaymentStatusResponse(paymentService.getPaymentStatus(orderId));
     }
 }
