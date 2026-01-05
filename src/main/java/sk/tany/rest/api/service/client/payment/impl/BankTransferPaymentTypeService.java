@@ -1,4 +1,4 @@
-package sk.tany.rest.api.service.common;
+package sk.tany.rest.api.service.client.payment.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +8,11 @@ import scala.Option;
 import scala.math.BigDecimal;
 import sk.softwave.paybysquare.PayBySquare$;
 import sk.softwave.paybysquare.SimplePay;
+import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.PaymentDto;
+import sk.tany.rest.api.dto.PaymentInfoDto;
+import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +22,7 @@ import java.util.Base64;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PaymentDetailsProvider {
+public class BankTransferPaymentTypeService implements PaymentTypeService {
 
     @Value("${eshop.bank-account.iban}")
     private String iban;
@@ -26,19 +30,34 @@ public class PaymentDetailsProvider {
     @Value("${eshop.bank-account.bic}")
     private String bic;
 
-    public String getIban() {
+    @Override
+    public PaymentType getSupportedType() {
+        return PaymentType.BANK_TRANSFER;
+    }
+
+    @Override
+    public PaymentInfoDto getPaymentInfo(OrderDto order, PaymentDto payment) {
+        return PaymentInfoDto.builder()
+                .iban(getIban())
+                .swift(getSwift())
+                .variableSymbol(getVariableSymbol(order))
+                .qrCode(generateQrCodeBase64(order))
+                .build();
+    }
+
+    private String getIban() {
         return iban;
     }
 
-    public String getSwift() {
+    private String getSwift() {
         return bic;
     }
 
-    public String getVariableSymbol(OrderDto order) {
+    private String getVariableSymbol(OrderDto order) {
         return order.getOrderIdentifier() != null ? String.valueOf(order.getOrderIdentifier()) : null;
     }
 
-    public String generateQrCodeBase64(OrderDto order) {
+    private String generateQrCodeBase64(OrderDto order) {
         try {
             return generateQrCode(order);
         } catch (Exception e) {
