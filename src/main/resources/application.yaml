@@ -30,8 +30,16 @@ besteron:
   client-id: ${BESTERON_CLIENT_ID}
   client-secret: ${BESTERON_CLIENT_SECRET}
   base-url: ${BESTERON_BASE_URL:https://gate.besteron.com}
-  return-url: ${BESTERON_RETURN_URL:http://localhost:8080/api/payments/besteron/return}
-  notification-url: ${BESTERON_NOTIFICATION_URL:http://localhost:8080/api/payments/besteron/return}
+  return-url: ${BESTERON_RETURN_URL:http://localhost:3000/besteron-callback}
+  notification-url: ${BESTERON_NOTIFICATION_URL:http://localhost:8080/api/payments/besteron-callback}
+
+gpwebpay:
+  merchant-number: ${GPWEBPAY_MERCHANT_NUMBER}
+  private-key: ${GPWEBPAY_PRIVATE_KEY}
+  private-key-password: ${GPWEBPAY_PRIVATE_KEY_PASSWORD}
+  public-key: ${GPWEBPAY_PUBLIC_KEY}
+  url: ${GPWEBPAY_URL:https://test.3dsecure.gpwebpay.com/pgw/order.do}
+  return-url: ${GPWEBPAY_RETURN_URL:http://localhost:3000/global-payments-callback}
 
 security:
   excluded-urls:

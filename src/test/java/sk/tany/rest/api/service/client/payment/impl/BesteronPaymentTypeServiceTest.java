@@ -17,8 +17,10 @@ import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.BesteronPayment;
 import sk.tany.rest.api.domain.payment.BesteronPaymentRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
-import sk.tany.rest.api.dto.*;
-import sk.tany.rest.api.dto.besteron.BesteronIntentRequest;
+import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.OrderItemDto;
+import sk.tany.rest.api.dto.PaymentDto;
+import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTransactionResponse;
@@ -27,7 +29,8 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -141,7 +144,7 @@ class BesteronPaymentTypeServiceTest {
         verify(besteronPaymentRepository).save(besteronPayment);
         assertEquals("Completed", besteronPayment.getStatus());
         verify(orderRepository).save(order);
-        assertEquals(OrderStatus.PAYED, order.getStatus());
+        assertEquals(OrderStatus.PAID, order.getStatus());
     }
 
     @Test

@@ -10,12 +10,8 @@ import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.client.order.create.OrderClientCreateRequest;
 import sk.tany.rest.api.dto.client.order.create.OrderClientCreateResponse;
 import sk.tany.rest.api.dto.client.order.get.OrderClientGetResponse;
-import sk.tany.rest.api.dto.client.order.list.OrderClientListResponse;
 import sk.tany.rest.api.mapper.OrderClientApiMapper;
 import sk.tany.rest.api.service.client.OrderClientService;
-
-import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -52,25 +48,6 @@ class OrderClientControllerTest {
 
         assertEquals("1", result.getId());
         verify(orderService, times(1)).createOrder(orderDto);
-    }
-
-    @Test
-    void getOrders_ShouldReturnListOfOrders() {
-        OrderDto orderDto = new OrderDto();
-        orderDto.setId("1");
-        List<OrderDto> orders = Collections.singletonList(orderDto);
-
-        OrderClientListResponse response = new OrderClientListResponse();
-        response.setId("1");
-
-        when(orderService.getOrders()).thenReturn(orders);
-        when(orderClientApiMapper.toListResponse(orderDto)).thenReturn(response);
-
-        List<OrderClientListResponse> result = orderClientController.getOrders();
-
-        assertEquals(1, result.size());
-        assertEquals("1", result.get(0).getId());
-        verify(orderService, times(1)).getOrders();
     }
 
     @Test

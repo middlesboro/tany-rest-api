@@ -2,6 +2,7 @@ package sk.tany.rest.api.dto;
 
 import lombok.Data;
 import sk.tany.rest.api.domain.carrier.CarrierType;
+import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.PaymentType;
 
 import java.math.BigDecimal;
@@ -28,4 +29,5 @@ public class OrderDto {
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+    private OrderStatus status;
 }

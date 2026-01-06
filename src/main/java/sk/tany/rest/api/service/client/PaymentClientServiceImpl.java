@@ -9,7 +9,6 @@ import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.mapper.PaymentMapper;
-import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.payment.PaymentTypeServiceFactory;
 
 import java.util.Optional;
@@ -44,14 +43,4 @@ public class PaymentClientServiceImpl implements PaymentClientService {
                 .orElse(PaymentInfoDto.builder().build());
     }
 
-    @Override
-    public String getPaymentStatus(String orderId) {
-        OrderDto order = orderClientService.getOrder(orderId);
-        PaymentDto payment = findById(order.getPaymentId())
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
-
-        return paymentTypeServiceFactory.getService(payment.getType())
-                .map(service -> service.checkStatus(orderId))
-                .orElse(null);
-    }
 }

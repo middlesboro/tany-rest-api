@@ -2,6 +2,7 @@ package sk.tany.rest.api.dto.client.order.get;
 
 import lombok.Data;
 import sk.tany.rest.api.domain.carrier.CarrierType;
+import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.OrderItemDto;
@@ -29,4 +30,5 @@ public class OrderClientGetResponse {
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+    private OrderStatus status;
 }

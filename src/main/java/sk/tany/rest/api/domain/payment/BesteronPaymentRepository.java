@@ -8,4 +8,5 @@ import java.util.Optional;
 @Repository
 public interface BesteronPaymentRepository extends MongoRepository<BesteronPayment, String> {
     Optional<BesteronPayment> findTopByOrderIdOrderByCreateDateDesc(String orderId);
+    Optional<BesteronPayment> findByTransactionId(String transactionId);
 }
