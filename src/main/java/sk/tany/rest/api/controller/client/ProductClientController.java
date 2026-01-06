@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
@@ -40,6 +41,14 @@ public class ProductClientController {
     public Page<ProductClientListResponse> getProductsByCategory(@PathVariable String categoryId, Pageable pageable) {
         return productService.search(categoryId, pageable)
                 .map(productClientApiMapper::toListResponse);
+    }
+
+    @GetMapping("/search")
+    public java.util.List<ProductClientListResponse> searchProducts(@RequestParam String query) {
+        return productService.searchProducts(query)
+                .stream()
+                .map(productClientApiMapper::toListResponse)
+                .toList();
     }
 
 }

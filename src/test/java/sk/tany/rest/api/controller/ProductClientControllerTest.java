@@ -111,4 +111,23 @@ class ProductClientControllerTest {
         assertEquals("Category Product", result.getContent().get(0).getTitle());
         verify(productService, times(1)).search(categoryId, pageable);
     }
+
+    @Test
+    void searchProducts_ShouldReturnList() {
+        String query = "search query";
+        ProductDto productDto = new ProductDto();
+        productDto.setTitle("Searched Product");
+
+        ProductClientListResponse response = new ProductClientListResponse();
+        response.setTitle("Searched Product");
+
+        when(productService.searchProducts(query)).thenReturn(java.util.List.of(productDto));
+        when(productClientApiMapper.toListResponse(productDto)).thenReturn(response);
+
+        java.util.List<ProductClientListResponse> result = productClientController.searchProducts(query);
+
+        assertEquals(1, result.size());
+        assertEquals("Searched Product", result.get(0).getTitle());
+        verify(productService, times(1)).searchProducts(query);
+    }
 }
