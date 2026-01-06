@@ -4,18 +4,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.domain.customer.Customer;
-import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.domain.payment.GlobalPaymentsPayment;
+import sk.tany.rest.api.domain.order.OrderRepository;
+import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.GlobalPaymentsPaymentRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
+import sk.tany.rest.api.dto.GlobalPaymentDetailsDto;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
+import sk.tany.rest.api.dto.client.payment.PaymentCallbackDto;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 import sk.tany.rest.api.service.common.GlobalPaymentsSigner;
 
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @Service
 @Slf4j
@@ -23,10 +26,27 @@ import java.util.Optional;
 public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
 
     private final GlobalPaymentsPaymentRepository globalPaymentsPaymentRepository;
-    private final CustomerRepository customerRepository;
+    private final OrderRepository orderRepository;
+    private final GlobalPaymentsSigner signer;
 
-    @Value("${eshop.base-url}")
-    private String baseUrl;
+    // todo load as config class
+    @Value("${gpwebpay.merchant-number}")
+    private String merchantNumber;
+
+    @Value("${gpwebpay.private-key}")
+    private String privateKey;
+
+    @Value("${gpwebpay.public-key}")
+    private String publicKey;
+
+    @Value("${gpwebpay.private-key-password}")
+    private String privateKeyPassword;
+
+    @Value("${gpwebpay.return-url}")
+    private String returnUrl;
+
+    @Value("${gpwebpay.url}")
+    private String url;
 
     @Override
     public PaymentType getSupportedType() {
@@ -35,15 +55,67 @@ public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
 
     @Override
     public PaymentInfoDto getPaymentInfo(OrderDto order, PaymentDto payment) {
-        String paymentLink = baseUrl + "/api/payments/global-payments/redirect/" + order.getId();
+        String operation = "CREATE_ORDER";
+        String orderNumber = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        String amount = String.valueOf(order.getFinalPrice().multiply(BigDecimal.valueOf(100)).intValue());
+        String currency = "978"; // EUR
+        String depositFlag = "1";
+        String merOrderNum = String.valueOf(order.getOrderIdentifier());
+
+        String textToSign = merchantNumber + "|" + operation + "|" + orderNumber + "|" + amount + "|" + currency + "|" + depositFlag + "|" + merOrderNum + "|" + returnUrl + "||" + order.getId();
+
+        String digest = signer.sign(textToSign, privateKey, privateKeyPassword);
+
         return PaymentInfoDto.builder()
-                .paymentLink(paymentLink)
+                .globalPaymentDetails(GlobalPaymentDetailsDto.builder()
+                        .merchantNumber(merchantNumber)
+                        .operation("CREATE_ORDER")
+                        .orderNumber(orderNumber)
+                        .amount(amount)
+                        .currency(currency)
+                        .depositFlag(depositFlag)
+                        .merOrderNum(merOrderNum)
+                        .url(returnUrl)
+                        .paymentUrl(url)
+                        .md(order.getId())
+                        .digest(digest)
+                        .build())
                 .build();
     }
 
-    @Override
-    public String checkStatus(String orderId) {
-        Optional<GlobalPaymentsPayment> paymentOpt = globalPaymentsPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId);
-        return paymentOpt.map(GlobalPaymentsPayment::getStatus).orElse(null);
+    public String paymentCallback(PaymentCallbackDto paymentCallback) {
+        String operation = paymentCallback.getOperation();
+        String orderNumber = paymentCallback.getOrderNumber();
+        String merOrderNum = paymentCallback.getMerOrderNum();
+        String md = paymentCallback.getMd();
+        String prCode = paymentCallback.getPrCode();
+        String srCode = paymentCallback.getSrCode();
+        String resultText = paymentCallback.getResultText();
+        String digest = paymentCallback.getDigest1();
+
+        if (!"0".equals(prCode) || !"0".equals(srCode)) {
+            return "ERROR";
+        }
+
+        StringBuilder textToVerify = new StringBuilder();
+        textToVerify.append(operation).append("|").append(orderNumber);
+        textToVerify.append("|").append(merOrderNum);
+        textToVerify.append("|").append(md);
+        textToVerify.append("|").append(prCode).append("|").append(srCode);
+        if (resultText != null && !resultText.isEmpty()) {
+            textToVerify.append("|").append(resultText);
+        }
+        textToVerify.append("|").append(merchantNumber);
+        boolean isValid = signer.verify(textToVerify.toString(), digest, publicKey);
+
+        if (isValid) {
+            orderRepository.findById(md).ifPresent(order -> {
+                order.setStatus(OrderStatus.PAID);
+                orderRepository.save(order);
+            });
+        }
+
+        return "PAID";
     }
+
 }

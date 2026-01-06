@@ -11,5 +11,4 @@ public interface PaymentClientService {
     Page<PaymentDto> findAll(Pageable pageable);
     Optional<PaymentDto> findById(String id);
     PaymentInfoDto getPaymentInfo(String orderId);
-    String getPaymentStatus(String orderId);
 }

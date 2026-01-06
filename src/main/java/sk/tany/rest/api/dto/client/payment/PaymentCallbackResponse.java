@@ -1,4 +1,4 @@
-package sk.tany.rest.api.dto;
+package sk.tany.rest.api.dto.client.payment;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentStatusResponse {
+public class PaymentCallbackResponse {
     private String status;
 }

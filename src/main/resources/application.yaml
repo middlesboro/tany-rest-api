@@ -30,24 +30,16 @@ besteron:
   client-id: ${BESTERON_CLIENT_ID}
   client-secret: ${BESTERON_CLIENT_SECRET}
   base-url: ${BESTERON_BASE_URL:https://gate.besteron.com}
-  return-url: ${BESTERON_RETURN_URL:http://localhost:8080/api/payments/besteron/return}
-  notification-url: ${BESTERON_NOTIFICATION_URL:http://localhost:8080/api/payments/besteron/return}
+  return-url: ${BESTERON_RETURN_URL:http://localhost:3000/besteron-callback}
+  notification-url: ${BESTERON_NOTIFICATION_URL:http://localhost:8080/api/payments/besteron-callback}
 
 gpwebpay:
   merchant-number: ${GPWEBPAY_MERCHANT_NUMBER}
   private-key: ${GPWEBPAY_PRIVATE_KEY}
   private-key-password: ${GPWEBPAY_PRIVATE_KEY_PASSWORD}
-  public-key: ${GPWEBPAY_PUBLIC_KEY:-----BEGIN PUBLIC KEY-----
-    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAukooJBqkgau4pjhxkDC3
-    5hDl0SHOn3BonEU1ldz/l6886nJhypHNkLSHgBJRvhbLz/QdOD3mZShrupcxNRKT
-    cA1oLzWWWOeLlgmK0cSM5Xchy/vE6LVbij4+wKtujfPZWg4XIdJFpb4VBTj0mx3N
-    X5nKshu2A987uIZGYB6YapS3NGWPSJL5VPwdv5PRqV4U0v4/DuQl01A9v8fuqr3b
-    s+AsqUXzWfLALHLnxxoCzaEzUC+EV2b7jcNyngjv9vDhOeGsxrojQA73w2Lf16Bu
-    aSQrlIUWDt4BAhIc+L8ZM8pKGXtbwXP1NwBtxQ2FvtAqfHqwHdw4yrb/V2Q/QMaB
-    8wIDAQAB
-    -----END PUBLIC KEY-----}
+  public-key: ${GPWEBPAY_PUBLIC_KEY}
   url: ${GPWEBPAY_URL:https://test.3dsecure.gpwebpay.com/pgw/order.do}
-  return-url: ${GPWEBPAY_RETURN_URL:http://localhost:8080/api/payments/global-payments/callback}
+  return-url: ${GPWEBPAY_RETURN_URL:http://localhost:3000/global-payments-callback}
 
 security:
   excluded-urls:

@@ -13,7 +13,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.BesteronPayment;
@@ -35,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+// TODO add everywhere log.info about created payment link etc. add also to other services not only payments
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -45,6 +45,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     private final BesteronPaymentRepository besteronPaymentRepository;
     private final OrderRepository orderRepository;
 
+    // TODO add to config class
     @Value("${besteron.client-id}")
     private String clientId;
 
@@ -79,7 +80,6 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
         }
     }
 
-    @Override
     public String checkStatus(String orderId) {
         Optional<BesteronPayment> paymentOpt = besteronPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId);
         if (paymentOpt.isEmpty()) {
@@ -105,7 +105,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
 
                 if ("Completed".equalsIgnoreCase(status)) {
                     orderRepository.findById(orderId).ifPresent(order -> {
-                        order.setStatus(OrderStatus.PAYED);
+                        order.setStatus(OrderStatus.PAID);
                         orderRepository.save(order);
                     });
                 }
@@ -203,5 +203,9 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
         besteronPaymentRepository.save(payment);
 
         return response.getBody().getRedirectUrl();
+    }
+
+    public void paymentCallback(String transactionId) {
+        besteronPaymentRepository.findByTransactionId(transactionId).ifPresent(payment -> checkStatus(payment.getOrderId()));
     }
 }
