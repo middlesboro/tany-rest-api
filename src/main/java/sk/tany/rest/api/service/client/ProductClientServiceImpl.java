@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.mapper.ProductMapper;
@@ -16,6 +17,7 @@ public class ProductClientServiceImpl implements ProductClientService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final ProductSearchEngine productSearchEngine;
 
     @Override
     public Page<ProductDto> findAll(Pageable pageable) {
@@ -35,5 +37,13 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public java.util.List<ProductDto> findAllByIds(Iterable<String> ids) {
         return productRepository.findAllById(ids).stream().map(productMapper::toDto).toList();
+    }
+
+    @Override
+    public java.util.List<ProductDto> searchProducts(String query) {
+        return productSearchEngine.searchAndSort(query)
+                .stream()
+                .map(productMapper::toDto)
+                .toList();
     }
 }
