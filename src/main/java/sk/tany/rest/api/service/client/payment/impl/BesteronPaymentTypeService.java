@@ -225,4 +225,9 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     public void paymentCallback(String transactionId) {
         besteronPaymentRepository.findByTransactionId(transactionId).ifPresent(payment -> checkStatus(payment.getOrderId()));
     }
+
+    public Optional<String> getOrderIdByTransactionId(String transactionId) {
+        return besteronPaymentRepository.findByTransactionId(transactionId)
+                .map(BesteronPayment::getOrderId);
+    }
 }

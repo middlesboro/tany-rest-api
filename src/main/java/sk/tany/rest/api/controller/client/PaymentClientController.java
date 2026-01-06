@@ -16,6 +16,7 @@ import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.client.payment.PaymentCallbackDto;
 import sk.tany.rest.api.dto.client.payment.PaymentCallbackRequest;
 import sk.tany.rest.api.dto.client.payment.PaymentCallbackResponse;
+import sk.tany.rest.api.dto.client.payment.PaymentOrderIdResponse;
 import sk.tany.rest.api.dto.client.payment.PaymentStatusResponse;
 import sk.tany.rest.api.service.client.PaymentClientService;
 import sk.tany.rest.api.service.client.payment.impl.BesteronPaymentTypeService;
@@ -69,6 +70,13 @@ public class PaymentClientController {
     public PaymentCallbackResponse besteronCallback(@RequestParam("transactionId") String transactionId) {
         besteronPaymentTypeService.paymentCallback(transactionId);
         return new PaymentCallbackResponse("OK");
+    }
+
+    @GetMapping("/besteron/order-id/{transactionId}")
+    public PaymentOrderIdResponse getOrderIdByTransactionId(@PathVariable String transactionId) {
+        return besteronPaymentTypeService.getOrderIdByTransactionId(transactionId)
+                .map(PaymentOrderIdResponse::new)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Transaction not found"));
     }
 
 }
