@@ -24,6 +24,7 @@ import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentRequest;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
+import sk.tany.rest.api.domain.payment.enums.PaymentStatus;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTransactionResponse;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
@@ -100,7 +101,9 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
 
             if (response.getBody() != null && response.getBody().getTransaction() != null) {
                 String status = response.getBody().getTransaction().getStatus();
-                payment.setStatus(status);
+                payment.setOriginalStatus(status);
+                PaymentStatus paymentStatus = mapStatus(status);
+                payment.setStatus(paymentStatus.name());
                 besteronPaymentRepository.save(payment);
 
                 if ("Completed".equalsIgnoreCase(status)) {
@@ -109,12 +112,26 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
                         orderRepository.save(order);
                     });
                 }
-                return status;
+                return paymentStatus.name();
             }
         } catch (Exception e) {
             log.error("Failed to check status for order {}", orderId, e);
         }
         return payment.getStatus();
+    }
+
+    private PaymentStatus mapStatus(String status) {
+        if (status == null) {
+            return PaymentStatus.ERROR;
+        }
+        return switch (status) {
+            case "Created" -> PaymentStatus.CREATED;
+            case "WaitingForConfirmation" -> PaymentStatus.WAITING;
+            case "Completed" -> PaymentStatus.COMPLETED;
+            case "Canceled" -> PaymentStatus.CANCELED;
+            case "Error", "Timeouted", "Invalid", "ManualAttentionRequired" -> PaymentStatus.ERROR;
+            default -> PaymentStatus.ERROR;
+        };
     }
 
     private String getAuthToken() {

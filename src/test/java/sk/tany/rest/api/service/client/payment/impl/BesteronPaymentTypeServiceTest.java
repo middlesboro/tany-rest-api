@@ -140,9 +140,10 @@ class BesteronPaymentTypeServiceTest {
         String status = service.checkStatus(orderId);
 
         // Assert
-        assertEquals("Completed", status);
+        assertEquals("COMPLETED", status);
         verify(besteronPaymentRepository).save(besteronPayment);
-        assertEquals("Completed", besteronPayment.getStatus());
+        assertEquals("COMPLETED", besteronPayment.getStatus());
+        assertEquals("Completed", besteronPayment.getOriginalStatus());
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.PAID, order.getStatus());
     }
@@ -176,9 +177,10 @@ class BesteronPaymentTypeServiceTest {
         String status = service.checkStatus(orderId);
 
         // Assert
-        assertEquals("WaitingForConfirmation", status);
+        assertEquals("WAITING", status);
         verify(besteronPaymentRepository).save(besteronPayment);
-        assertEquals("WaitingForConfirmation", besteronPayment.getStatus());
+        assertEquals("WAITING", besteronPayment.getStatus());
+        assertEquals("WaitingForConfirmation", besteronPayment.getOriginalStatus());
         verify(orderRepository, never()).save(any());
     }
 }
