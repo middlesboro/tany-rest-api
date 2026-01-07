@@ -82,4 +82,48 @@ class ProductSearchEngineTest {
         List<Product> results = productSearchEngine.searchAndSort("");
         assertThat(results).isEmpty();
     }
+
+    @Test
+    void shouldAddProduct() {
+        Product p1 = new Product();
+        p1.setId("1");
+        p1.setTitle("New Product");
+
+        productSearchEngine.addProduct(p1);
+
+        List<Product> results = productSearchEngine.searchAndSort("new product");
+        assertThat(results).contains(p1);
+    }
+
+    @Test
+    void shouldUpdateProduct() {
+        Product p1 = new Product();
+        p1.setId("1");
+        p1.setTitle("Old Product");
+
+        productSearchEngine.addProduct(p1);
+
+        Product p2 = new Product();
+        p2.setId("1");
+        p2.setTitle("Updated Product");
+
+        productSearchEngine.updateProduct(p2);
+
+        List<Product> results = productSearchEngine.searchAndSort("Updated");
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getTitle()).isEqualTo("Updated Product");
+    }
+
+    @Test
+    void shouldRemoveProduct() {
+        Product p1 = new Product();
+        p1.setId("1");
+        p1.setTitle("Delete Me");
+
+        productSearchEngine.addProduct(p1);
+        productSearchEngine.removeProduct("1");
+
+        List<Product> results = productSearchEngine.searchAndSort("delete me");
+        assertThat(results).isEmpty();
+    }
 }

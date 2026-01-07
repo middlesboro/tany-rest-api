@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.mapper.ProductMapper;
@@ -16,6 +17,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final ProductSearchEngine productSearchEngine;
 
     @Override
     public Page<ProductDto> findAll(Pageable pageable) {
@@ -31,6 +33,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     public ProductDto save(ProductDto productDto) {
         var product = productMapper.toEntity(productDto);
         var savedProduct = productRepository.save(product);
+        productSearchEngine.addProduct(savedProduct);
         return productMapper.toDto(savedProduct);
     }
 
@@ -39,12 +42,14 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         productDto.setId(id);
         var product = productMapper.toEntity(productDto);
         var savedProduct = productRepository.save(product);
+        productSearchEngine.updateProduct(savedProduct);
         return productMapper.toDto(savedProduct);
     }
 
     @Override
     public void deleteById(String id) {
         productRepository.deleteById(id);
+        productSearchEngine.removeProduct(id);
     }
 
     @Override
