@@ -36,6 +36,23 @@ public class ProductSearchEngine {
         log.info("Loaded {} products into search engine.", cachedProducts.size());
     }
 
+    public void addProduct(Product product) {
+        if (product.getId() != null) {
+            removeProduct(product.getId());
+        }
+        cachedProducts.add(product);
+    }
+
+    public void updateProduct(Product product) {
+        addProduct(product);
+    }
+
+    public void removeProduct(String productId) {
+        if (productId != null) {
+            cachedProducts.removeIf(p -> productId.equals(p.getId()));
+        }
+    }
+
     public List<Product> searchAndSort(String query) {
         if (StringUtils.isBlank(query)) {
             return List.of();
