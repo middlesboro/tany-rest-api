@@ -117,10 +117,11 @@ public class CustomerClientServiceImpl implements CustomerClientService {
     @Override
     public CustomerDto updateCustomer(CustomerDto customerDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof String email)) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
 
+        String email = authentication.getName();
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
 
@@ -137,12 +138,25 @@ public class CustomerClientServiceImpl implements CustomerClientService {
             customer.setEmail(customerDto.getEmail());
         }
         if (customerDto.getInvoiceAddress() != null) {
-            customer.setInvoiceAddress(customerMapper.toEntity(customerDto).getInvoiceAddress());
+            customer.setInvoiceAddress(customerMapper.toEntity(customerDto.getInvoiceAddress()));
         }
         if (customerDto.getDeliveryAddress() != null) {
-            customer.setDeliveryAddress(customerMapper.toEntity(customerDto).getDeliveryAddress());
+            customer.setDeliveryAddress(customerMapper.toEntity(customerDto.getDeliveryAddress()));
         }
 
         return customerMapper.toDto(customerRepository.save(customer));
+    }
+
+    @Override
+    public CustomerDto getCurrentCustomer() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+
+        String email = authentication.getName();
+        return customerRepository.findByEmail(email)
+                .map(customerMapper::toDto)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
     }
 }

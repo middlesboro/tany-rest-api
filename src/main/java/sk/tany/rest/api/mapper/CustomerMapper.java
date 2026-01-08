@@ -10,4 +10,6 @@ public interface CustomerMapper {
     CustomerDto toDto(Customer customer);
 
     Customer toEntity(CustomerDto customerDto);
+
+    sk.tany.rest.api.domain.customer.Address toEntity(sk.tany.rest.api.dto.AddressDto addressDto);
 }

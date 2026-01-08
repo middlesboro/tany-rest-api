@@ -11,4 +11,5 @@ public interface CustomerClientService {
     CustomerDto save(CustomerDto customerDto);
     Optional<CustomerDto> findById(String id);
     CustomerDto updateCustomer(CustomerDto customerDto);
+    CustomerDto getCurrentCustomer();
 }

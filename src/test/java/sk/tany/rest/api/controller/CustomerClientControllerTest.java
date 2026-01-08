@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
+import sk.tany.rest.api.dto.client.customer.get.CustomerClientDetailResponse;
 import sk.tany.rest.api.dto.client.customer.get.CustomerClientGetResponse;
 import sk.tany.rest.api.dto.client.customer.update.CustomerClientUpdateRequest;
 import sk.tany.rest.api.dto.client.customer.update.CustomerClientUpdateResponse;
@@ -82,6 +83,20 @@ class CustomerClientControllerTest {
                 .andExpect(status().isOk());
 
         verify(customerService).getCustomerContext(null);
+    }
+
+    @Test
+    void getCustomer_ReturnsOk() throws Exception {
+        CustomerDto customerDto = new CustomerDto();
+        CustomerClientDetailResponse response = new CustomerClientDetailResponse();
+
+        when(customerService.getCurrentCustomer()).thenReturn(customerDto);
+        when(customerClientApiMapper.toDetailResponse(customerDto)).thenReturn(response);
+
+        mockMvc.perform(get("/api/customer"))
+                .andExpect(status().isOk());
+
+        verify(customerService).getCurrentCustomer();
     }
 
     @Test

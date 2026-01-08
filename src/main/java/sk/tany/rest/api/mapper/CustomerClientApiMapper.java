@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
+import sk.tany.rest.api.dto.client.customer.get.CustomerClientDetailResponse;
 import sk.tany.rest.api.dto.client.customer.get.CustomerClientGetResponse;
 import sk.tany.rest.api.dto.client.customer.update.CustomerClientUpdateRequest;
 import sk.tany.rest.api.dto.client.customer.update.CustomerClientUpdateResponse;
@@ -17,4 +18,6 @@ public interface CustomerClientApiMapper {
     CustomerDto toDto(CustomerClientUpdateRequest request);
 
     CustomerClientUpdateResponse toUpdateResponse(CustomerDto dto);
+
+    CustomerClientDetailResponse toDetailResponse(CustomerDto dto);
 }
