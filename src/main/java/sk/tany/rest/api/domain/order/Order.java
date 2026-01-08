@@ -32,6 +32,7 @@ public class Order {
     private List<OrderItem> items;
     private String carrierId;
     private String paymentId;
+    private String selectedPickupPointId;
     private Address deliveryAddress;
     private Address invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;

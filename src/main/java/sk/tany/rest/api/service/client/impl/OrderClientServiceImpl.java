@@ -38,6 +38,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     @Override
     public OrderDto createOrder(OrderDto orderDto) {
         Order order = orderMapper.toEntity(orderDto);
+        order.setSelectedPickupPointId(orderDto.getSelectedPickupPointId());
         order.setCustomerId(getCurrentCustomerId());
         order.setOrderIdentifier(sequenceService.getNextSequence("order_identifier"));
         return orderMapper.toDto(orderRepository.save(order));
