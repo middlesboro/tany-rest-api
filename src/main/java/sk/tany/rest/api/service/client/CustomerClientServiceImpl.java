@@ -2,9 +2,11 @@ package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.*;
@@ -110,5 +112,51 @@ public class CustomerClientServiceImpl implements CustomerClientService {
 
     public Optional<CustomerDto> findById(String id) {
         return customerRepository.findById(id).map(customerMapper::toDto);
+    }
+
+    @Override
+    public CustomerDto updateCustomer(CustomerDto customerDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+
+        String email = authentication.getName();
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+
+        if (customerDto.getFirstname() != null) {
+            customer.setFirstname(customerDto.getFirstname());
+        }
+        if (customerDto.getLastname() != null) {
+            customer.setLastname(customerDto.getLastname());
+        }
+        // Email update might require verification in a real scenario, but based on requirements "edit all fields", we allow it.
+        // However, if email changes, the principal might become invalid for future requests if not handled.
+        // But simply updating the field is what is asked.
+        if (customerDto.getEmail() != null) {
+            customer.setEmail(customerDto.getEmail());
+        }
+        if (customerDto.getInvoiceAddress() != null) {
+            customer.setInvoiceAddress(customerMapper.toEntity(customerDto.getInvoiceAddress()));
+        }
+        if (customerDto.getDeliveryAddress() != null) {
+            customer.setDeliveryAddress(customerMapper.toEntity(customerDto.getDeliveryAddress()));
+        }
+
+        return customerMapper.toDto(customerRepository.save(customer));
+    }
+
+    @Override
+    public CustomerDto getCurrentCustomer() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+
+        String email = authentication.getName();
+        return customerRepository.findByEmail(email)
+                .map(customerMapper::toDto)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
     }
 }

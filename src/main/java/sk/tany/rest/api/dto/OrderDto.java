@@ -31,4 +31,5 @@ public class OrderDto {
     private String selectedPickupPointId;
     private String customerId;
     private OrderStatus status;
+    private String selectedPickupPointId;
 }
