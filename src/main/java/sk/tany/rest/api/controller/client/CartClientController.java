@@ -2,10 +2,7 @@ package sk.tany.rest.api.controller.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddItemRequest;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddProductResponse;
@@ -23,6 +20,11 @@ public class CartClientController {
 
     private final CartClientService cartService;
     private final CartClientApiMapper cartClientApiMapper;
+
+    @PutMapping
+    public ResponseEntity<CartDto> updateCart(@RequestBody CartDto cartDto) {
+        return ResponseEntity.ok(cartService.save(cartDto));
+    }
 
     @PostMapping("/items")
     public ResponseEntity<CartClientAddProductResponse> addProduct(@RequestBody CartClientAddItemRequest request) {

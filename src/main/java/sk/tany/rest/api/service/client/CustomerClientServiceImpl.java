@@ -43,6 +43,25 @@ public class CustomerClientServiceImpl implements CustomerClientService {
 
         CartDto cartDto = cartService.getOrCreateCart(cartId, customerId);
 
+        if (customerDto != null) {
+            if (cartDto.getFirstname() == null || cartDto.getFirstname().isEmpty()) {
+                cartDto.setFirstname(customerDto.getFirstname());
+            }
+            if (cartDto.getLastname() == null || cartDto.getLastname().isEmpty()) {
+                cartDto.setLastname(customerDto.getLastname());
+            }
+            if (cartDto.getEmail() == null || cartDto.getEmail().isEmpty()) {
+                cartDto.setEmail(customerDto.getEmail());
+            }
+            if (cartDto.getInvoiceAddress() == null) {
+                cartDto.setInvoiceAddress(customerDto.getInvoiceAddress());
+            }
+            if (cartDto.getDeliveryAddress() == null) {
+                cartDto.setDeliveryAddress(customerDto.getDeliveryAddress());
+            }
+            cartDto = cartService.save(cartDto);
+        }
+
         CustomerContextCartDto customerContextCartDto = new CustomerContextCartDto();
         customerContextCartDto.setCartId(cartDto.getCartId());
         customerContextCartDto.setCustomerId(cartDto.getCustomerId());
