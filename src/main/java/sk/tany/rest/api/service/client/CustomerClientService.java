@@ -10,4 +10,5 @@ public interface CustomerClientService {
     CustomerDto findByEmail(String email);
     CustomerDto save(CustomerDto customerDto);
     Optional<CustomerDto> findById(String id);
+    CustomerDto updateCustomer(CustomerDto customerDto);
 }

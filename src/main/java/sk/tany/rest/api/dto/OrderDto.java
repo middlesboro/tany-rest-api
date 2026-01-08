@@ -30,4 +30,5 @@ public class OrderDto {
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
     private OrderStatus status;
+    private String selectedPickupPointId;
 }
