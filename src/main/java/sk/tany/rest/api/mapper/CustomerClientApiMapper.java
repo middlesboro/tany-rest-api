@@ -14,7 +14,6 @@ public interface CustomerClientApiMapper {
     CustomerClientGetResponse toGetResponse(CustomerContextDto dto);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "role", ignore = true)
     CustomerDto toDto(CustomerClientUpdateRequest request);
 
     CustomerClientUpdateResponse toUpdateResponse(CustomerDto dto);
