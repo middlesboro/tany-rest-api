@@ -33,6 +33,7 @@ public class OrderClientController {
         return orderClientApiMapper.toCreateResponse(createdOrder);
     }
 
+    // todo this have to be under authentication
     @Operation(summary = "Get order details")
     @GetMapping("/{id}")
     public OrderClientGetResponse getOrder(@PathVariable String id) {

@@ -5,7 +5,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
-
 import sk.tany.rest.api.domain.customer.Address;
 
 import java.math.BigDecimal;
@@ -37,6 +36,10 @@ public class Order {
     private Address invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+    private String email;
+    private String phone;
+    private String firstname;
+    private String lastname;
     private OrderStatus status = OrderStatus.CREATED;
 
 }

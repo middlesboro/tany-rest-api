@@ -16,6 +16,8 @@ import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Base64;
 
@@ -42,6 +44,7 @@ public class BankTransferPaymentTypeService implements PaymentTypeService {
                 .swift(getSwift())
                 .variableSymbol(getVariableSymbol(order))
                 .qrCode(generateQrCodeBase64(order))
+                .paymentLink(generatePaymeLink(order))
                 .build();
     }
 
@@ -62,6 +65,28 @@ public class BankTransferPaymentTypeService implements PaymentTypeService {
             return generateQrCode(order);
         } catch (Exception e) {
             log.error("Error generating QR code for order {}", order.getId(), e);
+            return null;
+        }
+    }
+
+    private String generatePaymeLink(OrderDto order) {
+        try {
+            String vs = getVariableSymbol(order);
+            if (vs == null) {
+                return null;
+            }
+            String amount = order.getFinalPrice() != null ? order.getFinalPrice().toString() : "0";
+            String pi = "/VS" + vs;
+            String msg = "Objednavka " + vs;
+
+            return "https://payme.sk?V=1" +
+                    "&IBAN=" + iban +
+                    "&AM=" + amount +
+                    "&CC=EUR" +
+                    "&PI=" + URLEncoder.encode(pi, StandardCharsets.UTF_8) +
+                    "&MSG=" + URLEncoder.encode(msg, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            log.error("Error generating Payme link for order {}", order.getId(), e);
             return null;
         }
     }
