@@ -30,5 +30,9 @@ public class OrderClientGetResponse {
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+    private String email;
+    private String phone;
+    private String firstname;
+    private String lastname;
     private OrderStatus status;
 }
