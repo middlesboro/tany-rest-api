@@ -51,6 +51,12 @@ public class CustomerClientGetResponse {
         private BigDecimal totalProductPrice;
         private List<CarrierDto> carriers;
         private List<PaymentDto> payments;
+        private String firstname;
+        private String lastname;
+        private String email;
+        private String phone;
+        private AddressDto deliveryAddress;
+        private AddressDto invoiceAddress;
     }
 
     @Data

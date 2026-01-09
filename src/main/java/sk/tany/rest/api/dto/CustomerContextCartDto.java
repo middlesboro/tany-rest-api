@@ -13,4 +13,11 @@ public class CustomerContextCartDto {
     private java.math.BigDecimal totalProductPrice;
     private List<CarrierDto> carriers;
     private List<PaymentDto> payments;
+    private AddressDto invoiceAddress;
+    private AddressDto deliveryAddress;
+    private String firstname;
+    private String lastname;
+    private String email;
+    private String phone;
+
 }

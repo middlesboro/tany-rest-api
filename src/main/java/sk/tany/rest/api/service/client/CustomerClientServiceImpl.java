@@ -68,7 +68,7 @@ public class CustomerClientServiceImpl implements CustomerClientService {
             }
             if (cartDto.getDeliveryAddress() == null) {
                 cartDto.setDeliveryAddress(customerDto.getDeliveryAddress());
-            }
+            } // save just in case if something was changed
             cartDto = cartService.save(cartDto);
         }
 
@@ -128,6 +128,13 @@ public class CustomerClientServiceImpl implements CustomerClientService {
             payments.getFirst().setSelected(true);
         }
         customerContextCartDto.setPayments(payments);
+
+        customerContextCartDto.setEmail(cartDto.getEmail());
+        customerContextCartDto.setPhone(cartDto.getPhone());
+        customerContextCartDto.setFirstname(cartDto.getFirstname());
+        customerContextCartDto.setLastname(cartDto.getLastname());
+        customerContextCartDto.setDeliveryAddress(cartDto.getDeliveryAddress());
+        customerContextCartDto.setInvoiceAddress(cartDto.getInvoiceAddress());
 
         return new CustomerContextDto(customerDto, customerContextCartDto);
     }
