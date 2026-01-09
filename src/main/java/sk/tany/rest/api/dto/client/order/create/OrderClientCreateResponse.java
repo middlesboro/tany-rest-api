@@ -1,8 +1,8 @@
 package sk.tany.rest.api.dto.client.order.create;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import sk.tany.rest.api.dto.AddressDto;
-import sk.tany.rest.api.dto.OrderItemDto;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,4 +23,24 @@ public class OrderClientCreateResponse {
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OrderItemDto {
+        private String id;
+        private String name;
+        private Integer quantity;
+        private BigDecimal price;
+        private String image;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AddressDto {
+        private String street;
+        private String city;
+        private String zip;
+    }
 }

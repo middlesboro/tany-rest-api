@@ -1,11 +1,11 @@
 package sk.tany.rest.api.dto.client.order.get;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import sk.tany.rest.api.domain.carrier.CarrierType;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.PaymentType;
-import sk.tany.rest.api.dto.AddressDto;
-import sk.tany.rest.api.dto.OrderItemDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -15,8 +15,6 @@ public class OrderClientGetResponse {
     private String id;
     private String cartId;
     private BigDecimal finalPrice;
-    private BigDecimal carrierPrice;
-    private BigDecimal paymentPrice;
     private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;
     private List<OrderItemDto> items;
@@ -35,4 +33,24 @@ public class OrderClientGetResponse {
     private String firstname;
     private String lastname;
     private OrderStatus status;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OrderItemDto {
+        private String id;
+        private String name;
+        private Integer quantity;
+        private BigDecimal price;
+        private String image;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AddressDto {
+        private String street;
+        private String city;
+        private String zip;
+    }
 }

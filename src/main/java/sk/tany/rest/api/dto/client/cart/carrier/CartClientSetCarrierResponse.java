@@ -1,8 +1,10 @@
 package sk.tany.rest.api.dto.client.cart.carrier;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import sk.tany.rest.api.dto.CartItem;
+import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -15,4 +17,20 @@ public class CartClientSetCarrierResponse {
     private List<CartItem> items;
     private String selectedCarrierId;
     private String selectedPaymentId;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CartItem {
+        private String productId;
+        private Integer quantity;
+        private String title;
+        private String image;
+        private BigDecimal price;
+
+        public CartItem(String productId, Integer quantity) {
+            this.productId = productId;
+            this.quantity = quantity;
+        }
+    }
 }

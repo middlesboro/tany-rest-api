@@ -1,4 +1,4 @@
-package sk.tany.rest.api.dto.client.cart.payment;
+package sk.tany.rest.api.dto.client.cart.update;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,14 +9,20 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-public class CartClientSetPaymentResponse {
+public class CartClientUpdateResponse {
     private String cartId;
     private String customerId;
-    private Instant createDate;
-    private Instant updateDate;
-    private List<CartItem> items;
     private String selectedCarrierId;
     private String selectedPaymentId;
+    private List<CartItem> items;
+    private String firstname;
+    private String lastname;
+    private String email;
+    private String phone;
+    private AddressDto invoiceAddress;
+    private AddressDto deliveryAddress;
+    private Instant createDate;
+    private Instant updateDate;
 
     @Data
     @NoArgsConstructor
@@ -32,5 +38,14 @@ public class CartClientSetPaymentResponse {
             this.productId = productId;
             this.quantity = quantity;
         }
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AddressDto {
+        private String street;
+        private String city;
+        private String zip;
     }
 }

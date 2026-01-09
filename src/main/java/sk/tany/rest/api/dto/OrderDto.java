@@ -14,8 +14,6 @@ public class OrderDto {
     private Long orderIdentifier;
     private String cartId;
     private BigDecimal finalPrice;
-    private BigDecimal carrierPrice;
-    private BigDecimal paymentPrice;
     private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;
     private List<OrderItemDto> items;
