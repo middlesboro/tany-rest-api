@@ -5,6 +5,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
+import sk.tany.rest.api.domain.customer.Address;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,6 +20,12 @@ public class Cart {
     private String selectedCarrierId;
     private String selectedPaymentId;
     private List<CartItem> items;
+    private String firstname;
+    private String lastname;
+    private String email;
+    private String phone;
+    private Address invoiceAddress;
+    private Address deliveryAddress;
     @CreatedDate
     private Instant createDate;
     @LastModifiedDate

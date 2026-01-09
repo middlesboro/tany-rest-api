@@ -9,7 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.dto.*;
+import sk.tany.rest.api.dto.CarrierDto;
+import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.CartItem;
+import sk.tany.rest.api.dto.CustomerContextCartDto;
+import sk.tany.rest.api.dto.CustomerContextDto;
+import sk.tany.rest.api.dto.CustomerDto;
+import sk.tany.rest.api.dto.PaymentDto;
+import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.mapper.CustomerMapper;
 
 import java.math.BigDecimal;
@@ -43,6 +50,25 @@ public class CustomerClientServiceImpl implements CustomerClientService {
 
         CartDto cartDto = cartService.getOrCreateCart(cartId, customerId);
 
+        if (customerDto != null) {
+            if (cartDto.getFirstname() == null || cartDto.getFirstname().isEmpty()) {
+                cartDto.setFirstname(customerDto.getFirstname());
+            }
+            if (cartDto.getLastname() == null || cartDto.getLastname().isEmpty()) {
+                cartDto.setLastname(customerDto.getLastname());
+            }
+            if (cartDto.getEmail() == null || cartDto.getEmail().isEmpty()) {
+                cartDto.setEmail(customerDto.getEmail());
+            }
+            if (cartDto.getInvoiceAddress() == null) {
+                cartDto.setInvoiceAddress(customerDto.getInvoiceAddress());
+            }
+            if (cartDto.getDeliveryAddress() == null) {
+                cartDto.setDeliveryAddress(customerDto.getDeliveryAddress());
+            }
+            cartDto = cartService.save(cartDto);
+        }
+
         CustomerContextCartDto customerContextCartDto = new CustomerContextCartDto();
         customerContextCartDto.setCartId(cartDto.getCartId());
         customerContextCartDto.setCustomerId(cartDto.getCustomerId());
@@ -73,8 +99,9 @@ public class CustomerClientServiceImpl implements CustomerClientService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         List<CarrierDto> carriers = carrierService.findAll(Pageable.unpaged()).getContent();
+        CartDto finalCartDto = cartDto;
         carriers.forEach(carrier -> {
-            carrier.setSelected(carrier.getId().equals(cartDto.getSelectedCarrierId()));
+            carrier.setSelected(carrier.getId().equals(finalCartDto.getSelectedCarrierId()));
             if (carrier.getRanges() != null) {
                 carrier.getRanges().stream()
                         .filter(range ->
@@ -92,7 +119,8 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         customerContextCartDto.setCarriers(carriers);
 
         List<PaymentDto> payments = paymentService.findAll(Pageable.unpaged()).getContent();
-        payments.forEach(payment -> payment.setSelected(payment.getId().equals(cartDto.getSelectedPaymentId())));
+        CartDto finalCartDto1 = cartDto;
+        payments.forEach(payment -> payment.setSelected(payment.getId().equals(finalCartDto1.getSelectedPaymentId())));
         if (payments.stream().noneMatch(PaymentDto::isSelected) && !payments.isEmpty()) {
             payments.getFirst().setSelected(true);
         }
