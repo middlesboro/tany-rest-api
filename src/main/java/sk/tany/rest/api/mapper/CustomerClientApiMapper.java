@@ -27,7 +27,6 @@ public interface CustomerClientApiMapper {
     CustomerClientGetResponse toGetResponse(CustomerContextDto customerContextDto);
 
     // Helpers for AddressDto
-    CustomerClientDetailResponse.AddressDto toDetailAddress(AddressDto addressDto);
     AddressDto toAddressDto(CustomerClientUpdateRequest.AddressDto addressDto);
     CustomerClientUpdateResponse.AddressDto toUpdateAddress(AddressDto addressDto);
     CustomerClientGetResponse.AddressDto toGetAddress(AddressDto addressDto);
@@ -38,4 +37,6 @@ public interface CustomerClientApiMapper {
     CustomerClientGetResponse.ProductDto toGetProductDto(ProductDto productDto);
     CustomerClientGetResponse.CarrierDto toGetCarrierDto(CarrierDto carrierDto);
     CustomerClientGetResponse.PaymentDto toGetPaymentDto(PaymentDto paymentDto);
+
+    CustomerClientDetailResponse toDetailResponse(CustomerDto customerDto);
 }
