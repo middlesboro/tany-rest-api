@@ -60,6 +60,9 @@ public class CustomerClientServiceImpl implements CustomerClientService {
             if (cartDto.getEmail() == null || cartDto.getEmail().isEmpty()) {
                 cartDto.setEmail(customerDto.getEmail());
             }
+            if (cartDto.getPhone() == null || cartDto.getPhone().isEmpty()) {
+                cartDto.setPhone(customerDto.getPhone());
+            }
             if (cartDto.getInvoiceAddress() == null) {
                 cartDto.setInvoiceAddress(customerDto.getInvoiceAddress());
             }

@@ -17,8 +17,7 @@ import sk.tany.rest.api.dto.client.customer.update.CustomerClientUpdateResponse;
 @Mapper(componentModel = "spring")
 public interface CustomerClientApiMapper {
 
-    CustomerClientDetailResponse toDetailResponse(CustomerDto customerDto);
-
+    @Mapping(target = "id", ignore = true)
     CustomerDto toDto(CustomerClientUpdateRequest request);
 
     CustomerClientUpdateResponse toUpdateResponse(CustomerDto customerDto);
