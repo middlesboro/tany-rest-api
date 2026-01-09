@@ -10,6 +10,8 @@ import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierRequest;
 import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierResponse;
 import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentRequest;
 import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentResponse;
+import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateRequest;
+import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateResponse;
 import sk.tany.rest.api.mapper.CartClientApiMapper;
 import sk.tany.rest.api.service.client.CartClientService;
 
@@ -22,8 +24,10 @@ public class CartClientController {
     private final CartClientApiMapper cartClientApiMapper;
 
     @PutMapping
-    public ResponseEntity<CartDto> updateCart(@RequestBody CartDto cartDto) {
-        return ResponseEntity.ok(cartService.save(cartDto));
+    public ResponseEntity<CartClientUpdateResponse> updateCart(@RequestBody CartClientUpdateRequest request) {
+        CartDto dto = cartClientApiMapper.toDto(request);
+        CartDto updatedCart = cartService.save(dto);
+        return ResponseEntity.ok(cartClientApiMapper.toUpdateResponse(updatedCart));
     }
 
     @PostMapping("/items")

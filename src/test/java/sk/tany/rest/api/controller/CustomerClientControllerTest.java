@@ -53,8 +53,8 @@ class CustomerClientControllerTest {
         customerContextDto.setCartDto(new CustomerContextCartDto());
 
         CustomerClientGetResponse response = new CustomerClientGetResponse();
-        response.setCustomerDto(new CustomerDto());
-        response.setCartDto(new CustomerContextCartDto());
+        response.setCustomerDto(new CustomerClientGetResponse.CustomerDto());
+        response.setCartDto(new CustomerClientGetResponse.CustomerContextCartDto());
 
         when(customerService.getCustomerContext(cartId)).thenReturn(customerContextDto);
         when(customerClientApiMapper.toGetResponse(customerContextDto)).thenReturn(response);
@@ -73,8 +73,8 @@ class CustomerClientControllerTest {
         customerContextDto.setCartDto(new CustomerContextCartDto());
 
         CustomerClientGetResponse response = new CustomerClientGetResponse();
-        response.setCustomerDto(new CustomerDto());
-        response.setCartDto(new CustomerContextCartDto());
+        response.setCustomerDto(new CustomerClientGetResponse.CustomerDto());
+        response.setCartDto(new CustomerClientGetResponse.CustomerContextCartDto());
 
         when(customerService.getCustomerContext(null)).thenReturn(customerContextDto);
         when(customerClientApiMapper.toGetResponse(customerContextDto)).thenReturn(response);
