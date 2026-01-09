@@ -14,9 +14,6 @@ import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.common.SequenceService;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 public class OrderClientServiceImpl implements OrderClientService {
@@ -39,19 +36,16 @@ public class OrderClientServiceImpl implements OrderClientService {
     public OrderDto createOrder(OrderDto orderDto) {
         Order order = orderMapper.toEntity(orderDto);
         order.setSelectedPickupPointId(orderDto.getSelectedPickupPointId());
-        order.setCustomerId(getCurrentCustomerId());
+        try {
+            order.setCustomerId(getCurrentCustomerId());
+        } catch (Exception e) {
+            // nothing to do. if customer not found, order will be created without customerId
+        }
         order.setOrderIdentifier(sequenceService.getNextSequence("order_identifier"));
         return orderMapper.toDto(orderRepository.save(order));
     }
 
-    @Override
-    public List<OrderDto> getOrders() {
-        return orderRepository.findAllByCustomerId(getCurrentCustomerId())
-                .stream()
-                .map(orderMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
+    // todo do it e.g. accessible for 1h after creation. otherwise needed authorization. or find better solution
     @Override
     public OrderDto getOrder(String id) {
         return orderRepository.findById(id)
