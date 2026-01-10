@@ -97,6 +97,19 @@ public class ProductAdminController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping("/{id}/images")
+    public ResponseEntity<Void> deleteImage(@PathVariable String id, @RequestParam String url) {
+        return productService.findById(id)
+                .map(product -> {
+                    if (product.getImages() != null && product.getImages().remove(url)) {
+                        imageService.delete(url);
+                        productService.update(id, product);
+                    }
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/import/prestashop")
     public ResponseEntity<Void> importAllProducts() {
         prestaShopImportService.importAllProducts();

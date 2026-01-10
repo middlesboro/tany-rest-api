@@ -3,7 +3,9 @@ package sk.tany.rest.api.service.common;
 import io.imagekit.sdk.ImageKit;
 import io.imagekit.sdk.exceptions.InternalServerException;
 import io.imagekit.sdk.models.FileCreateRequest;
+import io.imagekit.sdk.models.GetFileListRequest;
 import io.imagekit.sdk.models.results.Result;
+import io.imagekit.sdk.models.results.ResultList;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -51,5 +53,38 @@ public class ImageKitService implements ImageService {
             log.error("Unexpected error while uploading image to ImageKit", e);
             throw new RuntimeException("Unexpected error while uploading image to ImageKit", e);
         }
+    }
+
+    @Override
+    public void delete(String url) {
+        try {
+            String fileName = getFileNameFromUrl(url);
+            GetFileListRequest getFileListRequest = new GetFileListRequest();
+            getFileListRequest.setSearchQuery("name=\"" + fileName + "\"");
+            ResultList resultList = imageKit.getFileList(getFileListRequest);
+            if (resultList.getResults().isEmpty()) {
+                log.warn("Image with url {} not found in ImageKit", url);
+                return;
+            }
+            // Assuming the first file is the one we want to delete
+            // Since we use UUIDs for filenames, it should be unique
+            String fileId = resultList.getResults().get(0).getFileId();
+            imageKit.deleteFile(fileId);
+            log.info("Image {} deleted successfully", url);
+        } catch (Exception e) {
+            log.error("Error while deleting image from ImageKit", e);
+            throw new RuntimeException("Error while deleting image from ImageKit", e);
+        }
+    }
+
+    private String getFileNameFromUrl(String url) {
+        if (url == null || url.isEmpty()) {
+            throw new IllegalArgumentException("URL cannot be null or empty");
+        }
+        int lastSlashIndex = url.lastIndexOf('/');
+        if (lastSlashIndex == -1) {
+            return url;
+        }
+        return url.substring(lastSlashIndex + 1);
     }
 }

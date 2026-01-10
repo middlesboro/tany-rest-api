@@ -62,4 +62,18 @@ public class PaymentAdminController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/{id}/image")
+    public ResponseEntity<Void> deleteImage(@PathVariable String id) {
+        return paymentService.findById(id)
+                .map(payment -> {
+                    if (payment.getImage() != null) {
+                        imageService.delete(payment.getImage());
+                        payment.setImage(null);
+                        paymentService.update(id, payment);
+                    }
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
