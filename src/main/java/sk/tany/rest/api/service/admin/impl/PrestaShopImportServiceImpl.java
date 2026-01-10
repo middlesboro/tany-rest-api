@@ -28,6 +28,7 @@ import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 import sk.tany.rest.api.service.admin.SupplierAdminService;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.service.common.enums.ImageKitType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -181,7 +182,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         dto.setMetaTitle(parseLanguageValue(psManufacturer.getMetaTitle()));
         dto.setMetaDescription(parseLanguageValue(psManufacturer.getMetaDescription()));
         dto.setActive("1".equals(psManufacturer.getActive()));
-        String imageUrl = downloadAndUploadImage("manufacturers", psManufacturer.getId(), null);
+        String imageUrl = downloadAndUploadImage("manufacturers", psManufacturer.getId(), null, ImageKitType.BRAND);
         dto.setImage(imageUrl);
 
         return dto;
@@ -204,7 +205,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         List<String> imageUrls = new ArrayList<>();
         if (psProduct.getAssociations() != null && psProduct.getAssociations().getImages() != null) {
             for (PrestaShopImage psImage : psProduct.getAssociations().getImages()) {
-                String imgUrl = downloadAndUploadImage("products", psProduct.getId(), psImage.getId());
+                String imgUrl = downloadAndUploadImage("products", psProduct.getId(), psImage.getId(), ImageKitType.PRODUCT);
                 if (imgUrl != null) {
                     imageUrls.add(imgUrl);
                 }
@@ -246,14 +247,14 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         return "";
     }
 
-    private String downloadAndUploadImage(String resource, Long id, String imageId) {
+    private String downloadAndUploadImage(String resource, Long id, String imageId, ImageKitType type) {
         String urlPart = imageId != null ? id + "/" + imageId : String.valueOf(id);
         String imageUrl = String.format("%s/api/images/%s/%s?ws_key=%s", prestashopUrl, resource, urlPart, prestashopKey);
         try {
             byte[] imageBytes = restTemplate.getForObject(imageUrl, byte[].class);
             if (imageBytes != null && imageBytes.length > 0) {
                 String filename = "ps_" + resource + "_" + id + (imageId != null ? "_" + imageId : "") + ".jpg";
-                return imageService.upload(imageBytes, filename);
+                return imageService.upload(imageBytes, filename, type);
             }
         } catch (Exception e) {
             log.error("Failed to download/upload image {} for {} {}", imageId, resource, id, e);

@@ -14,9 +14,14 @@ import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.dto.admin.product.list.ProductListResponse;
 import sk.tany.rest.api.dto.admin.product.search.ProductSearchResponse;
 import sk.tany.rest.api.mapper.ProductAdminApiMapper;
+import sk.tany.rest.api.dto.admin.product.upload.ProductUploadImageResponse;
 import sk.tany.rest.api.service.admin.ProductAdminService;
+import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.service.common.enums.ImageKitType;
 
 import java.util.Collections;
+import java.util.Optional;
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -25,6 +30,9 @@ class ProductAdminControllerTest {
 
     @Mock
     private ProductAdminService productService;
+
+    @Mock
+    private ImageService imageService;
 
     @Mock
     private ProductAdminApiMapper productAdminApiMapper;
@@ -76,5 +84,29 @@ class ProductAdminControllerTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("Search Result Product", result.getContent().get(0).getTitle());
         verify(productService, times(1)).search(categoryId, pageable);
+    }
+
+    @Test
+    void uploadImages_ShouldReturnUpdatedProduct() {
+        String id = "1";
+        ProductDto productDto = new ProductDto();
+        productDto.setId(id);
+        productDto.setImages(new ArrayList<>());
+
+        org.springframework.web.multipart.MultipartFile file = mock(org.springframework.web.multipart.MultipartFile.class);
+        org.springframework.web.multipart.MultipartFile[] files = {file};
+        String imageUrl = "http://image.url";
+
+        ProductUploadImageResponse response = new ProductUploadImageResponse();
+
+        when(productService.findById(id)).thenReturn(Optional.of(productDto));
+        when(imageService.upload(eq(file), eq(ImageKitType.PRODUCT))).thenReturn(imageUrl);
+        when(productService.update(eq(id), any(ProductDto.class))).thenReturn(productDto);
+        when(productAdminApiMapper.toUploadImageResponse(productDto)).thenReturn(response);
+
+        org.springframework.http.ResponseEntity<ProductUploadImageResponse> result = productAdminController.uploadImages(id, files);
+
+        assertEquals(org.springframework.http.HttpStatus.OK, result.getStatusCode());
+        verify(imageService, times(1)).upload(file, ImageKitType.PRODUCT);
     }
 }

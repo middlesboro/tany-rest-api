@@ -61,7 +61,7 @@ class BrandAdminControllerTest {
         updatedBrandDto.setImage(imageUrl);
 
         when(brandService.findById(brandId)).thenReturn(Optional.of(brandDto));
-        when(imageService.upload(any())).thenReturn(imageUrl);
+        when(imageService.upload(any(), any())).thenReturn(imageUrl);
         when(brandService.update(eq(brandId), any(BrandDto.class))).thenReturn(updatedBrandDto);
 
         mockMvc.perform(multipart("/api/admin/brands/{id}/image", brandId)

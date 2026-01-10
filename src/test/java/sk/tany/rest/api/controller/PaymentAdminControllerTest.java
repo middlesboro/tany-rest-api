@@ -99,4 +99,22 @@ class PaymentAdminControllerTest {
         assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
         verify(paymentService, times(1)).deleteById(id);
     }
+
+    @Test
+    void uploadImage_ShouldReturnUpdatedPayment() {
+        String id = "1";
+        PaymentDto paymentDto = new PaymentDto();
+        paymentDto.setId(id);
+        org.springframework.web.multipart.MultipartFile file = mock(org.springframework.web.multipart.MultipartFile.class);
+        String imageUrl = "http://image.url";
+
+        when(paymentService.findById(id)).thenReturn(Optional.of(paymentDto));
+        when(imageService.upload(eq(file), isNull())).thenReturn(imageUrl);
+        when(paymentService.update(eq(id), any(PaymentDto.class))).thenReturn(paymentDto);
+
+        ResponseEntity<PaymentDto> result = paymentAdminController.uploadImage(id, file);
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        verify(imageService, times(1)).upload(file, null);
+    }
 }

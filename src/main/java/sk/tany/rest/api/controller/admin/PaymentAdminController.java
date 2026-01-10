@@ -55,7 +55,7 @@ public class PaymentAdminController {
     public ResponseEntity<PaymentDto> uploadImage(@PathVariable String id, @RequestParam("file") MultipartFile file) {
         return paymentService.findById(id)
                 .map(payment -> {
-                    String imageUrl = imageService.upload(file);
+                    String imageUrl = imageService.upload(file, null);
                     payment.setImage(imageUrl);
                     PaymentDto updatedPayment = paymentService.update(id, payment);
                     return ResponseEntity.ok(updatedPayment);

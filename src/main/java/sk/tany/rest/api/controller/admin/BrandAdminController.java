@@ -12,6 +12,7 @@ import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.service.admin.BrandAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.service.common.enums.ImageKitType;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -62,7 +63,7 @@ public class BrandAdminController {
     public ResponseEntity<BrandDto> uploadImage(@PathVariable String id, @RequestParam("file") MultipartFile file) {
         return brandService.findById(id)
                 .map(brand -> {
-                    String imageUrl = imageService.upload(file);
+                    String imageUrl = imageService.upload(file, ImageKitType.BRAND);
                     brand.setImage(imageUrl);
                     BrandDto updatedBrand = brandService.update(id, brand);
                     return ResponseEntity.ok(updatedBrand);

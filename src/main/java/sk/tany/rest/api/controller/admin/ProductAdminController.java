@@ -20,6 +20,7 @@ import sk.tany.rest.api.dto.admin.product.upload.ProductUploadImageResponse;
 import sk.tany.rest.api.mapper.ProductAdminApiMapper;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.service.common.enums.ImageKitType;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 
 import java.util.ArrayList;
@@ -82,7 +83,7 @@ public class ProductAdminController {
         return productService.findById(id)
                 .map(product -> {
                     List<String> imageUrls = Arrays.stream(files)
-                            .map(imageService::upload)
+                            .map(file -> imageService.upload(file, ImageKitType.PRODUCT))
                             .toList();
 
                     if (product.getImages() == null) {
