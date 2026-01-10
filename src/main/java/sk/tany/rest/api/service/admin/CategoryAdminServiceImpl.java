@@ -28,6 +28,13 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     }
 
     @Override
+    public java.util.List<String> findIdsByPrestashopIds(java.util.List<Long> prestashopIds) {
+        return categoryRepository.findAllByPrestashopIdIn(prestashopIds).stream()
+                .map(sk.tany.rest.api.domain.category.Category::getId)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
     public CategoryDto save(CategoryDto categoryDto) {
         var category = categoryMapper.toEntity(categoryDto);
         var savedCategory = categoryRepository.save(category);

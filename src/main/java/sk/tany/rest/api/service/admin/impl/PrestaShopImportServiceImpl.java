@@ -9,7 +9,12 @@ import sk.tany.rest.api.domain.product.ProductStatus;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.dto.SupplierDto;
+import sk.tany.rest.api.dto.CategoryDto;
+import sk.tany.rest.api.dto.prestashop.PrestaShopCategoriesResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopCategory;
+import sk.tany.rest.api.dto.prestashop.PrestaShopCategoryDetailResponse;
+import sk.tany.rest.api.dto.prestashop.PrestaShopCategoryResponse;
+import sk.tany.rest.api.dto.prestashop.PrestaShopCategoryWrapper;
 import sk.tany.rest.api.dto.prestashop.PrestaShopImage;
 import sk.tany.rest.api.dto.prestashop.PrestaShopManufacturerDetailResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopManufacturerResponse;
@@ -24,6 +29,7 @@ import sk.tany.rest.api.dto.prestashop.PrestaShopSupplierResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopSupplierWrapper;
 import sk.tany.rest.api.dto.prestashop.PrestaShopSuppliersResponse;
 import sk.tany.rest.api.service.admin.BrandAdminService;
+import sk.tany.rest.api.service.admin.CategoryAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 import sk.tany.rest.api.service.admin.SupplierAdminService;
@@ -43,6 +49,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     private final ProductAdminService productAdminService;
     private final SupplierAdminService supplierAdminService;
     private final BrandAdminService brandAdminService;
+    private final CategoryAdminService categoryAdminService;
     private final ImageService imageService;
 
     @Value("${prestashop.url}")
@@ -54,6 +61,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     @Override
     public void importAllProducts() {
         log.info("Starting import of all products from PrestaShop");
+        importAllCategories();
         String url = String.format("%s/api/products?ws_key=%s&output_format=JSON", prestashopUrl, prestashopKey);
         try {
             PrestaShopProductsResponse response = restTemplate.getForObject(url, PrestaShopProductsResponse.class);
@@ -71,6 +79,63 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
             throw new RuntimeException("Error fetching product list from PrestaShop", e);
         }
         log.info("Finished import of all products from PrestaShop");
+    }
+
+    @Override
+    public void importAllCategories() {
+        log.info("Starting import of all categories from PrestaShop");
+        String url = String.format("%s/api/categories?ws_key=%s&output_format=JSON", prestashopUrl, prestashopKey);
+        try {
+            PrestaShopCategoriesResponse response = restTemplate.getForObject(url, PrestaShopCategoriesResponse.class);
+            if (response != null && response.getCategories() != null) {
+                for (PrestaShopCategoryResponse category : response.getCategories()) {
+                    try {
+                        importCategory(String.valueOf(category.getId()));
+                    } catch (Exception e) {
+                        log.error("Failed to import category with ID: {}", category.getId(), e);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error fetching category list from PrestaShop", e);
+            throw new RuntimeException("Error fetching category list from PrestaShop", e);
+        }
+        log.info("Finished import of all categories from PrestaShop");
+    }
+
+    private void importCategory(String id) {
+        log.info("Importing category with ID: {}", id);
+        String url = String.format("%s/api/categories/%s?ws_key=%s&output_format=JSON", prestashopUrl, id, prestashopKey);
+        try {
+            PrestaShopCategoryWrapper wrapper = restTemplate.getForObject(url, PrestaShopCategoryWrapper.class);
+            if (wrapper != null && wrapper.getCategory() != null) {
+                CategoryDto dto = mapToCategoryDto(wrapper.getCategory());
+                categoryAdminService.save(dto);
+                log.info("Successfully imported category with ID: {}", id);
+            }
+        } catch (Exception e) {
+            log.error("Error importing category with ID: {}", id, e);
+            throw new RuntimeException("Error importing category with ID: " + id, e);
+        }
+    }
+
+    private CategoryDto mapToCategoryDto(PrestaShopCategoryDetailResponse psCategory) {
+        CategoryDto dto = new CategoryDto();
+        dto.setPrestashopId(psCategory.getId());
+        dto.setTitle(parseLanguageValue(psCategory.getName()));
+        dto.setDescription(parseLanguageValue(psCategory.getDescription()));
+        dto.setSlug(parseLanguageValue(psCategory.getLinkRewrite()));
+        dto.setMetaTitle(parseLanguageValue(psCategory.getMetaTitle()));
+        dto.setMetaDescription(parseLanguageValue(psCategory.getMetaDescription()));
+        dto.setVisible("1".equals(psCategory.getActive()));
+
+        if (psCategory.getIdParent() != null) {
+            List<String> parentIds = categoryAdminService.findIdsByPrestashopIds(List.of(psCategory.getIdParent()));
+            if (!parentIds.isEmpty()) {
+                dto.setParentId(parentIds.get(0));
+            }
+        }
+        return dto;
     }
 
     @Override
@@ -216,19 +281,24 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         return dto;
     }
 
-    private static List<String> getCategoryIds(PrestaShopProductDetailResponse psProduct) {
-        List<String> categoryIds = new ArrayList<>();
+    private List<String> getCategoryIds(PrestaShopProductDetailResponse psProduct) {
+        List<Long> psCategoryIds = new ArrayList<>();
         if (psProduct.getCategoryIdDefault() != null) {
-            categoryIds.add(psProduct.getCategoryIdDefault());
+            try {
+                psCategoryIds.add(Long.parseLong(psProduct.getCategoryIdDefault()));
+            } catch (NumberFormatException ignored) {}
         }
         if (psProduct.getAssociations() != null && psProduct.getAssociations().getCategories() != null) {
              for(PrestaShopCategory cat : psProduct.getAssociations().getCategories()) {
-                 if(!categoryIds.contains(cat.getId())) {
-                     categoryIds.add(cat.getId());
-                 }
+                 try {
+                     Long psId = Long.parseLong(cat.getId());
+                     if(!psCategoryIds.contains(psId)) {
+                         psCategoryIds.add(psId);
+                     }
+                 } catch (NumberFormatException ignored) {}
              }
         }
-        return categoryIds;
+        return categoryAdminService.findIdsByPrestashopIds(psCategoryIds);
     }
 
     private String parseLanguageValue(Object value) {
