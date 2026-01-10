@@ -20,5 +20,6 @@ public class CustomerContextCartDto {
     private String email;
     private String phone;
     private String selectedPickupPointId;
+    private String selectedPickupPointName;
 
 }

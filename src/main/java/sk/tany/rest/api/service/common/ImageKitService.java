@@ -22,10 +22,20 @@ public class ImageKitService implements ImageService {
     @Override
     public String upload(MultipartFile file) {
         try {
-            FileCreateRequest fileCreateRequest = new FileCreateRequest(file.getBytes(), UUID.randomUUID().toString());
+            return upload(file.getBytes(), UUID.randomUUID().toString());
+        } catch (IOException e) {
+            log.error("Error while reading file bytes", e);
+            throw new RuntimeException("Error while reading file bytes", e);
+        }
+    }
+
+    @Override
+    public String upload(byte[] file, String fileName) {
+        try {
+            FileCreateRequest fileCreateRequest = new FileCreateRequest(file, fileName);
             Result result = imageKit.upload(fileCreateRequest);
             return result.getUrl();
-        } catch (IOException | InternalServerException e) {
+        } catch (InternalServerException e) {
             log.error("Error while uploading image to ImageKit", e);
             throw new RuntimeException("Error while uploading image to ImageKit", e);
         } catch (Exception e) {

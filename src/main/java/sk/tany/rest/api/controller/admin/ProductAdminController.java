@@ -18,6 +18,7 @@ import sk.tany.rest.api.dto.admin.product.update.ProductUpdateRequest;
 import sk.tany.rest.api.dto.admin.product.update.ProductUpdateResponse;
 import sk.tany.rest.api.dto.admin.product.upload.ProductUploadImageResponse;
 import sk.tany.rest.api.mapper.ProductAdminApiMapper;
+import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 
@@ -34,6 +35,7 @@ public class ProductAdminController {
     private final ProductAdminService productService;
     private final ImageService imageService;
     private final ProductAdminApiMapper productAdminApiMapper;
+    private final PrestaShopImportService prestaShopImportService;
 
     @PostMapping
     public ResponseEntity<ProductCreateResponse> createProduct(@RequestBody ProductCreateRequest product) {
@@ -92,5 +94,17 @@ public class ProductAdminController {
                     return ResponseEntity.ok(productAdminApiMapper.toUploadImageResponse(updatedProduct));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/import/prestashop")
+    public ResponseEntity<Void> importAllProducts() {
+        prestaShopImportService.importAllProducts();
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/import/prestashop/{id}")
+    public ResponseEntity<Void> importProduct(@PathVariable String id) {
+        prestaShopImportService.importProduct(id);
+        return ResponseEntity.ok().build();
     }
 }

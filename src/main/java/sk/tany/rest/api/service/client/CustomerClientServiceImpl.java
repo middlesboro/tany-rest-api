@@ -136,6 +136,7 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         customerContextCartDto.setDeliveryAddress(cartDto.getDeliveryAddress());
         customerContextCartDto.setInvoiceAddress(cartDto.getInvoiceAddress());
         customerContextCartDto.setSelectedPickupPointId(cartDto.getSelectedPickupPointId());
+        customerContextCartDto.setSelectedPickupPointName(cartDto.getSelectedPickupPointName());
 
         return new CustomerContextDto(customerDto, customerContextCartDto);
     }
