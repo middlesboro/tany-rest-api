@@ -2,8 +2,8 @@ package sk.tany.rest.api.dto.prestashop;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+
 import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 public class PrestaShopProductDetailResponse {
@@ -19,6 +19,8 @@ public class PrestaShopProductDetailResponse {
     private Object descriptionShort;
 
     private BigDecimal price;
+    @JsonProperty("wholesale_price")
+    private BigDecimal wholesalePrice;
 
     @JsonProperty("active")
     private String active; // "1" or "0"

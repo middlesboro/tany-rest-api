@@ -6,6 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
@@ -25,6 +26,7 @@ public class ShopSettings {
     private String ico;
     private String dic;
     private String vatNumber;
+    private BigDecimal vat;
     @CreatedDate
     private Instant createdDate;
     @LastModifiedDate

@@ -1,6 +1,8 @@
 package sk.tany.rest.api.dto.admin.shopsettings.list;
 
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
@@ -18,6 +20,7 @@ public class ShopSettingsListResponse {
     private String ico;
     private String dic;
     private String vatNumber;
+    private BigDecimal vat;
     private Instant createdDate;
     private Instant updateDate;
 }
