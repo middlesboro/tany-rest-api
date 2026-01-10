@@ -55,7 +55,7 @@ public class CarrierAdminController {
     public ResponseEntity<CarrierDto> uploadImage(@PathVariable String id, @RequestParam("file") MultipartFile file) {
         return carrierService.findById(id)
                 .map(carrier -> {
-                    String imageUrl = imageService.upload(file);
+                    String imageUrl = imageService.upload(file, null);
                     carrier.setImage(imageUrl);
                     CarrierDto updatedCarrier = carrierService.update(id, carrier);
                     return ResponseEntity.ok(updatedCarrier);

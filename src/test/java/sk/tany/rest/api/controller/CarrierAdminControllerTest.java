@@ -99,4 +99,22 @@ class CarrierAdminControllerTest {
         assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
         verify(carrierService, times(1)).deleteById(id);
     }
+
+    @Test
+    void uploadImage_ShouldReturnUpdatedCarrier() {
+        String id = "1";
+        CarrierDto carrierDto = new CarrierDto();
+        carrierDto.setId(id);
+        org.springframework.web.multipart.MultipartFile file = mock(org.springframework.web.multipart.MultipartFile.class);
+        String imageUrl = "http://image.url";
+
+        when(carrierService.findById(id)).thenReturn(Optional.of(carrierDto));
+        when(imageService.upload(eq(file), isNull())).thenReturn(imageUrl);
+        when(carrierService.update(eq(id), any(CarrierDto.class))).thenReturn(carrierDto);
+
+        ResponseEntity<CarrierDto> result = carrierAdminController.uploadImage(id, file);
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        verify(imageService, times(1)).upload(file, null);
+    }
 }

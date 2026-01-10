@@ -16,6 +16,7 @@ import sk.tany.rest.api.dto.prestashop.PrestaShopProductsResponse;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.service.common.enums.ImageKitType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -139,7 +140,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         try {
             byte[] imageBytes = restTemplate.getForObject(imageUrl, byte[].class);
             if (imageBytes != null && imageBytes.length > 0) {
-                return imageService.upload(imageBytes, "ps_product_" + productId + "_" + imageId + ".jpg");
+                return imageService.upload(imageBytes, "ps_product_" + productId + "_" + imageId + ".jpg", ImageKitType.PRODUCT);
             }
         } catch (Exception e) {
             log.error("Failed to download/upload image {} for product {}", imageId, productId, e);
