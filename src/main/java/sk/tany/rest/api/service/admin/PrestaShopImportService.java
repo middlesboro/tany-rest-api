@@ -5,4 +5,6 @@ public interface PrestaShopImportService {
     void importProduct(String id);
     void importAllSuppliers();
     void importAllManufacturers();
+    void importAllCategories();
+    void importCategory(String id);
 }

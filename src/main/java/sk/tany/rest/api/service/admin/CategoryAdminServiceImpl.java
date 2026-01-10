@@ -46,4 +46,9 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     public void deleteById(String id) {
         categoryRepository.deleteById(id);
     }
+
+    @Override
+    public Optional<CategoryDto> findByPrestashopId(Long prestashopId) {
+        return categoryRepository.findByPrestashopId(prestashopId).map(categoryMapper::toDto);
+    }
 }
