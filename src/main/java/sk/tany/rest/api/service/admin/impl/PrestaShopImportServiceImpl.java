@@ -315,7 +315,6 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
                     parentOpt.ifPresent(parent -> dto.setParentId(parent.getId()));
                 }
 
-                categoryAdminService.findByPrestashopId(wrapper.getCategory().getId()).ifPresent(existing -> dto.setId(existing.getId()));
                 categoryAdminService.save(dto);
                 log.info("Successfully imported category with ID: {}", id);
             }
@@ -328,6 +327,9 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     private CategoryDto mapToCategoryDto(PrestaShopCategoryDetailResponse psCategory) {
         CategoryDto dto = new CategoryDto();
         dto.setPrestashopId(psCategory.getId());
+        if (psCategory.getIdParent() != null) {
+            dto.setPrestashopParentId(Long.valueOf(psCategory.getIdParent()));
+        }
         dto.setTitle(parseLanguageValue(psCategory.getName()));
         dto.setDescription(parseLanguageValue(psCategory.getDescription()));
         dto.setMetaTitle(parseLanguageValue(psCategory.getMetaTitle()));

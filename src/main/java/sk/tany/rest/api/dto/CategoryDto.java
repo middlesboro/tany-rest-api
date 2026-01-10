@@ -6,6 +6,7 @@ import lombok.Data;
 public class CategoryDto {
     private String id;
     private Long prestashopId;
+    private Long prestashopParentId;
     private String title;
     private String description;
     private String metaTitle;

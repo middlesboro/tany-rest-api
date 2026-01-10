@@ -11,6 +11,7 @@ public class Category {
     @Id
     private String id;
     private Long prestashopId;
+    private Long prestashopParentId;
     private String title;
     private String description;
     private String metaTitle;
