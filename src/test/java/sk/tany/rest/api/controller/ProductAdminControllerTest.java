@@ -22,6 +22,7 @@ import sk.tany.rest.api.service.common.enums.ImageKitType;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -108,5 +109,26 @@ class ProductAdminControllerTest {
 
         assertEquals(org.springframework.http.HttpStatus.OK, result.getStatusCode());
         verify(imageService, times(1)).upload(file, ImageKitType.PRODUCT);
+    }
+
+    @Test
+    void deleteImage_ShouldRemoveImageAndReturnNoContent() {
+        String id = "1";
+        String imageUrl = "http://image.url/to/delete";
+        ProductDto productDto = new ProductDto();
+        productDto.setId(id);
+        List<String> images = new ArrayList<>();
+        images.add(imageUrl);
+        productDto.setImages(images);
+
+        when(productService.findById(id)).thenReturn(Optional.of(productDto));
+        when(productService.update(eq(id), any(ProductDto.class))).thenReturn(productDto);
+
+        org.springframework.http.ResponseEntity<Void> result = productAdminController.deleteImage(id, imageUrl);
+
+        assertEquals(org.springframework.http.HttpStatus.NO_CONTENT, result.getStatusCode());
+        verify(imageService, times(1)).delete(imageUrl);
+        verify(productService, times(1)).update(eq(id), any(ProductDto.class));
+        assertEquals(0, productDto.getImages().size());
     }
 }

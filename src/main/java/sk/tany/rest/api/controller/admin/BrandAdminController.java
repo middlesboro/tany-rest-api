@@ -70,4 +70,18 @@ public class BrandAdminController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/{id}/image")
+    public ResponseEntity<Void> deleteImage(@PathVariable String id) {
+        return brandService.findById(id)
+                .map(brand -> {
+                    if (brand.getImage() != null) {
+                        imageService.delete(brand.getImage());
+                        brand.setImage(null);
+                        brandService.update(id, brand);
+                    }
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

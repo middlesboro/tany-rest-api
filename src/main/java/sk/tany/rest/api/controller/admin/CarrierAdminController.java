@@ -62,4 +62,18 @@ public class CarrierAdminController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/{id}/image")
+    public ResponseEntity<Void> deleteImage(@PathVariable String id) {
+        return carrierService.findById(id)
+                .map(carrier -> {
+                    if (carrier.getImage() != null) {
+                        imageService.delete(carrier.getImage());
+                        carrier.setImage(null);
+                        carrierService.update(id, carrier);
+                    }
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
