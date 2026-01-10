@@ -13,6 +13,7 @@ import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.controller.admin.BrandAdminController;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.service.admin.BrandAdminService;
+import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.common.ImageService;
 
 import java.util.Optional;
@@ -36,6 +37,9 @@ class BrandAdminControllerTest {
 
     @MockBean
     private ImageService imageService;
+
+    @MockBean
+    private PrestaShopImportService prestaShopImportService;
 
     @MockBean
     private JwtUtil jwtUtil;

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.service.admin.BrandAdminService;
+import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
 
@@ -21,6 +22,12 @@ public class BrandAdminController {
 
     private final BrandAdminService brandService;
     private final ImageService imageService;
+    private final PrestaShopImportService prestaShopImportService;
+
+    @PostMapping("/import/prestashop")
+    public void importFromPrestaShop() {
+        prestaShopImportService.importAllManufacturers();
+    }
 
     @PostMapping
     public ResponseEntity<BrandDto> createBrand(@RequestBody BrandDto brand) {

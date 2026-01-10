@@ -13,9 +13,11 @@ import java.time.Instant;
 public class Brand {
     @Id
     private String id;
+    private Long prestashopId;
     private String name;
     private String image;
     private String metaTitle;
+    private boolean active;
     private String metaDescription;
     @CreatedDate
     private Instant createdDate;
