@@ -18,6 +18,7 @@ public class CartDto {
     private String email;
     private String phone;
     private String selectedPickupPointId;
+    private String selectedPickupPointName;
     private AddressDto invoiceAddress;
     private AddressDto deliveryAddress;
     private Instant createDate;

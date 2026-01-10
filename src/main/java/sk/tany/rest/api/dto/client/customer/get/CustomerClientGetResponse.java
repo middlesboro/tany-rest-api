@@ -58,6 +58,7 @@ public class CustomerClientGetResponse {
         private AddressDto deliveryAddress;
         private AddressDto invoiceAddress;
         private String selectedPickupPointId;
+        private String selectedPickupPointName;
     }
 
     @Data

@@ -27,6 +27,7 @@ public class OrderDto {
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String selectedPickupPointId;
+    private String selectedPickupPointName;
     private String customerId;
     private OrderStatus status;
     private String email;

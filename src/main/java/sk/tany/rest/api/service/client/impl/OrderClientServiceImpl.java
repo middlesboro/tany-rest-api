@@ -47,6 +47,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     public OrderDto createOrder(OrderDto orderDto) {
         Order order = orderMapper.toEntity(orderDto);
         order.setSelectedPickupPointId(orderDto.getSelectedPickupPointId());
+        order.setSelectedPickupPointName(orderDto.getSelectedPickupPointName());
         try {
             order.setCustomerId(getCurrentCustomerId());
         } catch (Exception e) {
