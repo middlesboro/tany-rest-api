@@ -6,8 +6,11 @@ import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.CategoryDto;
 import sk.tany.rest.api.mapper.CategoryMapper;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +21,21 @@ public class CategoryClientServiceImpl implements CategoryClientService {
 
     @Override
     public List<CategoryDto> findAll() {
-        return categoryRepository.findAll().stream().map(categoryMapper::toDto).toList();
+        List<CategoryDto> allCategories = categoryRepository.findAll().stream()
+                .map(categoryMapper::toDto)
+                .toList();
+
+        Map<String, List<CategoryDto>> childrenMap = allCategories.stream()
+                .filter(c -> c.getParentId() != null)
+                .collect(Collectors.groupingBy(CategoryDto::getParentId));
+
+        for (CategoryDto category : allCategories) {
+            category.setChildren(childrenMap.getOrDefault(category.getId(), new ArrayList<>()));
+        }
+
+        return allCategories.stream()
+                .filter(c -> c.getParentId() == null)
+                .toList();
     }
 
     @Override
