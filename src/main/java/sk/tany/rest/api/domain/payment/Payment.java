@@ -17,6 +17,8 @@ public class Payment {
     private String name;
     private String description;
     private String image;
+    private BigDecimal wholesalePrice;
+    private BigDecimal priceWithoutVat;
     private BigDecimal price;
     private PaymentType type;
     @CreatedDate

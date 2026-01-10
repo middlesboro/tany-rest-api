@@ -69,6 +69,8 @@ public class CustomerClientGetResponse {
         private String title;
         private String shortDescription;
         private String description;
+        private BigDecimal wholesalePrice;
+        private BigDecimal priceWithoutVat;
         private BigDecimal price;
         private BigDecimal weight;
         private Integer quantity;

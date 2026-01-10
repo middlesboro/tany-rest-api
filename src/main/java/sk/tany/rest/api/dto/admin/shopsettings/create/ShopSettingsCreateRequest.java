@@ -2,6 +2,8 @@ package sk.tany.rest.api.dto.admin.shopsettings.create;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class ShopSettingsCreateRequest {
     private String bankName;
@@ -16,4 +18,5 @@ public class ShopSettingsCreateRequest {
     private String ico;
     private String dic;
     private String vatNumber;
+    private BigDecimal vat;
 }

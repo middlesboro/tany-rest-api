@@ -16,6 +16,8 @@ public class CarrierDto {
     private String image;
     private Integer order;
     private CarrierType type;
+    private BigDecimal wholesalePrice;
+    private BigDecimal priceWithoutVat;
     private BigDecimal price;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<CarrierPriceRangeDto> ranges;
