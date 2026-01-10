@@ -39,6 +39,7 @@ import sk.tany.rest.api.service.common.enums.ImageKitType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -207,7 +208,18 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         dto.setEan(psProduct.getEan13());
 
         dto.setStatus("1".equals(psProduct.getActive()) ? ProductStatus.AVAILABLE : ProductStatus.SOLD_OUT);
-        dto.setCategoryIds(getCategoryIds(psProduct));
+
+        List<String> prestashopCategoryIdList = getCategoryIds(psProduct);
+        for (String prestashopCategoryId : prestashopCategoryIdList) {
+            Optional<CategoryDto> categoryOptional = categoryAdminService.findByPrestashopId(Long.valueOf(prestashopCategoryId));
+            categoryOptional.ifPresent(categoryDto -> dto.getCategoryIds().add(categoryDto.getId()));
+        }
+
+        Optional<SupplierDto> supplierOptional = supplierAdminService.findByPrestashopId(Long.valueOf(psProduct.getSupplierId()));
+        supplierOptional.ifPresent(supplierDto -> dto.setSupplierId(supplierDto.getId()));
+
+        Optional<BrandDto> brandOptional = brandAdminService.findByPrestashopId(Long.valueOf(psProduct.getManufacturerId()));
+        brandOptional.ifPresent(brandDto -> dto.setBrandId(brandDto.getId()));
 
         List<String> imageUrls = new ArrayList<>();
         if (psProduct.getAssociations() != null && psProduct.getAssociations().getImages() != null) {

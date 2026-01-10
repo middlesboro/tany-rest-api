@@ -13,4 +13,5 @@ public interface BrandAdminService {
     BrandDto update(String id, BrandDto brandDto);
     BrandDto patch(String id, sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest patchDto);
     void deleteById(String id);
+    Optional<BrandDto> findByPrestashopId(Long brandPrestashopId);
 }

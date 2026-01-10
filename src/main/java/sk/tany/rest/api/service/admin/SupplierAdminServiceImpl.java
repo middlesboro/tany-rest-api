@@ -55,4 +55,9 @@ public class SupplierAdminServiceImpl implements SupplierAdminService {
     public void deleteById(String id) {
         supplierRepository.deleteById(id);
     }
+
+    @Override
+    public Optional<SupplierDto> findByPrestashopId(Long prestashopId) {
+        return supplierRepository.findByPrestashopId(prestashopId).map(supplierMapper::toDto);
+    }
 }

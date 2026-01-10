@@ -28,6 +28,12 @@ public class PrestaShopProductDetailResponse {
     @JsonProperty("id_category_default")
     private String categoryIdDefault;
 
+    @JsonProperty("id_supplier")
+    private String supplierId;
+
+    @JsonProperty("id_manufacturer")
+    private String manufacturerId;
+
     @JsonProperty("associations")
     private PrestaShopAssociations associations;
 

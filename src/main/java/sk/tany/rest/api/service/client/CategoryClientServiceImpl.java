@@ -16,12 +16,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CategoryClientServiceImpl implements CategoryClientService {
 
+    private static final List<Long> EXCLUDED_PRESTASHOP_IDS = List.of(1L, 2L);
+
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
     @Override
     public List<CategoryDto> findAll() {
         List<CategoryDto> allCategories = categoryRepository.findAll().stream()
+                .filter(c -> !EXCLUDED_PRESTASHOP_IDS.contains(c.getPrestashopId()))
                 .map(categoryMapper::toDto)
                 .toList();
 
@@ -34,7 +37,7 @@ public class CategoryClientServiceImpl implements CategoryClientService {
         }
 
         return allCategories.stream()
-                .filter(c -> c.getParentId() == null)
+                .filter(c -> c.getPrestashopParentId() == 2L)
                 .toList();
     }
 

@@ -4,6 +4,7 @@ import lombok.Data;
 import sk.tany.rest.api.domain.product.ProductStatus;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -22,7 +23,7 @@ public class ProductDto {
     private String productCode;
     private String ean;
     private String slug;
-    private List<String> categoryIds;
+    private List<String> categoryIds = new ArrayList<>();
     private String supplierId;
     private String brandId;
     private List<String> images;

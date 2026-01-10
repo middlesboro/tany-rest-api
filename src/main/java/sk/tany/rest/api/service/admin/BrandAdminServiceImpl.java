@@ -55,4 +55,9 @@ public class BrandAdminServiceImpl implements BrandAdminService {
     public void deleteById(String id) {
         brandRepository.deleteById(id);
     }
+
+    @Override
+    public Optional<BrandDto> findByPrestashopId(Long prestashopId) {
+        return brandRepository.findByPrestashopId(prestashopId).map(brandMapper::toDto);
+    }
 }

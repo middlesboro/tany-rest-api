@@ -13,4 +13,5 @@ public interface SupplierAdminService {
     SupplierDto update(String id, SupplierDto supplierDto);
     SupplierDto patch(String id, sk.tany.rest.api.dto.admin.supplier.patch.SupplierPatchRequest patchDto);
     void deleteById(String id);
+    Optional<SupplierDto> findByPrestashopId(Long supplierId);
 }
