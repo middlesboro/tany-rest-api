@@ -37,8 +37,9 @@ public class ImageKitService implements ImageService {
             if (type != null) {
                 switch (type) {
                     case PRODUCT -> fileCreateRequest.setFolder("products");
-                    case SUPPLIER -> fileCreateRequest.setFolder("suppliers");
                     case BRAND -> fileCreateRequest.setFolder("brands");
+                    case CARRIER -> fileCreateRequest.setFolder("carriers");
+                    case PAYMENT_METHOD -> fileCreateRequest.setFolder("payment_methods");
                 }
             }
             Result result = imageKit.upload(fileCreateRequest);
