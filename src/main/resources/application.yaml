@@ -41,6 +41,10 @@ gpwebpay:
   url: ${GPWEBPAY_URL:https://test.3dsecure.gpwebpay.com/pgw/order.do}
   return-url: ${GPWEBPAY_RETURN_URL:http://localhost:3000/global-payments-callback}
 
+prestashop:
+  url: ${PRESTASHOP_URL}
+  key: ${PRESTASHOP_KEY}
+
 security:
   excluded-urls:
     - /api/login/**
