@@ -13,6 +13,7 @@ import sk.tany.rest.api.dto.admin.product.create.ProductCreateRequest;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
 import sk.tany.rest.api.dto.admin.product.get.ProductGetResponse;
 import sk.tany.rest.api.dto.admin.product.list.ProductListResponse;
+import sk.tany.rest.api.dto.admin.product.patch.ProductPatchRequest;
 import sk.tany.rest.api.dto.admin.product.search.ProductSearchResponse;
 import sk.tany.rest.api.dto.admin.product.update.ProductUpdateRequest;
 import sk.tany.rest.api.dto.admin.product.update.ProductUpdateResponse;
@@ -69,6 +70,12 @@ public class ProductAdminController {
     public ResponseEntity<ProductUpdateResponse> updateProduct(@PathVariable String id, @RequestBody ProductUpdateRequest product) {
         ProductDto productDto = productAdminApiMapper.toDto(product);
         ProductDto updatedProduct = productService.update(id, productDto);
+        return ResponseEntity.ok(productAdminApiMapper.toUpdateResponse(updatedProduct));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ProductUpdateResponse> patchProduct(@PathVariable String id, @RequestBody ProductPatchRequest patchDto) {
+        ProductDto updatedProduct = productService.patch(id, patchDto);
         return ResponseEntity.ok(productAdminApiMapper.toUpdateResponse(updatedProduct));
     }
 

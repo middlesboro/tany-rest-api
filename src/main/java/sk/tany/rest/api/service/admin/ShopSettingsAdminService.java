@@ -12,6 +12,8 @@ public interface ShopSettingsAdminService {
 
     ShopSettingsGetResponse update(String id, ShopSettingsUpdateRequest request);
 
+    ShopSettingsGetResponse patch(String id, sk.tany.rest.api.dto.admin.shopsettings.patch.ShopSettingsPatchRequest request);
+
     void delete(String id);
 
     ShopSettingsGetResponse get(String id);

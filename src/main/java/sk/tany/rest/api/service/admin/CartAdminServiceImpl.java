@@ -43,4 +43,11 @@ public class CartAdminServiceImpl implements CartAdminService {
         cartMapper.updateEntityFromDto(cartDto, cart);
         return cartMapper.toDto(cartRepository.save(cart));
     }
+
+    @Override
+    public CartDto patch(String id, sk.tany.rest.api.dto.admin.cart.patch.CartPatchRequest patchDto) {
+        var cart = cartRepository.findById(id).orElseThrow(() -> new RuntimeException("Cart not found"));
+        cartMapper.updateEntityFromPatch(patchDto, cart);
+        return cartMapper.toDto(cartRepository.save(cart));
+    }
 }

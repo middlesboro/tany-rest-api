@@ -44,6 +44,14 @@ public class BrandAdminServiceImpl implements BrandAdminService {
     }
 
     @Override
+    public BrandDto patch(String id, sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest patchDto) {
+        var brand = brandRepository.findById(id).orElseThrow(() -> new RuntimeException("Brand not found"));
+        brandMapper.updateEntityFromPatch(patchDto, brand);
+        var savedBrand = brandRepository.save(brand);
+        return brandMapper.toDto(savedBrand);
+    }
+
+    @Override
     public void deleteById(String id) {
         brandRepository.deleteById(id);
     }

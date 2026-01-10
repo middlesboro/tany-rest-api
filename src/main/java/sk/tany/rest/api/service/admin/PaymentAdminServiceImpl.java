@@ -43,6 +43,14 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
     }
 
     @Override
+    public PaymentDto patch(String id, sk.tany.rest.api.dto.admin.payment.patch.PaymentPatchRequest patchDto) {
+        var payment = paymentRepository.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));
+        paymentMapper.updateEntityFromPatch(patchDto, payment);
+        var savedPayment = paymentRepository.save(payment);
+        return paymentMapper.toDto(savedPayment);
+    }
+
+    @Override
     public void deleteById(String id) {
         paymentRepository.deleteById(id);
     }

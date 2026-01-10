@@ -43,6 +43,14 @@ public class OrderAdminServiceImpl implements OrderAdminService {
     }
 
     @Override
+    public OrderDto patch(String id, sk.tany.rest.api.dto.admin.order.patch.OrderPatchRequest patchDto) {
+        var order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+        orderMapper.updateEntityFromPatch(patchDto, order);
+        var savedOrder = orderRepository.save(order);
+        return orderMapper.toDto(savedOrder);
+    }
+
+    @Override
     public void deleteById(String id) {
         orderRepository.deleteById(id);
     }

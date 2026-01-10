@@ -1,0 +1,22 @@
+package sk.tany.rest.api.dto.admin.shopsettings.patch;
+
+import lombok.Data;
+
+import java.math.BigDecimal;
+
+@Data
+public class ShopSettingsPatchRequest {
+    private String bankName;
+    private String bankAccount;
+    private String bankBic;
+    private String shopStreet;
+    private String shopZip;
+    private String shopCity;
+    private String shopPhoneNumber;
+    private String shopEmail;
+    private String organizationName;
+    private String ico;
+    private String dic;
+    private String vatNumber;
+    private BigDecimal vat;
+}

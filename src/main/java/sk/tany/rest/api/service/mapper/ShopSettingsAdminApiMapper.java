@@ -23,4 +23,7 @@ public interface ShopSettingsAdminApiMapper {
     List<ShopSettingsListResponse> toListResponse(List<ShopSettings> entities);
 
     void update(@MappingTarget ShopSettings entity, ShopSettingsUpdateRequest request);
+
+    @org.mapstruct.BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateFromPatch(@MappingTarget ShopSettings entity, sk.tany.rest.api.dto.admin.shopsettings.patch.ShopSettingsPatchRequest patch);
 }

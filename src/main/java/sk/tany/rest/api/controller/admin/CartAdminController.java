@@ -12,6 +12,7 @@ import sk.tany.rest.api.dto.admin.cart.create.CartAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.cart.create.CartAdminCreateResponse;
 import sk.tany.rest.api.dto.admin.cart.get.CartAdminGetResponse;
 import sk.tany.rest.api.dto.admin.cart.list.CartAdminListResponse;
+import sk.tany.rest.api.dto.admin.cart.patch.CartPatchRequest;
 import sk.tany.rest.api.dto.admin.cart.update.CartAdminUpdateRequest;
 import sk.tany.rest.api.dto.admin.cart.update.CartAdminUpdateResponse;
 import sk.tany.rest.api.mapper.CartAdminApiMapper;
@@ -79,6 +80,12 @@ public class CartAdminController {
         CartDto dto = cartAdminApiMapper.toDto(cartDto);
         dto.setCartId(id);
         CartDto updatedCart = cartService.save(dto);
+        return new ResponseEntity<>(cartAdminApiMapper.toUpdateResponse(updatedCart), HttpStatus.OK);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CartAdminUpdateResponse> patchCart(@PathVariable String id, @RequestBody CartPatchRequest patchDto) {
+        CartDto updatedCart = cartService.patch(id, patchDto);
         return new ResponseEntity<>(cartAdminApiMapper.toUpdateResponse(updatedCart), HttpStatus.OK);
     }
 

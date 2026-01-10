@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.admin.shopsettings.create.ShopSettingsCreateRequest;
 import sk.tany.rest.api.dto.admin.shopsettings.get.ShopSettingsGetResponse;
 import sk.tany.rest.api.dto.admin.shopsettings.list.ShopSettingsListResponse;
+import sk.tany.rest.api.dto.admin.shopsettings.patch.ShopSettingsPatchRequest;
 import sk.tany.rest.api.dto.admin.shopsettings.update.ShopSettingsUpdateRequest;
 import sk.tany.rest.api.service.admin.ShopSettingsAdminService;
 
@@ -46,6 +47,12 @@ public class ShopSettingsAdminController {
     @Operation(summary = "Update shop settings by ID")
     public ShopSettingsGetResponse update(@PathVariable String id, @RequestBody ShopSettingsUpdateRequest request) {
         return service.update(id, request);
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Patch shop settings by ID")
+    public ShopSettingsGetResponse patch(@PathVariable String id, @RequestBody ShopSettingsPatchRequest request) {
+        return service.patch(id, request);
     }
 
     @DeleteMapping("/{id}")

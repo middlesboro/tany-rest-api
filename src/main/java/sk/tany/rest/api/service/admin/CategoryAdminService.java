@@ -11,5 +11,6 @@ public interface CategoryAdminService {
     Optional<CategoryDto> findById(String id);
     CategoryDto save(CategoryDto categoryDto);
     CategoryDto update(String id, CategoryDto categoryDto);
+    CategoryDto patch(String id, sk.tany.rest.api.dto.admin.category.patch.CategoryPatchRequest patchDto);
     void deleteById(String id);
 }

@@ -43,6 +43,14 @@ public class CarrierAdminServiceImpl implements CarrierAdminService {
     }
 
     @Override
+    public CarrierDto patch(String id, sk.tany.rest.api.dto.admin.carrier.patch.CarrierPatchRequest patchDto) {
+        var carrier = carrierRepository.findById(id).orElseThrow(() -> new RuntimeException("Carrier not found"));
+        carrierMapper.updateEntityFromPatch(patchDto, carrier);
+        var savedCarrier = carrierRepository.save(carrier);
+        return carrierMapper.toDto(savedCarrier);
+    }
+
+    @Override
     public void deleteById(String id) {
         carrierRepository.deleteById(id);
     }

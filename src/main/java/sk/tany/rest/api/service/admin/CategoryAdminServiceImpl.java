@@ -43,6 +43,14 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     }
 
     @Override
+    public CategoryDto patch(String id, sk.tany.rest.api.dto.admin.category.patch.CategoryPatchRequest patchDto) {
+        var category = categoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Category not found"));
+        categoryMapper.updateEntityFromPatch(patchDto, category);
+        var savedCategory = categoryRepository.save(category);
+        return categoryMapper.toDto(savedCategory);
+    }
+
+    @Override
     public void deleteById(String id) {
         categoryRepository.deleteById(id);
     }

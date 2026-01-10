@@ -11,5 +11,6 @@ public interface CarrierAdminService {
     Optional<CarrierDto> findById(String id);
     CarrierDto save(CarrierDto carrierDto);
     CarrierDto update(String id, CarrierDto carrierDto);
+    CarrierDto patch(String id, sk.tany.rest.api.dto.admin.carrier.patch.CarrierPatchRequest patchDto);
     void deleteById(String id);
 }

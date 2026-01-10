@@ -9,4 +9,5 @@ public interface CartAdminService {
     Optional<CartDto> findById(String id);
     void deleteById(String id);
     CartDto save(CartDto cartDto);
+    CartDto patch(String id, sk.tany.rest.api.dto.admin.cart.patch.CartPatchRequest patchDto);
 }
