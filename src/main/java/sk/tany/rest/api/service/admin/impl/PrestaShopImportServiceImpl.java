@@ -130,6 +130,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     private SupplierDto mapToSupplierDto(PrestaShopSupplierDetailResponse psSupplier) {
         SupplierDto dto = new SupplierDto();
         dto.setName(psSupplier.getName());
+        dto.setPrestashopId(psSupplier.getId());
         dto.setMetaTitle(parseLanguageValue(psSupplier.getMetaTitle()));
         dto.setMetaDescription(parseLanguageValue(psSupplier.getMetaDescription()));
         return dto;
@@ -176,9 +177,10 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     private BrandDto mapToBrandDto(PrestaShopManufacturerDetailResponse psManufacturer) {
         BrandDto dto = new BrandDto();
         dto.setName(psManufacturer.getName());
+        dto.setPrestashopId(psManufacturer.getId());
         dto.setMetaTitle(parseLanguageValue(psManufacturer.getMetaTitle()));
         dto.setMetaDescription(parseLanguageValue(psManufacturer.getMetaDescription()));
-
+        dto.setActive("1".equals(psManufacturer.getActive()));
         String imageUrl = downloadAndUploadImage("manufacturers", psManufacturer.getId(), null);
         dto.setImage(imageUrl);
 
