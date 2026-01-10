@@ -3,20 +3,23 @@ package sk.tany.rest.api.service.client.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.domain.carrier.Carrier;
-import sk.tany.rest.api.domain.carrier.CarrierRepository;
-import sk.tany.rest.api.domain.customer.Customer;
-import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderItem;
 import sk.tany.rest.api.domain.order.OrderRepository;
-import sk.tany.rest.api.domain.payment.Payment;
-import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.dto.CarrierDto;
+import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.helper.OrderHelper;
 import sk.tany.rest.api.mapper.OrderMapper;
+import sk.tany.rest.api.service.client.CarrierClientService;
+import sk.tany.rest.api.service.client.CustomerClientService;
 import sk.tany.rest.api.service.client.OrderClientService;
+import sk.tany.rest.api.service.client.PaymentClientService;
+import org.springframework.context.event.EventListener;
+import sk.tany.rest.api.domain.order.OrderStatus;
+import sk.tany.rest.api.event.PaymentSuccessfulEvent;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.SequenceService;
 
@@ -30,17 +33,19 @@ public class OrderClientServiceImpl implements OrderClientService {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final CustomerRepository customerRepository;
+    private final CustomerClientService customerClientService;
     private final SequenceService sequenceService;
-    private final CarrierRepository carrierRepository;
-    private final PaymentRepository paymentRepository;
+    private final CarrierClientService carrierClientService;
+    private final PaymentClientService paymentClientService;
     private final ProductClientService productClientService;
 
-    private String getCurrentCustomerId() {
+    private CustomerDto getCurrentCustomer() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return customerRepository.findByEmail(email)
-                .map(Customer::getId)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        CustomerDto customer = customerClientService.findByEmail(email);
+        if (customer != null) {
+            return customer;
+        }
+        throw new RuntimeException("Customer not found");
     }
 
     @Override
@@ -49,24 +54,29 @@ public class OrderClientServiceImpl implements OrderClientService {
         order.setSelectedPickupPointId(orderDto.getSelectedPickupPointId());
         order.setSelectedPickupPointName(orderDto.getSelectedPickupPointName());
         try {
-            order.setCustomerId(getCurrentCustomerId());
+            CustomerDto customer = getCurrentCustomer();
+            order.setCustomerId(customer.getId());
+            order.setEmail(customer.getEmail());
+            order.setPhone(customer.getPhone());
+            order.setFirstname(customer.getFirstname());
+            order.setLastname(customer.getLastname());
         } catch (Exception e) {
             // nothing to do. if customer not found, order will be created without customerId
         }
         List<ProductDto> products = productClientService.findAllByIds(order.getItems().stream().map(OrderItem::getId).toList());
         order.setProductsPrice(OrderHelper.getProductsPrice(products));
 
-        Optional<Carrier> carrierOptional = carrierRepository.findById(orderDto.getCarrierId());
+        Optional<CarrierDto> carrierOptional = carrierClientService.findById(orderDto.getCarrierId());
         if (carrierOptional.isPresent()) {
-            Carrier carrier = carrierOptional.get();
+            CarrierDto carrier = carrierOptional.get();
 
             BigDecimal totalWeight = OrderHelper.getProductsWeight(products);
             order.setCarrierPrice(OrderHelper.getCarrierPrice(carrier, totalWeight));
         }
 
-        Optional<Payment> paymentOptional = paymentRepository.findById(orderDto.getPaymentId());
+        Optional<PaymentDto> paymentOptional = paymentClientService.findById(orderDto.getPaymentId());
         if (paymentOptional.isPresent()) {
-            Payment payment = paymentOptional.get();
+            PaymentDto payment = paymentOptional.get();
             order.setPaymentPrice(payment.getPrice());
         }
 
@@ -79,18 +89,18 @@ public class OrderClientServiceImpl implements OrderClientService {
     @Override
     public OrderDto getOrder(String id) {
         return orderRepository.findById(id)
-                .filter(order -> order.getCustomerId().equals(getCurrentCustomerId()))
+                .filter(order -> order.getCustomerId().equals(getCurrentCustomer().getId()))
                 .map(order -> {
                     OrderDto dto = orderMapper.toDto(order);
                     if (dto.getCarrierId() != null) {
-                        carrierRepository.findById(dto.getCarrierId())
+                        carrierClientService.findById(dto.getCarrierId())
                                 .ifPresent(carrier -> {
                                     dto.setCarrierType(carrier.getType());
                                     dto.setCarrierName(carrier.getName());
                                 });
                     }
                     if (dto.getPaymentId() != null) {
-                        paymentRepository.findById(dto.getPaymentId())
+                        paymentClientService.findById(dto.getPaymentId())
                                 .ifPresent(payment -> {
                                     dto.setPaymentType(payment.getType());
                                     dto.setPaymentName(payment.getName());
@@ -99,5 +109,18 @@ public class OrderClientServiceImpl implements OrderClientService {
                     return dto;
                 })
                 .orElseThrow(() -> new RuntimeException("Order not found or access denied"));
+    }
+
+    @Override
+    public void updateStatus(String orderId, OrderStatus status) {
+        orderRepository.findById(orderId).ifPresent(order -> {
+            order.setStatus(status);
+            orderRepository.save(order);
+        });
+    }
+
+    @EventListener
+    public void onPaymentSuccessful(PaymentSuccessfulEvent event) {
+        updateStatus(event.getOrderId(), OrderStatus.PAID);
     }
 }

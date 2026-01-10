@@ -12,4 +12,5 @@ public interface CustomerClientService {
     Optional<CustomerDto> findById(String id);
     CustomerDto updateCustomer(CustomerDto customerDto);
     CustomerDto getCurrentCustomer();
+    CustomerDto findOrCreateCustomer(String email);
 }

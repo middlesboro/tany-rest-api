@@ -12,4 +12,5 @@ public class CustomerDto {
     private String phone;
     private AddressDto invoiceAddress;
     private AddressDto deliveryAddress;
+    private sk.tany.rest.api.domain.customer.Role role;
 }

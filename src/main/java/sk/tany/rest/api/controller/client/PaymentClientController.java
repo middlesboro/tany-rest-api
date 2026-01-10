@@ -18,6 +18,7 @@ import sk.tany.rest.api.dto.client.payment.PaymentCallbackRequest;
 import sk.tany.rest.api.dto.client.payment.PaymentCallbackResponse;
 import sk.tany.rest.api.dto.client.payment.PaymentOrderIdResponse;
 import sk.tany.rest.api.dto.client.payment.PaymentStatusResponse;
+import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.PaymentClientService;
 import sk.tany.rest.api.service.client.payment.impl.BesteronPaymentTypeService;
 import sk.tany.rest.api.service.client.payment.impl.GlobalPaymentsPaymentTypeService;
@@ -28,6 +29,7 @@ import sk.tany.rest.api.service.client.payment.impl.GlobalPaymentsPaymentTypeSer
 public class PaymentClientController {
 
     private final PaymentClientService paymentService;
+    private final OrderClientService orderClientService;
     private final GlobalPaymentsPaymentTypeService globalPaymentsPaymentService;
     private final BesteronPaymentTypeService besteronPaymentTypeService;
 
@@ -38,7 +40,7 @@ public class PaymentClientController {
 
     @GetMapping("/info/{orderId}")
     public PaymentInfoDto getPaymentInfo(@PathVariable String orderId) {
-        return paymentService.getPaymentInfo(orderId);
+        return paymentService.getPaymentInfo(orderClientService.getOrder(orderId));
     }
 
     // todo optimalizacie na odstranenie urcitych znakov ako v php

@@ -19,7 +19,6 @@ public class PaymentClientServiceImpl implements PaymentClientService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
-    private final OrderClientService orderClientService;
     private final PaymentTypeServiceFactory paymentTypeServiceFactory;
 
     @Override
@@ -33,8 +32,7 @@ public class PaymentClientServiceImpl implements PaymentClientService {
     }
 
     @Override
-    public PaymentInfoDto getPaymentInfo(String orderId) {
-        OrderDto order = orderClientService.getOrder(orderId);
+    public PaymentInfoDto getPaymentInfo(OrderDto order) {
         PaymentDto payment = findById(order.getPaymentId())
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 

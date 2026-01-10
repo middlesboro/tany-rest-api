@@ -34,4 +34,5 @@ public class OrderDto {
     private String phone;
     private String firstname;
     private String lastname;
+    private java.time.Instant createDate;
 }

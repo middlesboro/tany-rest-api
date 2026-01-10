@@ -9,14 +9,11 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
-import sk.tany.rest.api.domain.customer.Customer;
-import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.domain.order.Order;
-import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.BesteronPayment;
 import sk.tany.rest.api.domain.payment.BesteronPaymentRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
+import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.PaymentDto;
@@ -24,6 +21,8 @@ import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTransactionResponse;
+import sk.tany.rest.api.service.client.CustomerClientService;
+import sk.tany.rest.api.service.client.OrderClientService;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -42,13 +41,13 @@ class BesteronPaymentTypeServiceTest {
     private RestTemplate restTemplate;
 
     @Mock
-    private CustomerRepository customerRepository;
+    private CustomerClientService customerClientService;
 
     @Mock
     private BesteronPaymentRepository besteronPaymentRepository;
 
     @Mock
-    private OrderRepository orderRepository;
+    private OrderClientService orderClientService;
 
     @InjectMocks
     private BesteronPaymentTypeService service;
@@ -79,13 +78,13 @@ class BesteronPaymentTypeServiceTest {
         item.setQuantity(1);
         order.setItems(Collections.singletonList(item));
 
-        Customer customer = new Customer();
+        CustomerDto customer = new CustomerDto();
         customer.setId("customer1");
         customer.setEmail("test@test.com");
         customer.setFirstname("John");
         customer.setLastname("Doe");
 
-        when(customerRepository.findById("customer1")).thenReturn(Optional.of(customer));
+        when(customerClientService.findById("customer1")).thenReturn(Optional.of(customer));
 
         PaymentDto payment = new PaymentDto();
 
@@ -132,10 +131,6 @@ class BesteronPaymentTypeServiceTest {
         when(restTemplate.postForEntity(eq("http://test.com/api/payment-intents/trans123"), any(HttpEntity.class), eq(BesteronTransactionResponse.class)))
                 .thenReturn(ResponseEntity.ok(statusResponse));
 
-        Order order = new Order();
-        order.setId(orderId);
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-
         // Act
         String status = service.checkStatus(orderId);
 
@@ -144,8 +139,7 @@ class BesteronPaymentTypeServiceTest {
         verify(besteronPaymentRepository).save(besteronPayment);
         assertEquals("COMPLETED", besteronPayment.getStatus());
         assertEquals("Completed", besteronPayment.getOriginalStatus());
-        verify(orderRepository).save(order);
-        assertEquals(OrderStatus.PAID, order.getStatus());
+        verify(orderClientService).updateStatus(orderId, OrderStatus.PAID);
     }
 
     @Test
@@ -181,6 +175,6 @@ class BesteronPaymentTypeServiceTest {
         verify(besteronPaymentRepository).save(besteronPayment);
         assertEquals("WAITING", besteronPayment.getStatus());
         assertEquals("WaitingForConfirmation", besteronPayment.getOriginalStatus());
-        verify(orderRepository, never()).save(any());
+        verify(orderClientService, never()).updateStatus(any(), any());
     }
 }
