@@ -34,6 +34,21 @@ public class OrderHelper {
         return null;
     }
 
+    public static BigDecimal getCarrierPrice(sk.tany.rest.api.dto.CarrierDto carrier, BigDecimal weight) {
+        if (carrier.getRanges() != null) {
+            sk.tany.rest.api.dto.CarrierPriceRangeDto priceRange = carrier.getRanges().stream()
+                    .filter(range ->
+                            (range.getWeightFrom() == null || weight.compareTo(range.getWeightFrom()) >= 0) &&
+                                    (range.getWeightTo() == null || weight.compareTo(range.getWeightTo()) <= 0)
+                    )
+                    .findFirst().orElse(null);
+
+            return priceRange != null && priceRange.getPrice() != null ? priceRange.getPrice() : null;
+        }
+
+        return null;
+    }
+
     public static BigDecimal getProductsPrice(List<ProductDto> products) {
         return products.stream().map(ProductDto::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
     }

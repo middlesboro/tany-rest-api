@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.GlobalPaymentsPaymentRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
@@ -13,6 +12,7 @@ import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.client.payment.PaymentCallbackDto;
+import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 import sk.tany.rest.api.service.common.GlobalPaymentsSigner;
 
@@ -26,7 +26,7 @@ import java.util.Date;
 public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
 
     private final GlobalPaymentsPaymentRepository globalPaymentsPaymentRepository;
-    private final OrderRepository orderRepository;
+    private final OrderClientService orderClientService;
     private final GlobalPaymentsSigner signer;
 
     // todo load as config class
@@ -109,10 +109,7 @@ public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
         boolean isValid = signer.verify(textToVerify.toString(), digest, publicKey);
 
         if (isValid) {
-            orderRepository.findById(md).ifPresent(order -> {
-                order.setStatus(OrderStatus.PAID);
-                orderRepository.save(order);
-            });
+            orderClientService.updateStatus(md, OrderStatus.PAID);
         }
 
         return "PAID";

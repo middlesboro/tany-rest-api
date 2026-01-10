@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.customer.Role;
 import sk.tany.rest.api.dto.CarrierDto;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
@@ -198,5 +199,17 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         return customerRepository.findByEmail(email)
                 .map(customerMapper::toDto)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+    }
+
+    @Override
+    public CustomerDto findOrCreateCustomer(String email) {
+        return customerRepository.findByEmail(email)
+                .map(customerMapper::toDto)
+                .orElseGet(() -> {
+                    Customer newCustomer = new Customer();
+                    newCustomer.setEmail(email);
+                    newCustomer.setRole(Role.CUSTOMER);
+                    return customerMapper.toDto(customerRepository.save(newCustomer));
+                });
     }
 }

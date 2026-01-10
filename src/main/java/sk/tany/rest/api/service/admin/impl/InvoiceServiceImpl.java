@@ -7,41 +7,32 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.domain.carrier.Carrier;
-import sk.tany.rest.api.domain.customer.Customer;
-import sk.tany.rest.api.domain.order.Order;
-import sk.tany.rest.api.domain.order.OrderItem;
-import sk.tany.rest.api.domain.payment.Payment;
-import sk.tany.rest.api.domain.product.Product;
-import sk.tany.rest.api.domain.carrier.CarrierRepository;
-import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.domain.order.OrderRepository;
-import sk.tany.rest.api.domain.payment.PaymentRepository;
-import sk.tany.rest.api.domain.product.ProductRepository;
-import sk.tany.rest.api.service.admin.InvoiceService;
+import sk.tany.rest.api.dto.CarrierDto;
+import sk.tany.rest.api.dto.CustomerDto;
+import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.OrderItemDto;
+import sk.tany.rest.api.dto.PaymentDto;
+import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.service.admin.*;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class InvoiceServiceImpl implements InvoiceService {
 
-    private final OrderRepository orderRepository;
-    private final CarrierRepository carrierRepository;
-    private final PaymentRepository paymentRepository;
-    private final ProductRepository productRepository;
-    private final CustomerRepository customerRepository;
+    private final OrderAdminService orderAdminService;
+    private final CarrierAdminService carrierAdminService;
+    private final PaymentAdminService paymentAdminService;
+    private final ProductAdminService productAdminService;
+    private final CustomerAdminService customerAdminService;
 
     private static final Font FONT_BOLD_12 = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.BOLD);
     private static final Font FONT_BOLD_10 = FontFactory.getFont(FontFactory.HELVETICA, 10, Font.BOLD);
@@ -61,26 +52,26 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     public byte[] generateInvoice(String orderId) {
-        Order order = orderRepository.findById(orderId)
+        OrderDto order = orderAdminService.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
 
-        Customer customer = null;
+        CustomerDto customer = null;
         if (order.getCustomerId() != null) {
-            customer = customerRepository.findById(order.getCustomerId()).orElse(null);
+            customer = customerAdminService.findById(order.getCustomerId()).orElse(null);
         }
 
-        String carrierName = carrierRepository.findById(order.getCarrierId())
-                .map(Carrier::getName)
+        String carrierName = carrierAdminService.findById(order.getCarrierId())
+                .map(CarrierDto::getName)
                 .orElse("Unknown Carrier");
 
-        String paymentName = paymentRepository.findById(order.getPaymentId())
-                .map(Payment::getName)
+        String paymentName = paymentAdminService.findById(order.getPaymentId())
+                .map(PaymentDto::getName)
                 .orElse("Unknown Payment");
 
         // Fetch products for codes
-        Map<String, Product> productMap = productRepository.findAllById(
-                order.getItems().stream().map(OrderItem::getId).collect(Collectors.toList())
-        ).stream().collect(Collectors.toMap(Product::getId, p -> p));
+        Map<String, ProductDto> productMap = productAdminService.findAllByIds(
+                order.getItems().stream().map(OrderItemDto::getId).collect(Collectors.toList())
+        ).stream().collect(Collectors.toMap(ProductDto::getId, p -> p));
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4);
@@ -96,7 +87,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
     }
 
-    private void addContent(Document document, Order order, Customer customer, String carrierName, String paymentName, Map<String, Product> productMap) throws DocumentException {
+    private void addContent(Document document, OrderDto order, CustomerDto customer, String carrierName, String paymentName, Map<String, ProductDto> productMap) throws DocumentException {
         // Main Table: 2 columns (Supplier, Customer/Invoice Info)
         PdfPTable mainTable = new PdfPTable(2);
         mainTable.setWidthPercentage(100);
@@ -227,8 +218,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         BigDecimal totalWithVat = BigDecimal.ZERO;
         BigDecimal vatRate = new BigDecimal("0.20"); // 20%
 
-        for (OrderItem item : order.getItems()) {
-            Product product = productMap.get(item.getId());
+        for (OrderItemDto item : order.getItems()) {
+            ProductDto product = productMap.get(item.getId());
             String code = product != null ? product.getProductCode() : "";
             String ean = product != null ? product.getEan() : "";
 

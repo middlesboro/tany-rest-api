@@ -5,10 +5,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.domain.auth.*;
-import sk.tany.rest.api.domain.customer.Customer;
-import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.customer.Role;
+import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.exception.InvalidTokenException;
+import sk.tany.rest.api.service.client.CustomerClientService;
 
 import java.util.Collections;
 import java.util.Date;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private final CustomerRepository customerRepository;
+    private final CustomerClientService customerClientService;
     private final MagicLinkTokenRepository magicLinkTokenRepository;
     private final AuthorizationCodeRepository authorizationCodeRepository;
     private final JwtUtil jwtUtil;
@@ -31,14 +31,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public void initiateLogin(String email) {
         // Find or create customer
-        Optional<Customer> existingCustomer = customerRepository.findByEmail(email);
-
-        if (existingCustomer.isEmpty()) {
-            Customer newCustomer = new Customer();
-            newCustomer.setEmail(email);
-            newCustomer.setRole(Role.CUSTOMER);
-            customerRepository.save(newCustomer);
-        }
+        customerClientService.findOrCreateCustomer(email);
 
         // Generate JTI
         String jti = UUID.randomUUID().toString();
@@ -85,8 +78,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         magicLinkTokenRepository.save(magicLinkToken);
 
         // Get Customer Role
-        Customer customer = customerRepository.findByEmail(magicLinkToken.getCustomerEmail())
-                .orElseThrow(() -> new InvalidTokenException("Customer not found"));
+        CustomerDto customer = customerClientService.findByEmail(magicLinkToken.getCustomerEmail());
+        if (customer == null) {
+            throw new InvalidTokenException("Customer not found");
+        }
 
         String role = "ROLE_" + (customer.getRole() != null ? customer.getRole().name() : Role.CUSTOMER.name());
 
