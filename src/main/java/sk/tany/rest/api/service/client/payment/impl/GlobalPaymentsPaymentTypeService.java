@@ -3,8 +3,8 @@ package sk.tany.rest.api.service.client.payment.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.GlobalPaymentsPaymentRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.dto.GlobalPaymentDetailsDto;
@@ -12,7 +12,7 @@ import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.client.payment.PaymentCallbackDto;
-import sk.tany.rest.api.service.client.OrderClientService;
+import sk.tany.rest.api.event.PaymentSuccessfulEvent;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 import sk.tany.rest.api.service.common.GlobalPaymentsSigner;
 
@@ -26,7 +26,7 @@ import java.util.Date;
 public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
 
     private final GlobalPaymentsPaymentRepository globalPaymentsPaymentRepository;
-    private final OrderClientService orderClientService;
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final GlobalPaymentsSigner signer;
 
     // todo load as config class
@@ -109,7 +109,7 @@ public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
         boolean isValid = signer.verify(textToVerify.toString(), digest, publicKey);
 
         if (isValid) {
-            orderClientService.updateStatus(md, OrderStatus.PAID);
+            applicationEventPublisher.publishEvent(new PaymentSuccessfulEvent(this, md));
         }
 
         return "PAID";

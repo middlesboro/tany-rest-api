@@ -17,6 +17,9 @@ import sk.tany.rest.api.service.client.CarrierClientService;
 import sk.tany.rest.api.service.client.CustomerClientService;
 import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.PaymentClientService;
+import org.springframework.context.event.EventListener;
+import sk.tany.rest.api.domain.order.OrderStatus;
+import sk.tany.rest.api.event.PaymentSuccessfulEvent;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.SequenceService;
 
@@ -36,11 +39,11 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final PaymentClientService paymentClientService;
     private final ProductClientService productClientService;
 
-    private String getCurrentCustomerId() {
+    private CustomerDto getCurrentCustomer() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         CustomerDto customer = customerClientService.findByEmail(email);
         if (customer != null) {
-            return customer.getId();
+            return customer;
         }
         throw new RuntimeException("Customer not found");
     }
@@ -51,7 +54,12 @@ public class OrderClientServiceImpl implements OrderClientService {
         order.setSelectedPickupPointId(orderDto.getSelectedPickupPointId());
         order.setSelectedPickupPointName(orderDto.getSelectedPickupPointName());
         try {
-            order.setCustomerId(getCurrentCustomerId());
+            CustomerDto customer = getCurrentCustomer();
+            order.setCustomerId(customer.getId());
+            order.setEmail(customer.getEmail());
+            order.setPhone(customer.getPhone());
+            order.setFirstname(customer.getFirstname());
+            order.setLastname(customer.getLastname());
         } catch (Exception e) {
             // nothing to do. if customer not found, order will be created without customerId
         }
@@ -81,7 +89,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     @Override
     public OrderDto getOrder(String id) {
         return orderRepository.findById(id)
-                .filter(order -> order.getCustomerId().equals(getCurrentCustomerId()))
+                .filter(order -> order.getCustomerId().equals(getCurrentCustomer().getId()))
                 .map(order -> {
                     OrderDto dto = orderMapper.toDto(order);
                     if (dto.getCarrierId() != null) {
@@ -104,10 +112,15 @@ public class OrderClientServiceImpl implements OrderClientService {
     }
 
     @Override
-    public void updateStatus(String orderId, sk.tany.rest.api.domain.order.OrderStatus status) {
+    public void updateStatus(String orderId, OrderStatus status) {
         orderRepository.findById(orderId).ifPresent(order -> {
             order.setStatus(status);
             orderRepository.save(order);
         });
+    }
+
+    @EventListener
+    public void onPaymentSuccessful(PaymentSuccessfulEvent event) {
+        updateStatus(event.getOrderId(), OrderStatus.PAID);
     }
 }

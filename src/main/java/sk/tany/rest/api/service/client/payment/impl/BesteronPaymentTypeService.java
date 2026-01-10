@@ -10,23 +10,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.client.RestTemplate;
-import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.BesteronPayment;
 import sk.tany.rest.api.domain.payment.BesteronPaymentRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
-import sk.tany.rest.api.dto.CustomerDto;
+import sk.tany.rest.api.domain.payment.enums.PaymentStatus;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentRequest;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
-import sk.tany.rest.api.domain.payment.enums.PaymentStatus;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTransactionResponse;
-import sk.tany.rest.api.service.client.CustomerClientService;
-import sk.tany.rest.api.service.client.OrderClientService;
+import sk.tany.rest.api.event.PaymentSuccessfulEvent;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 
 import java.math.BigDecimal;
@@ -42,9 +40,8 @@ import java.util.Optional;
 public class BesteronPaymentTypeService implements PaymentTypeService {
 
     private final RestTemplate restTemplate;
-    private final CustomerClientService customerClientService;
     private final BesteronPaymentRepository besteronPaymentRepository;
-    private final OrderClientService orderClientService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     // TODO add to config class
     @Value("${besteron.client-id}")
@@ -107,7 +104,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
                 besteronPaymentRepository.save(payment);
 
                 if ("Completed".equalsIgnoreCase(status)) {
-                    orderClientService.updateStatus(orderId, OrderStatus.PAID);
+                    applicationEventPublisher.publishEvent(new PaymentSuccessfulEvent(this, orderId));
                 }
                 return paymentStatus.name();
             }
@@ -157,9 +154,6 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     }
 
     private String createPaymentIntent(OrderDto order, String token) {
-        CustomerDto customer = customerClientService.findById(order.getCustomerId())
-                .orElseThrow(() -> new IllegalStateException("Customer not found for order: " + order.getId()));
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -191,9 +185,9 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
                         .notificationUrl(notificationUrl)
                         .build())
                 .buyer(BesteronIntentRequest.Buyer.builder()
-                        .email(customer.getEmail())
-                        .firstName(customer.getFirstname())
-                        .lastName(customer.getLastname())
+                        .email(order.getEmail())
+                        .firstName(order.getFirstname())
+                        .lastName(order.getLastname())
                         .build())
                 .build();
 
