@@ -10,5 +10,6 @@ public interface CustomerAdminService {
     Page<CustomerDto> findAll(Pageable pageable);
     Optional<CustomerDto> findById(String id);
     CustomerDto save(CustomerDto customerDto);
+    CustomerDto patch(String id, sk.tany.rest.api.dto.admin.customer.patch.CustomerPatchRequest patchDto);
     void deleteById(String id);
 }

@@ -47,6 +47,15 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     }
 
     @Override
+    public ProductDto patch(String id, sk.tany.rest.api.dto.admin.product.patch.ProductPatchRequest patchDto) {
+        var product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
+        productMapper.updateEntityFromPatch(patchDto, product);
+        var savedProduct = productRepository.save(product);
+        productSearchEngine.updateProduct(savedProduct);
+        return productMapper.toDto(savedProduct);
+    }
+
+    @Override
     public void deleteById(String id) {
         productRepository.deleteById(id);
         productSearchEngine.removeProduct(id);

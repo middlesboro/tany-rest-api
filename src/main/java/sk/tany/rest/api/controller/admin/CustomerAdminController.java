@@ -12,6 +12,7 @@ import sk.tany.rest.api.dto.admin.customer.create.CustomerAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.customer.create.CustomerAdminCreateResponse;
 import sk.tany.rest.api.dto.admin.customer.get.CustomerAdminGetResponse;
 import sk.tany.rest.api.dto.admin.customer.list.CustomerAdminListResponse;
+import sk.tany.rest.api.dto.admin.customer.patch.CustomerPatchRequest;
 import sk.tany.rest.api.dto.admin.customer.update.CustomerAdminUpdateRequest;
 import sk.tany.rest.api.dto.admin.customer.update.CustomerAdminUpdateResponse;
 import sk.tany.rest.api.mapper.CustomerAdminApiMapper;
@@ -51,6 +52,12 @@ public class CustomerAdminController {
         CustomerDto dto = customerAdminApiMapper.toDto(customerDto);
         dto.setId(id);
         CustomerDto updatedCustomer = customerService.save(dto);
+        return new ResponseEntity<>(customerAdminApiMapper.toUpdateResponse(updatedCustomer), HttpStatus.OK);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CustomerAdminUpdateResponse> patchCustomer(@PathVariable String id, @RequestBody CustomerPatchRequest patchDto) {
+        CustomerDto updatedCustomer = customerService.patch(id, patchDto);
         return new ResponseEntity<>(customerAdminApiMapper.toUpdateResponse(updatedCustomer), HttpStatus.OK);
     }
 

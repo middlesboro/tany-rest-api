@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.SupplierDto;
+import sk.tany.rest.api.dto.admin.supplier.patch.SupplierPatchRequest;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.SupplierAdminService;
 
@@ -46,6 +47,12 @@ public class SupplierAdminController {
     @PutMapping("/{id}")
     public ResponseEntity<SupplierDto> updateSupplier(@PathVariable String id, @RequestBody SupplierDto supplier) {
         SupplierDto updatedSupplier = supplierService.update(id, supplier);
+        return ResponseEntity.ok(updatedSupplier);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<SupplierDto> patchSupplier(@PathVariable String id, @RequestBody SupplierPatchRequest patchDto) {
+        SupplierDto updatedSupplier = supplierService.patch(id, patchDto);
         return ResponseEntity.ok(updatedSupplier);
     }
 

@@ -12,6 +12,7 @@ import sk.tany.rest.api.dto.admin.order.create.OrderAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.order.create.OrderAdminCreateResponse;
 import sk.tany.rest.api.dto.admin.order.get.OrderAdminGetResponse;
 import sk.tany.rest.api.dto.admin.order.list.OrderAdminListResponse;
+import sk.tany.rest.api.dto.admin.order.patch.OrderPatchRequest;
 import sk.tany.rest.api.dto.admin.order.update.OrderAdminUpdateRequest;
 import sk.tany.rest.api.dto.admin.order.update.OrderAdminUpdateResponse;
 import sk.tany.rest.api.mapper.OrderAdminApiMapper;
@@ -62,6 +63,12 @@ public class OrderAdminController {
     public ResponseEntity<OrderAdminUpdateResponse> updateOrder(@PathVariable String id, @RequestBody OrderAdminUpdateRequest order) {
         OrderDto orderDto = orderAdminApiMapper.toDto(order);
         OrderDto updatedOrder = orderService.update(id, orderDto);
+        return ResponseEntity.ok(orderAdminApiMapper.toUpdateResponse(updatedOrder));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<OrderAdminUpdateResponse> patchOrder(@PathVariable String id, @RequestBody OrderPatchRequest patchDto) {
+        OrderDto updatedOrder = orderService.patch(id, patchDto);
         return ResponseEntity.ok(orderAdminApiMapper.toUpdateResponse(updatedOrder));
     }
 

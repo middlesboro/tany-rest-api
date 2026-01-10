@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.CategoryDto;
+import sk.tany.rest.api.dto.admin.category.patch.CategoryPatchRequest;
 import sk.tany.rest.api.service.admin.CategoryAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 
@@ -51,6 +52,12 @@ public class CategoryAdminController {
     @PutMapping("/{id}")
     public ResponseEntity<CategoryDto> updateCategory(@PathVariable String id, @RequestBody CategoryDto category) {
         CategoryDto updatedCategory = categoryService.update(id, category);
+        return ResponseEntity.ok(updatedCategory);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CategoryDto> patchCategory(@PathVariable String id, @RequestBody CategoryPatchRequest patchDto) {
+        CategoryDto updatedCategory = categoryService.patch(id, patchDto);
         return ResponseEntity.ok(updatedCategory);
     }
 

@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.CarrierDto;
+import sk.tany.rest.api.dto.admin.carrier.patch.CarrierPatchRequest;
 import sk.tany.rest.api.service.admin.CarrierAdminService;
 import sk.tany.rest.api.service.common.ImageService;
 
@@ -42,6 +43,12 @@ public class CarrierAdminController {
     @PutMapping("/{id}")
     public ResponseEntity<CarrierDto> updateCarrier(@PathVariable String id, @RequestBody CarrierDto carrier) {
         CarrierDto updatedCarrier = carrierService.update(id, carrier);
+        return ResponseEntity.ok(updatedCarrier);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CarrierDto> patchCarrier(@PathVariable String id, @RequestBody CarrierPatchRequest patchDto) {
+        CarrierDto updatedCarrier = carrierService.patch(id, patchDto);
         return ResponseEntity.ok(updatedCarrier);
     }
 

@@ -35,6 +35,13 @@ public class CustomerAdminServiceImpl implements CustomerAdminService {
     }
 
     @Override
+    public CustomerDto patch(String id, sk.tany.rest.api.dto.admin.customer.patch.CustomerPatchRequest patchDto) {
+        var customer = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Customer not found"));
+        customerMapper.updateEntityFromPatch(patchDto, customer);
+        return customerMapper.toDto(customerRepository.save(customer));
+    }
+
+    @Override
     public void deleteById(String id) {
         customerRepository.deleteById(id);
     }

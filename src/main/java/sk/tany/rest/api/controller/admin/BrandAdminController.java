@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.BrandDto;
+import sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest;
 import sk.tany.rest.api.service.admin.BrandAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.common.ImageService;
@@ -50,6 +51,12 @@ public class BrandAdminController {
     @PutMapping("/{id}")
     public ResponseEntity<BrandDto> updateBrand(@PathVariable String id, @RequestBody BrandDto brand) {
         BrandDto updatedBrand = brandService.update(id, brand);
+        return ResponseEntity.ok(updatedBrand);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<BrandDto> patchBrand(@PathVariable String id, @RequestBody BrandPatchRequest patchDto) {
+        BrandDto updatedBrand = brandService.patch(id, patchDto);
         return ResponseEntity.ok(updatedBrand);
     }
 

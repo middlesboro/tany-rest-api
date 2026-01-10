@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.PaymentDto;
+import sk.tany.rest.api.dto.admin.payment.patch.PaymentPatchRequest;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.admin.PaymentAdminService;
 
@@ -42,6 +43,12 @@ public class PaymentAdminController {
     @PutMapping("/{id}")
     public ResponseEntity<PaymentDto> updatePayment(@PathVariable String id, @RequestBody PaymentDto payment) {
         PaymentDto updatedPayment = paymentService.update(id, payment);
+        return ResponseEntity.ok(updatedPayment);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<PaymentDto> patchPayment(@PathVariable String id, @RequestBody PaymentPatchRequest patchDto) {
+        PaymentDto updatedPayment = paymentService.patch(id, patchDto);
         return ResponseEntity.ok(updatedPayment);
     }
 

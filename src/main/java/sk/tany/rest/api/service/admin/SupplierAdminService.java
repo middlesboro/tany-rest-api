@@ -11,5 +11,6 @@ public interface SupplierAdminService {
     Optional<SupplierDto> findById(String id);
     SupplierDto save(SupplierDto supplierDto);
     SupplierDto update(String id, SupplierDto supplierDto);
+    SupplierDto patch(String id, sk.tany.rest.api.dto.admin.supplier.patch.SupplierPatchRequest patchDto);
     void deleteById(String id);
 }

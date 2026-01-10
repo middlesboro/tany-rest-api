@@ -44,6 +44,14 @@ public class SupplierAdminServiceImpl implements SupplierAdminService {
     }
 
     @Override
+    public SupplierDto patch(String id, sk.tany.rest.api.dto.admin.supplier.patch.SupplierPatchRequest patchDto) {
+        var supplier = supplierRepository.findById(id).orElseThrow(() -> new RuntimeException("Supplier not found"));
+        supplierMapper.updateEntityFromPatch(patchDto, supplier);
+        var savedSupplier = supplierRepository.save(supplier);
+        return supplierMapper.toDto(savedSupplier);
+    }
+
+    @Override
     public void deleteById(String id) {
         supplierRepository.deleteById(id);
     }

@@ -31,6 +31,16 @@ public class ShopSettingsAdminServiceImpl implements ShopSettingsAdminService {
 
     @Override
     @Transactional
+    public ShopSettingsGetResponse patch(String id, sk.tany.rest.api.dto.admin.shopsettings.patch.ShopSettingsPatchRequest request) {
+        ShopSettings entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("ShopSettings not found"));
+        mapper.updateFromPatch(entity, request);
+        entity = repository.save(entity);
+        return mapper.toGetResponse(entity);
+    }
+
+    @Override
+    @Transactional
     public ShopSettingsGetResponse update(String id, ShopSettingsUpdateRequest request) {
         ShopSettings entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ShopSettings not found"));

@@ -11,5 +11,6 @@ public interface OrderAdminService {
     Optional<OrderDto> findById(String id);
     OrderDto save(OrderDto orderDto);
     OrderDto update(String id, OrderDto orderDto);
+    OrderDto patch(String id, sk.tany.rest.api.dto.admin.order.patch.OrderPatchRequest patchDto);
     void deleteById(String id);
 }

@@ -11,5 +11,6 @@ public interface BrandAdminService {
     Optional<BrandDto> findById(String id);
     BrandDto save(BrandDto brandDto);
     BrandDto update(String id, BrandDto brandDto);
+    BrandDto patch(String id, sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest patchDto);
     void deleteById(String id);
 }
