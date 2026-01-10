@@ -14,6 +14,8 @@ public class Supplier {
     @Id
     private String id;
     private String name;
+    private String metaTitle;
+    private String metaDescription;
     @CreatedDate
     private Instant createdDate;
     @LastModifiedDate

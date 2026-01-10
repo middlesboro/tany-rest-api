@@ -9,6 +9,8 @@ public class CategoryDto {
     private String description;
     private String metaTitle;
     private String metaDescription;
+    private boolean showInMenu;
+    private boolean visible;
     private String slug;
     private String parentId;
 }
