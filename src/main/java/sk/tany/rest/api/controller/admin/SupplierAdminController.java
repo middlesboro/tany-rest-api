@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.SupplierDto;
+import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.SupplierAdminService;
 
 @RestController
@@ -17,6 +18,12 @@ import sk.tany.rest.api.service.admin.SupplierAdminService;
 public class SupplierAdminController {
 
     private final SupplierAdminService supplierService;
+    private final PrestaShopImportService prestaShopImportService;
+
+    @PostMapping("/import/prestashop")
+    public void importFromPrestaShop() {
+        prestaShopImportService.importAllSuppliers();
+    }
 
     @PostMapping
     public ResponseEntity<SupplierDto> createSupplier(@RequestBody SupplierDto supplier) {

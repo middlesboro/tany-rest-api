@@ -6,18 +6,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.domain.product.ProductStatus;
+import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.SupplierDto;
 import sk.tany.rest.api.dto.prestashop.*;
+import sk.tany.rest.api.service.admin.BrandAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
+import sk.tany.rest.api.service.admin.SupplierAdminService;
 import sk.tany.rest.api.service.common.ImageService;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,8 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
 
     private final RestTemplate restTemplate;
     private final ProductAdminService productAdminService;
+    private final SupplierAdminService supplierAdminService;
+    private final BrandAdminService brandAdminService;
     private final ImageService imageService;
 
     @Value("${prestashop.url}")
@@ -73,6 +76,102 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         }
     }
 
+    @Override
+    public void importAllSuppliers() {
+        log.info("Starting import of all suppliers from PrestaShop");
+        String url = String.format("%s/api/suppliers?ws_key=%s&output_format=JSON", prestashopUrl, prestashopKey);
+        try {
+            PrestaShopSuppliersResponse response = restTemplate.getForObject(url, PrestaShopSuppliersResponse.class);
+            if (response != null && response.getSuppliers() != null) {
+                for (PrestaShopSupplierResponse supplier : response.getSuppliers()) {
+                    try {
+                        importSupplier(String.valueOf(supplier.getId()));
+                    } catch (Exception e) {
+                        log.error("Failed to import supplier with ID: {}", supplier.getId(), e);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error fetching supplier list from PrestaShop", e);
+            throw new RuntimeException("Error fetching supplier list from PrestaShop", e);
+        }
+        log.info("Finished import of all suppliers from PrestaShop");
+    }
+
+    private void importSupplier(String id) {
+        log.info("Importing supplier with ID: {}", id);
+        String url = String.format("%s/api/suppliers/%s?ws_key=%s&output_format=JSON", prestashopUrl, id, prestashopKey);
+        try {
+            PrestaShopSupplierWrapper wrapper = restTemplate.getForObject(url, PrestaShopSupplierWrapper.class);
+            if (wrapper != null && wrapper.getSupplier() != null) {
+                SupplierDto dto = mapToSupplierDto(wrapper.getSupplier());
+                supplierAdminService.save(dto);
+                log.info("Successfully imported supplier with ID: {}", id);
+            }
+        } catch (Exception e) {
+            log.error("Error importing supplier with ID: {}", id, e);
+            throw new RuntimeException("Error importing supplier with ID: " + id, e);
+        }
+    }
+
+    private SupplierDto mapToSupplierDto(PrestaShopSupplierDetailResponse psSupplier) {
+        SupplierDto dto = new SupplierDto();
+        dto.setName(psSupplier.getName());
+        dto.setMetaTitle(parseLanguageValue(psSupplier.getMetaTitle()));
+        dto.setMetaDescription(parseLanguageValue(psSupplier.getMetaDescription()));
+        return dto;
+    }
+
+    @Override
+    public void importAllManufacturers() {
+        log.info("Starting import of all manufacturers from PrestaShop");
+        String url = String.format("%s/api/manufacturers?ws_key=%s&output_format=JSON", prestashopUrl, prestashopKey);
+        try {
+            PrestaShopManufacturersResponse response = restTemplate.getForObject(url, PrestaShopManufacturersResponse.class);
+            if (response != null && response.getManufacturers() != null) {
+                for (PrestaShopManufacturerResponse manufacturer : response.getManufacturers()) {
+                    try {
+                        importManufacturer(String.valueOf(manufacturer.getId()));
+                    } catch (Exception e) {
+                        log.error("Failed to import manufacturer with ID: {}", manufacturer.getId(), e);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error fetching manufacturer list from PrestaShop", e);
+            throw new RuntimeException("Error fetching manufacturer list from PrestaShop", e);
+        }
+        log.info("Finished import of all manufacturers from PrestaShop");
+    }
+
+    private void importManufacturer(String id) {
+        log.info("Importing manufacturer with ID: {}", id);
+        String url = String.format("%s/api/manufacturers/%s?ws_key=%s&output_format=JSON", prestashopUrl, id, prestashopKey);
+        try {
+            PrestaShopManufacturerWrapper wrapper = restTemplate.getForObject(url, PrestaShopManufacturerWrapper.class);
+            if (wrapper != null && wrapper.getManufacturer() != null) {
+                BrandDto dto = mapToBrandDto(wrapper.getManufacturer());
+                brandAdminService.save(dto);
+                log.info("Successfully imported manufacturer with ID: {}", id);
+            }
+        } catch (Exception e) {
+            log.error("Error importing manufacturer with ID: {}", id, e);
+            throw new RuntimeException("Error importing manufacturer with ID: " + id, e);
+        }
+    }
+
+    private BrandDto mapToBrandDto(PrestaShopManufacturerDetailResponse psManufacturer) {
+        BrandDto dto = new BrandDto();
+        dto.setName(psManufacturer.getName());
+        dto.setMetaTitle(parseLanguageValue(psManufacturer.getMetaTitle()));
+        dto.setMetaDescription(parseLanguageValue(psManufacturer.getMetaDescription()));
+
+        String imageUrl = downloadAndUploadImage("manufacturers", psManufacturer.getId(), null);
+        dto.setImage(imageUrl);
+
+        return dto;
+    }
+
     private ProductDto mapToProductDto(PrestaShopProductDetailResponse psProduct) {
         ProductDto dto = new ProductDto();
         dto.setTitle(parseLanguageValue(psProduct.getName()));
@@ -101,7 +200,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         List<String> imageUrls = new ArrayList<>();
         if (psProduct.getAssociations() != null && psProduct.getAssociations().getImages() != null) {
             for (PrestaShopImage psImage : psProduct.getAssociations().getImages()) {
-                String imgUrl = downloadAndUploadImage(psProduct.getId(), psImage.getId());
+                String imgUrl = downloadAndUploadImage("products", psProduct.getId(), psImage.getId());
                 if (imgUrl != null) {
                     imageUrls.add(imgUrl);
                 }
@@ -128,15 +227,17 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         return "";
     }
 
-    private String downloadAndUploadImage(Long productId, String imageId) {
-        String imageUrl = String.format("%s/api/images/products/%d/%s?ws_key=%s", prestashopUrl, productId, imageId, prestashopKey);
+    private String downloadAndUploadImage(String resource, Long id, String imageId) {
+        String urlPart = imageId != null ? id + "/" + imageId : String.valueOf(id);
+        String imageUrl = String.format("%s/api/images/%s/%s?ws_key=%s", prestashopUrl, resource, urlPart, prestashopKey);
         try {
             byte[] imageBytes = restTemplate.getForObject(imageUrl, byte[].class);
             if (imageBytes != null && imageBytes.length > 0) {
-                return imageService.upload(imageBytes, "ps_product_" + productId + "_" + imageId + ".jpg");
+                String filename = "ps_" + resource + "_" + id + (imageId != null ? "_" + imageId : "") + ".jpg";
+                return imageService.upload(imageBytes, filename);
             }
         } catch (Exception e) {
-            log.error("Failed to download/upload image {} for product {}", imageId, productId, e);
+            log.error("Failed to download/upload image {} for {} {}", imageId, resource, id, e);
         }
         return null;
     }
