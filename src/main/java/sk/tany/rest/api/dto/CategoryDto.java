@@ -2,6 +2,8 @@ package sk.tany.rest.api.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class CategoryDto {
     private String id;
@@ -15,4 +17,5 @@ public class CategoryDto {
     private boolean visible;
     private String slug;
     private String parentId;
+    private List<CategoryDto> children;
 }
