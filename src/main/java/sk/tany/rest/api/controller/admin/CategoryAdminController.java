@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.CategoryDto;
 import sk.tany.rest.api.service.admin.CategoryAdminService;
+import sk.tany.rest.api.service.admin.PrestaShopImportService;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -17,6 +18,17 @@ import sk.tany.rest.api.service.admin.CategoryAdminService;
 public class CategoryAdminController {
 
     private final CategoryAdminService categoryService;
+    private final PrestaShopImportService prestaShopImportService;
+
+    @PostMapping("/import/prestashop")
+    public void importCategories() {
+        prestaShopImportService.importAllCategories();
+    }
+
+    @PostMapping("/import/prestashop/{id}")
+    public void importCategory(@PathVariable String id) {
+        prestaShopImportService.importCategory(id);
+    }
 
     @PostMapping
     public ResponseEntity<CategoryDto> createCategory(@RequestBody CategoryDto category) {

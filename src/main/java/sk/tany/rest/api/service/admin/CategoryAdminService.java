@@ -12,4 +12,5 @@ public interface CategoryAdminService {
     CategoryDto save(CategoryDto categoryDto);
     CategoryDto update(String id, CategoryDto categoryDto);
     void deleteById(String id);
+    Optional<CategoryDto> findByPrestashopId(Long prestashopId);
 }

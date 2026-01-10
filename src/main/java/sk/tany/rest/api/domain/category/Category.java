@@ -10,7 +10,7 @@ public class Category {
 
     @Id
     private String id;
-    private long prestashopId;
+    private Long prestashopId;
     private String title;
     private String description;
     private String metaTitle;
