@@ -14,6 +14,7 @@ public class CartClientUpdateResponse {
     private String customerId;
     private String selectedCarrierId;
     private String selectedPaymentId;
+    private String selectedPickupPointId;
     private List<CartItem> items;
     private String firstname;
     private String lastname;
