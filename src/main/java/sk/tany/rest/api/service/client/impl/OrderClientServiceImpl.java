@@ -3,6 +3,7 @@ package sk.tany.rest.api.service.client.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.customer.Customer;
@@ -44,6 +45,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     }
 
     @Override
+    @Transactional
     public OrderDto createOrder(OrderDto orderDto) {
         Order order = orderMapper.toEntity(orderDto);
         order.setSelectedPickupPointId(orderDto.getSelectedPickupPointId());
@@ -72,7 +74,13 @@ public class OrderClientServiceImpl implements OrderClientService {
 
         // add carrier price and payment price
         order.setOrderIdentifier(sequenceService.getNextSequence("order_identifier"));
-        return orderMapper.toDto(orderRepository.save(order));
+        Order savedOrder = orderRepository.save(order);
+
+        savedOrder.getItems().forEach(item -> {
+            productClientService.updateProductStock(item.getId(), item.getQuantity());
+        });
+
+        return orderMapper.toDto(savedOrder);
     }
 
     // todo do it e.g. accessible for 1h after creation. otherwise needed authorization. or find better solution

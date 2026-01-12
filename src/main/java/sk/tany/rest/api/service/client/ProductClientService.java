@@ -12,4 +12,6 @@ public interface ProductClientService {
     Page<ProductDto> search(String categoryId, Pageable pageable);
     java.util.List<ProductDto> findAllByIds(Iterable<String> ids);
     java.util.List<ProductDto> searchProducts(String query);
+
+    void updateProductStock(String productId, Integer quantityChange);
 }
