@@ -10,12 +10,10 @@ import sk.tany.rest.api.dto.CategoryDto;
 import sk.tany.rest.api.service.client.CategoryClientService;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 
 class CategoryClientControllerTest {
@@ -37,13 +35,13 @@ class CategoryClientControllerTest {
         categoryDto.setTitle("Test Category");
         List<CategoryDto> categoryList = Collections.singletonList(categoryDto);
 
-        when(categoryService.findAll()).thenReturn(categoryList);
+        when(categoryService.findAllVisible()).thenReturn(categoryList);
 
         List<CategoryDto> result = categoryClientController.getCategories();
 
         assertEquals(1, result.size());
         assertEquals("Test Category", result.get(0).getTitle());
-        verify(categoryService, times(1)).findAll();
+        verify(categoryService, times(1)).findAllVisible();
     }
 
     @Test
@@ -68,7 +66,7 @@ class CategoryClientControllerTest {
         // Service should return only root
         List<CategoryDto> tree = Collections.singletonList(root);
 
-        when(categoryService.findAll()).thenReturn(tree);
+        when(categoryService.findAllVisible()).thenReturn(tree);
 
         List<CategoryDto> result = categoryClientController.getCategories();
 
@@ -77,6 +75,6 @@ class CategoryClientControllerTest {
         assertEquals(1, result.get(0).getChildren().size());
         assertEquals("Child", result.get(0).getChildren().get(0).getTitle());
 
-        verify(categoryService, times(1)).findAll();
+        verify(categoryService, times(1)).findAllVisible();
     }
 }

@@ -16,7 +16,7 @@ public class CategoryClientController {
 
     @GetMapping
     public java.util.List<CategoryDto> getCategories() {
-        return categoryService.findAll();
+        return categoryService.findAllVisible();
     }
 
 }

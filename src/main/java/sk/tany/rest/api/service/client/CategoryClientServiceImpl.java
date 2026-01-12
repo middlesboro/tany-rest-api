@@ -2,11 +2,13 @@ package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.CategoryDto;
 import sk.tany.rest.api.mapper.CategoryMapper;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,9 +24,10 @@ public class CategoryClientServiceImpl implements CategoryClientService {
     private final CategoryMapper categoryMapper;
 
     @Override
-    public List<CategoryDto> findAll() {
+    public List<CategoryDto> findAllVisible() {
         List<CategoryDto> allCategories = categoryRepository.findAll().stream()
-                .filter(c -> !EXCLUDED_PRESTASHOP_IDS.contains(c.getPrestashopId()))
+                .filter(c -> !EXCLUDED_PRESTASHOP_IDS.contains(c.getPrestashopId()) && c.isActive() && c.isVisible())
+                .sorted(Comparator.comparingLong(Category::getPosition))
                 .map(categoryMapper::toDto)
                 .toList();
 
@@ -33,7 +36,10 @@ public class CategoryClientServiceImpl implements CategoryClientService {
                 .collect(Collectors.groupingBy(CategoryDto::getParentId));
 
         for (CategoryDto category : allCategories) {
-            category.setChildren(childrenMap.getOrDefault(category.getId(), new ArrayList<>()));
+            category.setChildren(childrenMap.getOrDefault(category.getId(), new ArrayList<>())
+                    .stream()
+                    .sorted(Comparator.comparingLong(value -> category.getPosition())).toList()
+            );
         }
 
         return allCategories.stream()

@@ -10,6 +10,7 @@ import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.CategoryDto;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.dto.SupplierDto;
+import sk.tany.rest.api.dto.admin.shopsettings.get.ShopSettingsGetResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopCategoriesResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopCategory;
 import sk.tany.rest.api.dto.prestashop.PrestaShopCategoryDetailResponse;
@@ -28,14 +29,18 @@ import sk.tany.rest.api.dto.prestashop.PrestaShopSupplierDetailResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopSupplierResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopSupplierWrapper;
 import sk.tany.rest.api.dto.prestashop.PrestaShopSuppliersResponse;
+import sk.tany.rest.api.helper.StringHelper;
 import sk.tany.rest.api.service.admin.BrandAdminService;
 import sk.tany.rest.api.service.admin.CategoryAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
+import sk.tany.rest.api.service.admin.ShopSettingsAdminService;
 import sk.tany.rest.api.service.admin.SupplierAdminService;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +57,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     private final BrandAdminService brandAdminService;
     private final CategoryAdminService categoryAdminService;
     private final ImageService imageService;
+    private final ShopSettingsAdminService shopSettingsAdminService;
 
     @Value("${prestashop.url}")
     private String prestashopUrl;
@@ -190,18 +196,22 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         dto.setMetaTitle(parseLanguageValue(psManufacturer.getMetaTitle()));
         dto.setMetaDescription(parseLanguageValue(psManufacturer.getMetaDescription()));
         dto.setActive("1".equals(psManufacturer.getActive()));
-        String imageUrl = downloadAndUploadImage("manufacturers", psManufacturer.getId(), null, ImageKitType.BRAND);
+        String imageUrl = downloadAndUploadImage("manufacturers", psManufacturer.getId(), null, psManufacturer.getName(), ImageKitType.BRAND);
         dto.setImage(imageUrl);
 
         return dto;
     }
 
     private ProductDto mapToProductDto(PrestaShopProductDetailResponse psProduct) {
+        ShopSettingsGetResponse shopSettings = shopSettingsAdminService.get();
+        BigDecimal vat = shopSettings.getVat();
+
         ProductDto dto = new ProductDto();
         dto.setTitle(parseLanguageValue(psProduct.getName()));
         dto.setDescription(parseLanguageValue(psProduct.getDescription()));
         dto.setShortDescription(parseLanguageValue(psProduct.getDescriptionShort()));
-        dto.setPrice(psProduct.getPrice());
+        dto.setPriceWithoutVat(psProduct.getPrice());
+        dto.setPrice(psProduct.getPrice().multiply(BigDecimal.valueOf(1 + vat.divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP).doubleValue())));
         dto.setWholesalePrice(psProduct.getWholesalePrice());
         dto.setWeight(psProduct.getWeight());
         dto.setProductCode(psProduct.getReference());
@@ -224,7 +234,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         List<String> imageUrls = new ArrayList<>();
         if (psProduct.getAssociations() != null && psProduct.getAssociations().getImages() != null) {
             for (PrestaShopImage psImage : psProduct.getAssociations().getImages()) {
-                String imgUrl = downloadAndUploadImage("products", psProduct.getId(), psImage.getId(), ImageKitType.PRODUCT);
+                String imgUrl = downloadAndUploadImage("products", psProduct.getId(), psImage.getId(), dto.getTitle(), ImageKitType.PRODUCT);
                 if (imgUrl != null) {
                     imageUrls.add(imgUrl);
                 }
@@ -266,13 +276,13 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         return "";
     }
 
-    private String downloadAndUploadImage(String resource, Long id, String imageId, ImageKitType type) {
+    private String downloadAndUploadImage(String resource, Long id, String imageId, String name, ImageKitType type) {
         String urlPart = imageId != null ? id + "/" + imageId : String.valueOf(id);
         String imageUrl = String.format("%s/api/images/%s/%s?ws_key=%s", prestashopUrl, resource, urlPart, prestashopKey);
         try {
             byte[] imageBytes = restTemplate.getForObject(imageUrl, byte[].class);
             if (imageBytes != null && imageBytes.length > 0) {
-                String filename = "ps_" + resource + "_" + id + (imageId != null ? "_" + imageId : "") + ".jpg";
+                String filename = StringHelper.slugify(name) + ".jpg";
                 return imageService.upload(imageBytes, filename, type);
             }
         } catch (Exception e) {
@@ -347,7 +357,9 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         dto.setMetaTitle(parseLanguageValue(psCategory.getMetaTitle()));
         dto.setMetaDescription(parseLanguageValue(psCategory.getMetaDescription()));
         dto.setSlug(parseLanguageValue(psCategory.getLinkRewrite()));
-        dto.setVisible("1".equals(psCategory.getActive()));
+        dto.setActive("1".equals(psCategory.getActive()));
+        dto.setVisible("1".equals(psCategory.getVisible()));
+        dto.setPosition(Long.valueOf(psCategory.getPosition()));
         // parentId is handled in importCategory
         return dto;
     }
