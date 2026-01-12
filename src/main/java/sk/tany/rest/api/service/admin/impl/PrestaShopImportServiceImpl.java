@@ -40,6 +40,7 @@ import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
@@ -211,7 +212,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         dto.setDescription(parseLanguageValue(psProduct.getDescription()));
         dto.setShortDescription(parseLanguageValue(psProduct.getDescriptionShort()));
         dto.setPriceWithoutVat(psProduct.getPrice());
-        dto.setPrice(psProduct.getPrice().multiply(BigDecimal.valueOf(1 + vat.divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP).doubleValue())));
+        dto.setPrice(psProduct.getPrice().multiply(BigDecimal.valueOf(1 + vat.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP).doubleValue()), new MathContext(2, RoundingMode.HALF_UP)));
         dto.setWholesalePrice(psProduct.getWholesalePrice());
         dto.setWeight(psProduct.getWeight());
         dto.setProductCode(psProduct.getReference());
