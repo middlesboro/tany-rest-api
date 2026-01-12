@@ -38,5 +38,7 @@ public class Product {
     private String brandId;
     private List<String> images;
     private ProductStatus status;
+    private BigDecimal averageRating;
+    private Integer reviewsCount;
 
 }
