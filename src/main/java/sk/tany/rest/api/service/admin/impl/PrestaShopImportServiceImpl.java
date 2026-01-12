@@ -217,6 +217,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         dto.setWeight(psProduct.getWeight());
         dto.setProductCode(psProduct.getReference());
         dto.setEan(psProduct.getEan13());
+        dto.setQuantity(10);
 
         dto.setStatus("1".equals(psProduct.getActive()) ? ProductStatus.AVAILABLE : ProductStatus.SOLD_OUT);
 
