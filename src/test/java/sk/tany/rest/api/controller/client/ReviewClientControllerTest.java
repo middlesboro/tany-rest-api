@@ -10,6 +10,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.dto.client.review.ReviewClientListResponse;
+import sk.tany.rest.api.dto.client.review.ReviewClientProductResponse;
 import sk.tany.rest.api.service.client.ReviewClientService;
 
 import java.util.Collections;
@@ -37,7 +38,9 @@ class ReviewClientControllerTest {
     @WithMockUser
     void findAllByProductId_ShouldReturnPageOfReviews() throws Exception {
         String productId = "123";
-        when(reviewClientService.findAllByProductId(eq(productId), any())).thenReturn(new PageImpl<>(Collections.emptyList()));
+        ReviewClientProductResponse response = new ReviewClientProductResponse();
+        response.setReviews(new PageImpl<>(Collections.emptyList()));
+        when(reviewClientService.findAllByProductId(eq(productId), any())).thenReturn(response);
 
         mockMvc.perform(get("/api/reviews/product/{productId}", productId)
                         .with(csrf()))
