@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.dto.CarrierDto;
 import sk.tany.rest.api.mapper.CarrierMapper;
+import sk.tany.rest.api.service.common.ImageService;
 
 import java.util.Optional;
 
@@ -16,6 +17,7 @@ public class CarrierAdminServiceImpl implements CarrierAdminService {
 
     private final CarrierRepository carrierRepository;
     private final CarrierMapper carrierMapper;
+    private final ImageService imageService;
 
     @Override
     public Page<CarrierDto> findAll(Pageable pageable) {
@@ -52,6 +54,12 @@ public class CarrierAdminServiceImpl implements CarrierAdminService {
 
     @Override
     public void deleteById(String id) {
-        carrierRepository.deleteById(id);
+        var carrier = carrierRepository.findById(id);
+        if (carrier.isPresent()) {
+            if (carrier.get().getImage() != null) {
+                imageService.delete(carrier.get().getImage());
+            }
+            carrierRepository.deleteById(id);
+        }
     }
 }

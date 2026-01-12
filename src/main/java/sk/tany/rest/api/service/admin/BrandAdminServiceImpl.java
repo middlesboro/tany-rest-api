@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.mapper.BrandMapper;
+import sk.tany.rest.api.service.common.ImageService;
 
 import java.util.Optional;
 
@@ -16,6 +17,7 @@ public class BrandAdminServiceImpl implements BrandAdminService {
 
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
+    private final ImageService imageService;
 
     @Override
     public Page<BrandDto> findAll(Pageable pageable) {
@@ -53,7 +55,13 @@ public class BrandAdminServiceImpl implements BrandAdminService {
 
     @Override
     public void deleteById(String id) {
-        brandRepository.deleteById(id);
+        var brand = brandRepository.findById(id);
+        if (brand.isPresent()) {
+            if (brand.get().getImage() != null) {
+                imageService.delete(brand.get().getImage());
+            }
+            brandRepository.deleteById(id);
+        }
     }
 
     @Override

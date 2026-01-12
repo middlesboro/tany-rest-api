@@ -8,6 +8,7 @@ import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.mapper.ProductMapper;
+import sk.tany.rest.api.service.common.ImageService;
 
 import java.util.Optional;
 
@@ -18,6 +19,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final ProductSearchEngine productSearchEngine;
+    private final ImageService imageService;
 
     @Override
     public Page<ProductDto> findAll(Pageable pageable) {
@@ -57,8 +59,15 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
     @Override
     public void deleteById(String id) {
-        productRepository.deleteById(id);
-        productSearchEngine.removeProduct(id);
+        var product = productRepository.findById(id);
+        if (product.isPresent()) {
+            var images = product.get().getImages();
+            if (images != null) {
+                images.forEach(imageService::delete);
+            }
+            productRepository.deleteById(id);
+            productSearchEngine.removeProduct(id);
+        }
     }
 
     @Override

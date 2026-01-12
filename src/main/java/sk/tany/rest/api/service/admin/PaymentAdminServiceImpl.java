@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.mapper.PaymentMapper;
+import sk.tany.rest.api.service.common.ImageService;
 
 import java.util.Optional;
 
@@ -16,6 +17,7 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
+    private final ImageService imageService;
 
     @Override
     public Page<PaymentDto> findAll(Pageable pageable) {
@@ -52,6 +54,12 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
 
     @Override
     public void deleteById(String id) {
-        paymentRepository.deleteById(id);
+        var payment = paymentRepository.findById(id);
+        if (payment.isPresent()) {
+            if (payment.get().getImage() != null) {
+                imageService.delete(payment.get().getImage());
+            }
+            paymentRepository.deleteById(id);
+        }
     }
 }
