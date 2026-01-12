@@ -70,6 +70,11 @@ public class CartClientServiceImpl implements CartClientService {
         ProductDto productDto = productService.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        int stock = productDto.getQuantity() != null ? productDto.getQuantity() : 0;
+        if (quantity > stock) {
+            throw new RuntimeException("Not enough stock. Available: " + stock);
+        }
+
         String image = (productDto.getImages() != null && !productDto.getImages().isEmpty())
                 ? productDto.getImages().get(0)
                 : null;

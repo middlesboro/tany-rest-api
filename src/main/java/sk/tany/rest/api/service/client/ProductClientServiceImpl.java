@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.mapper.ProductMapper;
@@ -45,5 +46,20 @@ public class ProductClientServiceImpl implements ProductClientService {
                 .stream()
                 .map(productMapper::toDto)
                 .toList();
+    }
+
+    @Override
+    public void updateProductStock(String productId, Integer quantityChange) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        int currentQuantity = product.getQuantity() != null ? product.getQuantity() : 0;
+        int newQuantity = currentQuantity - quantityChange;
+        if (newQuantity < 0) {
+            throw new RuntimeException("Not enough stock for product: " + product.getTitle());
+        }
+        product.setQuantity(newQuantity);
+        productRepository.save(product);
+        productSearchEngine.updateProduct(product);
     }
 }
