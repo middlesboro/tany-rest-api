@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 public class ProductDto {
     private String id;
+    private Long prestashopId;
     private String title;
     private String shortDescription;
     private String description;

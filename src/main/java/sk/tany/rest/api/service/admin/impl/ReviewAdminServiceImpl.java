@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
 import sk.tany.rest.api.domain.review.ReviewRepository;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminCreateRequest;
@@ -24,6 +26,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
     private final ReviewRepository repository;
     private final ReviewMapper mapper;
     private final ObjectMapper objectMapper;
+    private final ProductRepository productRepository;
 
     @Override
     public Page<ReviewAdminListResponse> findAll(Pageable pageable) {
@@ -93,35 +97,36 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 for (JsonNode item : dataNode) {
                     try {
-                        String id = item.get("id").asText();
-                        if (repository.existsById(id)) {
-                           log.info("Review with id {} already exists, skipping", id);
-                           continue;
-                        }
-
                         Review review = new Review();
-                        review.setId(id);
-                        review.setProductId(item.get("id_product").asText());
-                        review.setText(item.get("text_review").asText());
-                        review.setRating(Integer.parseInt(item.get("rating").asText()));
-                        // Mapping title from "title_review"
-                        if (item.has("title_review")) {
-                            review.setTitle(item.get("title_review").asText());
-                        }
-                        review.setEmail(item.get("email").asText());
-                        review.setActive("1".equals(item.get("is_active").asText()));
+                        Long prestashopProductId = Long.valueOf(item.get("id_product").asText());
+                        review.setPrestashopProductId(prestashopProductId);
 
-                        if (item.has("time_add")) {
-                            String timeAdd = item.get("time_add").asText();
-                            try {
-                                LocalDateTime ldt = LocalDateTime.parse(timeAdd, formatter);
-                                review.setCreateDate(ldt.atZone(ZoneId.systemDefault()).toInstant());
-                            } catch (Exception e) {
-                                log.warn("Failed to parse date for review {}: {}", id, timeAdd);
+                        Optional<Product> productOptional = productRepository.findByPrestashopId(prestashopProductId);
+                        if (productOptional.isPresent()) {
+                            Product product = productOptional.get();
+                            review.setProductId(product.getId());
+                            review.setText(item.get("text_review").asText());
+                            review.setRating(Integer.parseInt(item.get("rating").asText()));
+                            // Mapping title from "title_review"
+                            if (item.has("title_review")) {
+                                review.setTitle(item.get("title_review").asText());
                             }
-                        }
+                            review.setEmail(item.get("email").asText());
+                            review.setActive("1".equals(item.get("is_active").asText()));
+                            review.setCustomerName(item.get("customer_name").asText());
 
-                        repository.save(review);
+                            if (item.has("time_add")) {
+                                String timeAdd = item.get("time_add").asText();
+                                try {
+                                    LocalDateTime ldt = LocalDateTime.parse(timeAdd, formatter);
+                                    review.setCreateDate(ldt.atZone(ZoneId.systemDefault()).toInstant());
+                                } catch (Exception e) {
+                                    log.warn("Failed to parse date for review {}: {}", prestashopProductId, timeAdd);
+                                }
+                            }
+
+                            repository.save(review);
+                        }
                     } catch (Exception e) {
                         log.error("Failed to import review item: {}", item, e);
                     }

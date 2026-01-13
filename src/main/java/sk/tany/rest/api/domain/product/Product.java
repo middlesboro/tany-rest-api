@@ -16,6 +16,7 @@ public class Product {
 
     @Id
     private String id;
+    private Long prestashopId;
     @CreatedDate
     private Instant createDate;
     @LastModifiedDate

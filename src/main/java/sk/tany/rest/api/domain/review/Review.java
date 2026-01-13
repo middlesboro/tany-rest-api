@@ -18,9 +18,11 @@ public class Review {
     @LastModifiedDate
     private Instant updateDate;
     private String productId;
+    private Long prestashopProductId;
     private String text;
     private int rating;
     private String title;
+    private String customerName;
     private String email;
     private boolean active;
 }
