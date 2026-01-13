@@ -1,6 +1,7 @@
 package sk.tany.rest.api.service.admin.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -71,7 +72,7 @@ public class BlogAdminServiceImpl implements BlogAdminService {
         Blog blog = blogRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Blog not found"));
 
-        if (blog.getImage() != null) {
+        if (StringUtils.isNotBlank(blog.getImage())) {
             imageService.delete(blog.getImage());
         }
 
