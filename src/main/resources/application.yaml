@@ -55,6 +55,7 @@ security:
     - /api/carriers/**
     - /api/payments/**
     - /api/categories/**
+    - /api/blogs/**
     - /v3/api-docs/**
     - /swagger-ui/**
 

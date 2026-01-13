@@ -5,4 +5,5 @@ public enum ImageKitType {
     BRAND,
     CARRIER,
     PAYMENT_METHOD,
+    BLOG,
 }
