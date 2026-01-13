@@ -1,9 +1,15 @@
 package sk.tany.rest.api.service.client.impl;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.HtmlUtils;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.customer.Customer;
@@ -21,12 +27,6 @@ import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
-import jakarta.annotation.PostConstruct;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.web.util.HtmlUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -181,7 +181,7 @@ public class OrderClientServiceImpl implements OrderClientService {
                     Files.copy(inputStream, pdfFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
 
-                emailService.sendEmail(order.getEmail(), "Order Confirmation #" + order.getOrderIdentifier(), template, true, pdfFile);
+//                emailService.sendEmail(order.getEmail(), "Order Confirmation #" + order.getOrderIdentifier(), template, true, pdfFile);
             } finally {
                 // Cleanup temp file
                 if (pdfFile != null && pdfFile.exists()) {
