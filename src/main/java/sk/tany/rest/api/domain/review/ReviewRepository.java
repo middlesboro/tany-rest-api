@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface ReviewRepository extends MongoRepository<Review, String> {
     Page<Review> findAllByProductId(String productId, Pageable pageable);
+
+    List<Review> findAllByProductId(String productId);
 }
