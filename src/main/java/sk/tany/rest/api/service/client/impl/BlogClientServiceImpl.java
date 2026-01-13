@@ -23,4 +23,10 @@ public class BlogClientServiceImpl implements BlogClientService {
                 .map(blogMapper::toDto)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public java.util.Optional<BlogDto> getBlog(String id) {
+        return blogRepository.findById(id)
+                .map(blogMapper::toDto);
+    }
 }

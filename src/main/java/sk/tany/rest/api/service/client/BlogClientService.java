@@ -5,4 +5,6 @@ import java.util.List;
 
 public interface BlogClientService {
     List<BlogDto> getAll();
+
+    java.util.Optional<BlogDto> getBlog(String id);
 }
