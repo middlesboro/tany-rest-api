@@ -6,6 +6,7 @@ public interface CartClientService {
     CartDto getOrCreateCart(String cartId, String customerId);
     CartDto save(CartDto cartDto);
     String addProductToCart(String cartId, String productId, Integer quantity);
+    String removeProductFromCart(String cartId, String productId);
     CartDto addCarrier(String cartId, String carrierId);
     CartDto addPayment(String cartId, String paymentId);
 }
