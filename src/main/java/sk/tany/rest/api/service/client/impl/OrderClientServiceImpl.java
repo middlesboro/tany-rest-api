@@ -21,11 +21,12 @@ import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
-import org.apache.commons.text.StringEscapeUtils;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.web.util.HtmlUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +54,20 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final EmailService emailService;
     private final ResourceLoader resourceLoader;
 
+    private String cachedTemplate;
+
+    @PostConstruct
+    public void init() {
+        try {
+            Resource templateResource = resourceLoader.getResource("classpath:templates/email/order_created.html");
+            try (InputStream inputStream = templateResource.getInputStream()) {
+                cachedTemplate = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException e) {
+            log.error("Failed to load email template", e);
+        }
+    }
+
     private String getCurrentCustomerId() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return customerRepository.findByEmail(email)
@@ -74,17 +89,19 @@ public class OrderClientServiceImpl implements OrderClientService {
         List<ProductDto> products = productClientService.findAllByIds(order.getItems().stream().map(OrderItem::getId).toList());
         order.setProductsPrice(OrderHelper.getProductsPrice(products));
 
+        Carrier carrier = null;
         Optional<Carrier> carrierOptional = carrierRepository.findById(orderDto.getCarrierId());
         if (carrierOptional.isPresent()) {
-            Carrier carrier = carrierOptional.get();
+            carrier = carrierOptional.get();
 
             BigDecimal totalWeight = OrderHelper.getProductsWeight(products);
             order.setCarrierPrice(OrderHelper.getCarrierPrice(carrier, totalWeight));
         }
 
+        Payment payment = null;
         Optional<Payment> paymentOptional = paymentRepository.findById(orderDto.getPaymentId());
         if (paymentOptional.isPresent()) {
-            Payment payment = paymentOptional.get();
+            payment = paymentOptional.get();
             order.setPaymentPrice(payment.getPrice());
         }
 
@@ -96,22 +113,66 @@ public class OrderClientServiceImpl implements OrderClientService {
             productClientService.updateProductStock(item.getId(), item.getQuantity());
         });
 
-        sendOrderCreatedEmail(savedOrder);
+        sendOrderCreatedEmail(savedOrder, carrier, payment);
 
         return orderMapper.toDto(savedOrder);
     }
 
-    private void sendOrderCreatedEmail(Order order) {
+    private void sendOrderCreatedEmail(Order order, Carrier carrier, Payment payment) {
+        if (cachedTemplate == null) {
+            log.warn("Email template not loaded, skipping email sending.");
+            return;
+        }
+
         try {
-            Resource templateResource = resourceLoader.getResource("classpath:templates/email/order_created.html");
-            String template;
-            try (InputStream inputStream = templateResource.getInputStream()) {
-                template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-            }
+            String template = cachedTemplate;
 
             String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
-            template = template.replace("{{firstname}}", StringEscapeUtils.escapeHtml4(firstname));
+            template = template.replace("{{firstname}}", HtmlUtils.htmlEscape(firstname));
             template = template.replace("{{orderIdentifier}}", String.valueOf(order.getOrderIdentifier()));
+
+            // Products
+            StringBuilder productsHtml = new StringBuilder();
+            if (order.getItems() != null) {
+                for (OrderItem item : order.getItems()) {
+                    productsHtml.append("<tr>");
+                    productsHtml.append("<td>").append(HtmlUtils.htmlEscape(item.getName())).append("</td>");
+                    productsHtml.append("<td>").append(item.getQuantity()).append("</td>");
+                    productsHtml.append("<td>").append(String.format("%.2f €", item.getPrice())).append("</td>");
+                    productsHtml.append("<td>").append(String.format("%.2f €", item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))).append("</td>");
+                    productsHtml.append("</tr>");
+                }
+            }
+            template = template.replace("{{products}}", productsHtml.toString());
+
+            // Carrier and Payment
+            String carrierName = carrier != null ? carrier.getName() : "Unknown Carrier";
+            String carrierPrice = order.getCarrierPrice() != null ? String.format("%.2f €", order.getCarrierPrice()) : "0.00 €";
+            template = template.replace("{{carrierName}}", HtmlUtils.htmlEscape(carrierName));
+            template = template.replace("{{carrierPrice}}", carrierPrice);
+
+            String paymentName = payment != null ? payment.getName() : "Unknown Payment";
+            String paymentPrice = order.getPaymentPrice() != null ? String.format("%.2f €", order.getPaymentPrice()) : "0.00 €";
+            template = template.replace("{{paymentName}}", HtmlUtils.htmlEscape(paymentName));
+            template = template.replace("{{paymentPrice}}", paymentPrice);
+
+            // Address
+            StringBuilder addressHtml = new StringBuilder();
+            if (order.getDeliveryAddress() != null) {
+                addressHtml.append("<p>").append(HtmlUtils.htmlEscape(order.getDeliveryAddress().getStreet())).append("</p>");
+                addressHtml.append("<p>").append(HtmlUtils.htmlEscape(order.getDeliveryAddress().getZip())).append(" ")
+                           .append(HtmlUtils.htmlEscape(order.getDeliveryAddress().getCity())).append("</p>");
+            } else {
+                addressHtml.append("<p>No delivery address provided</p>");
+            }
+            template = template.replace("{{deliveryAddress}}", addressHtml.toString());
+
+            // Final Price
+            BigDecimal productsPrice = order.getProductsPrice() != null ? order.getProductsPrice() : BigDecimal.ZERO;
+            BigDecimal cPrice = order.getCarrierPrice() != null ? order.getCarrierPrice() : BigDecimal.ZERO;
+            BigDecimal pPrice = order.getPaymentPrice() != null ? order.getPaymentPrice() : BigDecimal.ZERO;
+            BigDecimal finalPrice = productsPrice.add(cPrice).add(pPrice);
+            template = template.replace("{{finalPrice}}", String.format("%.2f €", finalPrice));
 
             Resource pdfResource = resourceLoader.getResource("classpath:empty.pdf");
             File pdfFile = File.createTempFile("order_attachment", ".pdf");

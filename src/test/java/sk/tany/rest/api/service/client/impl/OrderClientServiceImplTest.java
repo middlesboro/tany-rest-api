@@ -76,6 +76,14 @@ class OrderClientServiceImplTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getName()).thenReturn("user@example.com");
         SecurityContextHolder.setContext(securityContext);
+
+        // Mock ResourceLoader
+        Resource templateResource = new ByteArrayResource("<html>{{firstname}} {{orderIdentifier}} {{products}} {{carrierName}} {{paymentName}} {{deliveryAddress}} {{finalPrice}}</html>".getBytes());
+        Resource pdfResource = new ByteArrayResource("dummy pdf".getBytes());
+        when(resourceLoader.getResource("classpath:templates/email/order_created.html")).thenReturn(templateResource);
+        when(resourceLoader.getResource("classpath:empty.pdf")).thenReturn(pdfResource);
+
+        orderClientService.init();
     }
 
     @Test
@@ -86,24 +94,32 @@ class OrderClientServiceImplTest {
         orderDto.setPaymentId("paymentId");
 
         Order order = new Order();
-        order.setItems(Collections.singletonList(new OrderItem()));
+        OrderItem item = new OrderItem();
+        item.setName("Test Product");
+        item.setQuantity(1);
+        item.setPrice(BigDecimal.TEN);
+        order.setItems(Collections.singletonList(item));
         order.setEmail("user@example.com");
         order.setOrderIdentifier(123L);
+        order.setCarrierPrice(BigDecimal.valueOf(5));
+        order.setPaymentPrice(BigDecimal.valueOf(2));
+        sk.tany.rest.api.domain.customer.Address address = new sk.tany.rest.api.domain.customer.Address("Street", "City", "12345");
+        order.setDeliveryAddress(address);
+
+        Carrier carrier = new Carrier();
+        carrier.setName("Test Carrier");
+
+        Payment payment = new Payment();
+        payment.setName("Test Payment");
 
         when(orderMapper.toEntity(orderDto)).thenReturn(order);
         when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.of(new Customer()));
         when(productClientService.findAllByIds(any())).thenReturn(Collections.emptyList());
-        when(carrierRepository.findById("carrierId")).thenReturn(Optional.of(new Carrier()));
-        when(paymentRepository.findById("paymentId")).thenReturn(Optional.of(new Payment()));
+        when(carrierRepository.findById("carrierId")).thenReturn(Optional.of(carrier));
+        when(paymentRepository.findById("paymentId")).thenReturn(Optional.of(payment));
         when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toDto(any(Order.class))).thenReturn(orderDto);
-
-        // Mock ResourceLoader
-        Resource templateResource = new ByteArrayResource("<html>{{firstname}} {{orderIdentifier}}</html>".getBytes());
-        Resource pdfResource = new ByteArrayResource("dummy pdf".getBytes());
-        when(resourceLoader.getResource("classpath:templates/email/order_created.html")).thenReturn(templateResource);
-        when(resourceLoader.getResource("classpath:empty.pdf")).thenReturn(pdfResource);
 
         orderClientService.createOrder(orderDto);
 
@@ -118,24 +134,30 @@ class OrderClientServiceImplTest {
         orderDto.setPaymentId("paymentId");
 
         Order order = new Order();
-        order.setItems(Collections.singletonList(new OrderItem()));
+        OrderItem item = new OrderItem();
+        item.setName("Test Product");
+        item.setQuantity(1);
+        item.setPrice(BigDecimal.TEN);
+        order.setItems(Collections.singletonList(item));
         order.setEmail("user@example.com");
         order.setOrderIdentifier(123L);
+        sk.tany.rest.api.domain.customer.Address address = new sk.tany.rest.api.domain.customer.Address("Street", "City", "12345");
+        order.setDeliveryAddress(address);
+
+        Carrier carrier = new Carrier();
+        carrier.setName("Test Carrier");
+
+        Payment payment = new Payment();
+        payment.setName("Test Payment");
 
         when(orderMapper.toEntity(orderDto)).thenReturn(order);
         when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.of(new Customer()));
         when(productClientService.findAllByIds(any())).thenReturn(Collections.emptyList());
-        when(carrierRepository.findById("carrierId")).thenReturn(Optional.of(new Carrier()));
-        when(paymentRepository.findById("paymentId")).thenReturn(Optional.of(new Payment()));
+        when(carrierRepository.findById("carrierId")).thenReturn(Optional.of(carrier));
+        when(paymentRepository.findById("paymentId")).thenReturn(Optional.of(payment));
         when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toDto(any(Order.class))).thenReturn(orderDto);
-
-        // Mock ResourceLoader
-        Resource templateResource = new ByteArrayResource("<html>{{firstname}} {{orderIdentifier}}</html>".getBytes());
-        Resource pdfResource = new ByteArrayResource("dummy pdf".getBytes());
-        when(resourceLoader.getResource("classpath:templates/email/order_created.html")).thenReturn(templateResource);
-        when(resourceLoader.getResource("classpath:empty.pdf")).thenReturn(pdfResource);
 
         doThrow(new RuntimeException("Email failed")).when(emailService).sendEmail(anyString(), anyString(), anyString(), eq(true), any(File.class));
 
