@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddItemRequest;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddProductResponse;
+import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemRequest;
+import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemResponse;
 import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierRequest;
 import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierResponse;
 import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentRequest;
@@ -34,6 +36,14 @@ public class CartClientController {
     public ResponseEntity<CartClientAddProductResponse> addProduct(@RequestBody CartClientAddItemRequest request) {
         String cartId = cartService.addProductToCart(request.getCartId(), request.getProductId(), request.getQuantity());
         CartClientAddProductResponse response = new CartClientAddProductResponse();
+        response.setCartId(cartId);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/items")
+    public ResponseEntity<CartClientRemoveItemResponse> removeProduct(@RequestBody CartClientRemoveItemRequest request) {
+        String cartId = cartService.removeProductFromCart(request.getCartId(), request.getProductId());
+        CartClientRemoveItemResponse response = new CartClientRemoveItemResponse();
         response.setCartId(cartId);
         return ResponseEntity.ok(response);
     }

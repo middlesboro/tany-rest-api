@@ -11,6 +11,7 @@ import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.controller.client.CartClientController;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddItemRequest;
+import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemRequest;
 import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierRequest;
 import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierResponse;
 import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentRequest;
@@ -22,6 +23,7 @@ import sk.tany.rest.api.service.client.CartClientService;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -62,6 +64,25 @@ public class CartClientControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"cartId\":\"cart-123\"}"));
+    }
+
+    @Test
+    @WithMockUser
+    public void removeProduct_shouldReturnCartId() throws Exception {
+        String cartId = "cart-123";
+        String productId = "prod-456";
+        CartClientRemoveItemRequest request = new CartClientRemoveItemRequest();
+        request.setCartId(cartId);
+        request.setProductId(productId);
+
+        given(cartService.removeProductFromCart(cartId, productId)).willReturn(cartId);
+
+        mockMvc.perform(delete("/api/cart/items")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"cartId\":\"cart-123\"}"));
     }

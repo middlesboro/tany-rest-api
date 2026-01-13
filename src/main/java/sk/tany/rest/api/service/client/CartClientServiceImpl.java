@@ -101,6 +101,18 @@ public class CartClientServiceImpl implements CartClientService {
     }
 
     @Override
+    public String removeProductFromCart(String cartId, String productId) {
+        CartDto cartDto = findById(cartId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        if (cartDto.getItems() != null) {
+            cartDto.getItems().removeIf(item -> item.getProductId().equals(productId));
+        }
+
+        return save(cartDto).getCartId();
+    }
+
+    @Override
     public CartDto addCarrier(String cartId, String carrierId) {
         CartDto cartDto = findById(cartId)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
