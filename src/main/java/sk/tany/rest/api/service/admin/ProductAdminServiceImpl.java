@@ -7,10 +7,15 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.review.Review;
+import sk.tany.rest.api.domain.review.ReviewRepository;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,6 +26,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final ProductMapper productMapper;
     private final ProductSearchEngine productSearchEngine;
     private final ImageService imageService;
+    private final ReviewRepository reviewRepository;
 
     @Override
     public Page<ProductDto> findAll(Pageable pageable) {
@@ -85,7 +91,30 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     }
 
     private void recalculateReviewStatistics(Product product) {
-        product.setAverageRating(null);
-        product.setReviewsCount(null);
+        if (product.getId() == null) {
+            product.setAverageRating(BigDecimal.ZERO);
+            product.setReviewsCount(0);
+            return;
+        }
+
+        List<Review> reviews = reviewRepository.findAllByProductId(product.getId());
+        List<Review> activeReviews = reviews.stream()
+                .filter(Review::isActive)
+                .toList();
+
+        int count = activeReviews.size();
+        if (count == 0) {
+            product.setAverageRating(BigDecimal.ZERO);
+            product.setReviewsCount(0);
+            return;
+        }
+
+        double average = activeReviews.stream()
+                .mapToInt(Review::getRating)
+                .average()
+                .orElse(0.0);
+
+        product.setAverageRating(BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP));
+        product.setReviewsCount(count);
     }
 }
