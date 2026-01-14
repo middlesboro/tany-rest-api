@@ -2,6 +2,7 @@ package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.CategoryDto;
@@ -22,6 +23,7 @@ public class CategoryClientServiceImpl implements CategoryClientService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final ProductSearchEngine productSearchEngine;
 
     @Override
     public List<CategoryDto> findAllVisible() {
@@ -30,6 +32,10 @@ public class CategoryClientServiceImpl implements CategoryClientService {
                 .sorted(Comparator.comparingLong(Category::getPosition))
                 .map(categoryMapper::toDto)
                 .toList();
+
+        for (CategoryDto category : allCategories) {
+            category.setFilterParameters(productSearchEngine.getFilterParametersForCategory(category.getId()));
+        }
 
         Map<String, List<CategoryDto>> childrenMap = allCategories.stream()
                 .filter(c -> c.getParentId() != null)

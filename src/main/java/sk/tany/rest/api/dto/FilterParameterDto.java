@@ -11,5 +11,6 @@ public class FilterParameterDto {
     private String name;
     private FilterParameterType type;
     private List<String> filterParameterValueIds;
+    private List<FilterParameterValueDto> values;
     private Boolean active;
 }
