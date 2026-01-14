@@ -10,6 +10,7 @@ public class FilterParameterValue {
 
     @Id
     private String id;
+    private String filterParameterId;
     private String name;
     private Boolean active;
 }

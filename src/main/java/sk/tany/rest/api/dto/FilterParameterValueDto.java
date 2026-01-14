@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class FilterParameterValueDto {
     private String id;
+    private String filterParameterId;
     private String name;
     private Boolean active;
 }
