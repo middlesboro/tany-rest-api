@@ -17,6 +17,8 @@ import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
+import sk.tany.rest.api.dto.request.CategoryFilterRequest;
+import sk.tany.rest.api.dto.request.FilterParameterRequest;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 
@@ -129,19 +131,70 @@ public class ProductSearchEngine {
             return List.of();
         }
 
-        // Step 1: Collect all products in the category
         List<Product> productsInCategory = cachedProducts.stream()
                 .filter(p -> p.getCategoryIds() != null && p.getCategoryIds().contains(categoryId))
                 .toList();
 
-        if (productsInCategory.isEmpty()) {
+        return getFilterParametersForProducts(productsInCategory, Collections.emptySet());
+    }
+
+    public List<FilterParameterDto> getFilterParametersForCategoryWithFilter(String categoryId, CategoryFilterRequest filterRequest) {
+        if (categoryId == null) {
             return List.of();
         }
 
-        // Step 2: Collect all filter parameters and their values from these products
+        List<Product> productsInCategory = cachedProducts.stream()
+                .filter(p -> p.getCategoryIds() != null && p.getCategoryIds().contains(categoryId))
+                .toList();
+
+        Set<String> selectedValueIds = new HashSet<>();
+        if (filterRequest != null && filterRequest.getFilterParameters() != null) {
+            for (FilterParameterRequest param : filterRequest.getFilterParameters()) {
+                if (param.getFilterParameterValueIds() != null) {
+                    selectedValueIds.addAll(param.getFilterParameterValueIds());
+                }
+            }
+        }
+
+        // We return the full list of filters for the category (facets), marking selected ones.
+        // We do NOT restrict the list of available filters based on the selection (multi-select friendly).
+        return getFilterParametersForProducts(productsInCategory, selectedValueIds);
+    }
+
+    private boolean matchesFilter(Product product, CategoryFilterRequest filterRequest) {
+        if (filterRequest == null || filterRequest.getFilterParameters() == null || filterRequest.getFilterParameters().isEmpty()) {
+            return true;
+        }
+
+        if (product.getProductFilterParameters() == null) {
+            return false;
+        }
+
+        for (FilterParameterRequest paramReq : filterRequest.getFilterParameters()) {
+            if (paramReq.getFilterParameterValueIds() == null || paramReq.getFilterParameterValueIds().isEmpty()) {
+                continue;
+            }
+
+            boolean matchFound = product.getProductFilterParameters().stream()
+                    .anyMatch(pfp -> pfp.getFilterParameterId() != null &&
+                            pfp.getFilterParameterId().equals(paramReq.getId()) &&
+                            paramReq.getFilterParameterValueIds().contains(pfp.getFilterParameterValueId()));
+
+            if (!matchFound) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private List<FilterParameterDto> getFilterParametersForProducts(List<Product> products, Set<String> selectedValueIds) {
+        if (products.isEmpty()) {
+            return List.of();
+        }
+
         Map<String, Set<String>> filterParamToValuesMap = new HashMap<>();
 
-        for (Product product : productsInCategory) {
+        for (Product product : products) {
             if (product.getProductFilterParameters() != null) {
                 for (ProductFilterParameter param : product.getProductFilterParameters()) {
                     if (param.getFilterParameterId() != null && param.getFilterParameterValueId() != null) {
@@ -153,7 +206,6 @@ public class ProductSearchEngine {
             }
         }
 
-        // Step 3: Map to DTOs
         List<FilterParameterDto> result = new ArrayList<>();
 
         for (Map.Entry<String, Set<String>> entry : filterParamToValuesMap.entrySet()) {
@@ -168,11 +220,12 @@ public class ProductSearchEngine {
                 for (String valueId : valueIds) {
                     FilterParameterValue value = cachedFilterParameterValues.get(valueId);
                     if (value != null) {
-                        valueDtos.add(filterParameterValueMapper.toDto(value));
+                        FilterParameterValueDto valueDto = filterParameterValueMapper.toDto(value);
+                        valueDto.setSelected(selectedValueIds.contains(valueId));
+                        valueDtos.add(valueDto);
                     }
                 }
 
-                // Sort values by name for better UX
                 valueDtos.sort(Comparator.comparing(FilterParameterValueDto::getName, Comparator.nullsLast(Comparator.naturalOrder())));
 
                 dto.setValues(valueDtos);
@@ -180,7 +233,6 @@ public class ProductSearchEngine {
             }
         }
 
-        // Sort parameters by name
         result.sort(Comparator.comparing(FilterParameterDto::getName, Comparator.nullsLast(Comparator.naturalOrder())));
 
         return result;
