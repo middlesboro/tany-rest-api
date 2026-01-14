@@ -2,6 +2,7 @@ package sk.tany.rest.api.dto.admin.product.list;
 
 import lombok.Data;
 import sk.tany.rest.api.domain.product.ProductStatus;
+import sk.tany.rest.api.dto.ProductFilterParameterDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,4 +26,5 @@ public class ProductListResponse {
     private String brandId;
     private List<String> images;
     private ProductStatus status;
+    private List<ProductFilterParameterDto> productFilterParameters;
 }
