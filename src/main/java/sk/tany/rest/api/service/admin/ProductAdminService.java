@@ -16,4 +16,5 @@ public interface ProductAdminService {
     Page<ProductDto> search(String categoryId, Pageable pageable);
     java.util.List<ProductDto> searchByQuery(String query);
     java.util.List<ProductDto> findAllByIds(Iterable<String> ids);
+    java.util.List<ProductDto> findAllByFilterParameterValueId(String filterParameterValueId);
 }

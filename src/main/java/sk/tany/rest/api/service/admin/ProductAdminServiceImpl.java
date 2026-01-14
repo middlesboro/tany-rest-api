@@ -97,6 +97,13 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                 .toList();
     }
 
+    @Override
+    public java.util.List<ProductDto> findAllByFilterParameterValueId(String filterParameterValueId) {
+        return productRepository.findAllByProductFilterParametersFilterParameterValueId(filterParameterValueId).stream()
+                .map(productMapper::toDto)
+                .toList();
+    }
+
     private void recalculateReviewStatistics(Product product) {
         if (product.getId() == null) {
             product.setAverageRating(BigDecimal.ZERO);
