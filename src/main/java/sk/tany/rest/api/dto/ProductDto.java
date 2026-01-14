@@ -31,4 +31,5 @@ public class ProductDto {
     private ProductStatus status;
     private BigDecimal averageRating;
     private Integer reviewsCount;
+    private List<ProductFilterParameterDto> productFilterParameters;
 }
