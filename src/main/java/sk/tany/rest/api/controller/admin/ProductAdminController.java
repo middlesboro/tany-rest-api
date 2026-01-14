@@ -58,6 +58,13 @@ public class ProductAdminController {
                 .map(productAdminApiMapper::toSearchResponse);
     }
 
+    @GetMapping(value = "/search", params = "query")
+    public List<ProductSearchResponse> searchByQuery(@RequestParam String query) {
+        return productService.searchByQuery(query).stream()
+                .map(productAdminApiMapper::toSearchResponse)
+                .toList();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductGetResponse> getProduct(@PathVariable String id) {
         return productService.findById(id)

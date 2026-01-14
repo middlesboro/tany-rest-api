@@ -109,4 +109,24 @@ class ProductAdminServiceImplTest {
         assertThat(product.getAverageRating()).isEqualByComparingTo(BigDecimal.valueOf(5.0));
         assertThat(product.getReviewsCount()).isEqualTo(1);
     }
+
+    @Test
+    void searchByQuery_shouldReturnMappedProducts() {
+        String query = "test";
+        Product product = new Product();
+        product.setId("1");
+        product.setTitle("Test Product");
+        ProductDto dto = new ProductDto();
+        dto.setId("1");
+        dto.setTitle("Test Product");
+
+        when(productSearchEngine.searchAndSort(query)).thenReturn(List.of(product));
+        when(productMapper.toDto(product)).thenReturn(dto);
+
+        List<ProductDto> result = productAdminService.searchByQuery(query);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getTitle()).isEqualTo("Test Product");
+        verify(productSearchEngine).searchAndSort(query);
+    }
 }
