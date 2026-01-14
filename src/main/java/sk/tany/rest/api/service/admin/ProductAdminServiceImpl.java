@@ -90,6 +90,13 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         return productRepository.findAllById(ids).stream().map(productMapper::toDto).toList();
     }
 
+    @Override
+    public java.util.List<ProductDto> searchByQuery(String query) {
+        return productSearchEngine.searchAndSort(query).stream()
+                .map(productMapper::toDto)
+                .toList();
+    }
+
     private void recalculateReviewStatistics(Product product) {
         if (product.getId() == null) {
             product.setAverageRating(BigDecimal.ZERO);

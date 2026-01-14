@@ -14,5 +14,6 @@ public interface ProductAdminService {
     ProductDto patch(String id, sk.tany.rest.api.dto.admin.product.patch.ProductPatchRequest patchDto);
     void deleteById(String id);
     Page<ProductDto> search(String categoryId, Pageable pageable);
+    java.util.List<ProductDto> searchByQuery(String query);
     java.util.List<ProductDto> findAllByIds(Iterable<String> ids);
 }
