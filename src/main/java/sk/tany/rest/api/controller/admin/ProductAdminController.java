@@ -65,6 +65,13 @@ public class ProductAdminController {
                 .toList();
     }
 
+    @GetMapping("/by-filter-value/{filterParameterValueId}")
+    public List<ProductListResponse> getProductsByFilterParameterValueId(@PathVariable String filterParameterValueId) {
+        return productService.findAllByFilterParameterValueId(filterParameterValueId).stream()
+                .map(productAdminApiMapper::toListResponse)
+                .toList();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductGetResponse> getProduct(@PathVariable String id) {
         return productService.findById(id)

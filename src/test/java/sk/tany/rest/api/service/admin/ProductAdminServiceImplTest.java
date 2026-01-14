@@ -129,4 +129,25 @@ class ProductAdminServiceImplTest {
         assertThat(result.get(0).getTitle()).isEqualTo("Test Product");
         verify(productSearchEngine).searchAndSort(query);
     }
+
+    @Test
+    void findAllByFilterParameterValueId_shouldReturnMappedProducts() {
+        String filterParameterValueId = "fpv1";
+        Product product = new Product();
+        product.setId("1");
+        product.setTitle("Test Product");
+        ProductDto dto = new ProductDto();
+        dto.setId("1");
+        dto.setTitle("Test Product");
+
+        when(productRepository.findAllByProductFilterParametersFilterParameterValueId(filterParameterValueId))
+                .thenReturn(List.of(product));
+        when(productMapper.toDto(product)).thenReturn(dto);
+
+        List<ProductDto> result = productAdminService.findAllByFilterParameterValueId(filterParameterValueId);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getTitle()).isEqualTo("Test Product");
+        verify(productRepository).findAllByProductFilterParametersFilterParameterValueId(filterParameterValueId);
+    }
 }
