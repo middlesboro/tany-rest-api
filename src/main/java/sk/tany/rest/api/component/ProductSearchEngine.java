@@ -8,12 +8,22 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import sk.tany.rest.api.domain.filter.FilterParameter;
+import sk.tany.rest.api.domain.filter.FilterParameterRepository;
+import sk.tany.rest.api.domain.filter.FilterParameterValue;
+import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.dto.FilterParameterDto;
+import sk.tany.rest.api.dto.FilterParameterValueDto;
+import sk.tany.rest.api.mapper.FilterParameterMapper;
+import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -22,9 +32,16 @@ import java.util.stream.Collectors;
 public class ProductSearchEngine {
 
     private final ProductRepository productRepository;
+    private final FilterParameterRepository filterParameterRepository;
+    private final FilterParameterValueRepository filterParameterValueRepository;
+    private final FilterParameterMapper filterParameterMapper;
+    private final FilterParameterValueMapper filterParameterValueMapper;
+
     private final LevenshteinDistance levenshtein = new LevenshteinDistance();
     private final JaroWinklerSimilarity jaroWinkler = new JaroWinklerSimilarity();
     private final List<Product> cachedProducts = new CopyOnWriteArrayList<>();
+    private final Map<String, FilterParameter> cachedFilterParameters = new ConcurrentHashMap<>();
+    private final Map<String, FilterParameterValue> cachedFilterParameterValues = new ConcurrentHashMap<>();
 
     private static final int MAX_EDIT_DISTANCE = 2;
 
@@ -34,6 +51,18 @@ public class ProductSearchEngine {
         cachedProducts.clear();
         cachedProducts.addAll(productRepository.findAll());
         log.info("Loaded {} products into search engine.", cachedProducts.size());
+
+        log.info("Loading filter parameters into search engine...");
+        cachedFilterParameters.clear();
+        cachedFilterParameters.putAll(filterParameterRepository.findAll().stream()
+                .collect(Collectors.toMap(FilterParameter::getId, Function.identity())));
+        log.info("Loaded {} filter parameters into search engine.", cachedFilterParameters.size());
+
+        log.info("Loading filter parameter values into search engine...");
+        cachedFilterParameterValues.clear();
+        cachedFilterParameterValues.putAll(filterParameterValueRepository.findAll().stream()
+                .collect(Collectors.toMap(FilterParameterValue::getId, Function.identity())));
+        log.info("Loaded {} filter parameter values into search engine.", cachedFilterParameterValues.size());
     }
 
     public void addProduct(Product product) {
@@ -93,5 +122,67 @@ public class ProductSearchEngine {
         String normalizedName = StringUtils.stripAccents(productName.toLowerCase());
         // Jaro-Winkler vráti hodnotu medzi 0.0 a 1.0
         return jaroWinkler.apply(normalizedName, normalizedQuery);
+    }
+
+    public List<FilterParameterDto> getFilterParametersForCategory(String categoryId) {
+        if (categoryId == null) {
+            return List.of();
+        }
+
+        // Step 1: Collect all products in the category
+        List<Product> productsInCategory = cachedProducts.stream()
+                .filter(p -> p.getCategoryIds() != null && p.getCategoryIds().contains(categoryId))
+                .toList();
+
+        if (productsInCategory.isEmpty()) {
+            return List.of();
+        }
+
+        // Step 2: Collect all filter parameters and their values from these products
+        Map<String, Set<String>> filterParamToValuesMap = new HashMap<>();
+
+        for (Product product : productsInCategory) {
+            if (product.getProductFilterParameters() != null) {
+                for (ProductFilterParameter param : product.getProductFilterParameters()) {
+                    if (param.getFilterParameterId() != null && param.getFilterParameterValueId() != null) {
+                        filterParamToValuesMap
+                                .computeIfAbsent(param.getFilterParameterId(), k -> new HashSet<>())
+                                .add(param.getFilterParameterValueId());
+                    }
+                }
+            }
+        }
+
+        // Step 3: Map to DTOs
+        List<FilterParameterDto> result = new ArrayList<>();
+
+        for (Map.Entry<String, Set<String>> entry : filterParamToValuesMap.entrySet()) {
+            String filterParamId = entry.getKey();
+            Set<String> valueIds = entry.getValue();
+
+            FilterParameter filterParameter = cachedFilterParameters.get(filterParamId);
+            if (filterParameter != null) {
+                FilterParameterDto dto = filterParameterMapper.toDto(filterParameter);
+                List<FilterParameterValueDto> valueDtos = new ArrayList<>();
+
+                for (String valueId : valueIds) {
+                    FilterParameterValue value = cachedFilterParameterValues.get(valueId);
+                    if (value != null) {
+                        valueDtos.add(filterParameterValueMapper.toDto(value));
+                    }
+                }
+
+                // Sort values by name for better UX
+                valueDtos.sort(Comparator.comparing(FilterParameterValueDto::getName, Comparator.nullsLast(Comparator.naturalOrder())));
+
+                dto.setValues(valueDtos);
+                result.add(dto);
+            }
+        }
+
+        // Sort parameters by name
+        result.sort(Comparator.comparing(FilterParameterDto::getName, Comparator.nullsLast(Comparator.naturalOrder())));
+
+        return result;
     }
 }

@@ -19,4 +19,5 @@ public class CategoryDto {
     private String slug;
     private String parentId;
     private List<CategoryDto> children;
+    private List<FilterParameterDto> filterParameters;
 }
