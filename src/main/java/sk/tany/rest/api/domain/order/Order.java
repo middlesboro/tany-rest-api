@@ -41,6 +41,7 @@ public class Order {
     private String phone;
     private String firstname;
     private String lastname;
+    private String note;
     private OrderStatus status = OrderStatus.CREATED;
 
 }

@@ -23,4 +23,5 @@ public class OrderAdminGetResponse {
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+    private String note;
 }
