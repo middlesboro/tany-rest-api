@@ -161,6 +161,104 @@ public class ProductSearchEngine {
         return getFilterParametersForProducts(productsInCategory, selectedValueIds);
     }
 
+    public List<Product> filterProducts(CategoryFilterRequest request) {
+        return cachedProducts.stream()
+                .filter(p -> matchesFilter(p, request))
+                .toList();
+    }
+
+    public List<sk.tany.rest.api.dto.ClientFilterParameterDto> getClientFilterParameters(List<Product> baseProducts, List<Product> availableProducts, CategoryFilterRequest request) {
+        if (baseProducts.isEmpty()) {
+            return List.of();
+        }
+
+        Set<String> availableValueIds = new HashSet<>();
+        for (Product product : availableProducts) {
+            if (product.getProductFilterParameters() != null) {
+                for (ProductFilterParameter param : product.getProductFilterParameters()) {
+                    if (param.getFilterParameterValueId() != null) {
+                        availableValueIds.add(param.getFilterParameterValueId());
+                    }
+                }
+            }
+        }
+
+        Set<String> selectedValueIds = new HashSet<>();
+        if (request != null && request.getFilterParameters() != null) {
+            for (FilterParameterRequest param : request.getFilterParameters()) {
+                if (param.getFilterParameterValueIds() != null) {
+                    selectedValueIds.addAll(param.getFilterParameterValueIds());
+                }
+            }
+        }
+
+        Map<String, Set<String>> filterParamToValuesMap = new HashMap<>();
+        for (Product product : baseProducts) {
+            if (product.getProductFilterParameters() != null) {
+                for (ProductFilterParameter param : product.getProductFilterParameters()) {
+                    if (param.getFilterParameterId() != null && param.getFilterParameterValueId() != null) {
+                        filterParamToValuesMap
+                                .computeIfAbsent(param.getFilterParameterId(), k -> new HashSet<>())
+                                .add(param.getFilterParameterValueId());
+                    }
+                }
+            }
+        }
+
+        List<sk.tany.rest.api.dto.ClientFilterParameterDto> result = new ArrayList<>();
+
+        for (Map.Entry<String, Set<String>> entry : filterParamToValuesMap.entrySet()) {
+            String filterParamId = entry.getKey();
+            Set<String> valueIds = entry.getValue();
+
+            FilterParameter filterParameter = cachedFilterParameters.get(filterParamId);
+            if (filterParameter != null) {
+                sk.tany.rest.api.dto.ClientFilterParameterDto dto = new sk.tany.rest.api.dto.ClientFilterParameterDto();
+                dto.setId(filterParameter.getId());
+                dto.setName(filterParameter.getName());
+                dto.setType(filterParameter.getType());
+                dto.setActive(filterParameter.getActive());
+                dto.setFilterParameterValueIds(new ArrayList<>(valueIds));
+
+                List<sk.tany.rest.api.dto.ClientFilterParameterValueDto> valueDtos = new ArrayList<>();
+                boolean anyValueAvailable = false;
+
+                for (String valueId : valueIds) {
+                    FilterParameterValue value = cachedFilterParameterValues.get(valueId);
+                    if (value != null) {
+                        sk.tany.rest.api.dto.ClientFilterParameterValueDto valueDto = new sk.tany.rest.api.dto.ClientFilterParameterValueDto();
+                        valueDto.setId(value.getId());
+                        valueDto.setFilterParameterId(value.getFilterParameterId());
+                        valueDto.setName(value.getName());
+                        valueDto.setActive(value.getActive());
+
+                        boolean isSelected = selectedValueIds.contains(valueId);
+                        boolean isAvailable = availableValueIds.contains(valueId);
+
+                        valueDto.setSelected(isSelected);
+                        valueDto.setAvailable(isAvailable);
+
+                        if (isAvailable) {
+                            anyValueAvailable = true;
+                        }
+
+                        valueDtos.add(valueDto);
+                    }
+                }
+
+                valueDtos.sort(Comparator.comparing(sk.tany.rest.api.dto.ClientFilterParameterValueDto::getName, Comparator.nullsLast(Comparator.naturalOrder())));
+                dto.setValues(valueDtos);
+                dto.setAvailable(anyValueAvailable);
+
+                result.add(dto);
+            }
+        }
+
+        result.sort(Comparator.comparing(sk.tany.rest.api.dto.ClientFilterParameterDto::getName, Comparator.nullsLast(Comparator.naturalOrder())));
+
+        return result;
+    }
+
     private boolean matchesFilter(Product product, CategoryFilterRequest filterRequest) {
         if (filterRequest == null || filterRequest.getFilterParameters() == null || filterRequest.getFilterParameters().isEmpty()) {
             return true;

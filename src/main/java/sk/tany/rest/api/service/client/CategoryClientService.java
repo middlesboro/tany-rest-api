@@ -11,4 +11,5 @@ public interface CategoryClientService {
     List<CategoryDto> findAllVisible();
     Optional<CategoryDto> findById(String id);
     List<FilterParameterDto> getFilterParameters(String categoryId, CategoryFilterRequest request);
+    sk.tany.rest.api.dto.response.CategoryClientResponse getCategoryData(CategoryFilterRequest request);
 }

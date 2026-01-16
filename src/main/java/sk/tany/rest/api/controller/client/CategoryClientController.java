@@ -19,14 +19,9 @@ public class CategoryClientController {
 
     private final CategoryClientService categoryService;
 
-    @GetMapping
-    public java.util.List<CategoryDto> getCategories() {
-        return categoryService.findAllVisible();
-    }
-
-    @PostMapping("/{categoryId}/filter")
-    public java.util.List<FilterParameterDto> filterCategories(@PathVariable String categoryId, @RequestBody CategoryFilterRequest request) {
-        return categoryService.getFilterParameters(categoryId, request);
+    @PostMapping
+    public sk.tany.rest.api.dto.response.CategoryClientResponse getCategories(@RequestBody(required = false) CategoryFilterRequest request) {
+        return categoryService.getCategoryData(request);
     }
 
 }
