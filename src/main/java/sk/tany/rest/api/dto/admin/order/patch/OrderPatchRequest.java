@@ -22,4 +22,5 @@ public class OrderPatchRequest {
     private AddressDto invoiceAddress;
     private Boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+    private String note;
 }

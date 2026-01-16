@@ -22,4 +22,5 @@ public class OrderAdminUpdateRequest {
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+    private String note;
 }
