@@ -9,4 +9,5 @@ public class FilterParameterValueDto {
     private String name;
     private Boolean active;
     private Boolean selected;
+    private Boolean available;
 }

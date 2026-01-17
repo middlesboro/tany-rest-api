@@ -138,6 +138,16 @@ public class ProductSearchEngine {
         return getFilterParametersForProducts(productsInCategory, Collections.emptySet());
     }
 
+    public List<Product> search(String categoryId, CategoryFilterRequest request) {
+        if (categoryId == null) {
+            return List.of();
+        }
+        return cachedProducts.stream()
+                .filter(p -> p.getCategoryIds() != null && p.getCategoryIds().contains(categoryId))
+                .filter(p -> matchesFilter(p, request))
+                .toList();
+    }
+
     public List<FilterParameterDto> getFilterParametersForCategoryWithFilter(String categoryId, CategoryFilterRequest filterRequest) {
         if (categoryId == null) {
             return List.of();
@@ -156,9 +166,40 @@ public class ProductSearchEngine {
             }
         }
 
-        // We return the full list of filters for the category (facets), marking selected ones.
-        // We do NOT restrict the list of available filters based on the selection (multi-select friendly).
-        return getFilterParametersForProducts(productsInCategory, selectedValueIds);
+        List<FilterParameterDto> allFacets = getFilterParametersForProducts(productsInCategory, selectedValueIds);
+
+        // Calculate availability
+        for (FilterParameterDto facet : allFacets) {
+            CategoryFilterRequest otherFiltersRequest = createRequestExcludingFacet(filterRequest, facet.getId());
+
+            // Filter products using all OTHER facets
+            Set<String> availableValuesForFacet = productsInCategory.stream()
+                    .filter(p -> matchesFilter(p, otherFiltersRequest))
+                    .flatMap(p -> p.getProductFilterParameters() != null ? p.getProductFilterParameters().stream() : null)
+                    .filter(Objects::nonNull)
+                    .filter(pfp -> facet.getId().equals(pfp.getFilterParameterId()))
+                    .map(ProductFilterParameter::getFilterParameterValueId)
+                    .collect(Collectors.toSet());
+
+            if (facet.getValues() != null) {
+                for (FilterParameterValueDto valueDto : facet.getValues()) {
+                    valueDto.setAvailable(availableValuesForFacet.contains(valueDto.getId()));
+                }
+            }
+        }
+
+        return allFacets;
+    }
+
+    private CategoryFilterRequest createRequestExcludingFacet(CategoryFilterRequest original, String facetIdToExclude) {
+        if (original == null || original.getFilterParameters() == null) {
+            return new CategoryFilterRequest();
+        }
+        CategoryFilterRequest newRequest = new CategoryFilterRequest();
+        newRequest.setFilterParameters(original.getFilterParameters().stream()
+                .filter(param -> !param.getId().equals(facetIdToExclude))
+                .collect(Collectors.toList()));
+        return newRequest;
     }
 
     private boolean matchesFilter(Product product, CategoryFilterRequest filterRequest) {
