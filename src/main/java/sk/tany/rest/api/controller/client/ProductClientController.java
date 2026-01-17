@@ -46,9 +46,13 @@ public class ProductClientController {
     }
 
     @PostMapping("/category/{categoryId}/search")
-    public Page<ProductClientListResponse> searchProductsByCategory(@PathVariable String categoryId, @RequestBody sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable) {
-        return productService.search(categoryId, request, pageable)
-                .map(productClientApiMapper::toListResponse);
+    public sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse searchProductsByCategory(@PathVariable String categoryId, @RequestBody sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable) {
+        sk.tany.rest.api.dto.ProductSearchDto result = productService.search(categoryId, request, pageable);
+
+        sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse response = new sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse();
+        response.setProducts(result.getProducts().map(productClientApiMapper::toListResponse));
+        response.setFilterParameters(result.getFilterParameters());
+        return response;
     }
 
     @GetMapping("/search")
