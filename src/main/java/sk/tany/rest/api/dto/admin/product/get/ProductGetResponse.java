@@ -13,6 +13,8 @@ public class ProductGetResponse {
     private String title;
     private String shortDescription;
     private String description;
+    private BigDecimal wholesalePrice;
+    private BigDecimal priceWithoutVat;
     private BigDecimal price;
     private BigDecimal weight;
     private Integer quantity;
@@ -27,4 +29,5 @@ public class ProductGetResponse {
     private List<String> images;
     private ProductStatus status;
     private List<ProductFilterParameterDto> productFilterParameters;
+    private List<String> productLabelIds;
 }

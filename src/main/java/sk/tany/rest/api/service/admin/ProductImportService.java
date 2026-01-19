@@ -8,9 +8,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
-import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.filter.FilterParameter;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
@@ -23,7 +23,6 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.productlabel.ProductLabel;
 import sk.tany.rest.api.domain.productlabel.ProductLabelPosition;
 import sk.tany.rest.api.domain.productlabel.ProductLabelRepository;
-import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.supplier.Supplier;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
@@ -32,6 +31,7 @@ import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -110,7 +110,7 @@ public class ProductImportService {
         }
         if (StringUtils.isNotBlank(baseData.getPriceTaxExcl())) {
             product.setPriceWithoutVat(new BigDecimal(baseData.getPriceTaxExcl()));
-            product.setPrice(new BigDecimal(baseData.getPriceTaxExcl())); // Assuming base price is ex tax
+            product.setPrice(product.getPriceWithoutVat().multiply(new BigDecimal("1.23")).setScale(2, RoundingMode.HALF_UP));
         }
         if (StringUtils.isNotBlank(baseData.getWholesalePrice())) {
             product.setWholesalePrice(new BigDecimal(baseData.getWholesalePrice()));
@@ -167,7 +167,8 @@ public class ProductImportService {
                 .sorted(Comparator.comparing(ImageInfo::isCover).reversed())
                 .collect(Collectors.toList());
 
-        // Deduplicate by URL (keeping the one with isCover if multiple entries for same URL exist)
+        // todo import image via imageservice to imakegit and get proper url and save it to product.
+//         Deduplicate by URL (keeping the one with isCover if multiple entries for same URL exist)
         List<String> finalImages = new ArrayList<>();
         Set<String> processedUrls = new HashSet<>();
         for (ImageInfo img : images) {
