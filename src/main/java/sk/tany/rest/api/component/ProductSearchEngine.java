@@ -7,6 +7,9 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import sk.tany.rest.api.domain.filter.FilterParameter;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
@@ -17,8 +20,10 @@ import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.product.ProductStatus;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
+import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
 import sk.tany.rest.api.dto.request.FilterParameterRequest;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
@@ -179,6 +184,88 @@ public class ProductSearchEngine {
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .filter(p -> matchesFilter(p, request))
                 .toList();
+    }
+
+    public Page<Product> search(ProductFilter filter, Pageable pageable) {
+        if (filter == null) {
+            return new PageImpl<>(List.of(), pageable, 0);
+        }
+
+        String normalizedQuery = null;
+        String[] queryWords = null;
+
+        if (StringUtils.isNotBlank(filter.getQuery())) {
+            normalizedQuery = StringUtils.stripAccents(filter.getQuery().toLowerCase()).trim();
+            queryWords = normalizedQuery.split("\\s+");
+        }
+
+        final String finalNormalizedQuery = normalizedQuery;
+        final String[] finalQueryWords = queryWords;
+
+        List<Product> filteredProducts = cachedProducts.stream()
+                .filter(p -> {
+                    if (filter.getId() != null && !filter.getId().isEmpty() && !p.getId().equals(filter.getId())) {
+                        return false;
+                    }
+                    if (filter.getBrandId() != null && !filter.getBrandId().isEmpty() && !filter.getBrandId().equals(p.getBrandId())) {
+                        return false;
+                    }
+                    if (filter.getActive() != null && p.isActive() != filter.getActive()) {
+                        return false;
+                    }
+                    if (filter.getQuantity() != null && !filter.getQuantity().equals(p.getQuantity())) {
+                        return false;
+                    }
+                    if (filter.getExternalStock() != null) {
+                        if (filter.getExternalStock() && p.getStatus() != ProductStatus.AVAILABLE_ON_EXTERNAL_STOCK) {
+                            return false;
+                        }
+                        if (!filter.getExternalStock() && p.getStatus() == ProductStatus.AVAILABLE_ON_EXTERNAL_STOCK) {
+                            return false;
+                        }
+                    }
+                    if (filter.getPriceFrom() != null && (p.getPrice() == null || p.getPrice().compareTo(filter.getPriceFrom()) < 0)) {
+                        return false;
+                    }
+                    if (filter.getPriceTo() != null && (p.getPrice() == null || p.getPrice().compareTo(filter.getPriceTo()) > 0)) {
+                        return false;
+                    }
+
+                    if (finalQueryWords != null) {
+                        if (p.getTitle() == null) {
+                            return false;
+                        }
+                        String normalizedName = StringUtils.stripAccents(p.getTitle().toLowerCase());
+                        String[] nameWords = normalizedName.split("\\s+");
+
+                        return Arrays.stream(finalQueryWords).allMatch(qWord ->
+                                Arrays.stream(nameWords).anyMatch(nWord ->
+                                        nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
+                                )
+                        );
+                    }
+
+                    return true;
+                })
+                .sorted((p1, p2) -> {
+                    if (finalNormalizedQuery != null) {
+                        Double score1 = calculateRelevance(p1.getTitle(), finalNormalizedQuery);
+                        Double score2 = calculateRelevance(p2.getTitle(), finalNormalizedQuery);
+                        return score2.compareTo(score1);
+                    }
+                    return 0; // Or default sort
+                })
+                .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filteredProducts.size());
+
+        if (start > filteredProducts.size()) {
+             return new PageImpl<>(List.of(), pageable, filteredProducts.size());
+        }
+
+        List<Product> pageContent = filteredProducts.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, filteredProducts.size());
     }
 
     public List<FilterParameterDto> getFilterParametersForCategoryWithFilter(String categoryId, CategoryFilterRequest filterRequest) {

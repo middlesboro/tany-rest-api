@@ -36,7 +36,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
     @Override
     public Page<ProductDto> findAll(ProductFilter filter, Pageable pageable) {
-        return productRepository.findAll(filter, pageable).map(productMapper::toDto);
+        return productSearchEngine.search(filter, pageable).map(productMapper::toDto);
     }
 
     @Override

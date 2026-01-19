@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.Optional;
 
-public interface ProductRepository extends MongoRepository<Product, String>, ProductRepositoryCustom {
+public interface ProductRepository extends MongoRepository<Product, String> {
     Page<Product> findByCategoryIds(String categoryId, Pageable pageable);
     Optional<Product> findByPrestashopId(Long prestashopId);
     java.util.List<Product> findAllByProductFilterParametersFilterParameterValueId(String filterParameterValueId);
