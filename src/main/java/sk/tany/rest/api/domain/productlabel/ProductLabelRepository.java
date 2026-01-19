@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface ProductLabelRepository extends MongoRepository<ProductLabel, String> {
     List<ProductLabel> findAllByProductId(String productId);
+    java.util.Optional<ProductLabel> findByTitle(String title);
 }

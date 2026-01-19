@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface FilterParameterRepository extends MongoRepository<FilterParameter, String> {
     List<FilterParameter> findAllByFilterParameterValueIdsContaining(String valueId);
+    java.util.Optional<FilterParameter> findByName(String name);
 }

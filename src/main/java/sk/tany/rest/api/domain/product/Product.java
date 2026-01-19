@@ -42,5 +42,6 @@ public class Product {
     private BigDecimal averageRating;
     private Integer reviewsCount;
     private List<ProductFilterParameter> productFilterParameters;
+    private List<String> productLabelIds;
 
 }

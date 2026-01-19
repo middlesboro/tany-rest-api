@@ -5,4 +5,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FilterParameterValueRepository extends MongoRepository<FilterParameterValue, String> {
+    java.util.Optional<FilterParameterValue> findByNameAndFilterParameterId(String name, String filterParameterId);
 }
