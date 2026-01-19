@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import sk.tany.rest.api.domain.category.Category;
+import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.filter.FilterParameter;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValue;
@@ -41,6 +43,8 @@ class ProductSearchEngineTest {
     private FilterParameterMapper filterParameterMapper;
     @Mock
     private FilterParameterValueMapper filterParameterValueMapper;
+    @Mock
+    private CategoryRepository categoryRepository;
 
     @InjectMocks
     private ProductSearchEngine productSearchEngine;
@@ -119,6 +123,7 @@ class ProductSearchEngineTest {
         when(productRepository.findAll()).thenReturn(List.of(product1, product2));
         when(filterParameterRepository.findAll()).thenReturn(List.of(colorParam, brandParam));
         when(filterParameterValueRepository.findAll()).thenReturn(List.of(redValue, greenValue, nikeValue, adidasValue));
+        when(categoryRepository.findAll()).thenReturn(Collections.emptyList());
 
         // Mock mappers leniently because some tests might not trigger them
         // In Mockito 3+, unnecessary stubs throw exceptions. Using lenient() avoids this.
@@ -204,5 +209,40 @@ class ProductSearchEngineTest {
 
         FilterParameterValueDto adidasDto = brandDto.getValues().stream().filter(v -> v.getId().equals("adidas")).findFirst().orElseThrow();
         assertFalse(adidasDto.getSelected());
+    }
+
+    @Test
+    void search_ShouldReturnProductsInSubcategories() {
+        Category cat1 = new Category();
+        cat1.setId("cat1");
+        cat1.setActive(true);
+        cat1.setVisible(true);
+
+        Category cat2 = new Category();
+        cat2.setId("cat2");
+        cat2.setParentId("cat1");
+        cat2.setActive(true);
+        cat2.setVisible(true);
+
+        Product product1 = new Product();
+        product1.setId("p1");
+        product1.setTitle("Product in Parent");
+        product1.setCategoryIds(List.of("cat1"));
+
+        Product product2 = new Product();
+        product2.setId("p2");
+        product2.setTitle("Product in Child");
+        product2.setCategoryIds(List.of("cat2"));
+
+        when(productRepository.findAll()).thenReturn(List.of(product1, product2));
+        when(categoryRepository.findAll()).thenReturn(List.of(cat1, cat2));
+
+        productSearchEngine.loadProducts();
+
+        // Search for products in cat1 (parent)
+        // Expected: p1 (direct) and p2 (indirect via cat2)
+        List<Product> result = productSearchEngine.search("cat1", null);
+
+        assertEquals(2, result.size(), "Should return products from subcategories");
     }
 }
