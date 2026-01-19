@@ -11,10 +11,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-import sk.tany.rest.api.domain.filter.FilterParameter;
-import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
+import sk.tany.rest.api.domain.filter.FilterParameter;
+import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValue;
 import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
@@ -29,7 +29,16 @@ import sk.tany.rest.api.dto.request.FilterParameterRequest;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -194,8 +203,8 @@ public class ProductSearchEngine {
         String normalizedQuery = null;
         String[] queryWords = null;
 
-        if (StringUtils.isNotBlank(filter.getQuery())) {
-            normalizedQuery = StringUtils.stripAccents(filter.getQuery().toLowerCase()).trim();
+        if (StringUtils.isNotBlank(filter.query())) {
+            normalizedQuery = StringUtils.stripAccents(filter.query().toLowerCase()).trim();
             queryWords = normalizedQuery.split("\\s+");
         }
 
@@ -204,30 +213,30 @@ public class ProductSearchEngine {
 
         List<Product> filteredProducts = cachedProducts.stream()
                 .filter(p -> {
-                    if (filter.getId() != null && !filter.getId().isEmpty() && !p.getId().equals(filter.getId())) {
+                    if (filter.id() != null && !filter.id().isEmpty() && !p.getId().equals(filter.id())) {
                         return false;
                     }
-                    if (filter.getBrandId() != null && !filter.getBrandId().isEmpty() && !filter.getBrandId().equals(p.getBrandId())) {
+                    if (filter.brandId() != null && !filter.brandId().isEmpty() && !filter.brandId().equals(p.getBrandId())) {
                         return false;
                     }
-                    if (filter.getActive() != null && p.isActive() != filter.getActive()) {
+                    if (filter.active() != null && p.isActive() != filter.active()) {
                         return false;
                     }
-                    if (filter.getQuantity() != null && !filter.getQuantity().equals(p.getQuantity())) {
+                    if (filter.quantity() != null && !filter.quantity().equals(p.getQuantity())) {
                         return false;
                     }
-                    if (filter.getExternalStock() != null) {
-                        if (filter.getExternalStock() && p.getStatus() != ProductStatus.AVAILABLE_ON_EXTERNAL_STOCK) {
+                    if (filter.externalStock() != null) {
+                        if (filter.externalStock() && p.getStatus() != ProductStatus.AVAILABLE_ON_EXTERNAL_STOCK) {
                             return false;
                         }
-                        if (!filter.getExternalStock() && p.getStatus() == ProductStatus.AVAILABLE_ON_EXTERNAL_STOCK) {
+                        if (!filter.externalStock() && p.getStatus() == ProductStatus.AVAILABLE_ON_EXTERNAL_STOCK) {
                             return false;
                         }
                     }
-                    if (filter.getPriceFrom() != null && (p.getPrice() == null || p.getPrice().compareTo(filter.getPriceFrom()) < 0)) {
+                    if (filter.priceFrom() != null && (p.getPrice() == null || p.getPrice().compareTo(filter.priceFrom()) < 0)) {
                         return false;
                     }
-                    if (filter.getPriceTo() != null && (p.getPrice() == null || p.getPrice().compareTo(filter.getPriceTo()) > 0)) {
+                    if (filter.priceTo() != null && (p.getPrice() == null || p.getPrice().compareTo(filter.priceTo()) > 0)) {
                         return false;
                     }
 
