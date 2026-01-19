@@ -15,6 +15,8 @@ import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.productsales.ProductSales;
+import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
@@ -36,6 +38,7 @@ public class ProductSearchEngine {
     private final ProductRepository productRepository;
     private final FilterParameterRepository filterParameterRepository;
     private final FilterParameterValueRepository filterParameterValueRepository;
+    private final ProductSalesRepository productSalesRepository;
     private final FilterParameterMapper filterParameterMapper;
     private final FilterParameterValueMapper filterParameterValueMapper;
 
@@ -44,6 +47,7 @@ public class ProductSearchEngine {
     private final List<Product> cachedProducts = new CopyOnWriteArrayList<>();
     private final Map<String, FilterParameter> cachedFilterParameters = new ConcurrentHashMap<>();
     private final Map<String, FilterParameterValue> cachedFilterParameterValues = new ConcurrentHashMap<>();
+    private final Map<String, Integer> cachedProductSales = new ConcurrentHashMap<>();
 
     private static final int MAX_EDIT_DISTANCE = 2;
 
@@ -65,6 +69,22 @@ public class ProductSearchEngine {
         cachedFilterParameterValues.putAll(filterParameterValueRepository.findAll().stream()
                 .collect(Collectors.toMap(FilterParameterValue::getId, Function.identity())));
         log.info("Loaded {} filter parameter values into search engine.", cachedFilterParameterValues.size());
+
+        log.info("Loading product sales into search engine...");
+        cachedProductSales.clear();
+        cachedProductSales.putAll(productSalesRepository.findAll().stream()
+                .collect(Collectors.toMap(ProductSales::getProductId, ProductSales::getSalesCount)));
+        log.info("Loaded {} product sales into search engine.", cachedProductSales.size());
+    }
+
+    public void updateSalesCount(String productId, int count) {
+        if (productId != null) {
+            cachedProductSales.put(productId, count);
+        }
+    }
+
+    public Integer getSalesCount(String productId) {
+        return cachedProductSales.getOrDefault(productId, 0);
     }
 
     public void addProduct(Product product) {
