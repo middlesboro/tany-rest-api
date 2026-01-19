@@ -10,6 +10,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import sk.tany.rest.api.domain.filter.FilterParameter;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
+import sk.tany.rest.api.domain.category.Category;
+import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValue;
 import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
@@ -39,6 +41,7 @@ public class ProductSearchEngine {
     private final FilterParameterRepository filterParameterRepository;
     private final FilterParameterValueRepository filterParameterValueRepository;
     private final ProductSalesRepository productSalesRepository;
+    private final CategoryRepository categoryRepository;
     private final FilterParameterMapper filterParameterMapper;
     private final FilterParameterValueMapper filterParameterValueMapper;
 
@@ -48,6 +51,8 @@ public class ProductSearchEngine {
     private final Map<String, FilterParameter> cachedFilterParameters = new ConcurrentHashMap<>();
     private final Map<String, FilterParameterValue> cachedFilterParameterValues = new ConcurrentHashMap<>();
     private final Map<String, Integer> cachedProductSales = new ConcurrentHashMap<>();
+    private final Map<String, Category> cachedCategories = new ConcurrentHashMap<>();
+    private final Map<String, List<String>> cachedCategoryChildren = new ConcurrentHashMap<>();
 
     private static final int MAX_EDIT_DISTANCE = 2;
 
@@ -57,6 +62,18 @@ public class ProductSearchEngine {
         cachedProducts.clear();
         cachedProducts.addAll(productRepository.findAll());
         log.info("Loaded {} products into search engine.", cachedProducts.size());
+
+        log.info("Loading categories into search engine...");
+        cachedCategories.clear();
+        cachedCategoryChildren.clear();
+        List<Category> allCategories = categoryRepository.findAll();
+        for (Category category : allCategories) {
+            cachedCategories.put(category.getId(), category);
+            if (category.getParentId() != null) {
+                cachedCategoryChildren.computeIfAbsent(category.getParentId(), k -> new ArrayList<>()).add(category.getId());
+            }
+        }
+        log.info("Loaded {} categories into search engine.", cachedCategories.size());
 
         log.info("Loading filter parameters into search engine...");
         cachedFilterParameters.clear();
@@ -163,8 +180,10 @@ public class ProductSearchEngine {
             return List.of();
         }
 
+        Set<String> categoryIds = getAllCategoryIdsIncludingSubcategories(categoryId);
+
         List<Product> productsInCategory = cachedProducts.stream()
-                .filter(p -> p.getCategoryIds() != null && p.getCategoryIds().contains(categoryId))
+                .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .toList();
 
         return getFilterParametersForProducts(productsInCategory, Collections.emptySet());
@@ -174,8 +193,10 @@ public class ProductSearchEngine {
         if (categoryId == null) {
             return List.of();
         }
+        Set<String> categoryIds = getAllCategoryIdsIncludingSubcategories(categoryId);
+
         return cachedProducts.stream()
-                .filter(p -> p.getCategoryIds() != null && p.getCategoryIds().contains(categoryId))
+                .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .filter(p -> matchesFilter(p, request))
                 .toList();
     }
@@ -184,9 +205,10 @@ public class ProductSearchEngine {
         if (categoryId == null) {
             return List.of();
         }
+        Set<String> categoryIds = getAllCategoryIdsIncludingSubcategories(categoryId);
 
         List<Product> productsInCategory = cachedProducts.stream()
-                .filter(p -> p.getCategoryIds() != null && p.getCategoryIds().contains(categoryId))
+                .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .toList();
 
         Set<String> selectedValueIds = new HashSet<>();
@@ -221,6 +243,25 @@ public class ProductSearchEngine {
         }
 
         return allFacets;
+    }
+
+    private Set<String> getAllCategoryIdsIncludingSubcategories(String categoryId) {
+        Set<String> result = new HashSet<>();
+        if (categoryId != null) {
+            collectCategoryIds(categoryId, result);
+        }
+        return result;
+    }
+
+    private void collectCategoryIds(String categoryId, Set<String> result) {
+        if (result.contains(categoryId)) return; // prevent cycles
+        result.add(categoryId);
+        List<String> children = cachedCategoryChildren.get(categoryId);
+        if (children != null) {
+            for (String childId : children) {
+                collectCategoryIds(childId, result);
+            }
+        }
     }
 
     private CategoryFilterRequest createRequestExcludingFacet(CategoryFilterRequest original, String facetIdToExclude) {
