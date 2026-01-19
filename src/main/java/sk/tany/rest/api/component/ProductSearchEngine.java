@@ -23,6 +23,7 @@ import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
 import sk.tany.rest.api.dto.request.FilterParameterRequest;
+import sk.tany.rest.api.dto.request.SortOption;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 
@@ -195,9 +196,24 @@ public class ProductSearchEngine {
         }
         Set<String> categoryIds = getAllCategoryIdsIncludingSubcategories(categoryId);
 
+        Comparator<Product> comparator;
+        if (request != null && request.getSort() != null) {
+            comparator = switch (request.getSort()) {
+                case NAME_ASC -> Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+                case NAME_DESC -> Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)).reversed();
+                case PRICE_ASC -> Comparator.comparing(Product::getPrice, Comparator.nullsLast(Comparator.naturalOrder()));
+                case PRICE_DESC -> Comparator.comparing(Product::getPrice, Comparator.nullsLast(Comparator.naturalOrder())).reversed();
+                case BEST_SELLING -> Comparator.comparing((Product p) -> getSalesCount(p.getId())).reversed();
+            };
+        } else {
+            // Default sort if none specified, or you can leave it unsorted/default
+            comparator = Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        }
+
         return cachedProducts.stream()
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .filter(p -> matchesFilter(p, request))
+                .sorted(comparator)
                 .toList();
     }
 
