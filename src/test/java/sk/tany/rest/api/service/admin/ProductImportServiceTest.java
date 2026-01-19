@@ -20,6 +20,7 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.productlabel.ProductLabel;
 import sk.tany.rest.api.domain.productlabel.ProductLabelRepository;
 import sk.tany.rest.api.domain.supplier.Supplier;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
@@ -53,6 +54,8 @@ class ProductImportServiceTest {
     private BrandRepository brandRepository;
     @Mock
     private ObjectMapper objectMapper;
+    @Mock
+    private ProductSearchEngine productSearchEngine;
 
     @InjectMocks
     private ProductImportService productImportService;
@@ -84,6 +87,12 @@ class ProductImportServiceTest {
                 .thenReturn(entries);
 
         when(productRepository.findByPrestashopId(123L)).thenReturn(Optional.empty());
+        when(productRepository.save(any(Product.class))).thenAnswer(i -> {
+            Product p = i.getArgument(0);
+            p.setId("p1");
+            return p;
+        });
+
         when(supplierRepository.findByName("Supplier1")).thenReturn(Optional.empty());
         when(supplierRepository.save(any(Supplier.class))).thenAnswer(i -> {
             Supplier s = i.getArgument(0);
@@ -127,5 +136,9 @@ class ProductImportServiceTest {
         // It can be saved multiple times (creation + adding value)
         verify(filterParameterRepository, org.mockito.Mockito.atLeastOnce()).save(any(FilterParameter.class));
         verify(filterParameterValueRepository).save(any(FilterParameterValue.class));
+
+        verify(productSearchEngine).updateProduct(any(Product.class));
+        verify(productSearchEngine, org.mockito.Mockito.atLeastOnce()).addFilterParameter(any(FilterParameter.class));
+        verify(productSearchEngine).addFilterParameterValue(any(FilterParameterValue.class));
     }
 }

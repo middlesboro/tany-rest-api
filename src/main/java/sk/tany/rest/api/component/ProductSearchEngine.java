@@ -84,6 +84,18 @@ public class ProductSearchEngine {
         }
     }
 
+    public void addFilterParameter(FilterParameter filterParameter) {
+        if (filterParameter != null && filterParameter.getId() != null) {
+            cachedFilterParameters.put(filterParameter.getId(), filterParameter);
+        }
+    }
+
+    public void addFilterParameterValue(FilterParameterValue filterParameterValue) {
+        if (filterParameterValue != null && filterParameterValue.getId() != null) {
+            cachedFilterParameterValues.put(filterParameterValue.getId(), filterParameterValue);
+        }
+    }
+
     public List<Product> searchAndSort(String query) {
         if (StringUtils.isBlank(query)) {
             return List.of();

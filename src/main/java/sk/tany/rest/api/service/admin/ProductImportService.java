@@ -23,6 +23,7 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.productlabel.ProductLabel;
 import sk.tany.rest.api.domain.productlabel.ProductLabelPosition;
 import sk.tany.rest.api.domain.productlabel.ProductLabelRepository;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.supplier.Supplier;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
@@ -53,6 +54,7 @@ public class ProductImportService {
     private final SupplierRepository supplierRepository;
     private final BrandRepository brandRepository;
     private final ObjectMapper objectMapper;
+    private final ProductSearchEngine productSearchEngine;
 
     @Transactional
     public void importProducts() {
@@ -216,7 +218,9 @@ public class ProductImportService {
                             newParam.setType(FilterParameterType.TAG);
                             newParam.setActive(true);
                             newParam.setFilterParameterValueIds(new ArrayList<>());
-                            return filterParameterRepository.save(newParam);
+                            FilterParameter saved = filterParameterRepository.save(newParam);
+                            productSearchEngine.addFilterParameter(saved);
+                            return saved;
                         });
 
                 FilterParameterValue filterValue = filterParameterValueRepository.findByNameAndFilterParameterId(valueName, filterParam.getId())
@@ -226,13 +230,15 @@ public class ProductImportService {
                             newValue.setFilterParameterId(filterParam.getId());
                             newValue.setActive(true);
                             FilterParameterValue savedValue = filterParameterValueRepository.save(newValue);
+                            productSearchEngine.addFilterParameterValue(savedValue);
 
                             // Add to parent param list
                             if (filterParam.getFilterParameterValueIds() == null) {
                                 filterParam.setFilterParameterValueIds(new ArrayList<>());
                             }
                             filterParam.getFilterParameterValueIds().add(savedValue.getId());
-                            filterParameterRepository.save(filterParam);
+                            FilterParameter updatedParam = filterParameterRepository.save(filterParam);
+                            productSearchEngine.addFilterParameter(updatedParam);
 
                             return savedValue;
                         });
@@ -245,7 +251,8 @@ public class ProductImportService {
         }
         product.setProductFilterParameters(productFilters);
 
-        productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+        productSearchEngine.updateProduct(savedProduct);
     }
 
     private static class ImageInfo {
