@@ -8,4 +8,5 @@ import java.util.Optional;
 @Repository
 public interface SupplierRepository extends MongoRepository<Supplier, String> {
     Optional<Supplier> findByPrestashopId(Long prestashopId);
+    Optional<Supplier> findByName(String name);
 }
