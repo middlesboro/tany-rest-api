@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +43,16 @@ public class ProductClientController {
     public Page<ProductClientListResponse> getProductsByCategory(@PathVariable String categoryId, Pageable pageable) {
         return productService.search(categoryId, pageable)
                 .map(productClientApiMapper::toListResponse);
+    }
+
+    @PostMapping("/category/{categoryId}/search")
+    public sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse searchProductsByCategory(@PathVariable String categoryId, @RequestBody sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable) {
+        sk.tany.rest.api.dto.ProductSearchDto result = productService.search(categoryId, request, pageable);
+
+        sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse response = new sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse();
+        response.setProducts(result.getProducts().map(productClientApiMapper::toListResponse));
+        response.setFilterParameters(result.getFilterParameters());
+        return response;
     }
 
     @GetMapping("/search")

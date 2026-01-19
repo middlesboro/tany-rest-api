@@ -36,6 +36,27 @@ public class ProductClientServiceImpl implements ProductClientService {
     }
 
     @Override
+    public sk.tany.rest.api.dto.ProductSearchDto search(String categoryId, sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable) {
+        java.util.List<Product> products = productSearchEngine.search(categoryId, request);
+        java.util.List<sk.tany.rest.api.dto.FilterParameterDto> filters = productSearchEngine.getFilterParametersForCategoryWithFilter(categoryId, request);
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), products.size());
+        java.util.List<ProductDto> pageContent;
+        if (start > products.size()) {
+            pageContent = java.util.Collections.emptyList();
+        } else {
+            pageContent = products.subList(start, end).stream().map(productMapper::toDto).toList();
+        }
+        Page<ProductDto> productsPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, products.size());
+
+        sk.tany.rest.api.dto.ProductSearchDto response = new sk.tany.rest.api.dto.ProductSearchDto();
+        response.setProducts(productsPage);
+        response.setFilterParameters(filters);
+        return response;
+    }
+
+    @Override
     public java.util.List<ProductDto> findAllByIds(Iterable<String> ids) {
         return productRepository.findAllById(ids).stream().map(productMapper::toDto).toList();
     }
