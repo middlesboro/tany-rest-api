@@ -1,6 +1,8 @@
 package sk.tany.rest.api.controller.admin;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,9 +16,6 @@ import sk.tany.rest.api.dto.admin.productlabel.update.ProductLabelUpdateRequest;
 import sk.tany.rest.api.dto.admin.productlabel.update.ProductLabelUpdateResponse;
 import sk.tany.rest.api.mapper.ProductLabelAdminApiMapper;
 import sk.tany.rest.api.service.admin.ProductLabelAdminService;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -35,11 +34,9 @@ public class ProductLabelAdminController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductLabelListResponse>> getAllProductLabels() {
-        List<ProductLabelListResponse> response = productLabelAdminService.findAll().stream()
-                .map(productLabelAdminApiMapper::toListResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+    public Page<ProductLabelListResponse> getAllProductLabels(Pageable pageable) {
+        return productLabelAdminService.findAll(pageable)
+                .map(productLabelAdminApiMapper::toListResponse);
     }
 
     @GetMapping("/{id}")
