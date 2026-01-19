@@ -7,4 +7,5 @@ import java.util.List;
 @Data
 public class CategoryFilterRequest {
     private List<FilterParameterRequest> filterParameters;
+    private SortOption sort;
 }

@@ -15,13 +15,17 @@ import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.productsales.ProductSales;
+import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
 import sk.tany.rest.api.dto.request.FilterParameterRequest;
+import sk.tany.rest.api.dto.request.SortOption;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +44,8 @@ class ProductSearchEngineTest {
     @Mock
     private FilterParameterValueRepository filterParameterValueRepository;
     @Mock
+    private ProductSalesRepository productSalesRepository;
+    @Mock
     private FilterParameterMapper filterParameterMapper;
     @Mock
     private FilterParameterValueMapper filterParameterValueMapper;
@@ -51,6 +57,7 @@ class ProductSearchEngineTest {
 
     private Product product1;
     private Product product2;
+    private Product product3;
     private FilterParameter colorParam;
     private FilterParameter brandParam;
     private FilterParameterValue redValue;
@@ -91,6 +98,7 @@ class ProductSearchEngineTest {
         product1 = new Product();
         product1.setId("p1");
         product1.setTitle("Nike Red Shoe");
+        product1.setPrice(new BigDecimal("100.00"));
         product1.setCategoryIds(List.of("cat1"));
         product1.setProductFilterParameters(new ArrayList<>());
 
@@ -107,6 +115,7 @@ class ProductSearchEngineTest {
         product2 = new Product();
         product2.setId("p2");
         product2.setTitle("Adidas Green Shoe");
+        product2.setPrice(new BigDecimal("50.00"));
         product2.setCategoryIds(List.of("cat1"));
         product2.setProductFilterParameters(new ArrayList<>());
 
@@ -120,16 +129,30 @@ class ProductSearchEngineTest {
         p2Brand.setFilterParameterValueId("adidas");
         product2.getProductFilterParameters().add(p2Brand);
 
-        when(productRepository.findAll()).thenReturn(List.of(product1, product2));
+        product3 = new Product();
+        product3.setId("p3");
+        product3.setTitle("Best Seller Shoe");
+        product3.setPrice(new BigDecimal("10.00"));
+        product3.setCategoryIds(List.of("cat1"));
+        product3.setProductFilterParameters(new ArrayList<>());
+
+        when(productRepository.findAll()).thenReturn(List.of(product1, product2, product3));
         when(filterParameterRepository.findAll()).thenReturn(List.of(colorParam, brandParam));
         when(filterParameterValueRepository.findAll()).thenReturn(List.of(redValue, greenValue, nikeValue, adidasValue));
         when(categoryRepository.findAll()).thenReturn(Collections.emptyList());
 
-        // Mock mappers leniently because some tests might not trigger them
-        // In Mockito 3+, unnecessary stubs throw exceptions. Using lenient() avoids this.
-        // Actually, let's just make the when calls, if they are unused they are unused.
-        // Wait, UnnecessaryStubbingException IS the default strictness.
+        // Setup sales counts
+        ProductSales sales1 = new ProductSales();
+        sales1.setProductId("p1");
+        sales1.setSalesCount(10);
+        ProductSales sales2 = new ProductSales();
+        sales2.setProductId("p2");
+        sales2.setSalesCount(20);
+        ProductSales sales3 = new ProductSales();
+        sales3.setProductId("p3");
+        sales3.setSalesCount(100);
 
+        when(productSalesRepository.findAll()).thenReturn(List.of(sales1, sales2, sales3));
     }
 
     private void setupMappers() {
@@ -192,11 +215,6 @@ class ProductSearchEngineTest {
         brandRequest.setFilterParameterValueIds(List.of("nike"));
         request.setFilterParameters(List.of(brandRequest));
 
-        // Modified Logic Plan: Return ALL category filters, mark selected.
-        // If I haven't implemented that change yet, this test will fail if I expect "Adidas" to be present (it was filtered out in previous impl).
-        // I will update the impl in the next step. So here I write the test for the NEW behavior.
-        // Expectation: Brand filter contains BOTH Nike and Adidas. Nike is selected.
-
         List<FilterParameterDto> result = productSearchEngine.getFilterParametersForCategoryWithFilter("cat1", request);
 
         assertEquals(2, result.size());
@@ -209,6 +227,96 @@ class ProductSearchEngineTest {
 
         FilterParameterValueDto adidasDto = brandDto.getValues().stream().filter(v -> v.getId().equals("adidas")).findFirst().orElseThrow();
         assertFalse(adidasDto.getSelected());
+    }
+
+    @Test
+    void search_ShouldSortByNameAsc() {
+        productSearchEngine.loadProducts();
+
+        CategoryFilterRequest request = new CategoryFilterRequest();
+        request.setSort(SortOption.NAME_ASC);
+
+        List<Product> result = productSearchEngine.search("cat1", request);
+
+        assertEquals(3, result.size());
+        assertEquals("Adidas Green Shoe", result.get(0).getTitle());
+        assertEquals("Best Seller Shoe", result.get(1).getTitle());
+        assertEquals("Nike Red Shoe", result.get(2).getTitle());
+    }
+
+    @Test
+    void search_ShouldSortByNameDesc() {
+        productSearchEngine.loadProducts();
+
+        CategoryFilterRequest request = new CategoryFilterRequest();
+        request.setSort(SortOption.NAME_DESC);
+
+        List<Product> result = productSearchEngine.search("cat1", request);
+
+        assertEquals(3, result.size());
+        assertEquals("Nike Red Shoe", result.get(0).getTitle());
+        assertEquals("Best Seller Shoe", result.get(1).getTitle());
+        assertEquals("Adidas Green Shoe", result.get(2).getTitle());
+    }
+
+    @Test
+    void search_ShouldSortByPriceAsc() {
+        productSearchEngine.loadProducts();
+
+        CategoryFilterRequest request = new CategoryFilterRequest();
+        request.setSort(SortOption.PRICE_ASC);
+
+        List<Product> result = productSearchEngine.search("cat1", request);
+
+        assertEquals(3, result.size());
+        assertEquals("Best Seller Shoe", result.get(0).getTitle()); // 10.00
+        assertEquals("Adidas Green Shoe", result.get(1).getTitle()); // 50.00
+        assertEquals("Nike Red Shoe", result.get(2).getTitle()); // 100.00
+    }
+
+    @Test
+    void search_ShouldSortByPriceDesc() {
+        productSearchEngine.loadProducts();
+
+        CategoryFilterRequest request = new CategoryFilterRequest();
+        request.setSort(SortOption.PRICE_DESC);
+
+        List<Product> result = productSearchEngine.search("cat1", request);
+
+        assertEquals(3, result.size());
+        assertEquals("Nike Red Shoe", result.get(0).getTitle()); // 100.00
+        assertEquals("Adidas Green Shoe", result.get(1).getTitle()); // 50.00
+        assertEquals("Best Seller Shoe", result.get(2).getTitle()); // 10.00
+    }
+
+    @Test
+    void search_ShouldSortByBestSelling() {
+        productSearchEngine.loadProducts();
+
+        CategoryFilterRequest request = new CategoryFilterRequest();
+        request.setSort(SortOption.BEST_SELLING);
+
+        List<Product> result = productSearchEngine.search("cat1", request);
+
+        assertEquals(3, result.size());
+        assertEquals("Best Seller Shoe", result.get(0).getTitle()); // 100 sales
+        assertEquals("Adidas Green Shoe", result.get(1).getTitle()); // 20 sales
+        assertEquals("Nike Red Shoe", result.get(2).getTitle()); // 10 sales
+    }
+
+    @Test
+    void search_ShouldDefaultSortByNameAsc() {
+        productSearchEngine.loadProducts();
+
+        CategoryFilterRequest request = new CategoryFilterRequest();
+        request.setSort(null);
+
+        List<Product> result = productSearchEngine.search("cat1", request);
+
+        assertEquals(3, result.size());
+        assertEquals("Adidas Green Shoe", result.get(0).getTitle());
+        assertEquals("Best Seller Shoe", result.get(1).getTitle());
+        assertEquals("Nike Red Shoe", result.get(2).getTitle());
     }
 
     @Test
@@ -234,9 +342,17 @@ class ProductSearchEngineTest {
         product2.setTitle("Product in Child");
         product2.setCategoryIds(List.of("cat2"));
 
+        // NOTE: In the previous setUp(), we already mocked repositories returning specific products.
+        // To test this specific scenario, we need to override the mocks or create a new test setup.
+        // Since the class uses @InjectMocks, we can't easily reset the internal state cleanly without partial rebuilding or
+        // using a separate test method that re-initializes things or just adding these to the existing mocks if possible.
+        // However, Mockito's 'when' can be overridden.
+
+        // Let's redefine the mocks for THIS test.
         when(productRepository.findAll()).thenReturn(List.of(product1, product2));
         when(categoryRepository.findAll()).thenReturn(List.of(cat1, cat2));
 
+        // We need to reload products because ProductSearchEngine loads them @EventListener
         productSearchEngine.loadProducts();
 
         // Search for products in cat1 (parent)
