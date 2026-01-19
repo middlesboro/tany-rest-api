@@ -21,11 +21,14 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.product.ProductStatus;
+import sk.tany.rest.api.domain.productsales.ProductSales;
+import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
 import sk.tany.rest.api.dto.request.FilterParameterRequest;
+import sk.tany.rest.api.dto.request.SortOption;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 
@@ -52,6 +55,7 @@ public class ProductSearchEngine {
     private final ProductRepository productRepository;
     private final FilterParameterRepository filterParameterRepository;
     private final FilterParameterValueRepository filterParameterValueRepository;
+    private final ProductSalesRepository productSalesRepository;
     private final CategoryRepository categoryRepository;
     private final FilterParameterMapper filterParameterMapper;
     private final FilterParameterValueMapper filterParameterValueMapper;
@@ -61,6 +65,7 @@ public class ProductSearchEngine {
     private final List<Product> cachedProducts = new CopyOnWriteArrayList<>();
     private final Map<String, FilterParameter> cachedFilterParameters = new ConcurrentHashMap<>();
     private final Map<String, FilterParameterValue> cachedFilterParameterValues = new ConcurrentHashMap<>();
+    private final Map<String, Integer> cachedProductSales = new ConcurrentHashMap<>();
     private final Map<String, Category> cachedCategories = new ConcurrentHashMap<>();
     private final Map<String, List<String>> cachedCategoryChildren = new ConcurrentHashMap<>();
 
@@ -96,6 +101,22 @@ public class ProductSearchEngine {
         cachedFilterParameterValues.putAll(filterParameterValueRepository.findAll().stream()
                 .collect(Collectors.toMap(FilterParameterValue::getId, Function.identity())));
         log.info("Loaded {} filter parameter values into search engine.", cachedFilterParameterValues.size());
+
+        log.info("Loading product sales into search engine...");
+        cachedProductSales.clear();
+        cachedProductSales.putAll(productSalesRepository.findAll().stream()
+                .collect(Collectors.toMap(ProductSales::getProductId, ProductSales::getSalesCount)));
+        log.info("Loaded {} product sales into search engine.", cachedProductSales.size());
+    }
+
+    public void updateSalesCount(String productId, int count) {
+        if (productId != null) {
+            cachedProductSales.put(productId, count);
+        }
+    }
+
+    public Integer getSalesCount(String productId) {
+        return cachedProductSales.getOrDefault(productId, 0);
     }
 
     public void addProduct(Product product) {
@@ -189,9 +210,24 @@ public class ProductSearchEngine {
         }
         Set<String> categoryIds = getAllCategoryIdsIncludingSubcategories(categoryId);
 
+        Comparator<Product> comparator;
+        if (request != null && request.getSort() != null) {
+            comparator = switch (request.getSort()) {
+                case NAME_ASC -> Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+                case NAME_DESC -> Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)).reversed();
+                case PRICE_ASC -> Comparator.comparing(Product::getPrice, Comparator.nullsLast(Comparator.naturalOrder()));
+                case PRICE_DESC -> Comparator.comparing(Product::getPrice, Comparator.nullsLast(Comparator.naturalOrder())).reversed();
+                case BEST_SELLING -> Comparator.comparing((Product p) -> getSalesCount(p.getId())).reversed();
+            };
+        } else {
+            // Default sort if none specified, or you can leave it unsorted/default
+            comparator = Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        }
+
         return cachedProducts.stream()
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .filter(p -> matchesFilter(p, request))
+                .sorted(comparator)
                 .toList();
     }
 

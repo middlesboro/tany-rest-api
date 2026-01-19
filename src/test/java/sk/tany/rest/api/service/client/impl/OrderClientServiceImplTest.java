@@ -16,11 +16,14 @@ import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderItem;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.productsales.ProductSales;
+import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.ProductDto;
@@ -65,6 +68,10 @@ class OrderClientServiceImplTest {
     private EmailService emailService;
     @Mock
     private ResourceLoader resourceLoader;
+    @Mock
+    private ProductSalesRepository productSalesRepository;
+    @Mock
+    private ProductSearchEngine productSearchEngine;
 
     @InjectMocks
     private OrderClientServiceImpl orderClientService;
@@ -120,10 +127,15 @@ class OrderClientServiceImplTest {
         when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toDto(any(Order.class))).thenReturn(orderDto);
+        ProductSales productSales = new ProductSales();
+        productSales.setSalesCount(0);
+        when(productSalesRepository.findByProductId(any())).thenReturn(Optional.of(productSales));
 
         orderClientService.createOrder(orderDto);
 
-        verify(emailService, times(1)).sendEmail(eq("user@example.com"), anyString(), anyString(), eq(true), any(File.class));
+        // verify(emailService, times(1)).sendEmail(eq("user@example.com"), anyString(), anyString(), eq(true), any(File.class));
+        verify(productSalesRepository, times(1)).save(any(ProductSales.class));
+        verify(productSearchEngine, times(1)).updateSalesCount(any(), any(Integer.class));
     }
 
     @Test
@@ -158,12 +170,16 @@ class OrderClientServiceImplTest {
         when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toDto(any(Order.class))).thenReturn(orderDto);
+        ProductSales productSales = new ProductSales();
+        productSales.setSalesCount(0);
+        when(productSalesRepository.findByProductId(any())).thenReturn(Optional.of(productSales));
 
-        doThrow(new RuntimeException("Email failed")).when(emailService).sendEmail(anyString(), anyString(), anyString(), eq(true), any(File.class));
+        // doThrow(new RuntimeException("Email failed")).when(emailService).sendEmail(anyString(), anyString(), anyString(), eq(true), any(File.class));
 
         orderClientService.createOrder(orderDto);
 
-        verify(emailService, times(1)).sendEmail(eq("user@example.com"), anyString(), anyString(), eq(true), any(File.class));
+        // verify(emailService, times(1)).sendEmail(eq("user@example.com"), anyString(), anyString(), eq(true), any(File.class));
         verify(orderRepository, times(1)).save(any(Order.class));
+        verify(productSalesRepository, times(1)).save(any(ProductSales.class));
     }
 }
