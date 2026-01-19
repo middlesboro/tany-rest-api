@@ -18,7 +18,9 @@ public class ProductLabel {
     @LastModifiedDate
     private Instant updateDate;
     private String color;
+    private String backgroundColor;
     private String title;
     private String productId;
     private ProductLabelPosition position;
+    private boolean active;
 }

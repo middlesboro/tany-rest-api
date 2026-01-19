@@ -7,7 +7,9 @@ import sk.tany.rest.api.domain.productlabel.ProductLabelPosition;
 public class ProductLabelGetResponse {
     private String id;
     private String color;
+    private String backgroundColor;
     private String title;
     private String productId;
     private ProductLabelPosition position;
+    private boolean active;
 }
