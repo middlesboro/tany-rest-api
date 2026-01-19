@@ -15,10 +15,13 @@ import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.Order;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.order.OrderItem;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.productsales.ProductSales;
+import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.helper.OrderHelper;
@@ -53,6 +56,8 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final ProductClientService productClientService;
     private final EmailService emailService;
     private final ResourceLoader resourceLoader;
+    private final ProductSalesRepository productSalesRepository;
+    private final ProductSearchEngine productSearchEngine;
 
     private String cachedTemplate;
 
@@ -111,6 +116,18 @@ public class OrderClientServiceImpl implements OrderClientService {
 
         savedOrder.getItems().forEach(item -> {
             productClientService.updateProductStock(item.getId(), item.getQuantity());
+
+            ProductSales productSales = productSalesRepository.findByProductId(item.getId())
+                    .orElseGet(() -> {
+                        ProductSales ps = new ProductSales();
+                        ps.setProductId(item.getId());
+                        ps.setSalesCount(0);
+                        return ps;
+                    });
+            int currentSales = productSales.getSalesCount() != null ? productSales.getSalesCount() : 0;
+            productSales.setSalesCount(currentSales + item.getQuantity());
+            productSalesRepository.save(productSales);
+            productSearchEngine.updateSalesCount(productSales.getProductId(), productSales.getSalesCount());
         });
 
         sendOrderCreatedEmail(savedOrder, carrier, payment);
