@@ -1,6 +1,8 @@
 package sk.tany.rest.api.service.admin.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -53,10 +55,9 @@ public class ProductLabelAdminServiceImpl implements ProductLabelAdminService {
     }
 
     @Override
-    public List<ProductLabelDto> findAll() {
-        return productLabelRepository.findAll().stream()
-                .map(productLabelMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<ProductLabelDto> findAll(Pageable pageable) {
+        return productLabelRepository.findAll(pageable)
+                .map(productLabelMapper::toDto);
     }
 
     @Override

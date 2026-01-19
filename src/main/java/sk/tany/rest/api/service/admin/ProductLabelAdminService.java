@@ -1,5 +1,7 @@
 package sk.tany.rest.api.service.admin;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.ProductLabelDto;
 
 import java.util.List;
@@ -10,6 +12,6 @@ public interface ProductLabelAdminService {
     ProductLabelDto update(String id, ProductLabelDto productLabelDto);
     void deleteById(String id);
     Optional<ProductLabelDto> findById(String id);
-    List<ProductLabelDto> findAll();
+    Page<ProductLabelDto> findAll(Pageable pageable);
     List<ProductLabelDto> findAllByProductId(String productId);
 }
