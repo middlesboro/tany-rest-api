@@ -39,6 +39,7 @@ public class Product {
     private String brandId;
     private List<String> images;
     private ProductStatus status;
+    private boolean active = true;
     private BigDecimal averageRating;
     private Integer reviewsCount;
     private List<ProductFilterParameter> productFilterParameters;

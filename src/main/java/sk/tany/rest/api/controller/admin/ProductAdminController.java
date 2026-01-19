@@ -6,11 +6,21 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.ProductDto;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateRequest;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
+import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.admin.product.get.ProductGetResponse;
 import sk.tany.rest.api.dto.admin.product.list.ProductListResponse;
 import sk.tany.rest.api.dto.admin.product.patch.ProductPatchRequest;
@@ -20,10 +30,11 @@ import sk.tany.rest.api.dto.admin.product.update.ProductUpdateResponse;
 import sk.tany.rest.api.dto.admin.product.upload.ProductUploadImageResponse;
 import sk.tany.rest.api.mapper.ProductAdminApiMapper;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
+import sk.tany.rest.api.service.admin.ProductAdminService;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
-import sk.tany.rest.api.service.admin.ProductAdminService;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,8 +58,11 @@ public class ProductAdminController {
     }
 
     @GetMapping
-    public Page<ProductListResponse> getProducts(Pageable pageable) {
-        return productService.findAll(pageable)
+    public Page<ProductListResponse> getProducts(@RequestParam(value = "query", required = false) String query, @RequestParam(value = "priceFrom", required = false) BigDecimal priceFrom,
+                                                 @RequestParam(value = "priceTo", required = false) BigDecimal priceTo, @RequestParam(value = "brandId", required = false) String brandId,
+                                                 @RequestParam(value = "id", required = false) String id, @RequestParam(value = "externalStock", required = false) Boolean externalStock,
+                                                 @RequestParam(value = "quantity", required = false) Integer quantity, @RequestParam(value = "active", required = false) Boolean active, Pageable pageable) {
+        return productService.findAll(new ProductFilter(query, priceFrom, priceTo, brandId, id, externalStock, quantity, active), pageable)
                 .map(productAdminApiMapper::toListResponse);
     }
 

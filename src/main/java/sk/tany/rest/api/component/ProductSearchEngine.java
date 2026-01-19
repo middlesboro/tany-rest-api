@@ -7,27 +7,41 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-import sk.tany.rest.api.domain.filter.FilterParameter;
-import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
+import sk.tany.rest.api.domain.filter.FilterParameter;
+import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValue;
 import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.product.ProductStatus;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
+import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
 import sk.tany.rest.api.dto.request.FilterParameterRequest;
 import sk.tany.rest.api.dto.request.SortOption;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -215,6 +229,88 @@ public class ProductSearchEngine {
                 .filter(p -> matchesFilter(p, request))
                 .sorted(comparator)
                 .toList();
+    }
+
+    public Page<Product> search(ProductFilter filter, Pageable pageable) {
+        if (filter == null) {
+            return new PageImpl<>(List.of(), pageable, 0);
+        }
+
+        String normalizedQuery = null;
+        String[] queryWords = null;
+
+        if (StringUtils.isNotBlank(filter.query())) {
+            normalizedQuery = StringUtils.stripAccents(filter.query().toLowerCase()).trim();
+            queryWords = normalizedQuery.split("\\s+");
+        }
+
+        final String finalNormalizedQuery = normalizedQuery;
+        final String[] finalQueryWords = queryWords;
+
+        List<Product> filteredProducts = cachedProducts.stream()
+                .filter(p -> {
+                    if (filter.id() != null && !filter.id().isEmpty() && !p.getId().equals(filter.id())) {
+                        return false;
+                    }
+                    if (filter.brandId() != null && !filter.brandId().isEmpty() && !filter.brandId().equals(p.getBrandId())) {
+                        return false;
+                    }
+                    if (filter.active() != null && p.isActive() != filter.active()) {
+                        return false;
+                    }
+                    if (filter.quantity() != null && !filter.quantity().equals(p.getQuantity())) {
+                        return false;
+                    }
+                    if (filter.externalStock() != null) {
+                        if (filter.externalStock() && p.getStatus() != ProductStatus.AVAILABLE_ON_EXTERNAL_STOCK) {
+                            return false;
+                        }
+                        if (!filter.externalStock() && p.getStatus() == ProductStatus.AVAILABLE_ON_EXTERNAL_STOCK) {
+                            return false;
+                        }
+                    }
+                    if (filter.priceFrom() != null && (p.getPrice() == null || p.getPrice().compareTo(filter.priceFrom()) < 0)) {
+                        return false;
+                    }
+                    if (filter.priceTo() != null && (p.getPrice() == null || p.getPrice().compareTo(filter.priceTo()) > 0)) {
+                        return false;
+                    }
+
+                    if (finalQueryWords != null) {
+                        if (p.getTitle() == null) {
+                            return false;
+                        }
+                        String normalizedName = StringUtils.stripAccents(p.getTitle().toLowerCase());
+                        String[] nameWords = normalizedName.split("\\s+");
+
+                        return Arrays.stream(finalQueryWords).allMatch(qWord ->
+                                Arrays.stream(nameWords).anyMatch(nWord ->
+                                        nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
+                                )
+                        );
+                    }
+
+                    return true;
+                })
+                .sorted((p1, p2) -> {
+                    if (finalNormalizedQuery != null) {
+                        Double score1 = calculateRelevance(p1.getTitle(), finalNormalizedQuery);
+                        Double score2 = calculateRelevance(p2.getTitle(), finalNormalizedQuery);
+                        return score2.compareTo(score1);
+                    }
+                    return 0; // Or default sort
+                })
+                .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filteredProducts.size());
+
+        if (start > filteredProducts.size()) {
+             return new PageImpl<>(List.of(), pageable, filteredProducts.size());
+        }
+
+        List<Product> pageContent = filteredProducts.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, filteredProducts.size());
     }
 
     public List<FilterParameterDto> getFilterParametersForCategoryWithFilter(String categoryId, CategoryFilterRequest filterRequest) {

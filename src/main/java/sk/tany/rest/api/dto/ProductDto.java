@@ -29,6 +29,7 @@ public class ProductDto {
     private String brandId;
     private List<String> images;
     private ProductStatus status;
+    private Boolean active;
     private BigDecimal averageRating;
     private Integer reviewsCount;
     private List<ProductFilterParameterDto> productFilterParameters;
