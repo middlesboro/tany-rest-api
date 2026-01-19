@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.controller.admin.ProductAdminController;
 import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.admin.product.list.ProductListResponse;
 import sk.tany.rest.api.dto.admin.product.search.ProductSearchResponse;
 import sk.tany.rest.api.mapper.ProductAdminApiMapper;
@@ -56,14 +57,14 @@ class ProductAdminControllerTest {
         ProductListResponse response = new ProductListResponse();
         response.setTitle("Test Product");
 
-        when(productService.findAll(pageable)).thenReturn(productPage);
+        when(productService.findAll(any(ProductFilter.class), eq(pageable))).thenReturn(productPage);
         when(productAdminApiMapper.toListResponse(productDto)).thenReturn(response);
 
-        Page<ProductListResponse> result = productAdminController.getProducts(pageable);
+        Page<ProductListResponse> result = productAdminController.getProducts(new ProductFilter(), pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test Product", result.getContent().get(0).getTitle());
-        verify(productService, times(1)).findAll(pageable);
+        verify(productService, times(1)).findAll(any(ProductFilter.class), eq(pageable));
     }
 
     @Test

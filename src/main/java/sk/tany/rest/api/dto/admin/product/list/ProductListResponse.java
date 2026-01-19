@@ -26,5 +26,6 @@ public class ProductListResponse {
     private String brandId;
     private List<String> images;
     private ProductStatus status;
+    private Boolean active;
     private List<ProductFilterParameterDto> productFilterParameters;
 }

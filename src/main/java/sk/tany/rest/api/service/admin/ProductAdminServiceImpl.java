@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
@@ -31,6 +32,11 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     @Override
     public Page<ProductDto> findAll(Pageable pageable) {
         return productRepository.findAll(pageable).map(productMapper::toDto);
+    }
+
+    @Override
+    public Page<ProductDto> findAll(ProductFilter filter, Pageable pageable) {
+        return productRepository.findAll(filter, pageable).map(productMapper::toDto);
     }
 
     @Override

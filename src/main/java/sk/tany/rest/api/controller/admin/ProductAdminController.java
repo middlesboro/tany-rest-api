@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateRequest;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
 import sk.tany.rest.api.dto.admin.product.get.ProductGetResponse;
@@ -47,8 +48,8 @@ public class ProductAdminController {
     }
 
     @GetMapping
-    public Page<ProductListResponse> getProducts(Pageable pageable) {
-        return productService.findAll(pageable)
+    public Page<ProductListResponse> getProducts(ProductFilter filter, Pageable pageable) {
+        return productService.findAll(filter, pageable)
                 .map(productAdminApiMapper::toListResponse);
     }
 
