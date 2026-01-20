@@ -28,7 +28,11 @@ public class ProductClientServiceImpl implements ProductClientService {
 
     @Override
     public Optional<ProductClientDto> findById(String id) {
-        return productRepository.findById(id).map(productMapper::toClientDto);
+        return productRepository.findById(id).map(product -> {
+            ProductClientDto dto = productMapper.toClientDto(product);
+            dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
+            return dto;
+        });
     }
 
     @Override

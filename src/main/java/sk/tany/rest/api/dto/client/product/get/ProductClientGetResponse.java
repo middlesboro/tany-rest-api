@@ -2,6 +2,7 @@ package sk.tany.rest.api.dto.client.product.get;
 
 import lombok.Data;
 import sk.tany.rest.api.domain.product.ProductStatus;
+import sk.tany.rest.api.dto.client.product.label.ProductLabelClientDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,4 +26,5 @@ public class ProductClientGetResponse {
     private String brandId;
     private List<String> images;
     private ProductStatus status;
+    private List<ProductLabelClientDto> productLabels;
 }
