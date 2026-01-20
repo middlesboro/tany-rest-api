@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.*;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.mapper.CustomerMapper;
 import sk.tany.rest.api.service.client.CustomerClientServiceImpl;
 
@@ -76,7 +77,7 @@ class CustomerClientServiceImplTest {
 
         when(cartService.getOrCreateCart(cartId, null)).thenReturn(cartDto);
 
-        ProductDto productDto = new ProductDto();
+        ProductClientDto productDto = new ProductClientDto();
         productDto.setId("prod1");
         productDto.setPrice(BigDecimal.valueOf(10.0));
         productDto.setWeight(BigDecimal.valueOf(2.5)); // Total weight = 2 * 2.5 = 5.0

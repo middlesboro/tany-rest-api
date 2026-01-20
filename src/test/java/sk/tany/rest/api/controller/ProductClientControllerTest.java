@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import sk.tany.rest.api.controller.client.ProductClientController;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
 import sk.tany.rest.api.dto.client.product.list.ProductClientListResponse;
 import sk.tany.rest.api.mapper.ProductClientApiMapper;
@@ -43,9 +43,9 @@ class ProductClientControllerTest {
     @Test
     void getProducts_ShouldReturnPagedProducts() {
         Pageable pageable = PageRequest.of(0, 10);
-        ProductDto productDto = new ProductDto();
+        ProductClientDto productDto = new ProductClientDto();
         productDto.setTitle("Test Product");
-        Page<ProductDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
+        Page<ProductClientDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
 
         ProductClientListResponse response = new ProductClientListResponse();
         response.setTitle("Test Product");
@@ -63,7 +63,7 @@ class ProductClientControllerTest {
     @Test
     void getProduct_ShouldReturnProduct_WhenFound() {
         String productId = "prod123";
-        ProductDto productDto = new ProductDto();
+        ProductClientDto productDto = new ProductClientDto();
         productDto.setTitle("Found Product");
 
         ProductClientGetResponse response = new ProductClientGetResponse();
@@ -95,9 +95,9 @@ class ProductClientControllerTest {
     void getProductsByCategory_ShouldReturnPagedProducts() {
         Pageable pageable = PageRequest.of(0, 10);
         String categoryId = "cat123";
-        ProductDto productDto = new ProductDto();
+        ProductClientDto productDto = new ProductClientDto();
         productDto.setTitle("Category Product");
-        Page<ProductDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
+        Page<ProductClientDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
 
         ProductClientListResponse response = new ProductClientListResponse();
         response.setTitle("Category Product");
@@ -115,7 +115,7 @@ class ProductClientControllerTest {
     @Test
     void searchProducts_ShouldReturnList() {
         String query = "search query";
-        ProductDto productDto = new ProductDto();
+        ProductClientDto productDto = new ProductClientDto();
         productDto.setTitle("Searched Product");
 
         ProductClientListResponse response = new ProductClientListResponse();

@@ -1,6 +1,7 @@
 package sk.tany.rest.api.dto;
 
 import lombok.Data;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 
 import java.util.List;
 
@@ -9,7 +10,7 @@ public class CustomerContextCartDto {
 
     private String cartId;
     private String customerId;
-    private List<ProductDto> products;
+    private List<ProductClientDto> products;
     private java.math.BigDecimal totalProductPrice;
     private List<CarrierDto> carriers;
     private List<PaymentDto> payments;

@@ -10,7 +10,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.controller.admin.ProductAdminController;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.product.search.ProductSearchResponse;
 import sk.tany.rest.api.dto.admin.product.upload.ProductUploadImageResponse;
 import sk.tany.rest.api.mapper.ProductAdminApiMapper;
@@ -49,9 +49,9 @@ class ProductAdminControllerTest {
     void search_ShouldReturnPagedProducts_WhenCategoryIdIsProvided() {
         Pageable pageable = PageRequest.of(0, 10);
         String categoryId = "cat123";
-        ProductDto productDto = new ProductDto();
+        ProductAdminDto productDto = new ProductAdminDto();
         productDto.setTitle("Search Result Product");
-        Page<ProductDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
+        Page<ProductAdminDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
 
         ProductSearchResponse response = new ProductSearchResponse();
         response.setTitle("Search Result Product");
@@ -69,7 +69,7 @@ class ProductAdminControllerTest {
     @Test
     void uploadImages_ShouldReturnUpdatedProduct() {
         String id = "1";
-        ProductDto productDto = new ProductDto();
+        ProductAdminDto productDto = new ProductAdminDto();
         productDto.setId(id);
         productDto.setImages(new ArrayList<>());
 
@@ -81,7 +81,7 @@ class ProductAdminControllerTest {
 
         when(productService.findById(id)).thenReturn(Optional.of(productDto));
         when(imageService.upload(eq(file), eq(ImageKitType.PRODUCT))).thenReturn(imageUrl);
-        when(productService.update(eq(id), any(ProductDto.class))).thenReturn(productDto);
+        when(productService.update(eq(id), any(ProductAdminDto.class))).thenReturn(productDto);
         when(productAdminApiMapper.toUploadImageResponse(productDto)).thenReturn(response);
 
         org.springframework.http.ResponseEntity<ProductUploadImageResponse> result = productAdminController.uploadImages(id, files);
@@ -94,20 +94,20 @@ class ProductAdminControllerTest {
     void deleteImage_ShouldRemoveImageAndReturnNoContent() {
         String id = "1";
         String imageUrl = "http://image.url/to/delete";
-        ProductDto productDto = new ProductDto();
+        ProductAdminDto productDto = new ProductAdminDto();
         productDto.setId(id);
         List<String> images = new ArrayList<>();
         images.add(imageUrl);
         productDto.setImages(images);
 
         when(productService.findById(id)).thenReturn(Optional.of(productDto));
-        when(productService.update(eq(id), any(ProductDto.class))).thenReturn(productDto);
+        when(productService.update(eq(id), any(ProductAdminDto.class))).thenReturn(productDto);
 
         org.springframework.http.ResponseEntity<Void> result = productAdminController.deleteImage(id, imageUrl);
 
         assertEquals(org.springframework.http.HttpStatus.NO_CONTENT, result.getStatusCode());
         verify(imageService, times(1)).delete(imageUrl);
-        verify(productService, times(1)).update(eq(id), any(ProductDto.class));
+        verify(productService, times(1)).update(eq(id), any(ProductAdminDto.class));
         assertEquals(0, productDto.getImages().size());
     }
 }

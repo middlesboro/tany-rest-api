@@ -23,7 +23,7 @@ import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.OrderDto;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.helper.OrderHelper;
 import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.client.OrderClientService;
@@ -91,7 +91,7 @@ public class OrderClientServiceImpl implements OrderClientService {
         } catch (Exception e) {
             // nothing to do. if customer not found, order will be created without customerId
         }
-        List<ProductDto> products = productClientService.findAllByIds(order.getItems().stream().map(OrderItem::getId).toList());
+        List<ProductClientDto> products = productClientService.findAllByIds(order.getItems().stream().map(OrderItem::getId).toList());
         order.setProductsPrice(OrderHelper.getProductsPrice(products));
 
         Carrier carrier = null;

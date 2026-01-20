@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import sk.tany.rest.api.dto.ProductSearchDto;
+import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
 import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
 import sk.tany.rest.api.dto.client.product.list.ProductClientListResponse;
 import sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse;
@@ -49,7 +49,7 @@ public class ProductClientController {
 
     @PostMapping("/category/{categoryId}/search")
     public ProductClientSearchResponse searchProductsByCategory(@PathVariable String categoryId, @RequestBody CategoryFilterRequest request, Pageable pageable) {
-        ProductSearchDto result = productService.search(categoryId, request, pageable);
+        ProductClientSearchDto result = productService.search(categoryId, request, pageable);
 
         ProductClientSearchResponse response = new ProductClientSearchResponse();
         response.setProducts(result.getProducts().map(productClientApiMapper::toListResponse));

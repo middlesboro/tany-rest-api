@@ -10,7 +10,7 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
 import sk.tany.rest.api.domain.review.ReviewRepository;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
 
@@ -42,7 +42,7 @@ class ProductAdminServiceImplTest {
     @Test
     void recalculateReviewStatistics_shouldSetZero_whenNoReviews() {
         String productId = "p1";
-        ProductDto dto = new ProductDto();
+        ProductAdminDto dto = new ProductAdminDto();
         dto.setId(productId);
         Product product = new Product();
         product.setId(productId);
@@ -50,7 +50,7 @@ class ProductAdminServiceImplTest {
         when(productMapper.toEntity(dto)).thenReturn(product);
         when(reviewRepository.findAllByProductId(productId)).thenReturn(Collections.emptyList());
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(productMapper.toDto(any(Product.class))).thenReturn(dto);
+        when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
 
         productAdminService.update(productId, dto);
 
@@ -61,7 +61,7 @@ class ProductAdminServiceImplTest {
     @Test
     void recalculateReviewStatistics_shouldCalculateCorrectly_whenActiveReviewsExist() {
         String productId = "p1";
-        ProductDto dto = new ProductDto();
+        ProductAdminDto dto = new ProductAdminDto();
         dto.setId(productId);
         Product product = new Product();
         product.setId(productId);
@@ -76,7 +76,7 @@ class ProductAdminServiceImplTest {
         when(productMapper.toEntity(dto)).thenReturn(product);
         when(reviewRepository.findAllByProductId(productId)).thenReturn(List.of(r1, r2));
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(productMapper.toDto(any(Product.class))).thenReturn(dto);
+        when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
 
         productAdminService.update(productId, dto);
 
@@ -87,7 +87,7 @@ class ProductAdminServiceImplTest {
     @Test
     void recalculateReviewStatistics_shouldIgnoreInactiveReviews() {
         String productId = "p1";
-        ProductDto dto = new ProductDto();
+        ProductAdminDto dto = new ProductAdminDto();
         dto.setId(productId);
         Product product = new Product();
         product.setId(productId);
@@ -102,7 +102,7 @@ class ProductAdminServiceImplTest {
         when(productMapper.toEntity(dto)).thenReturn(product);
         when(reviewRepository.findAllByProductId(productId)).thenReturn(List.of(r1, r2));
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(productMapper.toDto(any(Product.class))).thenReturn(dto);
+        when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
 
         productAdminService.update(productId, dto);
 
@@ -116,14 +116,14 @@ class ProductAdminServiceImplTest {
         Product product = new Product();
         product.setId("1");
         product.setTitle("Test Product");
-        ProductDto dto = new ProductDto();
+        ProductAdminDto dto = new ProductAdminDto();
         dto.setId("1");
         dto.setTitle("Test Product");
 
         when(productSearchEngine.searchAndSort(query)).thenReturn(List.of(product));
-        when(productMapper.toDto(product)).thenReturn(dto);
+        when(productMapper.toAdminDto(product)).thenReturn(dto);
 
-        List<ProductDto> result = productAdminService.searchByQuery(query);
+        List<ProductAdminDto> result = productAdminService.searchByQuery(query);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getTitle()).isEqualTo("Test Product");
@@ -136,15 +136,15 @@ class ProductAdminServiceImplTest {
         Product product = new Product();
         product.setId("1");
         product.setTitle("Test Product");
-        ProductDto dto = new ProductDto();
+        ProductAdminDto dto = new ProductAdminDto();
         dto.setId("1");
         dto.setTitle("Test Product");
 
         when(productRepository.findAllByProductFilterParametersFilterParameterValueId(filterParameterValueId))
                 .thenReturn(List.of(product));
-        when(productMapper.toDto(product)).thenReturn(dto);
+        when(productMapper.toAdminDto(product)).thenReturn(dto);
 
-        List<ProductDto> result = productAdminService.findAllByFilterParameterValueId(filterParameterValueId);
+        List<ProductAdminDto> result = productAdminService.findAllByFilterParameterValueId(filterParameterValueId);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getTitle()).isEqualTo("Test Product");

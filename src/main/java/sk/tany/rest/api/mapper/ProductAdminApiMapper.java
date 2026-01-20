@@ -2,7 +2,7 @@ package sk.tany.rest.api.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateRequest;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
 import sk.tany.rest.api.dto.admin.product.get.ProductGetResponse;
@@ -15,18 +15,18 @@ import sk.tany.rest.api.dto.admin.product.upload.ProductUploadImageResponse;
 @Mapper(componentModel = "spring")
 public interface ProductAdminApiMapper {
     @Mapping(target = "id", ignore = true)
-    ProductDto toDto(ProductCreateRequest request);
-    ProductCreateResponse toCreateResponse(ProductDto dto);
+    ProductAdminDto toDto(ProductCreateRequest request);
+    ProductCreateResponse toCreateResponse(ProductAdminDto dto);
 
-    ProductGetResponse toGetResponse(ProductDto dto);
+    ProductGetResponse toGetResponse(ProductAdminDto dto);
 
-    ProductListResponse toListResponse(ProductDto dto);
+    ProductListResponse toListResponse(ProductAdminDto dto);
 
-    ProductSearchResponse toSearchResponse(ProductDto dto);
+    ProductSearchResponse toSearchResponse(ProductAdminDto dto);
 
     @Mapping(target = "id", ignore = true)
-    ProductDto toDto(ProductUpdateRequest request);
-    ProductUpdateResponse toUpdateResponse(ProductDto dto);
+    ProductAdminDto toDto(ProductUpdateRequest request);
+    ProductUpdateResponse toUpdateResponse(ProductAdminDto dto);
 
-    ProductUploadImageResponse toUploadImageResponse(ProductDto dto);
+    ProductUploadImageResponse toUploadImageResponse(ProductAdminDto dto);
 }

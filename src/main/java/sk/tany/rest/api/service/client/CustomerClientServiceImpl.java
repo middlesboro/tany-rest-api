@@ -16,7 +16,7 @@ import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.PaymentDto;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.mapper.CustomerMapper;
 
 import java.math.BigDecimal;
@@ -76,12 +76,12 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         customerContextCartDto.setCartId(cartDto.getCartId());
         customerContextCartDto.setCustomerId(cartDto.getCustomerId());
 
-        List<ProductDto> products = new ArrayList<>();
+        List<ProductClientDto> products = new ArrayList<>();
         if (cartDto.getItems() != null && !cartDto.getItems().isEmpty()) {
             List<String> productIds = cartDto.getItems().stream().map(CartItem::getProductId).toList();
-            List<ProductDto> fetchedProducts = productService.findAllByIds(productIds);
+            List<ProductClientDto> fetchedProducts = productService.findAllByIds(productIds);
 
-            for (ProductDto product : fetchedProducts) {
+            for (ProductClientDto product : fetchedProducts) {
                 cartDto.getItems().stream()
                         .filter(item -> item.getProductId().equals(product.getId()))
                         .findFirst()
