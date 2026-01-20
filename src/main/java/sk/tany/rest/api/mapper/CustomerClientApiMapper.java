@@ -26,6 +26,9 @@ public interface CustomerClientApiMapper {
     @Mapping(target = "cartDto", source = "cartDto")
     CustomerClientGetResponse toGetResponse(CustomerContextDto customerContextDto);
 
+    // Helpers for CartDiscountClientDto
+    sk.tany.rest.api.dto.client.customer.get.CustomerClientGetResponse.CartDiscountClientDto toGetCartDiscountDto(sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto cartDiscountDto);
+
     // Helpers for AddressDto
     AddressDto toAddressDto(CustomerClientUpdateRequest.AddressDto addressDto);
     CustomerClientUpdateResponse.AddressDto toUpdateAddress(AddressDto addressDto);
