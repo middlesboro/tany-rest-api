@@ -1,6 +1,7 @@
 package sk.tany.rest.api.domain.order;
 
 import lombok.Data;
+import org.dizitart.no2.objects.Id;
 import sk.tany.rest.api.domain.customer.Address;
 
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.util.List;
 @Data
 public class Order {
 
+    @Id
     private String id;
     private Instant createDate;
     private Instant updateDate;

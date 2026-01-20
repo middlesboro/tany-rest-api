@@ -1,11 +1,13 @@
 package sk.tany.rest.api.domain.category;
 
 import lombok.Data;
+import org.dizitart.no2.objects.Id;
 import java.time.Instant;
 
 @Data
 public class Category {
 
+    @Id
     private String id;
     private Long prestashopId;
     private Long prestashopParentId;

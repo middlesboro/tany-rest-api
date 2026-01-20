@@ -1,6 +1,7 @@
 package sk.tany.rest.api.domain.cartdiscount;
 
 import lombok.Data;
+import org.dizitart.no2.objects.Id;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.List;
 @Data
 public class CartDiscount {
 
+    @Id
     private String id;
     private String code;
     private String title;

@@ -1,15 +1,16 @@
 package sk.tany.rest.api.domain.cart;
 
 import lombok.Data;
+import org.dizitart.no2.objects.Id;
 import sk.tany.rest.api.domain.customer.Address;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
 @Data
 public class Cart {
 
+    @Id
     private String id;
     private String cartId;
     private List<CartItem> items;

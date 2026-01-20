@@ -1,6 +1,7 @@
 package sk.tany.rest.api.domain.product;
 
 import lombok.Data;
+import org.dizitart.no2.objects.Id;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -9,6 +10,7 @@ import java.util.List;
 @Data
 public class Product {
 
+    @Id
     private String id;
     private Long prestashopId;
     private Instant createDate;
