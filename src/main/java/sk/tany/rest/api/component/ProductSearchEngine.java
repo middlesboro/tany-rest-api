@@ -21,16 +21,20 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.product.ProductStatus;
+import sk.tany.rest.api.domain.productlabel.ProductLabel;
+import sk.tany.rest.api.domain.productlabel.ProductLabelRepository;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
+import sk.tany.rest.api.dto.ProductLabelDto;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
 import sk.tany.rest.api.dto.request.FilterParameterRequest;
 import sk.tany.rest.api.dto.request.SortOption;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
+import sk.tany.rest.api.mapper.ProductLabelMapper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,8 +61,10 @@ public class ProductSearchEngine {
     private final FilterParameterValueRepository filterParameterValueRepository;
     private final ProductSalesRepository productSalesRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductLabelRepository productLabelRepository;
     private final FilterParameterMapper filterParameterMapper;
     private final FilterParameterValueMapper filterParameterValueMapper;
+    private final ProductLabelMapper productLabelMapper;
 
     private final LevenshteinDistance levenshtein = new LevenshteinDistance();
     private final JaroWinklerSimilarity jaroWinkler = new JaroWinklerSimilarity();
@@ -68,6 +74,7 @@ public class ProductSearchEngine {
     private final Map<String, Integer> cachedProductSales = new ConcurrentHashMap<>();
     private final Map<String, Category> cachedCategories = new ConcurrentHashMap<>();
     private final Map<String, List<String>> cachedCategoryChildren = new ConcurrentHashMap<>();
+    private final Map<String, ProductLabel> cachedProductLabels = new ConcurrentHashMap<>();
 
     private static final int MAX_EDIT_DISTANCE = 2;
 
@@ -107,6 +114,24 @@ public class ProductSearchEngine {
         cachedProductSales.putAll(productSalesRepository.findAll().stream()
                 .collect(Collectors.toMap(ProductSales::getProductId, ProductSales::getSalesCount)));
         log.info("Loaded {} product sales into search engine.", cachedProductSales.size());
+
+        log.info("Loading product labels into search engine...");
+        cachedProductLabels.clear();
+        cachedProductLabels.putAll(productLabelRepository.findAll().stream()
+                .collect(Collectors.toMap(ProductLabel::getId, Function.identity())));
+        log.info("Loaded {} product labels into search engine.", cachedProductLabels.size());
+    }
+
+    public List<ProductLabelDto> getProductLabels(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return ids.stream()
+                .map(cachedProductLabels::get)
+                .filter(Objects::nonNull)
+                .filter(ProductLabel::isActive)
+                .map(productLabelMapper::toDto)
+                .toList();
     }
 
     public void updateSalesCount(String productId, int count) {
