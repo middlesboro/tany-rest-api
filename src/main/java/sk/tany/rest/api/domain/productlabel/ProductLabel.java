@@ -20,8 +20,6 @@ public class ProductLabel {
     private String color;
     private String backgroundColor;
     private String title;
-    // todo delete. don't need productId in this collection
-    private String productId;
     private ProductLabelPosition position;
     private boolean active;
 }
