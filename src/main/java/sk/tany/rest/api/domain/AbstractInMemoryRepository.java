@@ -52,6 +52,9 @@ public abstract class AbstractInMemoryRepository<T> {
 
     public Page<T> findAll(Pageable pageable) {
         List<T> all = findAll();
+        if (pageable.isUnpaged()) {
+            return new PageImpl<>(all, pageable, all.size());
+        }
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), all.size());
         if (start > all.size()) {

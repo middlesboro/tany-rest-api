@@ -72,6 +72,10 @@ public class CategoryRepository extends AbstractInMemoryRepository<Category> {
                 })
                 .toList();
 
+        if (pageable.isUnpaged()) {
+            return new PageImpl<>(filteredCategories, pageable, filteredCategories.size());
+        }
+
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredCategories.size());
 

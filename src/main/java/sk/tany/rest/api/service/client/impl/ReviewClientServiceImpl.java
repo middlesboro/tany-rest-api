@@ -36,10 +36,24 @@ public class ReviewClientServiceImpl implements ReviewClientService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
 
         List<Review> allReviews = repository.findAllByProductId(productId);
+
+        List<ReviewClientListResponse> pageContent;
+
+        if (pageable.isUnpaged()) {
+            pageContent = allReviews.stream()
+                    .map(mapper::toClientListResponse)
+                    .collect(Collectors.toList());
+            Page<ReviewClientListResponse> reviews = new PageImpl<>(pageContent, pageable, allReviews.size());
+            return new ReviewClientProductResponse(
+                product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO,
+                product.getReviewsCount() != null ? product.getReviewsCount() : 0,
+                reviews
+            );
+        }
+
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), allReviews.size());
 
-        List<ReviewClientListResponse> pageContent;
         if (start > allReviews.size()) {
             pageContent = List.of();
         } else {

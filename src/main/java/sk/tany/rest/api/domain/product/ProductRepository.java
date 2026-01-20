@@ -218,6 +218,10 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
                 })
                 .toList();
 
+        if (pageable.isUnpaged()) {
+            return new PageImpl<>(filteredProducts, pageable, filteredProducts.size());
+        }
+
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredProducts.size());
 
@@ -427,6 +431,10 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .sorted(Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
                 .collect(Collectors.toList());
+
+        if (pageable.isUnpaged()) {
+            return new PageImpl<>(filtered, pageable, filtered.size());
+        }
 
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filtered.size());
