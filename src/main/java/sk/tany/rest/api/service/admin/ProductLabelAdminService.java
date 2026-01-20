@@ -4,7 +4,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.ProductLabelDto;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface ProductLabelAdminService {
@@ -13,5 +12,4 @@ public interface ProductLabelAdminService {
     void deleteById(String id);
     Optional<ProductLabelDto> findById(String id);
     Page<ProductLabelDto> findAll(Pageable pageable);
-    List<ProductLabelDto> findAllByProductId(String productId);
 }

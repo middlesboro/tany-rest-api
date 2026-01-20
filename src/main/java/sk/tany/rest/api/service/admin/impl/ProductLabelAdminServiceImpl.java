@@ -12,9 +12,7 @@ import sk.tany.rest.api.dto.ProductLabelDto;
 import sk.tany.rest.api.mapper.ProductLabelMapper;
 import sk.tany.rest.api.service.admin.ProductLabelAdminService;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -60,10 +58,4 @@ public class ProductLabelAdminServiceImpl implements ProductLabelAdminService {
                 .map(productLabelMapper::toDto);
     }
 
-    @Override
-    public List<ProductLabelDto> findAllByProductId(String productId) {
-        return productLabelRepository.findAllByProductId(productId).stream()
-                .map(productLabelMapper::toDto)
-                .collect(Collectors.toList());
-    }
 }
