@@ -1,6 +1,7 @@
 package sk.tany.rest.api.dto.admin.order.list;
 
 import lombok.Data;
+import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 
@@ -24,4 +25,5 @@ public class OrderAdminListResponse {
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
     private String note;
+    private OrderStatus status;
 }
