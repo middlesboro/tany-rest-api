@@ -1,6 +1,7 @@
 package sk.tany.rest.api.dto;
 
 import lombok.Data;
+import sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 
 import java.util.List;
@@ -22,5 +23,11 @@ public class CustomerContextCartDto {
     private String phone;
     private String selectedPickupPointId;
     private String selectedPickupPointName;
+
+    // Discount related fields
+    private List<CartDiscountClientDto> appliedDiscounts;
+    private java.math.BigDecimal totalDiscount;
+    private java.math.BigDecimal finalPrice; // Total - Discount + Carrier + Payment
+    private boolean freeShipping;
 
 }
