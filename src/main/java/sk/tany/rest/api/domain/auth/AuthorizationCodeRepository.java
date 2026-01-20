@@ -1,8 +1,15 @@
 package sk.tany.rest.api.domain.auth;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.dizitart.no2.Nitrite;
 import org.springframework.stereotype.Repository;
+import sk.tany.rest.api.domain.AbstractInMemoryRepository;
+
+import java.util.Optional;
 
 @Repository
-public interface AuthorizationCodeRepository extends MongoRepository<AuthorizationCode, String> {
+public class AuthorizationCodeRepository extends AbstractInMemoryRepository<AuthorizationCode> {
+
+    public AuthorizationCodeRepository(Nitrite nitrite) {
+        super(nitrite, AuthorizationCode.class);
+    }
 }

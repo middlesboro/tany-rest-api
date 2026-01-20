@@ -1,32 +1,20 @@
 package sk.tany.rest.api.domain.payment;
 
 import lombok.Data;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.Instant;
+import lombok.EqualsAndHashCode;
 
 @Data
-@Document(collection = "besteron_payments")
-public class BesteronPayment {
+@EqualsAndHashCode(callSuper = true)
+public class BesteronPayment extends Payment {
 
-    @Id
-    private String id;
-
-    private String redirectUrl;
-    private String transactionId;
     private String orderId;
     private String status;
-    private String originalStatus;
-
-    @CreatedDate
-    @Indexed(expireAfterSeconds = 604800)
-    private Instant createDate;
-
-    @LastModifiedDate
-    private Instant updateDate;
-
+    private String originalStatus; // Added
+    private String resultText;
+    private String transactionId;
+    private String ammount;
+    private String currency;
+    private String payer;
+    private String sign;
+    private String redirectUrl; // Added
 }

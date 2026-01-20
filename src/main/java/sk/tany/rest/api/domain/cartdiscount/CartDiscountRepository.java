@@ -1,25 +1,40 @@
 package sk.tany.rest.api.domain.cartdiscount;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.dizitart.no2.Nitrite;
 import org.springframework.stereotype.Repository;
+import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
-public interface CartDiscountRepository extends MongoRepository<CartDiscount, String> {
-    Optional<CartDiscount> findByCode(String code);
+public class CartDiscountRepository extends AbstractInMemoryRepository<CartDiscount> {
 
-    // Find automatic discounts (code is null) that are active and within date range (or no date range)
-    // Complex queries might be better handled with criteria or filtering in service if dataset is small,
-    // but let's try a query method.
-    // However, since we need to check active=true, and date ranges.
+    public CartDiscountRepository(Nitrite nitrite) {
+        super(nitrite, CartDiscount.class);
+    }
 
-    List<CartDiscount> findAllByCodeIsNullAndActiveTrue();
+    public Optional<CartDiscount> findByCode(String code) {
+        return memoryCache.values().stream()
+                .filter(cd -> cd.getCode() != null && cd.getCode().equals(code))
+                .findFirst();
+    }
 
-    // For manual code check
-    Optional<CartDiscount> findByCodeAndActiveTrue(String code);
+    public boolean existsByCode(String code) {
+        return memoryCache.values().stream()
+                .anyMatch(cd -> cd.getCode() != null && cd.getCode().equals(code));
+    }
 
-    boolean existsByCode(String code);
+    public Optional<CartDiscount> findByCodeAndActiveTrue(String code) {
+        return memoryCache.values().stream()
+                .filter(cd -> cd.getCode() != null && cd.getCode().equals(code) && cd.isActive())
+                .findFirst();
+    }
+
+    public List<CartDiscount> findAllByCodeIsNullAndActiveTrue() {
+        return memoryCache.values().stream()
+                .filter(cd -> cd.getCode() == null && cd.isActive())
+                .collect(Collectors.toList());
+    }
 }

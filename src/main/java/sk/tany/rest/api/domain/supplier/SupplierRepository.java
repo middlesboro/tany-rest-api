@@ -1,12 +1,27 @@
 package sk.tany.rest.api.domain.supplier;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.dizitart.no2.Nitrite;
 import org.springframework.stereotype.Repository;
+import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
 import java.util.Optional;
 
 @Repository
-public interface SupplierRepository extends MongoRepository<Supplier, String> {
-    Optional<Supplier> findByPrestashopId(Long prestashopId);
-    Optional<Supplier> findByName(String name);
+public class SupplierRepository extends AbstractInMemoryRepository<Supplier> {
+
+    public SupplierRepository(Nitrite nitrite) {
+        super(nitrite, Supplier.class);
+    }
+
+    public Optional<Supplier> findByPrestashopId(Long prestashopId) {
+        return memoryCache.values().stream()
+                .filter(s -> s.getPrestashopId() != null && s.getPrestashopId().equals(prestashopId))
+                .findFirst();
+    }
+
+    public Optional<Supplier> findByName(String name) {
+        return memoryCache.values().stream()
+                .filter(s -> s.getName() != null && s.getName().equals(name))
+                .findFirst();
+    }
 }

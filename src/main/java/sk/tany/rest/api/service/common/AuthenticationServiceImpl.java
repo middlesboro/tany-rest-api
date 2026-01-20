@@ -2,16 +2,21 @@ package sk.tany.rest.api.service.common;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import sk.tany.rest.api.component.JwtUtil;
-import sk.tany.rest.api.domain.auth.*;
+import sk.tany.rest.api.domain.auth.AuthorizationCode;
+import sk.tany.rest.api.domain.auth.AuthorizationCodeRepository;
+import sk.tany.rest.api.domain.auth.MagicLinkToken;
+import sk.tany.rest.api.domain.auth.MagicLinkTokenRepository;
+import sk.tany.rest.api.domain.auth.MagicLinkTokenState;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.domain.customer.Role;
-import sk.tany.rest.api.exception.InvalidTokenException;
 
-import java.util.Collections;
-import java.util.Date;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,95 +24,100 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private final CustomerRepository customerRepository;
     private final MagicLinkTokenRepository magicLinkTokenRepository;
     private final AuthorizationCodeRepository authorizationCodeRepository;
-    private final JwtUtil jwtUtil;
+    private final CustomerRepository customerRepository;
     private final EmailService emailService;
+    private final JwtUtil jwtUtil;
 
-    @Value("${eshop.base-url}")
-    private String baseUrl;
+    @Value("${eshop.frontend-url}")
+    private String frontendUrl;
 
     @Override
     public void initiateLogin(String email) {
-        // Find or create customer
-        Optional<Customer> existingCustomer = customerRepository.findByEmail(email);
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer not found"));
 
-        if (existingCustomer.isEmpty()) {
-            Customer newCustomer = new Customer();
-            newCustomer.setEmail(email);
-            newCustomer.setRole(Role.CUSTOMER);
-            customerRepository.save(newCustomer);
-        }
-
-        // Generate JTI
         String jti = UUID.randomUUID().toString();
-
-        // Create Magic Link Token in DB
         MagicLinkToken tokenEntity = new MagicLinkToken();
         tokenEntity.setJti(jti);
         tokenEntity.setCustomerEmail(email);
-        tokenEntity.setState(MagicLinkTokenState.PENDING);
-        tokenEntity.setCreatedAt(new Date());
+        tokenEntity.setState(MagicLinkTokenState.PENDING); // Fixed enum
+        tokenEntity.setExpiration(Instant.now().plus(15, ChronoUnit.MINUTES));
+        tokenEntity.setCreatedDate(Instant.now());
         magicLinkTokenRepository.save(tokenEntity);
 
-        // Generate JWT
         String token = jwtUtil.generateMagicLinkToken(jti);
 
-        // Send Email
-        String magicLink = baseUrl + "/api/login/verify?token=" + token;
-        String emailBody = "Click on the following link to log in: " + magicLink;
-
-        emailService.sendEmail(email, "Login Verification", emailBody, false, null);
+        String link = frontendUrl + "/api/login/verify?token=" + token; // Using backend endpoint which redirects
+        String body = "<p>Click here to login: <a href=\"" + link + "\">" + link + "</a></p>";
+        emailService.sendEmail(email, "Login to Tany.sk", body, true, null);
     }
 
     @Override
     public String verifyAndGenerateCode(String token) {
         if (!jwtUtil.validateToken(token)) {
-            throw new InvalidTokenException("Invalid token");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token");
         }
 
         if (!jwtUtil.hasClaim(token, "magic_link", true)) {
-            throw new InvalidTokenException("Invalid token type");
+             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token type");
         }
 
         String jti = jwtUtil.extractJti(token);
-
         MagicLinkToken magicLinkToken = magicLinkTokenRepository.findByJti(jti)
-                .orElseThrow(() -> new InvalidTokenException("Token not found or expired"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token not found"));
 
-        if (magicLinkToken.getState() == MagicLinkTokenState.VERIFIED) {
-            throw new InvalidTokenException("Token already used");
+        if (magicLinkToken.getExpiration().isBefore(Instant.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired");
         }
 
-        // Update state
-        magicLinkToken.setState(MagicLinkTokenState.VERIFIED);
+        if (magicLinkToken.getState() != MagicLinkTokenState.PENDING) { // Fixed enum
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token already used");
+        }
+
+        magicLinkToken.setState(MagicLinkTokenState.VERIFIED); // Fixed enum
         magicLinkTokenRepository.save(magicLinkToken);
 
-        // Get Customer Role
-        Customer customer = customerRepository.findByEmail(magicLinkToken.getCustomerEmail())
-                .orElseThrow(() -> new InvalidTokenException("Customer not found"));
-
-        String role = "ROLE_" + (customer.getRole() != null ? customer.getRole().name() : Role.CUSTOMER.name());
-
-        // Generate Session Token
-        String sessionToken = jwtUtil.generateSessionToken(magicLinkToken.getCustomerEmail(), Collections.singletonList(role));
-
+        String email = magicLinkToken.getCustomerEmail();
         // Generate Authorization Code
         String code = UUID.randomUUID().toString();
-        AuthorizationCode authorizationCode = new AuthorizationCode(code, sessionToken, new Date());
-        authorizationCodeRepository.save(authorizationCode);
+        AuthorizationCode authCode = new AuthorizationCode();
+        authCode.setCode(code);
+        authCode.setEmail(email);
+        authCode.setExpiration(Instant.now().plus(5, ChronoUnit.MINUTES));
+        authCode.setCreatedDate(Instant.now());
+        authorizationCodeRepository.save(authCode);
 
         return code;
     }
 
     @Override
     public String exchangeCode(String code) {
-        AuthorizationCode authorizationCode = authorizationCodeRepository.findById(code)
-                .orElseThrow(() -> new InvalidTokenException("Invalid or expired authorization code"));
+        Optional<AuthorizationCode> authCodeOpt = authorizationCodeRepository.findAll().stream()
+                .filter(ac -> ac.getCode().equals(code))
+                .findFirst();
 
-        String jwt = authorizationCode.getJwt();
-        authorizationCodeRepository.delete(authorizationCode);
-        return jwt;
+        if (authCodeOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid authorization code");
+        }
+
+        AuthorizationCode authCode = authCodeOpt.get();
+        if (authCode.getExpiration().isBefore(Instant.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Authorization code expired");
+        }
+
+        authorizationCodeRepository.delete(authCode);
+
+        // Return the JWT associated with this code if available, or create new one
+        if (authCode.getJwt() != null) {
+            return authCode.getJwt();
+        }
+
+        Customer customer = customerRepository.findByEmail(authCode.getEmail())
+             .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer not found"));
+
+        List<String> roles = List.of(customer.getRole() != null ? customer.getRole().name() : "USER");
+        return jwtUtil.generateSessionToken(customer.getEmail(), roles);
     }
 }

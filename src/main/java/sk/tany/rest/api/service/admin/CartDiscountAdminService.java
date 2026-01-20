@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 import sk.tany.rest.api.domain.cartdiscount.CartDiscount;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscountRepository;
 import sk.tany.rest.api.dto.admin.cartdiscount.CartDiscountDto;
@@ -31,7 +31,7 @@ public class CartDiscountAdminService {
                 .orElseThrow(() -> new RuntimeException("Cart discount not found"));
     }
 
-    @Transactional
+
     public CartDiscountDto create(CartDiscountCreateRequest request) {
         if (request.getCode() != null && cartDiscountRepository.existsByCode(request.getCode())) {
             throw new RuntimeException("Discount code already exists");
@@ -40,7 +40,7 @@ public class CartDiscountAdminService {
         return cartDiscountMapper.toDto(cartDiscountRepository.save(cartDiscount));
     }
 
-    @Transactional
+
     public CartDiscountDto update(String id, CartDiscountUpdateRequest request) {
         CartDiscount cartDiscount = cartDiscountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cart discount not found"));
@@ -55,7 +55,7 @@ public class CartDiscountAdminService {
         return cartDiscountMapper.toDto(cartDiscountRepository.save(cartDiscount));
     }
 
-    @Transactional
+
     public void delete(String id) {
         cartDiscountRepository.deleteById(id);
     }
