@@ -28,6 +28,7 @@ public class Cart {
     private String phone;
     private Address invoiceAddress;
     private Address deliveryAddress;
+    private List<String> discountCodes;
     @CreatedDate
     private Instant createDate;
     @LastModifiedDate

@@ -59,4 +59,14 @@ public class CartClientController {
         CartDto cartDto = cartService.addPayment(request.getCartId(), request.getPaymentId());
         return ResponseEntity.ok(cartClientApiMapper.toSetPaymentResponse(cartDto));
     }
+
+    @PostMapping("/{cartId}/discount")
+    public ResponseEntity<CartDto> addDiscount(@PathVariable String cartId, @RequestParam String code) {
+        return ResponseEntity.ok(cartService.addDiscount(cartId, code));
+    }
+
+    @DeleteMapping("/{cartId}/discount")
+    public ResponseEntity<CartDto> removeDiscount(@PathVariable String cartId, @RequestParam String code) {
+        return ResponseEntity.ok(cartService.removeDiscount(cartId, code));
+    }
 }

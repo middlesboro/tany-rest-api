@@ -28,6 +28,8 @@ public class Order {
     private BigDecimal paymentPrice;
     private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;
+    private BigDecimal discountPrice;
+    private List<String> appliedDiscountCodes;
     private List<OrderItem> items;
     private String carrierId;
     private String paymentId;
