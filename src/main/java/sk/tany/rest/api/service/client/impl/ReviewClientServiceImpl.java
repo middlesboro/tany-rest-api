@@ -43,9 +43,11 @@ public class ReviewClientServiceImpl implements ReviewClientService {
         Page<ReviewClientListResponse> reviews = repository.findAllByProductId(productId, pageable)
                 .map(mapper::toClientListResponse);
 
+        ReviewStats stats = getReviewStats(productId);
+
         return new ReviewClientProductResponse(
-                product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO,
-                product.getReviewsCount() != null ? product.getReviewsCount() : 0,
+                stats.averageRating,
+                stats.reviewsCount,
                 reviews
         );
     }
@@ -64,6 +66,20 @@ public class ReviewClientServiceImpl implements ReviewClientService {
     }
 
     private void recalculateProductStats(String productId) {
+        ReviewStats stats = getReviewStats(productId);
+
+        Update update = new Update();
+        update.set("averageRating", stats.averageRating);
+        update.set("reviewsCount", stats.reviewsCount);
+
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where("id").is(productId)),
+                update,
+                Product.class
+        );
+    }
+
+    private ReviewStats getReviewStats(String productId) {
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("productId").is(productId).and("active").is(true)),
                 Aggregation.group("productId")
@@ -83,15 +99,13 @@ public class ReviewClientServiceImpl implements ReviewClientService {
             averageRating = BigDecimal.valueOf(result.getAverageRating()).setScale(1, RoundingMode.HALF_UP);
             reviewsCount = result.getReviewsCount();
         }
+        return new ReviewStats(averageRating, reviewsCount);
+    }
 
-        Update update = new Update();
-        update.set("averageRating", averageRating);
-        update.set("reviewsCount", reviewsCount);
-
-        mongoTemplate.updateFirst(
-                Query.query(Criteria.where("id").is(productId)),
-                update,
-                Product.class
-        );
+    @lombok.Data
+    @lombok.AllArgsConstructor
+    private static class ReviewStats {
+        private BigDecimal averageRating;
+        private int reviewsCount;
     }
 }
