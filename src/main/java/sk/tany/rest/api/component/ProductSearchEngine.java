@@ -161,6 +161,94 @@ public class ProductSearchEngine {
         }
     }
 
+    public void addCategory(Category category) {
+        updateCategory(category);
+    }
+
+    public void updateCategory(Category category) {
+        if (category == null || category.getId() == null) return;
+
+        Category oldCategory = cachedCategories.put(category.getId(), category);
+
+        String oldParentId = (oldCategory != null) ? oldCategory.getParentId() : null;
+        String newParentId = category.getParentId();
+
+        if (!Objects.equals(oldParentId, newParentId)) {
+            if (oldParentId != null) {
+                List<String> children = cachedCategoryChildren.get(oldParentId);
+                if (children != null) {
+                    children.remove(category.getId());
+                }
+            }
+            if (newParentId != null) {
+                cachedCategoryChildren.computeIfAbsent(newParentId, k -> new ArrayList<>()).add(category.getId());
+            }
+        }
+    }
+
+    public void removeCategory(String categoryId) {
+        if (categoryId != null) {
+            Category category = cachedCategories.remove(categoryId);
+            if (category != null && category.getParentId() != null) {
+                List<String> children = cachedCategoryChildren.get(category.getParentId());
+                if (children != null) {
+                    children.remove(categoryId);
+                }
+            }
+            cachedCategoryChildren.remove(categoryId);
+        }
+    }
+
+    public Page<Category> searchCategories(String query, Pageable pageable) {
+        String normalizedQuery = null;
+        String[] queryWords = null;
+
+        if (StringUtils.isNotBlank(query)) {
+            normalizedQuery = StringUtils.stripAccents(query.toLowerCase()).trim();
+            queryWords = normalizedQuery.split("\\s+");
+        }
+
+        final String finalNormalizedQuery = normalizedQuery;
+        final String[] finalQueryWords = queryWords;
+
+        List<Category> filteredCategories = cachedCategories.values().stream()
+                .filter(c -> {
+                    if (finalQueryWords != null) {
+                        if (c.getTitle() == null) {
+                            return false;
+                        }
+                        String normalizedName = StringUtils.stripAccents(c.getTitle().toLowerCase());
+                        String[] nameWords = normalizedName.split("\\s+");
+
+                        return Arrays.stream(finalQueryWords).allMatch(qWord ->
+                                Arrays.stream(nameWords).anyMatch(nWord ->
+                                        nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
+                                )
+                        );
+                    }
+                    return true;
+                })
+                .sorted((c1, c2) -> {
+                    if (finalNormalizedQuery != null) {
+                        Double score1 = calculateRelevance(c1.getTitle(), finalNormalizedQuery);
+                        Double score2 = calculateRelevance(c2.getTitle(), finalNormalizedQuery);
+                        return score2.compareTo(score1);
+                    }
+                    return StringUtils.compareIgnoreCase(c1.getTitle(), c2.getTitle());
+                })
+                .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filteredCategories.size());
+
+        if (start > filteredCategories.size()) {
+            return new PageImpl<>(List.of(), pageable, filteredCategories.size());
+        }
+
+        List<Category> pageContent = filteredCategories.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, filteredCategories.size());
+    }
+
     public void addFilterParameter(FilterParameter filterParameter) {
         if (filterParameter != null && filterParameter.getId() != null) {
             cachedFilterParameters.put(filterParameter.getId(), filterParameter);

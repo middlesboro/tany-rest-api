@@ -38,7 +38,10 @@ public class CategoryAdminController {
     }
 
     @GetMapping
-    public Page<CategoryDto> getCategories(Pageable pageable) {
+    public Page<CategoryDto> getCategories(@RequestParam(required = false) String query, Pageable pageable) {
+        if (query != null) {
+            return categoryService.findAll(query, pageable);
+        }
         return categoryService.findAll(pageable);
     }
 

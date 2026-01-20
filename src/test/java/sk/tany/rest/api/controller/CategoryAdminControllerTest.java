@@ -40,10 +40,27 @@ class CategoryAdminControllerTest {
 
         when(categoryService.findAll(pageable)).thenReturn(categoryPage);
 
-        Page<CategoryDto> result = categoryAdminController.getCategories(pageable);
+        Page<CategoryDto> result = categoryAdminController.getCategories(null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test Category", result.getContent().get(0).getTitle());
         verify(categoryService, times(1)).findAll(pageable);
+    }
+
+    @Test
+    void getCategories_WithQuery_ShouldReturnFilteredCategories() {
+        Pageable pageable = PageRequest.of(0, 10);
+        String query = "Test";
+        CategoryDto categoryDto = new CategoryDto();
+        categoryDto.setTitle("Test Category");
+        Page<CategoryDto> categoryPage = new PageImpl<>(Collections.singletonList(categoryDto));
+
+        when(categoryService.findAll(query, pageable)).thenReturn(categoryPage);
+
+        Page<CategoryDto> result = categoryAdminController.getCategories(query, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Test Category", result.getContent().get(0).getTitle());
+        verify(categoryService, times(1)).findAll(query, pageable);
     }
 }

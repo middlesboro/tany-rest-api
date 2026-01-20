@@ -25,6 +25,10 @@ import sk.tany.rest.api.dto.request.SortOption;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,6 +58,9 @@ class ProductSearchEngineTest {
 
     @InjectMocks
     private ProductSearchEngine productSearchEngine;
+
+    private Category category1;
+    private Category category2;
 
     private Product product1;
     private Product product2;
@@ -136,10 +143,18 @@ class ProductSearchEngineTest {
         product3.setCategoryIds(List.of("cat1"));
         product3.setProductFilterParameters(new ArrayList<>());
 
+        category1 = new Category();
+        category1.setId("1");
+        category1.setTitle("Electronics");
+
+        category2 = new Category();
+        category2.setId("2");
+        category2.setTitle("Books");
+
         when(productRepository.findAll()).thenReturn(List.of(product1, product2, product3));
         when(filterParameterRepository.findAll()).thenReturn(List.of(colorParam, brandParam));
         when(filterParameterValueRepository.findAll()).thenReturn(List.of(redValue, greenValue, nikeValue, adidasValue));
-        when(categoryRepository.findAll()).thenReturn(Collections.emptyList());
+        when(categoryRepository.findAll()).thenReturn(List.of(category1, category2));
 
         // Setup sales counts
         ProductSales sales1 = new ProductSales();
@@ -360,5 +375,46 @@ class ProductSearchEngineTest {
         List<Product> result = productSearchEngine.search("cat1", null);
 
         assertEquals(2, result.size(), "Should return products from subcategories");
+    }
+
+    @Test
+    void searchCategories_ShouldReturnFilteredCategories() {
+        Category cat1 = new Category();
+        cat1.setId("1");
+        cat1.setTitle("Electronics");
+
+        Category cat2 = new Category();
+        cat2.setId("2");
+        cat2.setTitle("Books");
+
+        // We need to reload products because ProductSearchEngine loads them @EventListener
+        when(categoryRepository.findAll()).thenReturn(List.of(cat1, cat2));
+        productSearchEngine.loadProducts();
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Category> result = productSearchEngine.searchCategories("Elec", pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Electronics", result.getContent().get(0).getTitle());
+    }
+
+    @Test
+    void searchCategories_ShouldReturnAllCategories_WhenQueryIsEmpty() {
+        Category cat1 = new Category();
+        cat1.setId("1");
+        cat1.setTitle("Electronics");
+
+        Category cat2 = new Category();
+        cat2.setId("2");
+        cat2.setTitle("Books");
+
+        // We need to reload products because ProductSearchEngine loads them @EventListener
+        when(categoryRepository.findAll()).thenReturn(List.of(cat1, cat2));
+        productSearchEngine.loadProducts();
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Category> result = productSearchEngine.searchCategories("", pageable);
+
+        assertEquals(2, result.getTotalElements());
     }
 }
