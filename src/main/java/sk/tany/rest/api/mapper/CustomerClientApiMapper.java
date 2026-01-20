@@ -8,7 +8,7 @@ import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.PaymentDto;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.client.customer.get.CustomerClientDetailResponse;
 import sk.tany.rest.api.dto.client.customer.get.CustomerClientGetResponse;
 import sk.tany.rest.api.dto.client.customer.update.CustomerClientUpdateRequest;
@@ -34,7 +34,7 @@ public interface CustomerClientApiMapper {
     // Helpers for Nested CustomerClientGetResponse mapping
     CustomerClientGetResponse.CustomerDto toGetCustomerDto(CustomerDto customerDto);
     CustomerClientGetResponse.CustomerContextCartDto toGetCartDto(CustomerContextCartDto cartDto);
-    CustomerClientGetResponse.ProductDto toGetProductDto(ProductDto productDto);
+    CustomerClientGetResponse.ProductDto toGetProductDto(ProductClientDto productDto);
     CustomerClientGetResponse.CarrierDto toGetCarrierDto(CarrierDto carrierDto);
     CustomerClientGetResponse.PaymentDto toGetPaymentDto(PaymentDto paymentDto);
 

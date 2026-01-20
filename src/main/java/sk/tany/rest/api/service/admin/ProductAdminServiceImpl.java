@@ -10,7 +10,7 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
 import sk.tany.rest.api.domain.review.ReviewRepository;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
 
@@ -30,47 +30,47 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final ReviewRepository reviewRepository;
 
     @Override
-    public Page<ProductDto> findAll(Pageable pageable) {
-        return productRepository.findAll(pageable).map(productMapper::toDto);
+    public Page<ProductAdminDto> findAll(Pageable pageable) {
+        return productRepository.findAll(pageable).map(productMapper::toAdminDto);
     }
 
     @Override
-    public Page<ProductDto> findAll(ProductFilter filter, Pageable pageable) {
-        return productSearchEngine.search(filter, pageable).map(productMapper::toDto);
+    public Page<ProductAdminDto> findAll(ProductFilter filter, Pageable pageable) {
+        return productSearchEngine.search(filter, pageable).map(productMapper::toAdminDto);
     }
 
     @Override
-    public Optional<ProductDto> findById(String id) {
-        return productRepository.findById(id).map(productMapper::toDto);
+    public Optional<ProductAdminDto> findById(String id) {
+        return productRepository.findById(id).map(productMapper::toAdminDto);
     }
 
     @Override
-    public ProductDto save(ProductDto productDto) {
+    public ProductAdminDto save(ProductAdminDto productDto) {
         var product = productMapper.toEntity(productDto);
         recalculateReviewStatistics(product);
         var savedProduct = productRepository.save(product);
         productSearchEngine.addProduct(savedProduct);
-        return productMapper.toDto(savedProduct);
+        return productMapper.toAdminDto(savedProduct);
     }
 
     @Override
-    public ProductDto update(String id, ProductDto productDto) {
+    public ProductAdminDto update(String id, ProductAdminDto productDto) {
         productDto.setId(id);
         var product = productMapper.toEntity(productDto);
         recalculateReviewStatistics(product);
         var savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
-        return productMapper.toDto(savedProduct);
+        return productMapper.toAdminDto(savedProduct);
     }
 
     @Override
-    public ProductDto patch(String id, sk.tany.rest.api.dto.admin.product.patch.ProductPatchRequest patchDto) {
+    public ProductAdminDto patch(String id, sk.tany.rest.api.dto.admin.product.patch.ProductPatchRequest patchDto) {
         var product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
         recalculateReviewStatistics(product);
         productMapper.updateEntityFromPatch(patchDto, product);
         var savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
-        return productMapper.toDto(savedProduct);
+        return productMapper.toAdminDto(savedProduct);
     }
 
     @Override
@@ -87,26 +87,26 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     }
 
     @Override
-    public Page<ProductDto> search(String categoryId, Pageable pageable) {
-        return productRepository.findByCategoryIds(categoryId, pageable).map(productMapper::toDto);
+    public Page<ProductAdminDto> search(String categoryId, Pageable pageable) {
+        return productRepository.findByCategoryIds(categoryId, pageable).map(productMapper::toAdminDto);
     }
 
     @Override
-    public java.util.List<ProductDto> findAllByIds(Iterable<String> ids) {
-        return productRepository.findAllById(ids).stream().map(productMapper::toDto).toList();
+    public java.util.List<ProductAdminDto> findAllByIds(Iterable<String> ids) {
+        return productRepository.findAllById(ids).stream().map(productMapper::toAdminDto).toList();
     }
 
     @Override
-    public java.util.List<ProductDto> searchByQuery(String query) {
+    public java.util.List<ProductAdminDto> searchByQuery(String query) {
         return productSearchEngine.searchAndSort(query).stream()
-                .map(productMapper::toDto)
+                .map(productMapper::toAdminDto)
                 .toList();
     }
 
     @Override
-    public java.util.List<ProductDto> findAllByFilterParameterValueId(String filterParameterValueId) {
+    public java.util.List<ProductAdminDto> findAllByFilterParameterValueId(String filterParameterValueId) {
         return productRepository.findAllByProductFilterParametersFilterParameterValueId(filterParameterValueId).stream()
-                .map(productMapper::toDto)
+                .map(productMapper::toAdminDto)
                 .toList();
     }
 

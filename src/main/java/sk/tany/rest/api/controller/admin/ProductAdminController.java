@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateRequest;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
@@ -52,8 +52,8 @@ public class ProductAdminController {
 
     @PostMapping
     public ResponseEntity<ProductCreateResponse> createProduct(@RequestBody ProductCreateRequest product) {
-        ProductDto productDto = productAdminApiMapper.toDto(product);
-        ProductDto savedProduct = productService.save(productDto);
+        ProductAdminDto productDto = productAdminApiMapper.toDto(product);
+        ProductAdminDto savedProduct = productService.save(productDto);
         return new ResponseEntity<>(productAdminApiMapper.toCreateResponse(savedProduct), HttpStatus.CREATED);
     }
 
@@ -96,14 +96,14 @@ public class ProductAdminController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductUpdateResponse> updateProduct(@PathVariable String id, @RequestBody ProductUpdateRequest product) {
-        ProductDto productDto = productAdminApiMapper.toDto(product);
-        ProductDto updatedProduct = productService.update(id, productDto);
+        ProductAdminDto productDto = productAdminApiMapper.toDto(product);
+        ProductAdminDto updatedProduct = productService.update(id, productDto);
         return ResponseEntity.ok(productAdminApiMapper.toUpdateResponse(updatedProduct));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<ProductUpdateResponse> patchProduct(@PathVariable String id, @RequestBody ProductPatchRequest patchDto) {
-        ProductDto updatedProduct = productService.patch(id, patchDto);
+        ProductAdminDto updatedProduct = productService.patch(id, patchDto);
         return ResponseEntity.ok(productAdminApiMapper.toUpdateResponse(updatedProduct));
     }
 
@@ -126,7 +126,7 @@ public class ProductAdminController {
                     }
                     product.getImages().addAll(imageUrls);
 
-                    ProductDto updatedProduct = productService.update(id, product);
+                    ProductAdminDto updatedProduct = productService.update(id, product);
                     return ResponseEntity.ok(productAdminApiMapper.toUploadImageResponse(updatedProduct));
                 })
                 .orElse(ResponseEntity.notFound().build());

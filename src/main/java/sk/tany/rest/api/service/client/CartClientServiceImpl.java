@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.mapper.CartMapper;
 
 import java.util.ArrayList;
@@ -67,7 +67,7 @@ public class CartClientServiceImpl implements CartClientService {
             cartDto.setItems(new ArrayList<>());
         }
 
-        ProductDto productDto = productService.findById(productId)
+        ProductClientDto productDto = productService.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         int stock = productDto.getQuantity() != null ? productDto.getQuantity() : 0;

@@ -1,14 +1,16 @@
-package sk.tany.rest.api.dto;
+package sk.tany.rest.api.dto.client.product;
 
 import lombok.Data;
 import sk.tany.rest.api.domain.product.ProductStatus;
+import sk.tany.rest.api.dto.ProductFilterParameterDto;
+import sk.tany.rest.api.dto.ProductLabelDto;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class ProductDto {
+public class ProductClientDto {
     private String id;
     private Long prestashopId;
     private String title;
@@ -27,11 +29,11 @@ public class ProductDto {
     private List<String> categoryIds = new ArrayList<>();
     private String supplierId;
     private String brandId;
-    private List<String> images;
+    private List<String> images = new ArrayList<>();
     private ProductStatus status;
     private Boolean active;
     private BigDecimal averageRating;
     private Integer reviewsCount;
-    private List<ProductFilterParameterDto> productFilterParameters;
-    private List<ProductLabelDto> productLabels;
+    private List<ProductFilterParameterDto> productFilterParameters = new ArrayList<>();
+    private List<ProductLabelDto> productLabels = new ArrayList<>();
 }

@@ -2,7 +2,7 @@ package sk.tany.rest.api.helper;
 
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierPriceRange;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,7 +12,7 @@ public class OrderHelper {
     private OrderHelper() {
     }
 
-    public static BigDecimal getProductsWeight(List<ProductDto> products) {
+    public static BigDecimal getProductsWeight(List<ProductClientDto> products) {
         return products.stream()
                 .map(p -> (p.getWeight() != null ? p.getWeight() : BigDecimal.ZERO)
                         .multiply(BigDecimal.valueOf(p.getQuantity() != null ? p.getQuantity() : 0)))
@@ -34,7 +34,7 @@ public class OrderHelper {
         return null;
     }
 
-    public static BigDecimal getProductsPrice(List<ProductDto> products) {
-        return products.stream().map(ProductDto::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
+    public static BigDecimal getProductsPrice(List<ProductClientDto> products) {
+        return products.stream().map(ProductClientDto::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

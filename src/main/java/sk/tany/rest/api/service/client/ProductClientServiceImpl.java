@@ -7,7 +7,8 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
+import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 
 import java.util.Optional;
@@ -21,57 +22,57 @@ public class ProductClientServiceImpl implements ProductClientService {
     private final ProductSearchEngine productSearchEngine;
 
     @Override
-    public Page<ProductDto> findAll(Pageable pageable) {
-        return productRepository.findAll(pageable).map(productMapper::toDto);
+    public Page<ProductClientDto> findAll(Pageable pageable) {
+        return productRepository.findAll(pageable).map(productMapper::toClientDto);
     }
 
     @Override
-    public Optional<ProductDto> findById(String id) {
-        return productRepository.findById(id).map(productMapper::toDto);
+    public Optional<ProductClientDto> findById(String id) {
+        return productRepository.findById(id).map(productMapper::toClientDto);
     }
 
     @Override
-    public Page<ProductDto> search(String categoryId, Pageable pageable) {
-        return productRepository.findByCategoryIds(categoryId, pageable).map(productMapper::toDto);
+    public Page<ProductClientDto> search(String categoryId, Pageable pageable) {
+        return productRepository.findByCategoryIds(categoryId, pageable).map(productMapper::toClientDto);
     }
 
     @Override
-    public sk.tany.rest.api.dto.ProductSearchDto search(String categoryId, sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable) {
+    public ProductClientSearchDto search(String categoryId, sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable) {
         java.util.List<Product> products = productSearchEngine.search(categoryId, request);
         java.util.List<sk.tany.rest.api.dto.FilterParameterDto> filters = productSearchEngine.getFilterParametersForCategoryWithFilter(categoryId, request);
 
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), products.size());
-        java.util.List<ProductDto> pageContent;
+        java.util.List<ProductClientDto> pageContent;
         if (start > products.size()) {
             pageContent = java.util.Collections.emptyList();
         } else {
             pageContent = products.subList(start, end).stream()
                     .map(product -> {
-                        ProductDto dto = productMapper.toDto(product);
+                        ProductClientDto dto = productMapper.toClientDto(product);
                         dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
                         return dto;
                     })
                     .toList();
         }
-        Page<ProductDto> productsPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, products.size());
+        Page<ProductClientDto> productsPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, products.size());
 
-        sk.tany.rest.api.dto.ProductSearchDto response = new sk.tany.rest.api.dto.ProductSearchDto();
+        ProductClientSearchDto response = new ProductClientSearchDto();
         response.setProducts(productsPage);
         response.setFilterParameters(filters);
         return response;
     }
 
     @Override
-    public java.util.List<ProductDto> findAllByIds(Iterable<String> ids) {
-        return productRepository.findAllById(ids).stream().map(productMapper::toDto).toList();
+    public java.util.List<ProductClientDto> findAllByIds(Iterable<String> ids) {
+        return productRepository.findAllById(ids).stream().map(productMapper::toClientDto).toList();
     }
 
     @Override
-    public java.util.List<ProductDto> searchProducts(String query) {
+    public java.util.List<ProductClientDto> searchProducts(String query) {
         return productSearchEngine.searchAndSort(query)
                 .stream()
-                .map(productMapper::toDto)
+                .map(productMapper::toClientDto)
                 .toList();
     }
 

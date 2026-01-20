@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.domain.product.ProductStatus;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.CategoryDto;
-import sk.tany.rest.api.dto.ProductDto;
+import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.SupplierDto;
 import sk.tany.rest.api.dto.admin.shopsettings.get.ShopSettingsGetResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopCategoriesResponse;
@@ -95,7 +95,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         try {
             PrestaShopProductWrapper wrapper = restTemplate.getForObject(url, PrestaShopProductWrapper.class);
             if (wrapper != null && wrapper.getProduct() != null) {
-                ProductDto productDto = mapToProductDto(wrapper.getProduct());
+                ProductAdminDto productDto = mapToProductDto(wrapper.getProduct());
                 productAdminService.save(productDto);
                 log.info("Successfully imported product with ID: {}", id);
             }
@@ -203,11 +203,11 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         return dto;
     }
 
-    private ProductDto mapToProductDto(PrestaShopProductDetailResponse psProduct) {
+    private ProductAdminDto mapToProductDto(PrestaShopProductDetailResponse psProduct) {
         ShopSettingsGetResponse shopSettings = shopSettingsAdminService.get();
         BigDecimal vat = shopSettings.getVat();
 
-        ProductDto dto = new ProductDto();
+        ProductAdminDto dto = new ProductAdminDto();
         dto.setPrestashopId(psProduct.getId());
         dto.setTitle(parseLanguageValue(psProduct.getName()));
         dto.setDescription(parseLanguageValue(psProduct.getDescription()));
