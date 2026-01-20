@@ -75,13 +75,22 @@ class ReviewClientServiceImplTest {
         Pageable pageable = Pageable.unpaged();
         Product product = new Product();
         product.setId(productId);
-        product.setReviewsCount(10);
-        product.setAverageRating(new BigDecimal("4.5"));
+        // Note: product stats in entity are ignored in favor of aggregation
+        product.setReviewsCount(0);
+        product.setAverageRating(BigDecimal.ZERO);
 
         Page<Review> reviewPage = Page.empty();
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
         when(repository.findAllByProductId(productId, pageable)).thenReturn(reviewPage);
+
+        // Mock aggregation result
+        ReviewAggregationResult aggResult = new ReviewAggregationResult(productId, 4.5, 10);
+        AggregationResults<ReviewAggregationResult> aggResults = mock(AggregationResults.class);
+        when(aggResults.getUniqueMappedResult()).thenReturn(aggResult);
+
+        when(mongoTemplate.aggregate(any(Aggregation.class), eq("reviews"), eq(ReviewAggregationResult.class)))
+                .thenReturn(aggResults);
 
         // When
         ReviewClientProductResponse response = service.findAllByProductId(productId, pageable);
