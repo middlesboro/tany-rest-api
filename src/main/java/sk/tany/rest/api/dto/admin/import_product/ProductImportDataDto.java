@@ -54,5 +54,6 @@ public class ProductImportDataDto {
     private String isCover;
     @JsonProperty("image_url")
     private String imageUrl;
-
+    @JsonProperty("sold_quantity")
+    private Integer soldQuantity;
 }

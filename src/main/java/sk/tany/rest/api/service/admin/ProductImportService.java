@@ -23,6 +23,8 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.productlabel.ProductLabel;
 import sk.tany.rest.api.domain.productlabel.ProductLabelPosition;
 import sk.tany.rest.api.domain.productlabel.ProductLabelRepository;
+import sk.tany.rest.api.domain.productsales.ProductSales;
+import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.domain.supplier.Supplier;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
@@ -47,6 +49,7 @@ import java.util.stream.Collectors;
 public class ProductImportService {
 
     private final ProductRepository productRepository;
+    private final ProductSalesRepository productSalesRepository;
     private final ProductLabelRepository productLabelRepository;
     private final FilterParameterRepository filterParameterRepository;
     private final FilterParameterValueRepository filterParameterValueRepository;
@@ -64,7 +67,7 @@ public class ProductImportService {
             List<ProductImportEntryDto> entries = objectMapper.readValue(inputStream, new TypeReference<List<ProductImportEntryDto>>() {});
 
             Optional<ProductImportEntryDto> tableEntry = entries.stream()
-                    .filter(e -> "table".equals(e.getType()) && "p_label_p".equals(e.getName()))
+                    .filter(e -> "table".equals(e.getType()) && "p_sale".equals(e.getName()))
                     .findFirst();
 
             if (tableEntry.isPresent()) {
@@ -254,6 +257,15 @@ public class ProductImportService {
 
         Product savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
+
+        if (baseData.getSoldQuantity() != null) {
+            int soldQty = baseData.getSoldQuantity();
+            ProductSales ps = new ProductSales();
+            ps.setProductId(savedProduct.getId());
+            ps.setSalesCount(soldQty);
+            ProductSales savedProductSales = productSalesRepository.save(ps);
+            productSearchEngine.updateSalesCount(savedProductSales.getProductId(), savedProductSales.getSalesCount());
+        }
     }
 
     private static class ImageInfo {
