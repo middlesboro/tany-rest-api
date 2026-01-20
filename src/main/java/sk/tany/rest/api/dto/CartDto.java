@@ -1,7 +1,9 @@
 package sk.tany.rest.api.dto;
 
 import lombok.Data;
+import sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -23,4 +25,11 @@ public class CartDto {
     private AddressDto deliveryAddress;
     private Instant createDate;
     private Instant updateDate;
+
+    // Discount related fields
+    private List<CartDiscountClientDto> appliedDiscounts;
+    private BigDecimal totalPrice; // Products total
+    private BigDecimal totalDiscount;
+    private BigDecimal finalPrice; // Total - Discount + Carrier + Payment
+    private boolean freeShipping;
 }

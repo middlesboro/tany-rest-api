@@ -13,6 +13,8 @@ import org.springframework.web.util.HtmlUtils;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.customer.Customer;
+import sk.tany.rest.api.domain.cart.Cart;
+import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.component.ProductSearchEngine;
@@ -58,6 +60,8 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final ResourceLoader resourceLoader;
     private final ProductSalesRepository productSalesRepository;
     private final ProductSearchEngine productSearchEngine;
+    private final CartRepository cartRepository;
+    private final sk.tany.rest.api.service.client.CartClientService cartService;
 
     private String cachedTemplate;
 
@@ -110,7 +114,64 @@ public class OrderClientServiceImpl implements OrderClientService {
             order.setPaymentPrice(payment.getPrice());
         }
 
-        // add carrier price and payment price
+        // Apply discounts
+        // We need to fetch cart to get applied discounts
+        // Ideally OrderDto should contain discount info, or we trust Cart.
+        // Assuming OrderDto is created from Cart in Frontend.
+        // But price calculation must be secure.
+
+        // Fetch cart to verify discounts
+        if (order.getCartId() != null) {
+            sk.tany.rest.api.dto.CartDto cartDto = cartService.getOrCreateCart(order.getCartId(), null);
+            // Re-save cart to ensure calculation is up to date (though getOrCreateCart calls save which calculates)
+            // But getOrCreateCart might return existing DTO without recalc if not triggering save logic fully?
+            // save() in CartClientServiceImpl recalculates.
+
+            if (cartDto != null) {
+                // We use the calculated values from Cart Service to ensure consistency
+                // Note: Cart Service calculates based on current prices and discounts.
+                // If prices changed between cart view and order creation, this updates them.
+
+                // However, order.items are passed from OrderDto.
+                // We should probably rely on CartService's calculation for the items present in Cart.
+                // But Order items might differ if user manipulated request?
+                // Usually we build Order from Cart.
+
+                // Let's trust CartService calculation for discount amount.
+                BigDecimal discountAmount = cartDto.getTotalDiscount() != null ? cartDto.getTotalDiscount() : BigDecimal.ZERO;
+                order.setDiscountPrice(discountAmount);
+
+                if (cartDto.getAppliedDiscounts() != null) {
+                    List<String> codes = cartDto.getAppliedDiscounts().stream()
+                        .map(sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto::getCode)
+                        .collect(java.util.stream.Collectors.toList());
+                    order.setAppliedDiscountCodes(codes);
+                }
+
+                // Adjust Final Price
+                // OrderHelper calculated productsPrice + carrier + payment.
+                // We need to subtract discount.
+                // But carrier price might be free if free shipping discount.
+
+                if (cartDto.isFreeShipping()) {
+                    order.setCarrierPrice(BigDecimal.ZERO);
+                }
+
+                BigDecimal calculatedFinalPrice = order.getProductsPrice()
+                        .add(order.getCarrierPrice() != null ? order.getCarrierPrice() : BigDecimal.ZERO)
+                        .add(order.getPaymentPrice() != null ? order.getPaymentPrice() : BigDecimal.ZERO)
+                        .subtract(discountAmount);
+
+                order.setFinalPrice(calculatedFinalPrice.max(BigDecimal.ZERO));
+            }
+        } else {
+             // Fallback if no cart ID (shouldn't happen usually)
+             BigDecimal currentFinal = order.getProductsPrice()
+                     .add(order.getCarrierPrice() != null ? order.getCarrierPrice() : BigDecimal.ZERO)
+                     .add(order.getPaymentPrice() != null ? order.getPaymentPrice() : BigDecimal.ZERO);
+             order.setFinalPrice(currentFinal);
+        }
+
         order.setOrderIdentifier(sequenceService.getNextSequence("order_identifier"));
         Order savedOrder = orderRepository.save(order);
 

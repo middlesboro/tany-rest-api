@@ -9,4 +9,6 @@ public interface CartClientService {
     String removeProductFromCart(String cartId, String productId);
     CartDto addCarrier(String cartId, String carrierId);
     CartDto addPayment(String cartId, String paymentId);
+    CartDto addDiscount(String cartId, String code);
+    CartDto removeDiscount(String cartId, String code);
 }
