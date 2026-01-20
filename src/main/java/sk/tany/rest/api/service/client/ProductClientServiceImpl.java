@@ -46,7 +46,13 @@ public class ProductClientServiceImpl implements ProductClientService {
         if (start > products.size()) {
             pageContent = java.util.Collections.emptyList();
         } else {
-            pageContent = products.subList(start, end).stream().map(productMapper::toDto).toList();
+            pageContent = products.subList(start, end).stream()
+                    .map(product -> {
+                        ProductDto dto = productMapper.toDto(product);
+                        dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
+                        return dto;
+                    })
+                    .toList();
         }
         Page<ProductDto> productsPage = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, products.size());
 
