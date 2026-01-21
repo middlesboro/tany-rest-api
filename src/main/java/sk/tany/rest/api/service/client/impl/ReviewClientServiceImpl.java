@@ -35,38 +35,52 @@ public class ReviewClientServiceImpl implements ReviewClientService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
 
-        List<Review> allReviews = repository.findAllByProductId(productId);
+        // Fetch all reviews and filter only active ones for client response
+        List<Review> activeReviews = repository.findAllByProductId(productId).stream()
+                .filter(Review::isActive)
+                .collect(Collectors.toList());
+
+        BigDecimal averageRating = BigDecimal.ZERO;
+        int reviewsCount = activeReviews.size();
+
+        if (reviewsCount > 0) {
+            double average = activeReviews.stream()
+                    .mapToInt(Review::getRating)
+                    .average()
+                    .orElse(0.0);
+            averageRating = BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP);
+        }
 
         List<ReviewClientListResponse> pageContent;
 
         if (pageable.isUnpaged()) {
-            pageContent = allReviews.stream()
+            pageContent = activeReviews.stream()
                     .map(mapper::toClientListResponse)
                     .collect(Collectors.toList());
-            Page<ReviewClientListResponse> reviews = new PageImpl<>(pageContent, pageable, allReviews.size());
+            Page<ReviewClientListResponse> reviews = new PageImpl<>(pageContent, pageable, activeReviews.size());
             return new ReviewClientProductResponse(
-                product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO,
-                product.getReviewsCount() != null ? product.getReviewsCount() : 0,
+                averageRating,
+                reviewsCount,
                 reviews
             );
         }
 
         int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), allReviews.size());
+        int end = Math.min((start + pageable.getPageSize()), activeReviews.size());
 
-        if (start > allReviews.size()) {
+        if (start > activeReviews.size()) {
             pageContent = List.of();
         } else {
-            pageContent = allReviews.subList(start, end).stream()
+            pageContent = activeReviews.subList(start, end).stream()
                     .map(mapper::toClientListResponse)
                     .collect(Collectors.toList());
         }
 
-        Page<ReviewClientListResponse> reviews = new PageImpl<>(pageContent, pageable, allReviews.size());
+        Page<ReviewClientListResponse> reviews = new PageImpl<>(pageContent, pageable, activeReviews.size());
 
         return new ReviewClientProductResponse(
-                product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO,
-                product.getReviewsCount() != null ? product.getReviewsCount() : 0,
+                averageRating,
+                reviewsCount,
                 reviews
         );
     }
