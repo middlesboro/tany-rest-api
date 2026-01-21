@@ -38,7 +38,6 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     public CategoryDto save(CategoryDto categoryDto) {
         var category = categoryMapper.toEntity(categoryDto);
         var savedCategory = categoryRepository.save(category);
-        productSearchEngine.addCategory(savedCategory);
         return categoryMapper.toDto(savedCategory);
     }
 
@@ -47,7 +46,6 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         categoryDto.setId(id);
         var category = categoryMapper.toEntity(categoryDto);
         var savedCategory = categoryRepository.save(category);
-        productSearchEngine.updateCategory(savedCategory);
         return categoryMapper.toDto(savedCategory);
     }
 
@@ -56,14 +54,12 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         var category = categoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Category not found"));
         categoryMapper.updateEntityFromPatch(patchDto, category);
         var savedCategory = categoryRepository.save(category);
-        productSearchEngine.updateCategory(savedCategory);
         return categoryMapper.toDto(savedCategory);
     }
 
     @Override
     public void deleteById(String id) {
         categoryRepository.deleteById(id);
-        productSearchEngine.removeCategory(id);
     }
 
     @Override

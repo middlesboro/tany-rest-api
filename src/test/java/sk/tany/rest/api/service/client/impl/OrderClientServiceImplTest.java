@@ -134,7 +134,6 @@ class OrderClientServiceImplTest {
 
         // verify(emailService, times(1)).sendEmail(eq("user@example.com"), anyString(), anyString(), eq(true), any(File.class));
         verify(productSalesRepository, times(1)).save(any(ProductSales.class));
-        verify(productSearchEngine, times(1)).updateSalesCount(any(), any(Integer.class));
     }
 
     @Test

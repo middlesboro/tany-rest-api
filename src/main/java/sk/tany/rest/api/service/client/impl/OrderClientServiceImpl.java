@@ -186,7 +186,6 @@ public class OrderClientServiceImpl implements OrderClientService {
             int currentSales = productSales.getSalesCount() != null ? productSales.getSalesCount() : 0;
             productSales.setSalesCount(currentSales + item.getQuantity());
             productSalesRepository.save(productSales);
-            productSearchEngine.updateSalesCount(productSales.getProductId(), productSales.getSalesCount());
         });
 
         sendOrderCreatedEmail(savedOrder, carrier, payment);

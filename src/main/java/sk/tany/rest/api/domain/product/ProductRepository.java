@@ -11,7 +11,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import sk.tany.rest.api.domain.AbstractInMemoryRepository;
-import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.filter.FilterParameter;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
@@ -38,7 +37,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -57,11 +55,6 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
     private final JaroWinklerSimilarity jaroWinkler = new JaroWinklerSimilarity();
     private static final int MAX_EDIT_DISTANCE = 2;
 
-    // Cache for category hierarchy to avoid repeated DB lookups
-    private final Map<String, List<String>> cachedCategoryChildren = new ConcurrentHashMap<>();
-
-    // We use @Lazy to avoid circular dependencies if any exist, though ideally repo-to-repo deps should be minimal.
-    // However, ProductRepository needs other repos for the complex search logic.
     public ProductRepository(Nitrite nitrite,
                              @Lazy FilterParameterRepository filterParameterRepository,
                              @Lazy FilterParameterValueRepository filterParameterValueRepository,
@@ -76,22 +69,6 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
         this.categoryRepository = categoryRepository;
         this.filterParameterMapper = filterParameterMapper;
         this.filterParameterValueMapper = filterParameterValueMapper;
-    }
-
-    @Override
-    public void init() {
-        super.init();
-        refreshCategoryCache();
-    }
-
-    // Call this when categories change
-    public void refreshCategoryCache() {
-        cachedCategoryChildren.clear();
-        for (Category category : categoryRepository.findAll()) {
-             if (category.getParentId() != null) {
-                cachedCategoryChildren.computeIfAbsent(category.getParentId(), k -> new ArrayList<>()).add(category.getId());
-            }
-        }
     }
 
     public Optional<Product> findByPrestashopId(Long prestashopId) {
@@ -311,10 +288,6 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
     }
 
     private Set<String> getAllCategoryIdsIncludingSubcategories(String categoryId) {
-        // Need to ensure cache is populated if not already (or rely on init)
-        if (cachedCategoryChildren.isEmpty()) {
-            refreshCategoryCache();
-        }
         Set<String> result = new HashSet<>();
         if (categoryId != null) {
             collectCategoryIds(categoryId, result);
@@ -325,7 +298,7 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
     private void collectCategoryIds(String categoryId, Set<String> result) {
         if (result.contains(categoryId)) return;
         result.add(categoryId);
-        List<String> children = cachedCategoryChildren.get(categoryId);
+        List<String> children = categoryRepository.getChildrenIds(categoryId);
         if (children != null) {
             for (String childId : children) {
                 collectCategoryIds(childId, result);

@@ -49,7 +49,6 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         var product = productMapper.toEntity(productDto);
         recalculateReviewStatistics(product);
         var savedProduct = productRepository.save(product);
-        productSearchEngine.addProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
     }
 
@@ -59,7 +58,6 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         var product = productMapper.toEntity(productDto);
         recalculateReviewStatistics(product);
         var savedProduct = productRepository.save(product);
-        productSearchEngine.updateProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
     }
 
@@ -69,7 +67,6 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         recalculateReviewStatistics(product);
         productMapper.updateEntityFromPatch(patchDto, product);
         var savedProduct = productRepository.save(product);
-        productSearchEngine.updateProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
     }
 
@@ -82,7 +79,6 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                 images.forEach(imageService::delete);
             }
             productRepository.deleteById(id);
-            productSearchEngine.removeProduct(id);
         }
     }
 
