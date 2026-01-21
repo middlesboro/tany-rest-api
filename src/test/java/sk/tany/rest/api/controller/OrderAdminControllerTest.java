@@ -9,15 +9,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import sk.tany.rest.api.controller.admin.OrderAdminController;
 import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.PriceBreakDown;
+import sk.tany.rest.api.dto.admin.order.get.OrderAdminGetResponse;
 import sk.tany.rest.api.dto.admin.order.list.OrderAdminListResponse;
 import sk.tany.rest.api.mapper.OrderAdminApiMapper;
 import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.admin.OrderAdminService;
 import org.springframework.http.ResponseEntity;
 
+import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -60,6 +65,43 @@ class OrderAdminControllerTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("123", result.getContent().get(0).getId());
         verify(orderService, times(1)).findAll(pageable);
+    }
+
+    @Test
+    void getOrder_ShouldReturnOrderWithPriceBreakDown() {
+        String orderId = "123";
+        OrderDto orderDto = new OrderDto();
+        orderDto.setId(orderId);
+        PriceBreakDown priceBreakDown = new PriceBreakDown();
+        priceBreakDown.setTotalPrice(BigDecimal.TEN);
+        orderDto.setPriceBreakDown(priceBreakDown);
+
+        OrderAdminGetResponse response = new OrderAdminGetResponse();
+        response.setId(orderId);
+        response.setPriceBreakDown(priceBreakDown);
+
+        when(orderService.findById(orderId)).thenReturn(Optional.of(orderDto));
+        when(orderAdminApiMapper.toGetResponse(orderDto)).thenReturn(response);
+
+        ResponseEntity<OrderAdminGetResponse> result = orderAdminController.getOrder(orderId);
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertNotNull(result.getBody());
+        assertEquals(orderId, result.getBody().getId());
+        assertEquals(priceBreakDown, result.getBody().getPriceBreakDown());
+        verify(orderService).findById(orderId);
+        verify(orderAdminApiMapper).toGetResponse(orderDto);
+    }
+
+    @Test
+    void getOrder_ShouldReturnNotFound() {
+        String orderId = "123";
+        when(orderService.findById(orderId)).thenReturn(Optional.empty());
+
+        ResponseEntity<OrderAdminGetResponse> result = orderAdminController.getOrder(orderId);
+
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        verify(orderService).findById(orderId);
     }
 
     @Test
