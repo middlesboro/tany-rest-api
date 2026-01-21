@@ -322,6 +322,18 @@ public class OrderClientServiceImpl implements OrderClientService {
                                     dto.setPaymentName(payment.getName());
                                 });
                     }
+                    if (dto.getPriceBreakDown() != null && dto.getPriceBreakDown().getItems() != null) {
+                        for (sk.tany.rest.api.dto.PriceItem item : dto.getPriceBreakDown().getItems()) {
+                            if (item.getType() == sk.tany.rest.api.dto.PriceItemType.PRODUCT && item.getImage() == null) {
+                                if (dto.getItems() != null) {
+                                    dto.getItems().stream()
+                                            .filter(i -> i.getId().equals(item.getId()))
+                                            .findFirst()
+                                            .ifPresent(i -> item.setImage(i.getImage()));
+                                }
+                            }
+                        }
+                    }
                     return dto;
                 })
                 .orElseThrow(() -> new RuntimeException("Order not found or access denied"));
