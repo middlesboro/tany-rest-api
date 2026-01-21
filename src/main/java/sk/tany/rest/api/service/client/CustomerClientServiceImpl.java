@@ -145,6 +145,11 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         customerContextCartDto.setFinalPrice(cartDto.getFinalPrice());
         customerContextCartDto.setFreeShipping(cartDto.isFreeShipping());
 
+        customerContextCartDto.setAppliedDiscounts(cartDto.getAppliedDiscounts());
+        customerContextCartDto.setTotalDiscount(cartDto.getTotalDiscount());
+        customerContextCartDto.setFinalPrice(cartDto.getFinalPrice());
+        customerContextCartDto.setFreeShipping(cartDto.isFreeShipping());
+
         return new CustomerContextDto(customerDto, customerContextCartDto);
     }
 

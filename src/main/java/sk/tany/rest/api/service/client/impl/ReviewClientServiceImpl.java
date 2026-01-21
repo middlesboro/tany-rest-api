@@ -64,9 +64,11 @@ public class ReviewClientServiceImpl implements ReviewClientService {
 
         Page<ReviewClientListResponse> reviews = new PageImpl<>(pageContent, pageable, allReviews.size());
 
+        ReviewStats stats = getReviewStats(productId);
+
         return new ReviewClientProductResponse(
-                product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO,
-                product.getReviewsCount() != null ? product.getReviewsCount() : 0,
+                stats.averageRating,
+                stats.reviewsCount,
                 reviews
         );
     }
@@ -100,12 +102,7 @@ public class ReviewClientServiceImpl implements ReviewClientService {
                     .orElse(0.0);
             averageRating = BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP);
         }
-
-        Product product = productRepository.findById(productId).orElse(null);
-        if (product != null) {
-            product.setAverageRating(averageRating);
-            product.setReviewsCount(reviewsCount);
-            productRepository.save(product);
-        }
+        return new ReviewStats(averageRating, reviewsCount);
     }
+
 }

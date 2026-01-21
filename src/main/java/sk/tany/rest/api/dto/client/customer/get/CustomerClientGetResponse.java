@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sk.tany.rest.api.domain.cartdiscount.DiscountType;
 import sk.tany.rest.api.domain.carrier.CarrierType;
 import sk.tany.rest.api.domain.customer.Role;
 import sk.tany.rest.api.domain.payment.PaymentType;
@@ -60,10 +61,20 @@ public class CustomerClientGetResponse {
         private AddressDto invoiceAddress;
         private String selectedPickupPointId;
         private String selectedPickupPointName;
+        // Discount related fields
         private List<CartDiscountClientDto> appliedDiscounts;
-        private BigDecimal totalPrice; // Products total
         private BigDecimal totalDiscount;
         private BigDecimal finalPrice; // Total - Discount + Carrier + Payment
+        private boolean freeShipping;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CartDiscountClientDto {
+        private String code;
+        private DiscountType discountType;
+        private BigDecimal value;
         private boolean freeShipping;
     }
 

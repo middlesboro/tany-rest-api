@@ -30,4 +30,10 @@ public class CustomerContextCartDto {
     private BigDecimal finalPrice; // Total - Discount + Carrier + Payment
     private boolean freeShipping;
 
+    // Discount related fields
+    private List<CartDiscountClientDto> appliedDiscounts;
+    private java.math.BigDecimal totalDiscount;
+    private java.math.BigDecimal finalPrice; // Total - Discount + Carrier + Payment
+    private boolean freeShipping;
+
 }
