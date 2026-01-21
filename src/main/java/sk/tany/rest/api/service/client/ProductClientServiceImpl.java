@@ -92,6 +92,5 @@ public class ProductClientServiceImpl implements ProductClientService {
         }
         product.setQuantity(newQuantity);
         productRepository.save(product);
-        productSearchEngine.updateProduct(product);
     }
 }

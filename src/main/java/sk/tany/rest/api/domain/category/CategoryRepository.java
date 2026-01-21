@@ -11,9 +11,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Repository
@@ -23,8 +27,54 @@ public class CategoryRepository extends AbstractInMemoryRepository<Category> {
     private final JaroWinklerSimilarity jaroWinkler = new JaroWinklerSimilarity();
     private static final int MAX_EDIT_DISTANCE = 2;
 
+    private final Map<String, List<String>> childrenCache = new ConcurrentHashMap<>();
+
     public CategoryRepository(Nitrite nitrite) {
         super(nitrite, Category.class);
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        refreshChildrenCache();
+    }
+
+    @Override
+    public Category save(Category entity) {
+        Category saved = super.save(entity);
+        refreshChildrenCache();
+        return saved;
+    }
+
+    @Override
+    public void saveAll(Iterable<Category> entities) {
+        super.saveAll(entities);
+        refreshChildrenCache();
+    }
+
+    @Override
+    public void deleteById(String id) {
+        super.deleteById(id);
+        refreshChildrenCache();
+    }
+
+    @Override
+    public void deleteAll() {
+        super.deleteAll();
+        refreshChildrenCache();
+    }
+
+    private void refreshChildrenCache() {
+        childrenCache.clear();
+        for (Category category : memoryCache.values()) {
+            if (category.getParentId() != null) {
+                childrenCache.computeIfAbsent(category.getParentId(), k -> new ArrayList<>()).add(category.getId());
+            }
+        }
+    }
+
+    public List<String> getChildrenIds(String parentId) {
+        return childrenCache.getOrDefault(parentId, Collections.emptyList());
     }
 
     public Optional<Category> findByPrestashopId(Long prestashopId) {

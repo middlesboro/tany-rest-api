@@ -223,7 +223,6 @@ public class ProductImportService {
                             newParam.setActive(true);
                             newParam.setFilterParameterValueIds(new ArrayList<>());
                             FilterParameter saved = filterParameterRepository.save(newParam);
-                            productSearchEngine.addFilterParameter(saved);
                             return saved;
                         });
 
@@ -234,7 +233,6 @@ public class ProductImportService {
                             newValue.setFilterParameterId(filterParam.getId());
                             newValue.setActive(true);
                             FilterParameterValue savedValue = filterParameterValueRepository.save(newValue);
-                            productSearchEngine.addFilterParameterValue(savedValue);
 
                             // Add to parent param list
                             if (filterParam.getFilterParameterValueIds() == null) {
@@ -242,7 +240,6 @@ public class ProductImportService {
                             }
                             filterParam.getFilterParameterValueIds().add(savedValue.getId());
                             FilterParameter updatedParam = filterParameterRepository.save(filterParam);
-                            productSearchEngine.addFilterParameter(updatedParam);
 
                             return savedValue;
                         });
@@ -256,7 +253,6 @@ public class ProductImportService {
         product.setProductFilterParameters(productFilters);
 
         Product savedProduct = productRepository.save(product);
-        productSearchEngine.updateProduct(savedProduct);
 
         if (baseData.getSoldQuantity() != null) {
             int soldQty = baseData.getSoldQuantity();
@@ -264,7 +260,6 @@ public class ProductImportService {
             ps.setProductId(savedProduct.getId());
             ps.setSalesCount(soldQty);
             ProductSales savedProductSales = productSalesRepository.save(ps);
-            productSearchEngine.updateSalesCount(savedProductSales.getProductId(), savedProductSales.getSalesCount());
         }
     }
 

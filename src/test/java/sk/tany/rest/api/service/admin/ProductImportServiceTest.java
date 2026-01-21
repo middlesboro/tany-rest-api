@@ -65,7 +65,7 @@ class ProductImportServiceTest {
         // Arrange
         ProductImportEntryDto entry = new ProductImportEntryDto();
         entry.setType("table");
-        entry.setName("p_label_p");
+        entry.setName("p_sale");
 
         ProductImportDataDto data = new ProductImportDataDto();
         data.setIdProduct("123");
@@ -137,8 +137,5 @@ class ProductImportServiceTest {
         verify(filterParameterRepository, org.mockito.Mockito.atLeastOnce()).save(any(FilterParameter.class));
         verify(filterParameterValueRepository).save(any(FilterParameterValue.class));
 
-        verify(productSearchEngine).updateProduct(any(Product.class));
-        verify(productSearchEngine, org.mockito.Mockito.atLeastOnce()).addFilterParameter(any(FilterParameter.class));
-        verify(productSearchEngine).addFilterParameterValue(any(FilterParameterValue.class));
     }
 }
