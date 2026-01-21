@@ -18,14 +18,11 @@ public class Carrier {
     private BigDecimal wholesalePrice;
     private BigDecimal priceWithoutVat;
     private BigDecimal price;
+    private Integer order;
     private String description;
     private String image;
-    private List<CarrierPriceRange> prices;
+    private List<CarrierPriceRange> ranges;
     private boolean selected;
     private Instant createdDate;
     private Instant updateDate;
-
-    public List<CarrierPriceRange> getRanges() {
-        return prices;
-    }
 }

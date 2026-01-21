@@ -8,6 +8,7 @@ import sk.tany.rest.api.domain.carrier.CarrierType;
 import sk.tany.rest.api.domain.customer.Role;
 import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.domain.product.ProductStatus;
+import sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -59,6 +60,11 @@ public class CustomerClientGetResponse {
         private AddressDto invoiceAddress;
         private String selectedPickupPointId;
         private String selectedPickupPointName;
+        private List<CartDiscountClientDto> appliedDiscounts;
+        private BigDecimal totalPrice; // Products total
+        private BigDecimal totalDiscount;
+        private BigDecimal finalPrice; // Total - Discount + Carrier + Payment
+        private boolean freeShipping;
     }
 
     @Data

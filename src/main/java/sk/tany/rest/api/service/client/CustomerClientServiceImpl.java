@@ -21,6 +21,7 @@ import sk.tany.rest.api.mapper.CustomerMapper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -116,6 +117,7 @@ public class CustomerClientServiceImpl implements CustomerClientService {
             }
             carrier.setRanges(null);
         });
+        carriers = carriers.stream().sorted(Comparator.comparing(CarrierDto::getOrder)).toList();
         if (carriers.stream().noneMatch(CarrierDto::isSelected) && !carriers.isEmpty()) {
             carriers.getFirst().setSelected(true);
         }
@@ -137,6 +139,11 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         customerContextCartDto.setInvoiceAddress(cartDto.getInvoiceAddress());
         customerContextCartDto.setSelectedPickupPointId(cartDto.getSelectedPickupPointId());
         customerContextCartDto.setSelectedPickupPointName(cartDto.getSelectedPickupPointName());
+        customerContextCartDto.setAppliedDiscounts(cartDto.getAppliedDiscounts());
+        customerContextCartDto.setTotalPrice(cartDto.getTotalPrice());
+        customerContextCartDto.setTotalDiscount(cartDto.getTotalDiscount());
+        customerContextCartDto.setFinalPrice(cartDto.getFinalPrice());
+        customerContextCartDto.setFreeShipping(cartDto.isFreeShipping());
 
         return new CustomerContextDto(customerDto, customerContextCartDto);
     }

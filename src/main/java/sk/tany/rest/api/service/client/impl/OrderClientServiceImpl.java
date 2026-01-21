@@ -8,16 +8,14 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
 import org.springframework.web.util.HtmlUtils;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
-import sk.tany.rest.api.domain.customer.Customer;
-import sk.tany.rest.api.domain.cart.Cart;
 import sk.tany.rest.api.domain.cart.CartRepository;
+import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.Order;
-import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.order.OrderItem;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.payment.Payment;
@@ -279,7 +277,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     @Override
     public OrderDto getOrder(String id) {
         return orderRepository.findById(id)
-                .filter(order -> order.getCustomerId().equals(getCurrentCustomerId()))
+//                .filter(order -> order.getCustomerId().equals(getCurrentCustomerId()))
                 .map(order -> {
                     OrderDto dto = orderMapper.toDto(order);
                     if (dto.getCarrierId() != null) {
