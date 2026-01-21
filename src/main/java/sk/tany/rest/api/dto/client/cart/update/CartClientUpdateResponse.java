@@ -3,6 +3,7 @@ package sk.tany.rest.api.dto.client.cart.update;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -25,6 +26,7 @@ public class CartClientUpdateResponse {
     private AddressDto deliveryAddress;
     private Instant createDate;
     private Instant updateDate;
+    private PriceBreakDown priceBreakDown;
 
     @Data
     @NoArgsConstructor
