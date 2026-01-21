@@ -16,6 +16,8 @@ public class OrderDto {
     private BigDecimal finalPrice;
     private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;
+    private BigDecimal discountPrice;
+    private List<String> appliedDiscountCodes;
     private List<OrderItemDto> items;
     private String carrierId;
     private String paymentId;
