@@ -75,16 +75,20 @@ public class CartClientController {
     @PostMapping("/items")
     public ResponseEntity<CartClientAddProductResponse> addProduct(@RequestBody CartClientAddItemRequest request) {
         String cartId = cartService.addProductToCart(request.getCartId(), request.getProductId(), request.getQuantity());
+        CartDto cartDto = cartService.getOrCreateCart(cartId, null);
         CartClientAddProductResponse response = new CartClientAddProductResponse();
         response.setCartId(cartId);
+        response.setPriceBreakDown(cartDto.getPriceBreakDown());
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/items")
     public ResponseEntity<CartClientRemoveItemResponse> removeProduct(@RequestBody CartClientRemoveItemRequest request) {
         String cartId = cartService.removeProductFromCart(request.getCartId(), request.getProductId());
+        CartDto cartDto = cartService.getOrCreateCart(cartId, null);
         CartClientRemoveItemResponse response = new CartClientRemoveItemResponse();
         response.setCartId(cartId);
+        response.setPriceBreakDown(cartDto.getPriceBreakDown());
         return ResponseEntity.ok(response);
     }
 

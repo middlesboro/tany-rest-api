@@ -2,14 +2,18 @@ package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.domain.carrier.CarrierPriceRange;
+import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscount;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscountRepository;
 import sk.tany.rest.api.domain.cartdiscount.DiscountType;
-import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
+import sk.tany.rest.api.dto.PriceBreakDown;
+import sk.tany.rest.api.dto.PriceItem;
+import sk.tany.rest.api.dto.PriceItemType;
 import sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.mapper.CartDiscountMapper;
@@ -130,6 +134,7 @@ public class CartClientServiceImpl implements CartClientService {
         resultDto.setFinalPrice(cartDto.getFinalPrice());
         resultDto.setFreeShipping(cartDto.isFreeShipping());
         resultDto.setAppliedDiscounts(cartDto.getAppliedDiscounts());
+        resultDto.setPriceBreakDown(cartDto.getPriceBreakDown());
 
         return resultDto;
     }
@@ -283,20 +288,42 @@ public class CartClientServiceImpl implements CartClientService {
             cartDto.setItems(new ArrayList<>());
         }
 
+        PriceBreakDown breakdown = new PriceBreakDown();
+        cartDto.setPriceBreakDown(breakdown);
+
+        List<String> productIds = cartDto.getItems().stream().map(CartItem::getProductId).collect(Collectors.toList());
+        List<ProductClientDto> products = productService.findAllByIds(productIds);
+        var productMap = products.stream().collect(Collectors.toMap(ProductClientDto::getId, p -> p));
+
         // 1. Calculate base total price of products
         BigDecimal productsTotal = BigDecimal.ZERO;
+        BigDecimal productsTotalWithoutVat = BigDecimal.ZERO;
+        BigDecimal productsTotalVat = BigDecimal.ZERO;
+
+        // Update items with fresh prices from product map
         for (CartItem item : cartDto.getItems()) {
-            if (item.getPrice() != null && item.getQuantity() != null) {
-                productsTotal = productsTotal.add(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+            ProductClientDto product = productMap.get(item.getProductId());
+            if (product != null) {
+                item.setPrice(product.getPrice());
+                item.setImage((product.getImages() != null && !product.getImages().isEmpty()) ? product.getImages().get(0) : null);
+                item.setTitle(product.getTitle());
+
+                BigDecimal priceWithVat = product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal priceWithoutVat = (product.getPriceWithoutVat() != null ? product.getPriceWithoutVat() : product.getPrice())
+                        .multiply(BigDecimal.valueOf(item.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal vatValue = priceWithVat.subtract(priceWithoutVat).setScale(2, RoundingMode.HALF_UP);
+
+                productsTotal = productsTotal.add(priceWithVat);
+                productsTotalWithoutVat = productsTotalWithoutVat.add(priceWithoutVat);
+                productsTotalVat = productsTotalVat.add(vatValue);
+
+                breakdown.getItems().add(new PriceItem(PriceItemType.PRODUCT, product.getId(), product.getTitle(), item.getQuantity(), priceWithVat, priceWithoutVat, vatValue));
             }
         }
         cartDto.setTotalPrice(productsTotal);
 
         // 2. Identify all applicable discounts
-        // a) Automatic discounts
         List<CartDiscount> automaticDiscounts = cartDiscountRepository.findAllByCodeIsNullAndActiveTrue();
-
-        // b) Manual discounts (from cartDto.appliedDiscounts codes)
         List<String> manualCodes = new ArrayList<>();
         if (cartDto.getAppliedDiscounts() != null) {
             manualCodes = cartDto.getAppliedDiscounts().stream()
@@ -314,41 +341,23 @@ public class CartClientServiceImpl implements CartClientService {
         allDiscounts.addAll(automaticDiscounts);
         allDiscounts.addAll(manualDiscounts);
 
-        // Filter by date validity
         Instant now = Instant.now();
         allDiscounts = allDiscounts.stream()
                 .filter(d -> (d.getDateFrom() == null || !now.isBefore(d.getDateFrom())) &&
-                             (d.getDateTo() == null || !now.isAfter(d.getDateTo())))
+                        (d.getDateTo() == null || !now.isAfter(d.getDateTo())))
                 .collect(Collectors.toList());
 
-        // 3. Apply discounts
         BigDecimal totalDiscount = BigDecimal.ZERO;
         boolean freeShipping = false;
         Set<CartDiscount> actuallyAppliedDiscounts = new HashSet<>();
 
-        // We need to fetch product details to check categories/brands
-        // For simplicity, I assume CartItem has productId.
-        // I might need to fetch ProductClientDto for each item to check categories/brands.
-        // Since 'productService.findById' is cached or fast?
-        // Or I can optimize. findAllByIds.
-
-        List<String> productIds = cartDto.getItems().stream().map(CartItem::getProductId).collect(Collectors.toList());
-        List<ProductClientDto> products = productService.findAllByIds(productIds);
-
-        // Map productId -> ProductClientDto
-        var productMap = products.stream().collect(Collectors.toMap(ProductClientDto::getId, p -> p));
-
-        // For each discount, calculate amount
         for (CartDiscount discount : allDiscounts) {
             boolean isApplicable = false;
             BigDecimal discountAmount = BigDecimal.ZERO;
 
-            // Check applicability
-            // If no restrictions (categories, products, brands is empty/null), it applies to all.
             boolean hasCategory = discount.getCategoryIds() != null && !discount.getCategoryIds().isEmpty();
             boolean hasProductRestriction = discount.getProductIds() != null && !discount.getProductIds().isEmpty();
             boolean hasBrandRestriction = discount.getBrandIds() != null && !discount.getBrandIds().isEmpty();
-
             boolean global = !hasCategory && !hasProductRestriction && !hasBrandRestriction;
 
             for (CartItem item : cartDto.getItems()) {
@@ -359,132 +368,81 @@ public class CartClientServiceImpl implements CartClientService {
                 if (global) {
                     itemApplicable = true;
                 } else {
-                    if (hasProductRestriction && discount.getProductIds().contains(p.getId())) {
-                        itemApplicable = true;
-                    }
-                    if (!itemApplicable && hasCategory && p.getCategoryIds() != null) {
-                        // Check intersection
-                        if (p.getCategoryIds().stream().anyMatch(cid -> discount.getCategoryIds().contains(cid))) {
-                            itemApplicable = true;
-                        }
-                    }
-                    if (!itemApplicable && hasBrandRestriction && p.getBrandId() != null) {
-                        if (discount.getBrandIds().contains(p.getBrandId())) {
-                            itemApplicable = true;
-                        }
-                    }
+                    if (hasProductRestriction && discount.getProductIds().contains(p.getId())) itemApplicable = true;
+                    if (!itemApplicable && hasCategory && p.getCategoryIds() != null && p.getCategoryIds().stream().anyMatch(cid -> discount.getCategoryIds().contains(cid))) itemApplicable = true;
+                    if (!itemApplicable && hasBrandRestriction && p.getBrandId() != null && discount.getBrandIds().contains(p.getBrandId())) itemApplicable = true;
                 }
 
                 if (itemApplicable) {
                     isApplicable = true;
-                    BigDecimal itemPrice = item.getPrice();
-                    BigDecimal itemTotal = itemPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
-
                     if (discount.getDiscountType() == DiscountType.PERCENTAGE) {
-                        // Percentage
+                        BigDecimal itemPrice = item.getPrice();
+                        BigDecimal itemTotal = itemPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
                         BigDecimal amount = itemTotal.multiply(discount.getValue()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
                         discountAmount = discountAmount.add(amount);
-                    } else {
-                        // Fixed Amount
-                        // Fixed amount is per item or per order?
-                        // "10 euro discount". Usually per order if global, or per item?
-                        // "defined for the whole categories, selected products or brands".
-                        // If I buy 2 items from category, is it 10eur total or 20eur?
-                        // Usually fixed amount is applied once per cart if condition met,
-                        // or distributed.
-                        // Let's assume fixed amount is "per cart" but limited to the sum of applicable items value.
-                        // Wait, if I have multiple items, how do I split?
-                        // Let's assume simpler model: Fixed Amount is subtracted from the total of applicable items.
-                        // But we should not subtract more than the total of applicable items.
-                        // And we should not apply it multiple times for each item?
-                        // Usually "10 EUR OFF" is once per order.
                     }
                 }
             }
 
             if (isApplicable) {
                 if (discount.getDiscountType() == DiscountType.FIXED_AMOUNT) {
-                    // Start with full discount value
-                     BigDecimal limit = BigDecimal.ZERO;
-                     // Calculate total value of applicable items
-                     for (CartItem item : cartDto.getItems()) {
-                         ProductClientDto p = productMap.get(item.getProductId());
-                         if (p == null) continue;
-                         boolean itemApplicable = false;
-                         if (global) itemApplicable = true;
-                         else {
-                             if (hasProductRestriction && discount.getProductIds().contains(p.getId())) itemApplicable = true;
-                             if (!itemApplicable && hasCategory && p.getCategoryIds() != null && p.getCategoryIds().stream().anyMatch(cid -> discount.getCategoryIds().contains(cid))) itemApplicable = true;
-                             if (!itemApplicable && hasBrandRestriction && p.getBrandId() != null && discount.getBrandIds().contains(p.getBrandId())) itemApplicable = true;
-                         }
-                         if (itemApplicable) {
-                             limit = limit.add(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
-                         }
-                     }
-
-                     // Discount is min(value, limit)
-                     discountAmount = discount.getValue().min(limit);
+                    BigDecimal limit = BigDecimal.ZERO;
+                    for (CartItem item : cartDto.getItems()) {
+                        ProductClientDto p = productMap.get(item.getProductId());
+                        if (p == null) continue;
+                        boolean itemApplicable = false;
+                        if (global) itemApplicable = true;
+                        else {
+                            if (hasProductRestriction && discount.getProductIds().contains(p.getId())) itemApplicable = true;
+                            if (!itemApplicable && hasCategory && p.getCategoryIds() != null && p.getCategoryIds().stream().anyMatch(cid -> discount.getCategoryIds().contains(cid))) itemApplicable = true;
+                            if (!itemApplicable && hasBrandRestriction && p.getBrandId() != null && discount.getBrandIds().contains(p.getBrandId())) itemApplicable = true;
+                        }
+                        if (itemApplicable) {
+                            limit = limit.add(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+                        }
+                    }
+                    discountAmount = discount.getValue().min(limit);
                 }
 
-                if (discount.isFreeShipping()) {
-                    freeShipping = true;
-                }
+                if (discount.isFreeShipping()) freeShipping = true;
 
                 if (discountAmount.compareTo(BigDecimal.ZERO) > 0 || discount.isFreeShipping()) {
                     totalDiscount = totalDiscount.add(discountAmount);
                     actuallyAppliedDiscounts.add(discount);
+
+                    if (discountAmount.compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal discWithVat = discountAmount.negate().setScale(2, RoundingMode.HALF_UP);
+                        // Approximate VAT split for discount. Assuming average VAT rate of the cart.
+                        BigDecimal totalVatRatio = productsTotalWithoutVat.compareTo(BigDecimal.ZERO) > 0
+                            ? productsTotal.divide(productsTotalWithoutVat, 4, RoundingMode.HALF_UP)
+                            : BigDecimal.ONE;
+                        BigDecimal discWithoutVat = discWithVat.divide(totalVatRatio, 2, RoundingMode.HALF_UP);
+                        BigDecimal discVatValue = discWithVat.subtract(discWithoutVat);
+
+                        breakdown.getItems().add(new PriceItem(PriceItemType.DISCOUNT, discount.getId(), discount.getTitle() != null ? discount.getTitle() : discount.getCode(), 1, discWithVat, discWithoutVat, discVatValue));
+                    }
                 }
             }
         }
 
-        // Ensure total discount doesn't exceed total price
         if (totalDiscount.compareTo(productsTotal) > 0) {
             totalDiscount = productsTotal;
         }
-
         cartDto.setTotalDiscount(totalDiscount);
         cartDto.setFreeShipping(freeShipping);
 
-        // Update applied discounts list for display
         List<CartDiscountClientDto> appliedDtos = actuallyAppliedDiscounts.stream()
                 .map(cartDiscountMapper::toClientDto)
                 .collect(Collectors.toList());
         cartDto.setAppliedDiscounts(appliedDtos);
 
-        // Calculate Final Price
-        BigDecimal carrierPrice = BigDecimal.ZERO;
-        if (cartDto.getSelectedCarrierId() != null) {
-            // Need to fetch carrier price.
-            // But carrier price might depend on weight.
-            // CarrierClientService calculates it.
-            // Ideally I should reuse OrderHelper or Carrier Service logic.
-            // But here I'm in Cart Service.
-
-            // I will use carrierRepository to get basic info, but strict calculation might be complex (weight intervals).
-            // For now, assume a simple retrieval or 0. Or assume frontend calculates it?
-            // "recalculate cart price based on discount".
-            // If I skip carrier price, final price is wrong.
-            // Let's try to get carrier price.
-             Optional<sk.tany.rest.api.domain.carrier.Carrier> carrierOpt = carrierRepository.findById(cartDto.getSelectedCarrierId());
-             if (carrierOpt.isPresent()) {
-                 // Simplification: just take base price or 0 if validation needed.
-                 // OrderClientServiceImpl uses OrderHelper.getCarrierPrice(carrier, totalWeight).
-                 // I should copy that logic or make it shared.
-                 // It is static in OrderHelper? Let's assume so.
-                 // I need to read OrderHelper.
-             }
-        }
-
-        // For now, I will define Final Price as (ProductsTotal - Discount).
-        // Payment and Carrier are added in Checkout/Order usually, but if CartDto has them, I should add them.
-
         BigDecimal finalPrice = productsTotal.subtract(totalDiscount);
 
-        // Add carrier cost
+        // Carrier
         if (!freeShipping && cartDto.getSelectedCarrierId() != null) {
              Optional<sk.tany.rest.api.domain.carrier.Carrier> carrierOpt = carrierRepository.findById(cartDto.getSelectedCarrierId());
              if (carrierOpt.isPresent()) {
-                 // Calculate weight
+                 sk.tany.rest.api.domain.carrier.Carrier carrier = carrierOpt.get();
                  BigDecimal weight = BigDecimal.ZERO;
                  for (CartItem item : cartDto.getItems()) {
                      ProductClientDto p = productMap.get(item.getProductId());
@@ -492,23 +450,71 @@ public class CartClientServiceImpl implements CartClientService {
                          weight = weight.add(p.getWeight().multiply(BigDecimal.valueOf(item.getQuantity())));
                      }
                  }
-                 // I need OrderHelper or similar logic.
-                 // I will assume for now I cannot easily access OrderHelper if it is not injected or public.
-                 // I'll skip carrier price calculation in this iteration unless I see OrderHelper.
+
+                 BigDecimal carrierPrice = carrier.getPrice(); // Default price
+                 if (carrier.getRanges() != null) {
+                    final BigDecimal finalWeight = weight;
+                     carrierPrice = carrier.getRanges().stream()
+                             .filter(range ->
+                                     (range.getWeightFrom() == null || finalWeight.compareTo(range.getWeightFrom()) >= 0) &&
+                                     (range.getWeightTo() == null || finalWeight.compareTo(range.getWeightTo()) <= 0)
+                             )
+                             .findFirst()
+                             .map(CarrierPriceRange::getPrice)
+                             .orElse(carrierPrice);
+                 }
+
+                 finalPrice = finalPrice.add(carrierPrice);
+
+                 BigDecimal carrierWithVat = carrierPrice.setScale(2, RoundingMode.HALF_UP);
+                 BigDecimal carrierWithoutVat = (carrier.getPriceWithoutVat() != null ? carrier.getPriceWithoutVat() : carrierPrice).setScale(2, RoundingMode.HALF_UP);
+                 // If price is different from base price due to range, we might not have 'priceWithoutVat' for that range.
+                 // Assuming proportional tax if range price is used.
+                 if (carrier.getPrice() != null && carrier.getPrice().compareTo(BigDecimal.ZERO) != 0 && carrier.getPriceWithoutVat() != null) {
+                     BigDecimal ratio = carrier.getPrice().divide(carrier.getPriceWithoutVat(), 4, RoundingMode.HALF_UP);
+                     carrierWithoutVat = carrierWithVat.divide(ratio, 2, RoundingMode.HALF_UP);
+                 }
+
+                 BigDecimal carrierVatValue = carrierWithVat.subtract(carrierWithoutVat);
+                 breakdown.getItems().add(new PriceItem(PriceItemType.CARRIER, carrier.getId(), carrier.getName(), 1, carrierWithVat, carrierWithoutVat, carrierVatValue));
              }
         }
 
+        // Payment
         if (cartDto.getSelectedPaymentId() != null) {
             paymentRepository.findById(cartDto.getSelectedPaymentId())
                 .ifPresent(payment -> {
-                    // finalPrice = finalPrice.add(payment.getPrice());
+                    BigDecimal paymentPrice = payment.getPrice().setScale(2, RoundingMode.HALF_UP);
+                    // Assuming payment price is gross. No explicit VAT info in entity.
+                    BigDecimal paymentWithoutVat = paymentPrice; // Fallback
+                    BigDecimal paymentVatValue = BigDecimal.ZERO;
+
+                    breakdown.getItems().add(new PriceItem(PriceItemType.PAYMENT, payment.getId(), payment.getName(), 1, paymentPrice, paymentWithoutVat, paymentVatValue));
                 });
+             // Payment price is usually added to final price? The previous code didn't add it to finalPrice variable,
+             // but usually it should be. The commented out code suggested it.
+             // I will add it to finalPrice if found.
+             Optional<sk.tany.rest.api.domain.payment.Payment> pOpt = paymentRepository.findById(cartDto.getSelectedPaymentId());
+             if (pOpt.isPresent()) {
+                 finalPrice = finalPrice.add(pOpt.get().getPrice());
+             }
         }
 
-        // To be safe and avoid inconsistencies with Order calculation,
-        // maybe I should just expose 'totalDiscount' and let Frontend/Order handle the sum?
-        // But prompt said "recalculate cart price".
-
         cartDto.setFinalPrice(finalPrice.max(BigDecimal.ZERO));
+
+        // Finalize breakdown totals
+        BigDecimal totalWithVat = BigDecimal.ZERO;
+        BigDecimal totalWithoutVat = BigDecimal.ZERO;
+        BigDecimal totalVatValue = BigDecimal.ZERO;
+
+        for (PriceItem item : breakdown.getItems()) {
+            totalWithVat = totalWithVat.add(item.getPriceWithVat());
+            totalWithoutVat = totalWithoutVat.add(item.getPriceWithoutVat());
+            totalVatValue = totalVatValue.add(item.getVatValue());
+        }
+
+        breakdown.setTotalPrice(totalWithVat);
+        breakdown.setTotalPriceWithoutVat(totalWithoutVat);
+        breakdown.setTotalPriceVatValue(totalVatValue);
     }
 }

@@ -3,6 +3,7 @@ package sk.tany.rest.api.dto.client.cart.carrier;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -17,6 +18,7 @@ public class CartClientSetCarrierResponse {
     private List<CartItem> items;
     private String selectedCarrierId;
     private String selectedPaymentId;
+    private PriceBreakDown priceBreakDown;
 
     @Data
     @NoArgsConstructor

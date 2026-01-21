@@ -85,6 +85,7 @@ class CustomerClientServiceImplTest {
 
         CarrierDto carrier1 = new CarrierDto();
         carrier1.setId("carrier1");
+        carrier1.setOrder(1);
         CarrierPriceRangeDto range1 = new CarrierPriceRangeDto();
         range1.setWeightFrom(BigDecimal.ZERO);
         range1.setWeightTo(BigDecimal.valueOf(10));
@@ -93,6 +94,7 @@ class CustomerClientServiceImplTest {
 
         CarrierDto carrier2 = new CarrierDto();
         carrier2.setId("carrier2");
+        carrier2.setOrder(2);
         CarrierPriceRangeDto range2 = new CarrierPriceRangeDto();
         range2.setWeightFrom(BigDecimal.valueOf(10.1));
         range2.setWeightTo(BigDecimal.valueOf(20));
@@ -142,8 +144,10 @@ class CustomerClientServiceImplTest {
 
         CarrierDto carrier1 = new CarrierDto();
         carrier1.setId("carrier1");
+        carrier1.setOrder(1);
         CarrierDto carrier2 = new CarrierDto();
         carrier2.setId("carrier2");
+        carrier2.setOrder(2);
         when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(carrier1, carrier2)));
 
         PaymentDto payment1 = new PaymentDto();

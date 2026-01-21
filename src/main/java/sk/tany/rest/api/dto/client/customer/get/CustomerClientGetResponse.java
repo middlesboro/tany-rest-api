@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import sk.tany.rest.api.domain.cartdiscount.DiscountType;
 import sk.tany.rest.api.domain.carrier.CarrierType;
+import sk.tany.rest.api.domain.cartdiscount.DiscountType;
 import sk.tany.rest.api.domain.customer.Role;
 import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.domain.product.ProductStatus;
-import sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto;
+import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -66,6 +66,7 @@ public class CustomerClientGetResponse {
         private BigDecimal totalDiscount;
         private BigDecimal finalPrice; // Total - Discount + Carrier + Payment
         private boolean freeShipping;
+        private PriceBreakDown priceBreakDown;
     }
 
     @Data

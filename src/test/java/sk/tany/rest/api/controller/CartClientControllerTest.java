@@ -58,6 +58,9 @@ public class CartClientControllerTest {
         request.setProductId(productId);
         request.setQuantity(quantity);
 
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        given(cartService.getOrCreateCart(cartId, null)).willReturn(cartDto);
         given(cartService.addProductToCart(cartId, productId, quantity)).willReturn(cartId);
 
         mockMvc.perform(post("/api/cart/items")
@@ -77,6 +80,9 @@ public class CartClientControllerTest {
         request.setCartId(cartId);
         request.setProductId(productId);
 
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        given(cartService.getOrCreateCart(cartId, null)).willReturn(cartDto);
         given(cartService.removeProductFromCart(cartId, productId)).willReturn(cartId);
 
         mockMvc.perform(delete("/api/cart/items")
