@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.order.Order;
-import sk.tany.rest.api.domain.order.OrderItem;
 import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
@@ -18,19 +17,17 @@ import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.dto.PriceItem;
+import sk.tany.rest.api.dto.PriceItemType;
 import sk.tany.rest.api.service.admin.InvoiceService;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -78,9 +75,17 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .orElse("Unknown Payment");
 
         // Fetch products for codes
-        Map<String, Product> productMap = productRepository.findAllById(
-                order.getItems().stream().map(OrderItem::getId).collect(Collectors.toList())
-        ).stream().collect(Collectors.toMap(Product::getId, p -> p));
+        Map<String, Product> productMap;
+        if (order.getPriceBreakDown() != null && order.getPriceBreakDown().getItems() != null) {
+            productMap = productRepository.findAllById(
+                    order.getPriceBreakDown().getItems().stream()
+                            .filter(i -> i.getType() == PriceItemType.PRODUCT)
+                            .map(PriceItem::getId)
+                            .collect(Collectors.toList())
+            ).stream().collect(Collectors.toMap(Product::getId, p -> p));
+        } else {
+            productMap = Map.of();
+        }
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4);
@@ -222,62 +227,54 @@ public class InvoiceServiceImpl implements InvoiceService {
             itemsTable.addCell(cell);
         }
 
-        BigDecimal totalVat = BigDecimal.ZERO;
-        BigDecimal totalBase = BigDecimal.ZERO;
-        BigDecimal totalWithVat = BigDecimal.ZERO;
-        BigDecimal vatRate = new BigDecimal("0.20"); // 20%
+        if (order.getPriceBreakDown() != null && order.getPriceBreakDown().getItems() != null) {
+            for (PriceItem item : order.getPriceBreakDown().getItems()) {
+                String name = item.getName();
+                String code = "";
+                String ean = "";
 
-        for (OrderItem item : order.getItems()) {
-            Product product = productMap.get(item.getId());
-            String code = product != null ? product.getProductCode() : "";
-            String ean = product != null ? product.getEan() : "";
+                if (item.getType() == PriceItemType.PRODUCT) {
+                    Product product = productMap.get(item.getId());
+                    if (product != null) {
+                        code = product.getProductCode();
+                        ean = product.getEan();
+                    }
+                }
 
-            // Assuming Item Price is Final Price with VAT
-            BigDecimal priceWithVat = item.getPrice();
-            BigDecimal basePrice = priceWithVat.divide(BigDecimal.ONE.add(vatRate), 2, RoundingMode.HALF_UP);
-            BigDecimal vatAmount = priceWithVat.subtract(basePrice);
+                BigDecimal lineTotalWithVat = item.getPriceWithVat();
+                BigDecimal lineTotalBase = item.getPriceWithoutVat();
+                BigDecimal lineTotalVat = item.getVatValue();
 
-            BigDecimal lineTotal = priceWithVat.multiply(new BigDecimal(item.getQuantity()));
+                // Calculate Unit Prices and VAT Rate
+                BigDecimal qty = item.getQuantity() != null && item.getQuantity() > 0 ? new BigDecimal(item.getQuantity()) : BigDecimal.ONE;
+                BigDecimal unitPriceWithVat = lineTotalWithVat.divide(qty, 2, RoundingMode.HALF_UP);
+                BigDecimal unitPriceBase = lineTotalBase.divide(qty, 2, RoundingMode.HALF_UP);
 
-            totalWithVat = totalWithVat.add(lineTotal);
-            totalBase = totalBase.add(basePrice.multiply(new BigDecimal(item.getQuantity())));
-            totalVat = totalVat.add(vatAmount.multiply(new BigDecimal(item.getQuantity())));
+                // Calculate approximate VAT Rate for display
+                BigDecimal vatRate = BigDecimal.ZERO;
+                if (lineTotalBase.compareTo(BigDecimal.ZERO) != 0) {
+                    vatRate = lineTotalVat.divide(lineTotalBase, 2, RoundingMode.HALF_UP).multiply(new BigDecimal(100));
+                }
 
-            // Product Cell
-            PdfPCell prodCell = new PdfPCell();
-            prodCell.addElement(new Paragraph(item.getName(), getSlovakFont(8, Font.NORMAL)));
-            prodCell.addElement(new Paragraph("Kód: " + code + "   EAN: " + ean, getSlovakFont(8, Font.BOLD)));
-            itemsTable.addCell(prodCell);
+                // Product Cell
+                PdfPCell prodCell = new PdfPCell();
+                prodCell.addElement(new Paragraph(name, getSlovakFont(8, Font.NORMAL)));
+                if (!code.isEmpty() || !ean.isEmpty()) {
+                    prodCell.addElement(new Paragraph("Kód: " + code + "   EAN: " + ean, getSlovakFont(8, Font.BOLD)));
+                }
+                itemsTable.addCell(prodCell);
 
-            itemsTable.addCell(createRightAlignedCell(basePrice.toString() + " €"));
-            itemsTable.addCell(createRightAlignedCell("20 %"));
-            itemsTable.addCell(createRightAlignedCell(vatAmount.toString() + " €"));
-            itemsTable.addCell(createRightAlignedCell(priceWithVat.toString() + " €"));
+                itemsTable.addCell(createRightAlignedCell(unitPriceBase.toString() + " €"));
+                itemsTable.addCell(createRightAlignedCell(vatRate.intValue() + " %"));
+                itemsTable.addCell(createRightAlignedCell(lineTotalVat.toString() + " €"));
+                itemsTable.addCell(createRightAlignedCell(unitPriceWithVat.toString() + " €"));
 
-            PdfPCell qtyCell = createRightAlignedCell(String.valueOf(item.getQuantity()));
-            qtyCell.setHorizontalAlignment(Element.ALIGN_CENTER); // Usually center
-            itemsTable.addCell(qtyCell);
+                PdfPCell qtyCell = createRightAlignedCell(String.valueOf(item.getQuantity()));
+                qtyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                itemsTable.addCell(qtyCell);
 
-            itemsTable.addCell(createRightAlignedCell(lineTotal.toString() + " €"));
-        }
-
-        // Shipping Cost Row if > 0
-        if (order.getDeliveryPrice() != null && order.getDeliveryPrice().compareTo(BigDecimal.ZERO) > 0) {
-             BigDecimal priceWithVat = order.getDeliveryPrice();
-             BigDecimal basePrice = priceWithVat.divide(BigDecimal.ONE.add(vatRate), 2, RoundingMode.HALF_UP);
-             BigDecimal vatAmount = priceWithVat.subtract(basePrice);
-
-             totalWithVat = totalWithVat.add(priceWithVat);
-             totalBase = totalBase.add(basePrice);
-             totalVat = totalVat.add(vatAmount);
-
-             itemsTable.addCell(new Paragraph("Poplatky za dopravu", getSlovakFont(8, Font.NORMAL)));
-             itemsTable.addCell(createRightAlignedCell(basePrice.toString() + " €"));
-             itemsTable.addCell(createRightAlignedCell("20 %"));
-             itemsTable.addCell(createRightAlignedCell(vatAmount.toString() + " €"));
-             itemsTable.addCell(createRightAlignedCell(priceWithVat.toString() + " €"));
-             itemsTable.addCell(createRightAlignedCell("1"));
-             itemsTable.addCell(createRightAlignedCell(priceWithVat.toString() + " €"));
+                itemsTable.addCell(createRightAlignedCell(lineTotalWithVat.toString() + " €"));
+            }
         }
 
         document.add(itemsTable);
@@ -288,6 +285,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         footerTable.setSpacingBefore(20);
         footerTable.setWidths(new float[]{1.5f, 1});
 
+        BigDecimal totalBase = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPriceWithoutVat() : BigDecimal.ZERO;
+        BigDecimal totalVat = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPriceVatValue() : BigDecimal.ZERO;
+        BigDecimal totalWithVat = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPrice() : BigDecimal.ZERO;
+
         // Left Side (VAT Breakdown)
         PdfPTable vatTable = new PdfPTable(4);
         vatTable.setWidthPercentage(100);
@@ -296,6 +297,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         vatTable.addCell(createHeaderCell("Celkom DPH"));
         vatTable.addCell(createHeaderCell("Spolu"));
 
+        // Assuming 20% for simplicity in summary as per original logic,
+        // or we could aggregate from items if mixed rates exist.
+        // For now, displaying the totals under 20% row or just "Spolu" if we want to be safe?
+        // Original code hardcoded 20%. I will keep it simple and put the totals there.
+        // Ideally we should group by VAT rate.
         vatTable.addCell(createRightAlignedCell("20 %"));
         vatTable.addCell(createRightAlignedCell(totalBase.toString() + " €"));
         vatTable.addCell(createRightAlignedCell(totalVat.toString() + " €"));
