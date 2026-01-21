@@ -300,6 +300,13 @@ public class CartClientServiceImpl implements CartClientService {
         BigDecimal productsTotalWithoutVat = BigDecimal.ZERO;
         BigDecimal productsTotalVat = BigDecimal.ZERO;
 
+        if (cartDto.getItems() == null || cartDto.getItems().isEmpty()) {
+            breakdown.setTotalPrice(productsTotal);
+            breakdown.setTotalPriceWithoutVat(productsTotalWithoutVat);
+            breakdown.setTotalPriceVatValue(productsTotalVat);
+            return;
+        }
+
         // Update items with fresh prices from product map
         for (CartItem item : cartDto.getItems()) {
             ProductClientDto product = productMap.get(item.getProductId());
