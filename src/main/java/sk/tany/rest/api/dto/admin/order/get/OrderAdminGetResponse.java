@@ -3,6 +3,7 @@ package sk.tany.rest.api.dto.admin.order.get;
 import lombok.Data;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.OrderItemDto;
+import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,4 +25,5 @@ public class OrderAdminGetResponse {
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
     private String note;
+    private PriceBreakDown priceBreakDown;
 }
