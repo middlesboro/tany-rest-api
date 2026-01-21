@@ -40,19 +40,22 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
 
-    private static final Font FONT_BOLD_12 = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.BOLD);
-    private static final Font FONT_BOLD_10 = FontFactory.getFont(FontFactory.HELVETICA, 10, Font.BOLD);
-    private static final Font FONT_NORMAL_10 = FontFactory.getFont(FontFactory.HELVETICA, 10, Font.NORMAL);
-    private static final Font FONT_BOLD_8 = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.BOLD);
-    private static final Font FONT_NORMAL_8 = FontFactory.getFont(FontFactory.HELVETICA, 8, Font.NORMAL);
+    private static final Color BRAND_COLOR = new Color(44, 62, 80);
+    private static final Color ACCENT_COLOR = new Color(236, 240, 241);
+    private static final Color TEXT_WHITE = Color.WHITE;
+    private static final Color TEXT_DARK = new Color(30, 30, 30);
 
     // Attempt to use CP1250 for Slovak support if possible, otherwise fallback to standard
     private Font getSlovakFont(int size, int style) {
+        return getSlovakFont(size, style, Color.BLACK);
+    }
+
+    private Font getSlovakFont(int size, int style, Color color) {
         try {
-             BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1250, BaseFont.NOT_EMBEDDED);
-             return new Font(bf, size, style);
+            BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1250, BaseFont.NOT_EMBEDDED);
+            return new Font(bf, size, style, color);
         } catch (Exception e) {
-            return FontFactory.getFont(FontFactory.HELVETICA, size, style);
+            return FontFactory.getFont(FontFactory.HELVETICA, size, style, color);
         }
     }
 
@@ -88,7 +91,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            Document document = new Document(PageSize.A4);
+            Document document = new Document(PageSize.A4, 36, 36, 36, 36); // Margins
             PdfWriter.getInstance(document, baos);
             document.open();
 
@@ -102,74 +105,59 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     private void addContent(Document document, Order order, Customer customer, String carrierName, String paymentName, Map<String, Product> productMap) throws DocumentException {
-        // Main Table: 2 columns (Supplier, Customer/Invoice Info)
-        PdfPTable mainTable = new PdfPTable(2);
-        mainTable.setWidthPercentage(100);
-        mainTable.setWidths(new float[]{1, 1});
+        // --- Header Section ---
+        PdfPTable headerTable = new PdfPTable(1);
+        headerTable.setWidthPercentage(100);
 
-        // Supplier Cell
+        PdfPCell titleCell = new PdfPCell(new Paragraph("FAKTÚRA", getSlovakFont(24, Font.BOLD, TEXT_WHITE)));
+        titleCell.setBackgroundColor(BRAND_COLOR);
+        titleCell.setBorder(Rectangle.NO_BORDER);
+        titleCell.setPaddingTop(20);
+        titleCell.setPaddingBottom(10);
+        titleCell.setPaddingLeft(20);
+        headerTable.addCell(titleCell);
+
+        PdfPCell numberCell = new PdfPCell(new Paragraph("Číslo dokladu: 2026/" + order.getOrderIdentifier(), getSlovakFont(12, Font.NORMAL, TEXT_WHITE)));
+        numberCell.setBackgroundColor(BRAND_COLOR);
+        numberCell.setBorder(Rectangle.NO_BORDER);
+        numberCell.setPaddingBottom(20);
+        numberCell.setPaddingLeft(20);
+        headerTable.addCell(numberCell);
+
+        document.add(headerTable);
+
+        // --- Supplier & Customer Section ---
+        PdfPTable infoTable = new PdfPTable(2);
+        infoTable.setWidthPercentage(100);
+        infoTable.setSpacingBefore(20);
+        infoTable.setWidths(new float[]{1, 1});
+
+        // Supplier
         PdfPCell supplierCell = new PdfPCell();
-        supplierCell.setBorder(Rectangle.BOX);
-        supplierCell.setPadding(10);
-
-        // This addElement call adds a Paragraph to the cell's composite elements list
-        // which prevents further text mode operations if mixed incorrectly,
-        // but for PdfPCell it's fine as long as we don't mix text mode and composite mode in a way that breaks.
-        // However, OpenPDF/iText sometimes throws "Element not allowed" if we add things to a cell that expects only specific content or if structure is wrong.
-        // In this case, Paragraph is allowed. The error might be from nested elements or specific constraints.
-
-        supplierCell.addElement(new Paragraph("Dodávateľ:", getSlovakFont(12, Font.BOLD)));
-        // Static Supplier Info (from image)
-        supplierCell.addElement(new Paragraph("\nBc. Tatiana Grňová - Tany.sk", getSlovakFont(10, Font.BOLD)));
+        supplierCell.setBorder(Rectangle.NO_BORDER);
+        supplierCell.addElement(new Paragraph("DODÁVATEĽ", getSlovakFont(10, Font.BOLD, Color.GRAY)));
+        supplierCell.addElement(new Paragraph("Bc. Tatiana Grňová - Tany.sk", getSlovakFont(12, Font.BOLD)));
         supplierCell.addElement(new Paragraph("Budatínska 3916/24", getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("85106 Bratislava", getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("Slovenská republika", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("+421 944 432 457", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("info@tany.sk", getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("\nIČO: 50 350 595", getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("DIČ: 1077433060", getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("IČ DPH: SK1077433060", getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("\nEmail: info@tany.sk", getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("Tel: +421 944 432 457", getSlovakFont(10, Font.NORMAL)));
 
-        supplierCell.addElement(new Paragraph("\nIČO:             50 350 595", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("DIČ:             1077433060", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("IČ DPH:          SK1077433060", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("\nČíslo živnostenského registra 470-18777", getSlovakFont(10, Font.NORMAL)));
+        infoTable.addCell(supplierCell);
 
-        supplierCell.addElement(new Paragraph("-------------------------------------------------------"));
+        // Customer
+        PdfPCell customerCell = new PdfPCell();
+        customerCell.setBorder(Rectangle.NO_BORDER);
+        customerCell.addElement(new Paragraph("ODBERATEĽ", getSlovakFont(10, Font.BOLD, Color.GRAY)));
 
-        supplierCell.addElement(new Paragraph("Názov banky:     mBank", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("SWIFT:           BREXSKBX", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("IBAN:            SK52 8360 5207 0042 0571 4953", getSlovakFont(10, Font.NORMAL)));
-        // Variable symbol usually Order Number
-        supplierCell.addElement(new Paragraph("Variabilný symbol: " + order.getOrderIdentifier(), getSlovakFont(10, Font.BOLD))); // Simple cleanup for numeric
-
-        mainTable.addCell(supplierCell);
-
-        // Right Column Cell (Invoice Header + Customer)
-        PdfPCell rightCell = new PdfPCell();
-        rightCell.setBorder(Rectangle.BOX);
-        rightCell.setPadding(0);
-
-        // Header
-        PdfPTable headerTable = new PdfPTable(1);
-        headerTable.setWidthPercentage(100);
-        PdfPCell headerCell = new PdfPCell(new Paragraph("Daňový doklad č. 2026/" + order.getOrderIdentifier(), getSlovakFont(12, Font.BOLD)));
-        headerCell.setBackgroundColor(new Color(230, 230, 230));
-        headerCell.setPadding(10);
-        headerCell.setBorder(Rectangle.BOTTOM);
-        headerTable.addCell(headerCell);
-        rightCell.addElement(headerTable);
-
-        // Customer Info
-        // Directly add paragraphs to rightCell instead of nesting PdfPCell
-        Paragraph customerTitle = new Paragraph("Odberateľ:", getSlovakFont(12, Font.BOLD));
-        customerTitle.setSpacingBefore(10);
-        customerTitle.setIndentationLeft(10);
-        rightCell.addElement(customerTitle);
-
-        String customerName = "Unknown Customer";
+        String customerName = "Neregistrovaný zákazník";
         if (customer != null && customer.getFirstname() != null) {
             customerName = customer.getFirstname() + " " + (customer.getLastname() != null ? customer.getLastname() : "");
         }
 
-        // Use delivery address or invoice address from order
         String street = "";
         String city = "";
         String zip = "";
@@ -179,65 +167,75 @@ public class InvoiceServiceImpl implements InvoiceService {
             zip = order.getInvoiceAddress().getZip();
         }
 
-        Paragraph customerDetails = new Paragraph();
-        customerDetails.setIndentationLeft(10);
-        customerDetails.add(new Paragraph(customerName, getSlovakFont(10, Font.NORMAL)));
-        customerDetails.add(new Paragraph(street, getSlovakFont(10, Font.NORMAL)));
-        customerDetails.add(new Paragraph(zip + " " + city, getSlovakFont(10, Font.NORMAL)));
-        customerDetails.add(new Paragraph("Slovenská republika", getSlovakFont(10, Font.NORMAL)));
+        customerCell.addElement(new Paragraph(customerName, getSlovakFont(12, Font.BOLD)));
+        customerCell.addElement(new Paragraph(street, getSlovakFont(10, Font.NORMAL)));
+        customerCell.addElement(new Paragraph(zip + " " + city, getSlovakFont(10, Font.NORMAL)));
+        customerCell.addElement(new Paragraph("Slovenská republika", getSlovakFont(10, Font.NORMAL)));
 
-        rightCell.addElement(customerDetails);
+        infoTable.addCell(customerCell);
+        document.add(infoTable);
 
-        // Dates Table
-        PdfPTable datesTable = new PdfPTable(3);
-        datesTable.setWidthPercentage(100);
-        datesTable.setSpacingBefore(10);
+        // --- Dates & Details ---
+        PdfPTable detailsTable = new PdfPTable(3);
+        detailsTable.setWidthPercentage(100);
+        detailsTable.setSpacingBefore(20);
+        detailsTable.setWidths(new float[]{1, 1, 1});
 
-        addDateCell(datesTable, "Dátum vystavenia", order.getCreateDate(), false);
-        addDateCell(datesTable, "Dátum zdaniteľného\nplnenia", order.getCreateDate(), false);
-        addDateCell(datesTable, "Dátum splatnosti", order.getCreateDate(), true); // Assume due on creation or add days
+        addDetailCell(detailsTable, "Dátum vystavenia", formatDate(order.getCreateDate()));
+        addDetailCell(detailsTable, "Dátum dodania", formatDate(order.getCreateDate()));
+        addDetailCell(detailsTable, "Dátum splatnosti", formatDate(order.getCreateDate())); // Logic for due date?
 
-        rightCell.addElement(datesTable);
+        document.add(detailsTable);
 
-        // Order Extra Info
-        Paragraph orderExtra = new Paragraph();
-        orderExtra.setSpacingBefore(10);
-        orderExtra.setIndentationLeft(10);
-        orderExtra.add(new Chunk("Číslo objednávky:\t\t#" + order.getOrderIdentifier() + "\n", getSlovakFont(9, Font.NORMAL)));
-        orderExtra.add(new Chunk("Spôsob platby:\t\t" + paymentName + "\n", getSlovakFont(9, Font.NORMAL)));
-        orderExtra.add(new Chunk("Spôsob dopravy:\t\t" + carrierName + "\n", getSlovakFont(9, Font.NORMAL)));
+        // Payment Info Block
+        PdfPTable paymentInfoTable = new PdfPTable(2);
+        paymentInfoTable.setWidthPercentage(100);
+        paymentInfoTable.setSpacingBefore(10);
+        paymentInfoTable.setWidths(new float[]{1.5f, 1});
 
-        rightCell.addElement(orderExtra);
+        PdfPCell bankCell = new PdfPCell();
+        bankCell.setBorder(Rectangle.NO_BORDER);
+        bankCell.addElement(new Paragraph("BANKOVÉ SPOJENIE", getSlovakFont(9, Font.BOLD, Color.GRAY)));
+        bankCell.addElement(new Paragraph("mBank / BREXSKBX", getSlovakFont(10, Font.NORMAL)));
+        bankCell.addElement(new Paragraph("IBAN: SK52 8360 5207 0042 0571 4953", getSlovakFont(10, Font.BOLD)));
+        paymentInfoTable.addCell(bankCell);
 
-        mainTable.addCell(rightCell);
-        document.add(mainTable);
+        PdfPCell varSymbolCell = new PdfPCell();
+        varSymbolCell.setBorder(Rectangle.NO_BORDER);
+        varSymbolCell.addElement(new Paragraph("VARIABILNÝ SYMBOL", getSlovakFont(9, Font.BOLD, Color.GRAY)));
+        varSymbolCell.addElement(new Paragraph(String.valueOf(order.getOrderIdentifier()), getSlovakFont(12, Font.BOLD)));
+        paymentInfoTable.addCell(varSymbolCell);
 
-        // Items Table
-        PdfPTable itemsTable = new PdfPTable(7); // Prod, Base, VAT%, VAT val, Unit Price, Qty, Total
+        document.add(paymentInfoTable);
+
+        // --- Items Table ---
+        PdfPTable itemsTable = new PdfPTable(7);
         itemsTable.setWidthPercentage(100);
-        itemsTable.setSpacingBefore(20);
+        itemsTable.setSpacingBefore(30);
         itemsTable.setWidths(new float[]{4, 1.5f, 1, 1.5f, 1.5f, 1, 1.5f});
+        itemsTable.setHeaderRows(1);
 
-        // Headers
-        String[] headers = {"Produkt / Kód", "Základná\ncena\n/ Zľava", "Sadzba\nDPH", "DPH", "Jedn. cena\n(s DPH)", "Počet", "Celkom\n(s DPH)"};
+        String[] headers = {"POPIS", "CENA", "DPH %", "DPH", "CENA S DPH", "KS", "SPOLU"};
         for (String h : headers) {
-            PdfPCell cell = new PdfPCell(new Paragraph(h, getSlovakFont(8, Font.BOLD)));
-            cell.setBackgroundColor(new Color(230, 230, 230));
+            PdfPCell cell = new PdfPCell(new Paragraph(h, getSlovakFont(8, Font.BOLD, BRAND_COLOR)));
+            cell.setBackgroundColor(ACCENT_COLOR);
+            cell.setBorder(Rectangle.BOTTOM);
+            cell.setBorderColor(BRAND_COLOR);
+            cell.setPadding(8);
             cell.setHorizontalAlignment(Element.ALIGN_CENTER);
             itemsTable.addCell(cell);
         }
 
         if (order.getPriceBreakDown() != null && order.getPriceBreakDown().getItems() != null) {
+            boolean alternate = false;
             for (PriceItem item : order.getPriceBreakDown().getItems()) {
                 String name = item.getName();
                 String code = "";
-                String ean = "";
 
                 if (item.getType() == PriceItemType.PRODUCT) {
                     Product product = productMap.get(item.getId());
                     if (product != null) {
                         code = product.getProductCode();
-                        ean = product.getEan();
                     }
                 }
 
@@ -245,41 +243,43 @@ public class InvoiceServiceImpl implements InvoiceService {
                 BigDecimal lineTotalBase = item.getPriceWithoutVat();
                 BigDecimal lineTotalVat = item.getVatValue();
 
-                // Calculate Unit Prices and VAT Rate
                 BigDecimal qty = item.getQuantity() != null && item.getQuantity() > 0 ? new BigDecimal(item.getQuantity()) : BigDecimal.ONE;
                 BigDecimal unitPriceWithVat = lineTotalWithVat.divide(qty, 2, RoundingMode.HALF_UP);
                 BigDecimal unitPriceBase = lineTotalBase.divide(qty, 2, RoundingMode.HALF_UP);
 
-                // Calculate approximate VAT Rate for display
                 BigDecimal vatRate = BigDecimal.ZERO;
                 if (lineTotalBase.compareTo(BigDecimal.ZERO) != 0) {
                     vatRate = lineTotalVat.divide(lineTotalBase, 2, RoundingMode.HALF_UP).multiply(new BigDecimal(100));
                 }
 
-                // Product Cell
-                PdfPCell prodCell = new PdfPCell();
-                prodCell.addElement(new Paragraph(name, getSlovakFont(8, Font.NORMAL)));
-                if (!code.isEmpty() || !ean.isEmpty()) {
-                    prodCell.addElement(new Paragraph("Kód: " + code + "   EAN: " + ean, getSlovakFont(8, Font.BOLD)));
+                Color rowColor = alternate ? new Color(250, 250, 250) : Color.WHITE;
+
+                // Name & Code
+                PdfPCell nameCell = new PdfPCell();
+                nameCell.setBorder(Rectangle.BOTTOM);
+                nameCell.setBorderColor(new Color(230, 230, 230));
+                nameCell.setBackgroundColor(rowColor);
+                nameCell.setPadding(8);
+                nameCell.addElement(new Paragraph(name, getSlovakFont(9, Font.NORMAL)));
+                if (!code.isEmpty()) {
+                    nameCell.addElement(new Paragraph(code, getSlovakFont(8, Font.NORMAL, Color.GRAY)));
                 }
-                itemsTable.addCell(prodCell);
+                itemsTable.addCell(nameCell);
 
-                itemsTable.addCell(createRightAlignedCell(unitPriceBase.toString() + " €"));
-                itemsTable.addCell(createRightAlignedCell(vatRate.intValue() + " %"));
-                itemsTable.addCell(createRightAlignedCell(lineTotalVat.toString() + " €"));
-                itemsTable.addCell(createRightAlignedCell(unitPriceWithVat.toString() + " €"));
+                itemsTable.addCell(createItemCell(unitPriceBase.toString() + " €", rowColor));
+                itemsTable.addCell(createItemCell(vatRate.intValue() + "%", rowColor));
+                itemsTable.addCell(createItemCell(lineTotalVat.toString() + " €", rowColor));
+                itemsTable.addCell(createItemCell(unitPriceWithVat.toString() + " €", rowColor));
+                itemsTable.addCell(createItemCell(String.valueOf(item.getQuantity()), rowColor));
+                itemsTable.addCell(createItemCell(lineTotalWithVat.toString() + " €", rowColor, Font.BOLD));
 
-                PdfPCell qtyCell = createRightAlignedCell(String.valueOf(item.getQuantity()));
-                qtyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                itemsTable.addCell(qtyCell);
-
-                itemsTable.addCell(createRightAlignedCell(lineTotalWithVat.toString() + " €"));
+                alternate = !alternate;
             }
         }
 
         document.add(itemsTable);
 
-        // Footer / Totals
+        // --- Footer / Totals ---
         PdfPTable footerTable = new PdfPTable(2);
         footerTable.setWidthPercentage(100);
         footerTable.setSpacingBefore(20);
@@ -289,92 +289,89 @@ public class InvoiceServiceImpl implements InvoiceService {
         BigDecimal totalVat = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPriceVatValue() : BigDecimal.ZERO;
         BigDecimal totalWithVat = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPrice() : BigDecimal.ZERO;
 
-        // Left Side (VAT Breakdown)
-        PdfPTable vatTable = new PdfPTable(4);
-        vatTable.setWidthPercentage(100);
-        vatTable.addCell(createHeaderCell("Sadzba DPH"));
-        vatTable.addCell(createHeaderCell("Celkom bez DPH"));
-        vatTable.addCell(createHeaderCell("Celkom DPH"));
-        vatTable.addCell(createHeaderCell("Spolu"));
+        // Empty cell for left spacing (or notes)
+        PdfPCell leftSpace = new PdfPCell(new Paragraph(""));
+        leftSpace.setBorder(Rectangle.NO_BORDER);
+        footerTable.addCell(leftSpace);
 
-        // Assuming 20% for simplicity in summary as per original logic,
-        // or we could aggregate from items if mixed rates exist.
-        // For now, displaying the totals under 20% row or just "Spolu" if we want to be safe?
-        // Original code hardcoded 20%. I will keep it simple and put the totals there.
-        // Ideally we should group by VAT rate.
-        vatTable.addCell(createRightAlignedCell("20 %"));
-        vatTable.addCell(createRightAlignedCell(totalBase.toString() + " €"));
-        vatTable.addCell(createRightAlignedCell(totalVat.toString() + " €"));
-        vatTable.addCell(createRightAlignedCell(totalWithVat.toString() + " €"));
-
-        PdfPCell vatWrapper = new PdfPCell(vatTable);
-        vatWrapper.setBorder(Rectangle.NO_BORDER);
-        vatWrapper.setBackgroundColor(new Color(245, 245, 245)); // Light gray bg
-        footerTable.addCell(vatWrapper);
-
-        // Right Side (Final Total)
+        // Right Side (Totals)
         PdfPTable totalTable = new PdfPTable(2);
         totalTable.setWidthPercentage(100);
 
-        totalTable.addCell(createLabelCell("Celkom (bez DPH)"));
-        totalTable.addCell(createBoldRightCell(totalBase.toString() + " €"));
+        totalTable.addCell(createLabelCell("Suma bez DPH:"));
+        totalTable.addCell(createRightAlignedCell(totalBase.toString() + " €", 10, false));
 
-        totalTable.addCell(createLabelCell("Celkom DPH"));
-        totalTable.addCell(createBoldRightCell(totalVat.toString() + " €"));
+        totalTable.addCell(createLabelCell("DPH (20%):"));
+        totalTable.addCell(createRightAlignedCell(totalVat.toString() + " €", 10, false));
 
-        totalTable.addCell(createLabelCell("Celkom"));
-        totalTable.addCell(createBoldRightCell(totalWithVat.toString() + " €", 14)); // Larger font
+        PdfPCell totalLabel = new PdfPCell(new Paragraph("K ÚHRADE", getSlovakFont(12, Font.BOLD, BRAND_COLOR)));
+        totalLabel.setBorder(Rectangle.TOP);
+        totalLabel.setBorderColor(BRAND_COLOR);
+        totalLabel.setPaddingTop(10);
+        totalLabel.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        totalTable.addCell(totalLabel);
+
+        PdfPCell totalValue = new PdfPCell(new Paragraph(totalWithVat.toString() + " €", getSlovakFont(14, Font.BOLD, BRAND_COLOR)));
+        totalValue.setBorder(Rectangle.TOP);
+        totalValue.setBorderColor(BRAND_COLOR);
+        totalValue.setPaddingTop(10);
+        totalValue.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        totalTable.addCell(totalValue);
 
         PdfPCell totalWrapper = new PdfPCell(totalTable);
-        totalWrapper.setBorder(Rectangle.BOX);
-        totalWrapper.setPadding(10);
+        totalWrapper.setBorder(Rectangle.NO_BORDER);
         footerTable.addCell(totalWrapper);
 
         document.add(footerTable);
+
+        // Footer Note
+        Paragraph footerNote = new Paragraph("\nĎakujeme za Vašu objednávku.", getSlovakFont(10, Font.ITALIC, Color.GRAY));
+        footerNote.setAlignment(Element.ALIGN_CENTER);
+        footerNote.setSpacingBefore(30);
+        document.add(footerNote);
     }
 
-    private void addDateCell(PdfPTable table, String label, java.time.Instant date, boolean boldValue) {
-        PdfPCell cell = new PdfPCell();
-        cell.setBorder(Rectangle.BOX); // Or specific borders
-        cell.addElement(new Paragraph(label, getSlovakFont(9, boldValue ? Font.BOLD : Font.NORMAL))); // Actually label usually distinct color
+    private String formatDate(java.time.Instant date) {
+        if (date == null) return "";
+        return DateTimeFormatter.ofPattern("dd.MM.yyyy").withZone(ZoneId.systemDefault()).format(date);
+    }
 
-        String dateStr = "";
-        if (date != null) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy").withZone(ZoneId.systemDefault());
-            dateStr = formatter.format(date);
-        }
-        cell.addElement(new Paragraph(dateStr, getSlovakFont(10, Font.BOLD)));
+    private void addDetailCell(PdfPTable table, String label, String value) {
+        PdfPCell cell = new PdfPCell();
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.addElement(new Paragraph(label, getSlovakFont(9, Font.BOLD, Color.GRAY)));
+        cell.addElement(new Paragraph(value, getSlovakFont(10, Font.NORMAL)));
         table.addCell(cell);
     }
 
-    private PdfPCell createRightAlignedCell(String text) {
-        PdfPCell cell = new PdfPCell(new Paragraph(text, getSlovakFont(8, Font.NORMAL)));
-        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        return cell;
+    private PdfPCell createItemCell(String text, Color bgColor) {
+        return createItemCell(text, bgColor, Font.NORMAL);
     }
 
-    private PdfPCell createHeaderCell(String text) {
-        PdfPCell cell = new PdfPCell(new Paragraph(text, getSlovakFont(8, Font.BOLD)));
-        cell.setBackgroundColor(new Color(230, 230, 230));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+    private PdfPCell createItemCell(String text, Color bgColor, int style) {
+        PdfPCell cell = new PdfPCell(new Paragraph(text, getSlovakFont(9, style)));
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setBorder(Rectangle.BOTTOM);
+        cell.setBorderColor(new Color(230, 230, 230));
+        cell.setBackgroundColor(bgColor);
+        cell.setPadding(8);
         return cell;
     }
 
     private PdfPCell createLabelCell(String text) {
-        PdfPCell cell = new PdfPCell(new Paragraph(text, getSlovakFont(10, Font.BOLD)));
+        PdfPCell cell = new PdfPCell(new Paragraph(text, getSlovakFont(10, Font.NORMAL, Color.GRAY)));
         cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         cell.setBorder(Rectangle.NO_BORDER);
+        cell.setPaddingBottom(5);
         return cell;
     }
 
-    private PdfPCell createBoldRightCell(String text) {
-        return createBoldRightCell(text, 10);
-    }
-
-    private PdfPCell createBoldRightCell(String text, int size) {
-        PdfPCell cell = new PdfPCell(new Paragraph(text, getSlovakFont(size, Font.BOLD)));
+    private PdfPCell createRightAlignedCell(String text, int size, boolean bold) {
+        PdfPCell cell = new PdfPCell(new Paragraph(text, getSlovakFont(size, bold ? Font.BOLD : Font.NORMAL)));
         cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         cell.setBorder(Rectangle.NO_BORDER);
+        cell.setPaddingBottom(5);
         return cell;
     }
 }
