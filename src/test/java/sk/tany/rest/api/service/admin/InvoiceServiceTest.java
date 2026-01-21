@@ -17,6 +17,9 @@ import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.dto.PriceBreakDown;
+import sk.tany.rest.api.dto.PriceItem;
+import sk.tany.rest.api.dto.PriceItemType;
 import sk.tany.rest.api.service.admin.impl.InvoiceServiceImpl;
 
 import java.math.BigDecimal;
@@ -65,6 +68,14 @@ public class InvoiceServiceTest {
         item.setQuantity(2);
         item.setPrice(new BigDecimal("24.00")); // With VAT
         order.setItems(Collections.singletonList(item));
+
+        PriceBreakDown pbd = new PriceBreakDown();
+        PriceItem pi = new PriceItem(PriceItemType.PRODUCT, "prod1", "Test Product", 2, new BigDecimal("48.00"), new BigDecimal("40.00"), new BigDecimal("8.00"));
+        pbd.setItems(List.of(pi));
+        pbd.setTotalPrice(new BigDecimal("48.00"));
+        pbd.setTotalPriceWithoutVat(new BigDecimal("40.00"));
+        pbd.setTotalPriceVatValue(new BigDecimal("8.00"));
+        order.setPriceBreakDown(pbd);
 
         Address address = new Address("Street 1", "City", "12345");
         order.setInvoiceAddress(address);

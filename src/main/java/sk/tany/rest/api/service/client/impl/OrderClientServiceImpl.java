@@ -30,6 +30,9 @@ import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.helper.OrderHelper;
 import sk.tany.rest.api.mapper.OrderMapper;
+import sk.tany.rest.api.dto.PriceItem;
+import sk.tany.rest.api.dto.PriceItemType;
+import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.EmailService;
@@ -39,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -66,6 +70,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final ProductSearchEngine productSearchEngine;
     private final CartRepository cartRepository;
     private final sk.tany.rest.api.service.client.CartClientService cartService;
+    private final InvoiceService invoiceService;
 
     private String cachedTemplate;
 
@@ -235,13 +240,30 @@ public class OrderClientServiceImpl implements OrderClientService {
 
             // Products
             StringBuilder productsHtml = new StringBuilder();
-            if (order.getItems() != null) {
-                for (OrderItem item : order.getItems()) {
+            BigDecimal carrierPriceVal = BigDecimal.ZERO;
+            BigDecimal paymentPriceVal = BigDecimal.ZERO;
+
+            if (order.getPriceBreakDown() != null && order.getPriceBreakDown().getItems() != null) {
+                for (PriceItem item : order.getPriceBreakDown().getItems()) {
+                    if (item.getType() == PriceItemType.CARRIER) {
+                        carrierPriceVal = item.getPriceWithVat();
+                        continue;
+                    }
+                    if (item.getType() == PriceItemType.PAYMENT) {
+                        paymentPriceVal = item.getPriceWithVat();
+                        continue;
+                    }
+
+                    // Show Products and Discounts in the table
                     productsHtml.append("<tr>");
                     productsHtml.append("<td>").append(HtmlUtils.htmlEscape(item.getName())).append("</td>");
                     productsHtml.append("<td>").append(item.getQuantity()).append("</td>");
-                    productsHtml.append("<td>").append(String.format("%.2f €", item.getPrice())).append("</td>");
-                    productsHtml.append("<td>").append(String.format("%.2f €", item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))).append("</td>");
+
+                    BigDecimal qty = item.getQuantity() != null && item.getQuantity() > 0 ? new BigDecimal(item.getQuantity()) : BigDecimal.ONE;
+                    BigDecimal unitPrice = item.getPriceWithVat().divide(qty, 2, RoundingMode.HALF_UP);
+
+                    productsHtml.append("<td>").append(String.format("%.2f €", unitPrice)).append("</td>");
+                    productsHtml.append("<td>").append(String.format("%.2f €", item.getPriceWithVat())).append("</td>");
                     productsHtml.append("</tr>");
                 }
             }
@@ -249,12 +271,12 @@ public class OrderClientServiceImpl implements OrderClientService {
 
             // Carrier and Payment
             String carrierName = carrier != null ? carrier.getName() : "Unknown Carrier";
-            String carrierPrice = order.getCarrierPrice() != null ? String.format("%.2f €", order.getCarrierPrice()) : "0.00 €";
+            String carrierPrice = String.format("%.2f €", carrierPriceVal);
             template = template.replace("{{carrierName}}", HtmlUtils.htmlEscape(carrierName));
             template = template.replace("{{carrierPrice}}", carrierPrice);
 
             String paymentName = payment != null ? payment.getName() : "Unknown Payment";
-            String paymentPrice = order.getPaymentPrice() != null ? String.format("%.2f €", order.getPaymentPrice()) : "0.00 €";
+            String paymentPrice = String.format("%.2f €", paymentPriceVal);
             template = template.replace("{{paymentName}}", HtmlUtils.htmlEscape(paymentName));
             template = template.replace("{{paymentPrice}}", paymentPrice);
 
@@ -270,22 +292,14 @@ public class OrderClientServiceImpl implements OrderClientService {
             template = template.replace("{{deliveryAddress}}", addressHtml.toString());
 
             // Final Price
-            BigDecimal productsPrice = order.getProductsPrice() != null ? order.getProductsPrice() : BigDecimal.ZERO;
-            BigDecimal cPrice = order.getCarrierPrice() != null ? order.getCarrierPrice() : BigDecimal.ZERO;
-            BigDecimal pPrice = order.getPaymentPrice() != null ? order.getPaymentPrice() : BigDecimal.ZERO;
-            BigDecimal finalPrice = productsPrice.add(cPrice).add(pPrice);
-            // Discount should be handled in visual if needed, but here simple calc
-            // Actually order.getFinalPrice() is accurate.
-            template = template.replace("{{finalPrice}}", String.format("%.2f €", order.getFinalPrice()));
+            BigDecimal finalPrice = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPrice() : BigDecimal.ZERO;
+            template = template.replace("{{finalPrice}}", String.format("%.2f €", finalPrice));
 
-            Resource pdfResource = resourceLoader.getResource("classpath:empty.pdf");
-            File pdfFile = File.createTempFile("order_attachment", ".pdf");
+            byte[] invoiceBytes = invoiceService.generateInvoice(order.getId());
+            File pdfFile = File.createTempFile("faktura_" + order.getOrderIdentifier(), ".pdf");
             try {
-                try (InputStream inputStream = pdfResource.getInputStream()) {
-                    Files.copy(inputStream, pdfFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                }
-
-//                emailService.sendEmail(order.getEmail(), "Order Confirmation #" + order.getOrderIdentifier(), template, true, pdfFile);
+                Files.write(pdfFile.toPath(), invoiceBytes);
+                emailService.sendEmail(order.getEmail(), "Objednávka č. " + order.getOrderIdentifier(), template, true, pdfFile);
             } finally {
                 // Cleanup temp file
                 if (pdfFile != null && pdfFile.exists()) {
