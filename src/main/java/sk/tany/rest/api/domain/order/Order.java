@@ -3,6 +3,7 @@ package sk.tany.rest.api.domain.order;
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
 import sk.tany.rest.api.domain.customer.Address;
+import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -38,6 +39,7 @@ public class Order {
     private String firstname;
     private String lastname;
     private String note;
+    private PriceBreakDown priceBreakDown;
     private OrderStatus status = OrderStatus.CREATED;
 
 }

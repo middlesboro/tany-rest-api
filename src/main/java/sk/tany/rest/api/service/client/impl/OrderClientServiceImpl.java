@@ -13,6 +13,7 @@ import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.cart.CartRepository;
+import sk.tany.rest.api.domain.customer.Address;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.Order;
@@ -22,6 +23,9 @@ import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
+import sk.tany.rest.api.dto.AddressDto;
+import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.helper.OrderHelper;
@@ -38,8 +42,10 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -76,103 +82,122 @@ public class OrderClientServiceImpl implements OrderClientService {
     }
 
     private String getCurrentCustomerId() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return customerRepository.findByEmail(email)
-                .map(Customer::getId)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        try {
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            return customerRepository.findByEmail(email)
+                    .map(Customer::getId)
+                    .orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Address mapAddress(AddressDto dto) {
+        if (dto == null) return null;
+        return new Address(dto.getStreet(), dto.getCity(), dto.getZip());
     }
 
     @Override
-
     public OrderDto createOrder(OrderDto orderDto) {
-        Order order = orderMapper.toEntity(orderDto);
-        order.setSelectedPickupPointId(orderDto.getSelectedPickupPointId());
-        order.setSelectedPickupPointName(orderDto.getSelectedPickupPointName());
-        try {
-            order.setCustomerId(getCurrentCustomerId());
-        } catch (Exception e) {
-            // nothing to do. if customer not found, order will be created without customerId
+        if (orderDto.getCartId() == null) {
+            throw new RuntimeException("Cart ID is required to create an order");
         }
-        List<ProductClientDto> products = productClientService.findAllByIds(order.getItems().stream().map(OrderItem::getId).toList());
-        order.setProductsPrice(OrderHelper.getProductsPrice(products));
+
+        CartDto cartDto = cartService.getOrCreateCart(orderDto.getCartId(), null);
+        if (cartDto == null || cartDto.getItems() == null || cartDto.getItems().isEmpty()) {
+            throw new RuntimeException("Cart is empty or not found");
+        }
+
+        Order order = new Order();
+        order.setCartId(orderDto.getCartId());
+        order.setNote(orderDto.getNote());
+        order.setCustomerId(getCurrentCustomerId());
+
+        // Populate from Cart
+        order.setFirstname(cartDto.getFirstname());
+        order.setLastname(cartDto.getLastname());
+        order.setEmail(cartDto.getEmail());
+        order.setPhone(cartDto.getPhone());
+        order.setInvoiceAddress(mapAddress(cartDto.getInvoiceAddress()));
+        order.setDeliveryAddress(mapAddress(cartDto.getDeliveryAddress()));
+        order.setDeliveryAddressSameAsInvoiceAddress(cartDto.isDeliveryAddressSameAsInvoiceAddress());
+
+        order.setCarrierId(cartDto.getSelectedCarrierId());
+        order.setPaymentId(cartDto.getSelectedPaymentId());
+        order.setSelectedPickupPointId(cartDto.getSelectedPickupPointId());
+        order.setSelectedPickupPointName(cartDto.getSelectedPickupPointName());
+
+        // Map Items
+        List<OrderItem> orderItems = new ArrayList<>();
+        if (cartDto.getItems() != null) {
+            for (CartItem ci : cartDto.getItems()) {
+                OrderItem oi = new OrderItem();
+                oi.setId(ci.getProductId());
+                oi.setName(ci.getTitle());
+                oi.setQuantity(ci.getQuantity());
+                oi.setPrice(ci.getPrice());
+                oi.setImage(ci.getImage());
+                orderItems.add(oi);
+            }
+        }
+        order.setItems(orderItems);
+
+        // Prices
+        order.setProductsPrice(cartDto.getTotalPrice());
+        order.setDiscountPrice(cartDto.getTotalDiscount());
+        order.setFinalPrice(cartDto.getFinalPrice());
+        order.setPriceBreakDown(cartDto.getPriceBreakDown());
+
+        if (cartDto.getAppliedDiscounts() != null) {
+            List<String> codes = cartDto.getAppliedDiscounts().stream()
+                    .map(sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto::getCode)
+                    .collect(Collectors.toList());
+            order.setAppliedDiscountCodes(codes);
+        }
 
         Carrier carrier = null;
-        Optional<Carrier> carrierOptional = carrierRepository.findById(orderDto.getCarrierId());
-        if (carrierOptional.isPresent()) {
-            carrier = carrierOptional.get();
-
-            BigDecimal totalWeight = OrderHelper.getProductsWeight(products);
-            order.setCarrierPrice(OrderHelper.getCarrierPrice(carrier, totalWeight));
+        if (order.getCarrierId() != null) {
+            carrier = carrierRepository.findById(order.getCarrierId()).orElse(null);
         }
+        // Extract carrier price from breakdown if possible or calculate?
+        // CartDto does not expose carrier price directly as a field except inside breakdown or implicitly in final price.
+        // However, we can find it in breakdown.
+        if (cartDto.getPriceBreakDown() != null && cartDto.getPriceBreakDown().getItems() != null) {
+            BigDecimal carrierPrice = cartDto.getPriceBreakDown().getItems().stream()
+                    .filter(i -> i.getType() == sk.tany.rest.api.dto.PriceItemType.CARRIER)
+                    .map(sk.tany.rest.api.dto.PriceItem::getPriceWithVat)
+                    .findFirst()
+                    .orElse(BigDecimal.ZERO);
+            order.setCarrierPrice(carrierPrice);
+
+            BigDecimal paymentPrice = cartDto.getPriceBreakDown().getItems().stream()
+                    .filter(i -> i.getType() == sk.tany.rest.api.dto.PriceItemType.PAYMENT)
+                    .map(sk.tany.rest.api.dto.PriceItem::getPriceWithVat)
+                    .findFirst()
+                    .orElse(BigDecimal.ZERO);
+            order.setPaymentPrice(paymentPrice);
+        } else {
+            // Fallback if breakdown missing (should not happen)
+            order.setCarrierPrice(BigDecimal.ZERO);
+            order.setPaymentPrice(BigDecimal.ZERO);
+        }
+
+        // If free shipping, carrier price should be effectively 0 in final calculation, but breakdown shows real cost usually?
+        // Actually CartClientServiceImpl: "if (discountAmount.compareTo(BigDecimal.ZERO) > 0 || discount.isFreeShipping()) ... breakdown.add(...)"
+        // It adds carrier price to breakdown. But if free shipping?
+        // "if (!freeShipping && cartDto.getSelectedCarrierId() != null) ... add carrier to breakdown"
+        // So if freeShipping, carrier is NOT added to breakdown.
+        // So carrierPrice will be 0. Correct.
 
         Payment payment = null;
-        Optional<Payment> paymentOptional = paymentRepository.findById(orderDto.getPaymentId());
-        if (paymentOptional.isPresent()) {
-            payment = paymentOptional.get();
-            order.setPaymentPrice(payment.getPrice());
-        }
-
-        // Apply discounts
-        // We need to fetch cart to get applied discounts
-        // Ideally OrderDto should contain discount info, or we trust Cart.
-        // Assuming OrderDto is created from Cart in Frontend.
-        // But price calculation must be secure.
-
-        // Fetch cart to verify discounts
-        if (order.getCartId() != null) {
-            sk.tany.rest.api.dto.CartDto cartDto = cartService.getOrCreateCart(order.getCartId(), null);
-            // Re-save cart to ensure calculation is up to date (though getOrCreateCart calls save which calculates)
-            // But getOrCreateCart might return existing DTO without recalc if not triggering save logic fully?
-            // save() in CartClientServiceImpl recalculates.
-
-            if (cartDto != null) {
-                // We use the calculated values from Cart Service to ensure consistency
-                // Note: Cart Service calculates based on current prices and discounts.
-                // If prices changed between cart view and order creation, this updates them.
-
-                // However, order.items are passed from OrderDto.
-                // We should probably rely on CartService's calculation for the items present in Cart.
-                // But Order items might differ if user manipulated request?
-                // Usually we build Order from Cart.
-
-                // Let's trust CartService calculation for discount amount.
-                BigDecimal discountAmount = cartDto.getTotalDiscount() != null ? cartDto.getTotalDiscount() : BigDecimal.ZERO;
-                order.setDiscountPrice(discountAmount);
-
-                if (cartDto.getAppliedDiscounts() != null) {
-                    List<String> codes = cartDto.getAppliedDiscounts().stream()
-                        .map(sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto::getCode)
-                        .collect(java.util.stream.Collectors.toList());
-                    order.setAppliedDiscountCodes(codes);
-                }
-
-                // Adjust Final Price
-                // OrderHelper calculated productsPrice + carrier + payment.
-                // We need to subtract discount.
-                // But carrier price might be free if free shipping discount.
-
-                if (cartDto.isFreeShipping()) {
-                    order.setCarrierPrice(BigDecimal.ZERO);
-                }
-
-                BigDecimal calculatedFinalPrice = order.getProductsPrice()
-                        .add(order.getCarrierPrice() != null ? order.getCarrierPrice() : BigDecimal.ZERO)
-                        .add(order.getPaymentPrice() != null ? order.getPaymentPrice() : BigDecimal.ZERO)
-                        .subtract(discountAmount);
-
-                order.setFinalPrice(calculatedFinalPrice.max(BigDecimal.ZERO));
-            }
-        } else {
-             // Fallback if no cart ID (shouldn't happen usually)
-             BigDecimal currentFinal = order.getProductsPrice()
-                     .add(order.getCarrierPrice() != null ? order.getCarrierPrice() : BigDecimal.ZERO)
-                     .add(order.getPaymentPrice() != null ? order.getPaymentPrice() : BigDecimal.ZERO);
-             order.setFinalPrice(currentFinal);
+        if (order.getPaymentId() != null) {
+            payment = paymentRepository.findById(order.getPaymentId()).orElse(null);
         }
 
         order.setOrderIdentifier(sequenceService.getNextSequence("order_identifier"));
         Order savedOrder = orderRepository.save(order);
 
+        // Update Stock and Sales
         savedOrder.getItems().forEach(item -> {
             productClientService.updateProductStock(item.getId(), item.getQuantity());
 
@@ -191,7 +216,8 @@ public class OrderClientServiceImpl implements OrderClientService {
 
         sendOrderCreatedEmail(savedOrder, carrier, payment);
 
-        return orderMapper.toDto(savedOrder);
+        // Return full DTO
+        return getOrder(savedOrder.getId());
     }
 
     private void sendOrderCreatedEmail(Order order, Carrier carrier, Payment payment) {
@@ -248,7 +274,9 @@ public class OrderClientServiceImpl implements OrderClientService {
             BigDecimal cPrice = order.getCarrierPrice() != null ? order.getCarrierPrice() : BigDecimal.ZERO;
             BigDecimal pPrice = order.getPaymentPrice() != null ? order.getPaymentPrice() : BigDecimal.ZERO;
             BigDecimal finalPrice = productsPrice.add(cPrice).add(pPrice);
-            template = template.replace("{{finalPrice}}", String.format("%.2f €", finalPrice));
+            // Discount should be handled in visual if needed, but here simple calc
+            // Actually order.getFinalPrice() is accurate.
+            template = template.replace("{{finalPrice}}", String.format("%.2f €", order.getFinalPrice()));
 
             Resource pdfResource = resourceLoader.getResource("classpath:empty.pdf");
             File pdfFile = File.createTempFile("order_attachment", ".pdf");

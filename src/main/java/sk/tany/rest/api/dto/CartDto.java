@@ -23,6 +23,7 @@ public class CartDto {
     private String selectedPickupPointName;
     private AddressDto invoiceAddress;
     private AddressDto deliveryAddress;
+    private boolean deliveryAddressSameAsInvoiceAddress;
     private Instant createDate;
     private Instant updateDate;
 

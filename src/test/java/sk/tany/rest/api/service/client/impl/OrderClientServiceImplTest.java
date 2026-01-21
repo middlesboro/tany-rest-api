@@ -12,11 +12,12 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
+import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderItem;
 import sk.tany.rest.api.domain.order.OrderRepository;
@@ -24,9 +25,12 @@ import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
+import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.mapper.OrderMapper;
+import sk.tany.rest.api.service.client.CartClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
@@ -45,6 +49,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class OrderClientServiceImplTest {
@@ -71,6 +76,10 @@ class OrderClientServiceImplTest {
     private ProductSalesRepository productSalesRepository;
     @Mock
     private ProductSearchEngine productSearchEngine;
+    @Mock
+    private CartRepository cartRepository;
+    @Mock
+    private CartClientService cartService;
 
     @InjectMocks
     private OrderClientServiceImpl orderClientService;
@@ -79,15 +88,15 @@ class OrderClientServiceImplTest {
     void setUp() {
         SecurityContext securityContext = mock(SecurityContext.class);
         Authentication authentication = mock(Authentication.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getName()).thenReturn("user@example.com");
+        lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
+        lenient().when(authentication.getName()).thenReturn("user@example.com");
         SecurityContextHolder.setContext(securityContext);
 
         // Mock ResourceLoader
         Resource templateResource = new ByteArrayResource("<html>{{firstname}} {{orderIdentifier}} {{products}} {{carrierName}} {{paymentName}} {{deliveryAddress}} {{finalPrice}}</html>".getBytes());
         Resource pdfResource = new ByteArrayResource("dummy pdf".getBytes());
-        when(resourceLoader.getResource("classpath:templates/email/order_created.html")).thenReturn(templateResource);
-        when(resourceLoader.getResource("classpath:empty.pdf")).thenReturn(pdfResource);
+        lenient().when(resourceLoader.getResource("classpath:templates/email/order_created.html")).thenReturn(templateResource);
+        lenient().when(resourceLoader.getResource("classpath:empty.pdf")).thenReturn(pdfResource);
 
         orderClientService.init();
     }
@@ -95,12 +104,29 @@ class OrderClientServiceImplTest {
     @Test
     void createOrder_shouldSendEmail() throws Exception {
         OrderDto orderDto = new OrderDto();
-        orderDto.setItems(Collections.singletonList(new OrderItemDto()));
-        orderDto.setCarrierId("carrierId");
-        orderDto.setPaymentId("paymentId");
+        orderDto.setCartId("cart1");
+        // items are not needed in orderDto anymore
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId("cart1");
+        cartDto.setFirstname("John");
+        cartDto.setLastname("Doe");
+        cartDto.setEmail("user@example.com");
+        cartDto.setSelectedCarrierId("carrierId");
+        cartDto.setSelectedPaymentId("paymentId");
+        cartDto.setTotalPrice(BigDecimal.TEN);
+        cartDto.setFinalPrice(BigDecimal.valueOf(17));
+
+        CartItem cartItem = new CartItem("p1", 1);
+        cartItem.setTitle("Test Product");
+        cartItem.setPrice(BigDecimal.TEN);
+        cartDto.setItems(Collections.singletonList(cartItem));
+
+        when(cartService.getOrCreateCart("cart1", null)).thenReturn(cartDto);
 
         Order order = new Order();
         OrderItem item = new OrderItem();
+        item.setId("p1");
         item.setName("Test Product");
         item.setQuantity(1);
         item.setPrice(BigDecimal.TEN);
@@ -109,23 +135,32 @@ class OrderClientServiceImplTest {
         order.setOrderIdentifier(123L);
         order.setCarrierPrice(BigDecimal.valueOf(5));
         order.setPaymentPrice(BigDecimal.valueOf(2));
-        sk.tany.rest.api.domain.customer.Address address = new sk.tany.rest.api.domain.customer.Address("Street", "City", "12345");
-        order.setDeliveryAddress(address);
+        order.setId("order1"); // Simulate ID after save
 
         Carrier carrier = new Carrier();
         carrier.setName("Test Carrier");
+        carrier.setId("carrierId");
 
         Payment payment = new Payment();
         payment.setName("Test Payment");
+        payment.setId("paymentId");
 
-        when(orderMapper.toEntity(orderDto)).thenReturn(order);
-        when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.of(new Customer()));
-        when(productClientService.findAllByIds(any())).thenReturn(Collections.emptyList());
         when(carrierRepository.findById("carrierId")).thenReturn(Optional.of(carrier));
         when(paymentRepository.findById("paymentId")).thenReturn(Optional.of(payment));
         when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
-        when(orderMapper.toDto(any(Order.class))).thenReturn(orderDto);
+
+        // Mock save to return the order with ID
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order saved = invocation.getArgument(0);
+            saved.setId("order1");
+            return saved;
+        });
+
+        // Mock getOrder
+        when(orderRepository.findById("order1")).thenReturn(Optional.of(order));
+        OrderDto responseDto = new OrderDto();
+        when(orderMapper.toDto(order)).thenReturn(responseDto);
+
         ProductSales productSales = new ProductSales();
         productSales.setSalesCount(0);
         when(productSalesRepository.findByProductId(any())).thenReturn(Optional.of(productSales));
@@ -140,35 +175,45 @@ class OrderClientServiceImplTest {
     @Test
     void createOrder_shouldNotFailWhenEmailFails() throws Exception {
         OrderDto orderDto = new OrderDto();
-        orderDto.setItems(Collections.singletonList(new OrderItemDto()));
-        orderDto.setCarrierId("carrierId");
-        orderDto.setPaymentId("paymentId");
+        orderDto.setCartId("cart1");
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId("cart1");
+        cartDto.setFirstname("John");
+        cartDto.setEmail("user@example.com");
+        cartDto.setSelectedCarrierId("carrierId");
+        cartDto.setSelectedPaymentId("paymentId");
+        cartDto.setItems(Collections.singletonList(new CartItem("p1", 1)));
+
+        when(cartService.getOrCreateCart("cart1", null)).thenReturn(cartDto);
 
         Order order = new Order();
         OrderItem item = new OrderItem();
-        item.setName("Test Product");
+        item.setId("p1");
         item.setQuantity(1);
-        item.setPrice(BigDecimal.TEN);
         order.setItems(Collections.singletonList(item));
         order.setEmail("user@example.com");
         order.setOrderIdentifier(123L);
-        sk.tany.rest.api.domain.customer.Address address = new sk.tany.rest.api.domain.customer.Address("Street", "City", "12345");
-        order.setDeliveryAddress(address);
+        order.setId("order1");
 
         Carrier carrier = new Carrier();
-        carrier.setName("Test Carrier");
-
+        carrier.setId("carrierId");
         Payment payment = new Payment();
-        payment.setName("Test Payment");
+        payment.setId("paymentId");
 
-        when(orderMapper.toEntity(orderDto)).thenReturn(order);
-        when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.of(new Customer()));
-        when(productClientService.findAllByIds(any())).thenReturn(Collections.emptyList());
         when(carrierRepository.findById("carrierId")).thenReturn(Optional.of(carrier));
         when(paymentRepository.findById("paymentId")).thenReturn(Optional.of(payment));
         when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
-        when(orderMapper.toDto(any(Order.class))).thenReturn(orderDto);
+
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+             Order saved = invocation.getArgument(0);
+             saved.setId("order1");
+             return saved;
+        });
+
+        when(orderRepository.findById("order1")).thenReturn(Optional.of(order));
+        when(orderMapper.toDto(order)).thenReturn(new OrderDto());
+
         ProductSales productSales = new ProductSales();
         productSales.setSalesCount(0);
         when(productSalesRepository.findByProductId(any())).thenReturn(Optional.of(productSales));
