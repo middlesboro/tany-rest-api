@@ -2,7 +2,7 @@ package sk.tany.rest.api.service.admin.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 import sk.tany.rest.api.domain.shopsettings.ShopSettings;
 import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.admin.shopsettings.get.ShopSettingsGetResponse;
@@ -24,7 +24,7 @@ public class ShopSettingsAdminServiceImpl implements ShopSettingsAdminService {
     }
 
     @Override
-    @Transactional
+
     public ShopSettingsGetResponse patch(sk.tany.rest.api.dto.admin.shopsettings.patch.ShopSettingsPatchRequest request) {
         ShopSettings entity = getOrCreateFirst();
         mapper.updateFromPatch(entity, request);
@@ -33,7 +33,7 @@ public class ShopSettingsAdminServiceImpl implements ShopSettingsAdminService {
     }
 
     @Override
-    @Transactional
+
     public ShopSettingsGetResponse update(ShopSettingsUpdateRequest request) {
         ShopSettings entity = getOrCreateFirst();
         mapper.update(entity, request);

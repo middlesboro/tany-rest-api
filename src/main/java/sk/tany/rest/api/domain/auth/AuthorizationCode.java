@@ -1,15 +1,12 @@
 package sk.tany.rest.api.domain.auth;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
+import lombok.AllArgsConstructor;
+import org.dizitart.no2.objects.Id;
+import java.time.Instant;
 import java.util.Date;
 
-@Document(collection = "authorization_codes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,9 +14,18 @@ public class AuthorizationCode {
 
     @Id
     private String id;
-
+    private String code;
+    private String email;
     private String jwt;
+    private Instant expiration;
+    private Instant createdDate;
+    private Instant updateDate;
 
-    @Indexed(expireAfterSeconds = 30)
-    private Date createdAt;
+    public AuthorizationCode(String code, String email, Date expiration) {
+        this.code = code;
+        this.email = email;
+        if (expiration != null) {
+            this.expiration = expiration.toInstant();
+        }
+    }
 }

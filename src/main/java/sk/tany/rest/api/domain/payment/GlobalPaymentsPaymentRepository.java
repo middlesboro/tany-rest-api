@@ -1,11 +1,13 @@
 package sk.tany.rest.api.domain.payment;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.dizitart.no2.Nitrite;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
+import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
 @Repository
-public interface GlobalPaymentsPaymentRepository extends MongoRepository<GlobalPaymentsPayment, String> {
-    Optional<GlobalPaymentsPayment> findTopByOrderIdOrderByCreateDateDesc(String orderId);
+public class GlobalPaymentsPaymentRepository extends AbstractInMemoryRepository<GlobalPaymentsPayment> {
+
+    public GlobalPaymentsPaymentRepository(Nitrite nitrite) {
+        super(nitrite, GlobalPaymentsPayment.class);
+    }
 }

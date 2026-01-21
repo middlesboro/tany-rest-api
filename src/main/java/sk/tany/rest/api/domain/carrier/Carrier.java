@@ -1,27 +1,28 @@
 package sk.tany.rest.api.domain.carrier;
 
 import lombok.Data;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.dizitart.no2.objects.Id;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
 @Data
-@Document(collection = "carriers")
 public class Carrier {
+
     @Id
     private String id;
+    private Long prestashopId;
     private String name;
+    private CarrierType type;
+    private BigDecimal wholesalePrice;
+    private BigDecimal priceWithoutVat;
+    private BigDecimal price;
+    private Integer order;
     private String description;
     private String image;
-    private Integer order;
-    private CarrierType type;
     private List<CarrierPriceRange> ranges;
-    @CreatedDate
+    private boolean selected;
     private Instant createdDate;
-    @LastModifiedDate
     private Instant updateDate;
 }

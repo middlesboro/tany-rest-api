@@ -5,7 +5,7 @@ import sk.tany.rest.api.service.admin.FilterParameterValueAdminService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 import sk.tany.rest.api.domain.filter.FilterParameter;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValue;
@@ -60,7 +60,7 @@ public class FilterParameterValueAdminServiceImpl implements FilterParameterValu
     }
 
     @Override
-    @Transactional
+
     public void deleteById(String id) {
         // Remove this value ID from all FilterParameters that contain it
         List<FilterParameter> parameters = filterParameterRepository.findAllByFilterParameterValueIdsContaining(id);

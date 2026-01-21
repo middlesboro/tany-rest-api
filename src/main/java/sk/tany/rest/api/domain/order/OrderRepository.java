@@ -1,9 +1,22 @@
 package sk.tany.rest.api.domain.order;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.dizitart.no2.Nitrite;
+import org.springframework.stereotype.Repository;
+import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-public interface OrderRepository extends MongoRepository<Order, String> {
-    List<Order> findAllByCustomerId(String customerId);
+@Repository
+public class OrderRepository extends AbstractInMemoryRepository<Order> {
+
+    public OrderRepository(Nitrite nitrite) {
+        super(nitrite, Order.class);
+    }
+
+    public List<Order> findAllByCustomerId(String customerId) {
+        return memoryCache.values().stream()
+                .filter(o -> o.getCustomerId() != null && o.getCustomerId().equals(customerId))
+                .collect(Collectors.toList());
+    }
 }

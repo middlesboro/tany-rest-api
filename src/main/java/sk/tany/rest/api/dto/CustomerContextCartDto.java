@@ -23,7 +23,6 @@ public class CustomerContextCartDto {
     private String phone;
     private String selectedPickupPointId;
     private String selectedPickupPointName;
-
     // Discount related fields
     private List<CartDiscountClientDto> appliedDiscounts;
     private java.math.BigDecimal totalDiscount;

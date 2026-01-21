@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
@@ -59,7 +59,7 @@ public class ProductImportService {
     private final ObjectMapper objectMapper;
     private final ProductSearchEngine productSearchEngine;
 
-    @Transactional
+
     public void importProducts() {
         try {
             ClassPathResource resource = new ClassPathResource("products.json");

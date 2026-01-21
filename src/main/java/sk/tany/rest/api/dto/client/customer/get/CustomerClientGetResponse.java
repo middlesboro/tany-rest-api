@@ -9,6 +9,7 @@ import sk.tany.rest.api.domain.carrier.CarrierType;
 import sk.tany.rest.api.domain.customer.Role;
 import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.domain.product.ProductStatus;
+import sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto;
 
 import java.math.BigDecimal;
 import java.time.Instant;

@@ -1,8 +1,21 @@
 package sk.tany.rest.api.domain.customer;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.dizitart.no2.Nitrite;
+import org.springframework.stereotype.Repository;
+import sk.tany.rest.api.domain.AbstractInMemoryRepository;
+
 import java.util.Optional;
 
-public interface CustomerRepository extends MongoRepository<Customer, String> {
-    Optional<Customer> findByEmail(String email);
+@Repository
+public class CustomerRepository extends AbstractInMemoryRepository<Customer> {
+
+    public CustomerRepository(Nitrite nitrite) {
+        super(nitrite, Customer.class);
+    }
+
+    public Optional<Customer> findByEmail(String email) {
+        return memoryCache.values().stream()
+                .filter(c -> c.getEmail() != null && c.getEmail().equals(email))
+                .findFirst();
+    }
 }

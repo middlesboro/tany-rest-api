@@ -1,25 +1,18 @@
 package sk.tany.rest.api.domain.productlabel;
 
 import lombok.Data;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
-
+import org.dizitart.no2.objects.Id;
 import java.time.Instant;
 
 @Data
-@Document(collection = "product_labels")
 public class ProductLabel {
     @Id
     private String id;
-    @CreatedDate
-    private Instant createDate;
-    @LastModifiedDate
-    private Instant updateDate;
+    private String title;
     private String color;
     private String backgroundColor;
-    private String title;
     private ProductLabelPosition position;
     private boolean active;
+    private Instant createDate;
+    private Instant updateDate;
 }
