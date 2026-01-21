@@ -2,13 +2,13 @@ package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.domain.carrier.CarrierPriceRange;
+import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscount;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscountRepository;
 import sk.tany.rest.api.domain.cartdiscount.DiscountType;
-import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
-import sk.tany.rest.api.domain.carrier.CarrierPriceRange;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.PriceBreakDown;
@@ -134,6 +134,7 @@ public class CartClientServiceImpl implements CartClientService {
         resultDto.setFinalPrice(cartDto.getFinalPrice());
         resultDto.setFreeShipping(cartDto.isFreeShipping());
         resultDto.setAppliedDiscounts(cartDto.getAppliedDiscounts());
+        resultDto.setPriceBreakDown(cartDto.getPriceBreakDown());
 
         return resultDto;
     }

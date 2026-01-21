@@ -14,8 +14,8 @@ public class Cart {
     private String id;
     private String cartId;
     private List<CartItem> items;
-    private String carrierId;
-    private String paymentId;
+    private String selectedCarrierId;
+    private String selectedPaymentId;
     private String selectedPickupPointId;
     private String selectedPickupPointName;
     private String firstname;
