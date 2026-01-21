@@ -33,6 +33,7 @@ public class OrderClientGetResponse {
     private String firstname;
     private String lastname;
     private OrderStatus status;
+    private sk.tany.rest.api.dto.PriceBreakDown priceBreakDown;
 
     @Data
     @NoArgsConstructor

@@ -324,7 +324,7 @@ public class CartClientServiceImpl implements CartClientService {
                 productsTotalWithoutVat = productsTotalWithoutVat.add(priceWithoutVat);
                 productsTotalVat = productsTotalVat.add(vatValue);
 
-                breakdown.getItems().add(new PriceItem(PriceItemType.PRODUCT, product.getId(), product.getTitle(), item.getQuantity(), priceWithVat, priceWithoutVat, vatValue));
+                breakdown.getItems().add(new PriceItem(PriceItemType.PRODUCT, product.getId(), product.getTitle(), item.getImage(), item.getQuantity(), priceWithVat, priceWithoutVat, vatValue));
             }
         }
         cartDto.setTotalPrice(productsTotal);
