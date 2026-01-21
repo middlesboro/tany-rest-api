@@ -17,6 +17,8 @@ import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateResponse;
 import sk.tany.rest.api.mapper.CartClientApiMapper;
 import sk.tany.rest.api.service.client.CartClientService;
 
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
@@ -27,8 +29,46 @@ public class CartClientController {
 
     @PutMapping
     public ResponseEntity<CartClientUpdateResponse> updateCart(@RequestBody CartClientUpdateRequest request) {
-        CartDto dto = cartClientApiMapper.toDto(request);
-        CartDto updatedCart = cartService.save(dto);
+        CartDto cartDto = cartService.getOrCreateCart(request.getCartId(), null);
+
+        if (request.getItems() != null) {
+            cartDto.setItems(request.getItems().stream().map(i -> {
+                sk.tany.rest.api.dto.CartItem item = new sk.tany.rest.api.dto.CartItem();
+                item.setProductId(i.getProductId());
+                item.setQuantity(i.getQuantity());
+                item.setTitle(i.getTitle());
+                item.setImage(i.getImage());
+                item.setPrice(i.getPrice());
+                return item;
+            }).collect(Collectors.toList()));
+        }
+        if (request.getCustomerId() != null) cartDto.setCustomerId(request.getCustomerId());
+        if (request.getSelectedCarrierId() != null) cartDto.setSelectedCarrierId(request.getSelectedCarrierId());
+        if (request.getSelectedPaymentId() != null) cartDto.setSelectedPaymentId(request.getSelectedPaymentId());
+        if (request.getSelectedPickupPointId() != null) cartDto.setSelectedPickupPointId(request.getSelectedPickupPointId());
+        if (request.getSelectedPickupPointName() != null) cartDto.setSelectedPickupPointName(request.getSelectedPickupPointName());
+
+        if (request.getFirstname() != null) cartDto.setFirstname(request.getFirstname());
+        if (request.getLastname() != null) cartDto.setLastname(request.getLastname());
+        if (request.getEmail() != null) cartDto.setEmail(request.getEmail());
+        if (request.getPhone() != null) cartDto.setPhone(request.getPhone());
+
+        if (request.getInvoiceAddress() != null) {
+            sk.tany.rest.api.dto.AddressDto addr = new sk.tany.rest.api.dto.AddressDto();
+            addr.setStreet(request.getInvoiceAddress().getStreet());
+            addr.setCity(request.getInvoiceAddress().getCity());
+            addr.setZip(request.getInvoiceAddress().getZip());
+            cartDto.setInvoiceAddress(addr);
+        }
+        if (request.getDeliveryAddress() != null) {
+            sk.tany.rest.api.dto.AddressDto addr = new sk.tany.rest.api.dto.AddressDto();
+            addr.setStreet(request.getDeliveryAddress().getStreet());
+            addr.setCity(request.getDeliveryAddress().getCity());
+            addr.setZip(request.getDeliveryAddress().getZip());
+            cartDto.setDeliveryAddress(addr);
+        }
+
+        CartDto updatedCart = cartService.save(cartDto);
         return ResponseEntity.ok(cartClientApiMapper.toUpdateResponse(updatedCart));
     }
 
