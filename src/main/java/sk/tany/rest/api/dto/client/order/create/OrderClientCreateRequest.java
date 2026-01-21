@@ -1,47 +1,9 @@
 package sk.tany.rest.api.dto.client.order.create;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 public class OrderClientCreateRequest {
     private String cartId;
-    private BigDecimal finalPrice;
-    private BigDecimal deliveryPrice;
-    private BigDecimal productsPrice;
-    private List<OrderItemDto> items;
-    private String carrierId;
-    private String paymentId;
-    private AddressDto deliveryAddress;
-    private AddressDto invoiceAddress;
-    private boolean deliveryAddressSameAsInvoiceAddress;
-    private String customerId;
-    private String email;
-    private String phone;
-    private String firstname;
-    private String lastname;
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class OrderItemDto {
-        private String id;
-        private String name;
-        private Integer quantity;
-        private BigDecimal price;
-        private String image;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AddressDto {
-        private String street;
-        private String city;
-        private String zip;
-    }
+    private String note;
 }

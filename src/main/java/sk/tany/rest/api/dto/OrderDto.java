@@ -37,4 +37,5 @@ public class OrderDto {
     private String firstname;
     private String lastname;
     private String note;
+    private PriceBreakDown priceBreakDown;
 }
