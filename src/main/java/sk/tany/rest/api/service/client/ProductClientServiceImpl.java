@@ -10,6 +10,7 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
 import sk.tany.rest.api.mapper.ProductMapper;
+import sk.tany.rest.api.exception.ProductException;
 
 import java.util.Optional;
 
@@ -83,12 +84,12 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public void updateProductStock(String productId, Integer quantityChange) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductException.NotFound("Product not found"));
 
         int currentQuantity = product.getQuantity() != null ? product.getQuantity() : 0;
         int newQuantity = currentQuantity - quantityChange;
         if (newQuantity < 0) {
-            throw new RuntimeException("Not enough stock for product: " + product.getTitle());
+            throw new ProductException.BadRequest("Not enough stock for product: " + product.getTitle());
         }
         product.setQuantity(newQuantity);
         productRepository.save(product);

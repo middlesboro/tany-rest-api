@@ -18,6 +18,9 @@ import sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.mapper.CartDiscountMapper;
 import sk.tany.rest.api.mapper.CartMapper;
+import sk.tany.rest.api.exception.CartException;
+import sk.tany.rest.api.exception.ProductException;
+import sk.tany.rest.api.exception.CartDiscountException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -185,11 +188,11 @@ public class CartClientServiceImpl implements CartClientService {
         }
 
         ProductClientDto productDto = productService.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductException.NotFound("Product not found"));
 
         int stock = productDto.getQuantity() != null ? productDto.getQuantity() : 0;
         if (quantity > stock) {
-            throw new RuntimeException("Not enough stock. Available: " + stock);
+            throw new CartException.BadRequest("Not enough stock. Available: " + stock);
         }
 
         String image = (productDto.getImages() != null && !productDto.getImages().isEmpty())
@@ -220,7 +223,7 @@ public class CartClientServiceImpl implements CartClientService {
     @Override
     public String removeProductFromCart(String cartId, String productId) {
         CartDto cartDto = findById(cartId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new CartException.NotFound("Cart not found"));
 
         if (cartDto.getItems() != null) {
             cartDto.getItems().removeIf(item -> item.getProductId().equals(productId));
@@ -232,7 +235,7 @@ public class CartClientServiceImpl implements CartClientService {
     @Override
     public CartDto addCarrier(String cartId, String carrierId) {
         CartDto cartDto = findById(cartId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new CartException.NotFound("Cart not found"));
         cartDto.setSelectedCarrierId(carrierId);
         return save(cartDto);
     }
@@ -240,7 +243,7 @@ public class CartClientServiceImpl implements CartClientService {
     @Override
     public CartDto addPayment(String cartId, String paymentId) {
         CartDto cartDto = findById(cartId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new CartException.NotFound("Cart not found"));
         cartDto.setSelectedPaymentId(paymentId);
         return save(cartDto);
     }
@@ -248,11 +251,11 @@ public class CartClientServiceImpl implements CartClientService {
     @Override
     public CartDto addDiscount(String cartId, String code) {
         CartDto cartDto = findById(cartId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new CartException.NotFound("Cart not found"));
 
         // Check if code exists
         cartDiscountRepository.findByCodeAndActiveTrue(code)
-                .orElseThrow(() -> new RuntimeException("Invalid or inactive discount code"));
+                .orElseThrow(() -> new CartDiscountException.NotFound("Invalid or inactive discount code"));
 
         // Add to applied discounts if not already present
         if (cartDto.getAppliedDiscounts() == null) {
@@ -274,7 +277,7 @@ public class CartClientServiceImpl implements CartClientService {
     @Override
     public CartDto removeDiscount(String cartId, String code) {
         CartDto cartDto = findById(cartId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new CartException.NotFound("Cart not found"));
 
         if (cartDto.getAppliedDiscounts() != null) {
             cartDto.getAppliedDiscounts().removeIf(d -> code.equals(d.getCode()));

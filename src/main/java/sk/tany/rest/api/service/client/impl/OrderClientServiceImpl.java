@@ -37,6 +37,7 @@ import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
+import sk.tany.rest.api.exception.OrderException;
 
 import java.io.File;
 import java.io.IOException;
@@ -105,12 +106,12 @@ public class OrderClientServiceImpl implements OrderClientService {
     @Override
     public OrderDto createOrder(OrderDto orderDto) {
         if (orderDto.getCartId() == null) {
-            throw new RuntimeException("Cart ID is required to create an order");
+            throw new OrderException.BadRequest("Cart ID is required to create an order");
         }
 
         CartDto cartDto = cartService.getOrCreateCart(orderDto.getCartId(), null);
         if (cartDto == null || cartDto.getItems() == null || cartDto.getItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty or not found");
+            throw new OrderException.BadRequest("Cart is empty or not found");
         }
 
         Order order = new Order();
@@ -350,6 +351,6 @@ public class OrderClientServiceImpl implements OrderClientService {
                     }
                     return dto;
                 })
-                .orElseThrow(() -> new RuntimeException("Order not found or access denied"));
+                .orElseThrow(() -> new OrderException.NotFound("Order not found or access denied"));
     }
 }

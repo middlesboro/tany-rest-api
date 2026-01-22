@@ -104,12 +104,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .findFirst();
 
         if (authCodeOpt.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid authorization code");
+            throw new AuthenticationException.AuthorizationFailed("Invalid authorization code");
         }
 
         AuthorizationCode authCode = authCodeOpt.get();
         if (authCode.getExpiration().isBefore(Instant.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Authorization code expired");
+            throw new AuthenticationException.AuthorizationFailed("Authorization code expired");
         }
 
         authorizationCodeRepository.delete(authCode);
@@ -120,7 +120,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         Customer customer = customerRepository.findByEmail(authCode.getEmail())
-             .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer not found"));
+             .orElseThrow(() -> new AuthenticationException.AuthorizationFailed("Customer not found"));
 
         List<String> roles = List.of(customer.getRole() != null ? customer.getRole().name() : "USER");
         return jwtUtil.generateSessionToken(customer.getEmail(), roles);

@@ -11,6 +11,7 @@ import sk.tany.rest.api.domain.pagecontent.PageContentRepository;
 import sk.tany.rest.api.dto.PageContentDto;
 import sk.tany.rest.api.mapper.PageContentMapper;
 import sk.tany.rest.api.service.admin.PageContentAdminService;
+import sk.tany.rest.api.exception.PageContentException;
 
 import java.util.Optional;
 
@@ -40,7 +41,7 @@ public class PageContentAdminServiceImpl implements PageContentAdminService {
     @Override
     public PageContentDto update(String id, PageContentDto pageContentDto) {
         PageContent entity = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Page content not found"));
+                .orElseThrow(() -> new PageContentException.NotFound("Page content not found"));
         mapper.updateEntity(pageContentDto, entity);
         return mapper.toDto(repository.save(entity));
     }
@@ -48,7 +49,7 @@ public class PageContentAdminServiceImpl implements PageContentAdminService {
     @Override
     public void deleteById(String id) {
         if (!repository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Page content not found");
+            throw new PageContentException.NotFound("Page content not found");
         }
         repository.deleteById(id);
     }

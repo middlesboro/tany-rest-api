@@ -55,6 +55,8 @@ class ProductSearchEngineTest {
     private FilterParameterValueMapper filterParameterValueMapper;
     @Mock
     private CategoryRepository categoryRepository;
+    @Mock
+    private sk.tany.rest.api.domain.productlabel.ProductLabelRepository productLabelRepository;
 
     @InjectMocks
     private ProductSearchEngine productSearchEngine;

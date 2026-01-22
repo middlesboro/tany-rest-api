@@ -6,6 +6,7 @@ import com.mailersend.sdk.emails.Email;
 import com.mailersend.sdk.exceptions.MailerSendException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.exception.EmailException;
 
 import java.io.File;
 
@@ -39,7 +40,7 @@ public class EmailServiceImpl implements EmailService {
             try {
                 email.attachFile(attachment);
             } catch (java.io.IOException e) {
-                throw new RuntimeException("Failed to attach file", e);
+                throw new EmailException("Failed to attach file", e);
             }
         }
 
@@ -50,7 +51,7 @@ public class EmailServiceImpl implements EmailService {
             MailerSendResponse response = ms.emails().send(email);
             // Optionally log the response.messageId
         } catch (MailerSendException e) {
-            throw new RuntimeException("Failed to send email", e);
+            throw new EmailException("Failed to send email", e);
         }
     }
 }

@@ -36,6 +36,7 @@ import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 import sk.tany.rest.api.service.admin.ShopSettingsAdminService;
 import sk.tany.rest.api.service.admin.SupplierAdminService;
+import sk.tany.rest.api.exception.ImportException;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
 
@@ -83,7 +84,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
             }
         } catch (Exception e) {
             log.error("Error fetching product list from PrestaShop", e);
-            throw new RuntimeException("Error fetching product list from PrestaShop", e);
+            throw new ImportException("Error fetching product list from PrestaShop", e);
         }
         log.info("Finished import of all products from PrestaShop");
     }
@@ -101,7 +102,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
             }
         } catch (Exception e) {
             log.error("Error importing product with ID: {}", id, e);
-            throw new RuntimeException("Error importing product with ID: " + id, e);
+            throw new ImportException("Error importing product with ID: " + id, e);
         }
     }
 
@@ -122,7 +123,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
             }
         } catch (Exception e) {
             log.error("Error fetching supplier list from PrestaShop", e);
-            throw new RuntimeException("Error fetching supplier list from PrestaShop", e);
+            throw new ImportException("Error fetching supplier list from PrestaShop", e);
         }
         log.info("Finished import of all suppliers from PrestaShop");
     }
@@ -139,7 +140,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
             }
         } catch (Exception e) {
             log.error("Error importing supplier with ID: {}", id, e);
-            throw new RuntimeException("Error importing supplier with ID: " + id, e);
+            throw new ImportException("Error importing supplier with ID: " + id, e);
         }
     }
 
@@ -169,7 +170,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
             }
         } catch (Exception e) {
             log.error("Error fetching manufacturer list from PrestaShop", e);
-            throw new RuntimeException("Error fetching manufacturer list from PrestaShop", e);
+            throw new ImportException("Error fetching manufacturer list from PrestaShop", e);
         }
         log.info("Finished import of all manufacturers from PrestaShop");
     }
@@ -186,7 +187,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
             }
         } catch (Exception e) {
             log.error("Error importing manufacturer with ID: {}", id, e);
-            throw new RuntimeException("Error importing manufacturer with ID: " + id, e);
+            throw new ImportException("Error importing manufacturer with ID: " + id, e);
         }
     }
 
@@ -311,7 +312,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
             }
         } catch (Exception e) {
             log.error("Error fetching category list from PrestaShop", e);
-            throw new RuntimeException("Error fetching category list from PrestaShop", e);
+            throw new ImportException("Error fetching category list from PrestaShop", e);
         }
         log.info("Finished import of all categories from PrestaShop");
     }

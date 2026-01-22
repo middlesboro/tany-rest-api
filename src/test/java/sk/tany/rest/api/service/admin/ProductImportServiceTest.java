@@ -65,7 +65,7 @@ class ProductImportServiceTest {
         // Arrange
         ProductImportEntryDto entry = new ProductImportEntryDto();
         entry.setType("table");
-        entry.setName("p_label_p");
+        entry.setName("p_sale");
 
         ProductImportDataDto data = new ProductImportDataDto();
         data.setIdProduct("123");

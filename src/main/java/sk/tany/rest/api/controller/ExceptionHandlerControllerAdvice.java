@@ -18,22 +18,12 @@ public class ExceptionHandlerControllerAdvice {
     @ExceptionHandler({
             BaseException.class,
     })
-    public ResponseEntity<ErrorResponse> handleUnexpectedExceptions(Throwable ex) {
+    public ResponseEntity<ErrorResponse> handleBaseException(BaseException ex) {
         log.error(ex.getMessage(), ex);
 
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        HttpStatus status = ex.getHttpStatus();
         ErrorResponse error = new ErrorResponseException(status, ProblemDetail.forStatus(status.value()), ex);
         return new ResponseEntity<>(error, status);
-    }
-
-    @ExceptionHandler({
-            AuthenticationException.InvalidToken.class,
-    })
-    public ResponseEntity<ErrorResponse> handleAuthenticationExceptions(Throwable ex) {
-        log.error(ex.getMessage(), ex);
-
-        ErrorResponse error = new ErrorResponseException(HttpStatus.UNAUTHORIZED, ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED.value()), ex);
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
 }
