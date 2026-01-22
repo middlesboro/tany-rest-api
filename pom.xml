@@ -140,6 +140,21 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.14.0</version>
         </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-core</artifactId>
+            <version>0.31.0</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-embeddings-bge-small-en-v15-q</artifactId>
+            <version>0.31.0</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+            <version>0.31.0</version>
+        </dependency>
     </dependencies>
 
     <build>

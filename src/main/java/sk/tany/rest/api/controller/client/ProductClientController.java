@@ -41,6 +41,14 @@ public class ProductClientController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}/related")
+    public java.util.List<ProductClientListResponse> getRelatedProducts(@PathVariable String id) {
+        return productService.getRelatedProducts(id)
+                .stream()
+                .map(productClientApiMapper::toListResponse)
+                .toList();
+    }
+
     @GetMapping("/category/{categoryId}")
     public Page<ProductClientListResponse> getProductsByCategory(@PathVariable String categoryId, Pageable pageable) {
         return productService.search(categoryId, pageable)

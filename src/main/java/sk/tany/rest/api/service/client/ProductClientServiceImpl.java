@@ -11,6 +11,7 @@ import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.exception.ProductException;
+import sk.tany.rest.api.service.common.ProductEmbeddingService;
 
 import java.util.Optional;
 import java.util.Set;
@@ -24,6 +25,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     private final ProductMapper productMapper;
     private final ProductSearchEngine productSearchEngine;
     private final WishlistClientService wishlistClientService;
+    private final ProductEmbeddingService productEmbeddingService;
 
     @Override
     public Page<ProductClientDto> findAll(Pageable pageable) {
@@ -100,6 +102,23 @@ public class ProductClientServiceImpl implements ProductClientService {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
         return productSearchEngine.searchAndSort(query)
                 .stream()
+                .map(product -> {
+                    ProductClientDto dto = productMapper.toClientDto(product);
+                    dto.setInWishlist(wishlistProductIds.contains(product.getId()));
+                    return dto;
+                })
+                .toList();
+    }
+
+    @Override
+    public java.util.List<ProductClientDto> getRelatedProducts(String productId) {
+        java.util.List<String> relatedIds = productEmbeddingService.findRelatedProducts(productId);
+        if (relatedIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
+        return productRepository.findAllById(relatedIds).stream()
                 .map(product -> {
                     ProductClientDto dto = productMapper.toClientDto(product);
                     dto.setInWishlist(wishlistProductIds.contains(product.getId()));
