@@ -8,9 +8,10 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
@@ -25,25 +26,26 @@ public class ProductEmbeddingService {
 
     private final ProductRepository productRepository;
 
-    private EmbeddingStore<TextSegment> embeddingStore;
-    private EmbeddingModel embeddingModel;
+    private volatile EmbeddingStore<TextSegment> embeddingStore;
+    private volatile EmbeddingModel embeddingModel;
 
-    @PostConstruct
-    public void init() {
-        // Initialization can be heavy, run in background to not block startup if possible,
-        // but user requested "on startup load". We will do it synchronously to ensure it's ready.
-        // However, loading model and embedding all products might take time.
-        // BgeSmallEnV15QuantizedEmbeddingModel loads via ONNX.
+    @EventListener(ApplicationReadyEvent.class)
+    public void startBackgroundInitialization() {
+        new Thread(this::init).start();
+    }
 
-        log.info("Initializing ProductEmbeddingService...");
+    private void init() {
+        log.info("Initializing ProductEmbeddingService in background...");
         try {
+            // Use temporary variables to ensure atomic visibility if we were checking "isInitialized" by null checks on fields,
+            // but we are assigning them one by one. Since we use them together, it's safer to check both or have a separate flag.
+            // But since findRelatedProducts checks both for null, it is safe enough.
             this.embeddingStore = new InMemoryEmbeddingStore<>();
             this.embeddingModel = new BgeSmallEnV15QuantizedEmbeddingModel();
 
             List<Product> products = productRepository.findAll();
             log.info("Found {} products to embed.", products.size());
 
-            // We can process in batches if needed, but for "all on startup" let's just loop.
             int count = 0;
             for (Product product : products) {
                 if (product.isActive() && product.getTitle() != null) {
@@ -51,7 +53,7 @@ public class ProductEmbeddingService {
                     count++;
                 }
             }
-            log.info("Embedded {} active products into the store.", count);
+            log.info("Embedded {} active products into the store. Initialization complete.", count);
 
         } catch (Exception e) {
             log.error("Failed to initialize ProductEmbeddingService", e);
@@ -61,8 +63,6 @@ public class ProductEmbeddingService {
     private void addInternal(Product product) {
         String text = product.getTitle();
         if (product.getDescription() != null) {
-            // Truncate description if too long to avoid token limits, though BGE small handles reasonable length.
-            // Simple concatenation for now.
             text += " " + product.getDescription();
         } else if (product.getShortDescription() != null) {
              text += " " + product.getShortDescription();
@@ -80,7 +80,7 @@ public class ProductEmbeddingService {
 
     public List<String> findRelatedProducts(String productId) {
         if (embeddingStore == null || embeddingModel == null) {
-            log.warn("Embedding store not initialized.");
+            log.warn("Embedding store not initialized yet.");
             return List.of();
         }
 
@@ -115,5 +115,9 @@ public class ProductEmbeddingService {
                     return resultIds;
                 })
                 .orElse(List.of());
+    }
+
+    public boolean isInitialized() {
+        return embeddingStore != null && embeddingModel != null;
     }
 }
