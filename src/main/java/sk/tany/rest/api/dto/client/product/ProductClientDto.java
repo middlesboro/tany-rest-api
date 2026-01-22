@@ -36,4 +36,5 @@ public class ProductClientDto {
     private Integer reviewsCount;
     private List<ProductFilterParameterDto> productFilterParameters = new ArrayList<>();
     private List<ProductLabelDto> productLabels = new ArrayList<>();
+    private Boolean inWishlist;
 }
