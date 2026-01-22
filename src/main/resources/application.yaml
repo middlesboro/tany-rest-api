@@ -60,3 +60,4 @@ security:
 logging:
   level:
     org.springframework.security: DEBUG
+    sk.tany: ${TANY_LEVEL_LOG:INFO}

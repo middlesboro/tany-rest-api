@@ -26,4 +26,5 @@ public class OrderAdminGetResponse {
     private String customerId;
     private String note;
     private PriceBreakDown priceBreakDown;
+    private String selectedPickupPointName;
 }

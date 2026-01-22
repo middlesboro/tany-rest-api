@@ -16,7 +16,6 @@ import sk.tany.rest.api.component.JwtUtil;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -27,41 +26,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
+        final String jwt = authHeader.substring(7);
 
         try {
             var claims = jwtUtil.extractAllClaims(jwt);
             Boolean isSessionToken = claims.get("session_token", Boolean.class);
 
             if (Boolean.TRUE.equals(isSessionToken)) {
-                userEmail = claims.getSubject();
-                List<String> roles = claims.get("roles", List.class);
+                String userEmail = claims.getSubject();
+                List<String> roles = (List<String>) claims.get("roles");
+
                 List<SimpleGrantedAuthority> authorities = roles != null ?
-                        roles.stream().map(role -> new SimpleGrantedAuthority(role)).collect(Collectors.toList()) :
+                        roles.stream().map(SimpleGrantedAuthority::new).toList() :
                         Collections.emptyList();
 
                 if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userEmail,
-                            null,
-                            authorities
+                            userEmail, null, authorities
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
-        } catch (Exception ignored) {
-            // Invalid token
-        }
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Invalid or expired token\"}");
+        }
     }
+
 }

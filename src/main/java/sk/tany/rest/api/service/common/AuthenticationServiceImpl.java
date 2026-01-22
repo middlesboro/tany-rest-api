@@ -13,6 +13,7 @@ import sk.tany.rest.api.domain.auth.MagicLinkTokenRepository;
 import sk.tany.rest.api.domain.auth.MagicLinkTokenState;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.exception.AuthenticationException;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -30,19 +31,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final EmailService emailService;
     private final JwtUtil jwtUtil;
 
-    @Value("${eshop.frontend-url}")
+    @Value("${eshop.base-url}")
     private String frontendUrl;
 
     @Override
     public void initiateLogin(String email) {
-        Customer customer = customerRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer not found"));
+        Optional<Customer> customerOptional = customerRepository.findByEmail(email);
+        if (customerOptional.isEmpty()) {
+            Customer customer = new Customer();
+            customer.setEmail(email);
+            customerRepository.save(customer);
+        }
 
         String jti = UUID.randomUUID().toString();
         MagicLinkToken tokenEntity = new MagicLinkToken();
         tokenEntity.setJti(jti);
         tokenEntity.setCustomerEmail(email);
-        tokenEntity.setState(MagicLinkTokenState.PENDING); // Fixed enum
+        tokenEntity.setState(MagicLinkTokenState.PENDING);
         tokenEntity.setExpiration(Instant.now().plus(15, ChronoUnit.MINUTES));
         tokenEntity.setCreatedDate(Instant.now());
         magicLinkTokenRepository.save(tokenEntity);
@@ -57,26 +62,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public String verifyAndGenerateCode(String token) {
         if (!jwtUtil.validateToken(token)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token");
+            throw new AuthenticationException.InvalidToken("Invalid token");
         }
 
         if (!jwtUtil.hasClaim(token, "magic_link", true)) {
-             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token type");
+            throw new AuthenticationException.InvalidToken("Invalid token type.");
         }
 
         String jti = jwtUtil.extractJti(token);
         MagicLinkToken magicLinkToken = magicLinkTokenRepository.findByJti(jti)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token not found"));
+                .orElseThrow(() -> new AuthenticationException.InvalidToken("Token not found."));
 
         if (magicLinkToken.getExpiration().isBefore(Instant.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired");
+            throw new AuthenticationException.InvalidToken("Token expired.");
         }
 
-        if (magicLinkToken.getState() != MagicLinkTokenState.PENDING) { // Fixed enum
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token already used");
+        if (magicLinkToken.getState() != MagicLinkTokenState.PENDING) {
+            throw new AuthenticationException.InvalidToken("Token already used.");
         }
 
-        magicLinkToken.setState(MagicLinkTokenState.VERIFIED); // Fixed enum
+        magicLinkToken.setState(MagicLinkTokenState.VERIFIED);
         magicLinkTokenRepository.save(magicLinkToken);
 
         String email = magicLinkToken.getCustomerEmail();

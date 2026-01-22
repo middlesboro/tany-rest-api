@@ -4,7 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.service.common.AuthenticationService;
 
 import java.net.URI;
@@ -33,17 +38,11 @@ public class AuthenticationController {
 
     @GetMapping("/verify")
     public ResponseEntity<Void> verify(@RequestParam String token) {
-        try {
-            String authorizationCode = authenticationService.verifyAndGenerateCode(token);
-            String redirectUrl = frontendUrl + "/authentication/success?authorizationCode=" + authorizationCode;
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .location(URI.create(redirectUrl))
-                    .build();
-        } catch (sk.tany.rest.api.exception.InvalidTokenException e) {
-            return ResponseEntity.status(401).build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        String authorizationCode = authenticationService.verifyAndGenerateCode(token);
+        String redirectUrl = frontendUrl + "/authentication/success?authorizationCode=" + authorizationCode;
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(redirectUrl))
+                .build();
     }
 
     @PostMapping("/exchange")
@@ -52,11 +51,8 @@ public class AuthenticationController {
         if (authorizationCode == null || authorizationCode.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        try {
-            String jwt = authenticationService.exchangeCode(authorizationCode);
-            return ResponseEntity.ok(Collections.singletonMap("token", jwt));
-        } catch (sk.tany.rest.api.exception.InvalidTokenException e) {
-            return ResponseEntity.status(401).build();
-        }
+
+        String jwt = authenticationService.exchangeCode(authorizationCode);
+        return ResponseEntity.ok(Collections.singletonMap("token", jwt));
     }
 }
