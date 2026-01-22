@@ -17,7 +17,6 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 @Service
 @RequiredArgsConstructor
@@ -69,6 +68,8 @@ public class ProductEmbeddingService {
              text += " " + product.getShortDescription();
         }
 
+        text = text.length() > 1200 ? text.substring(0, 1200) : text;
+
         Metadata metadata = Metadata.from("id", product.getId());
         TextSegment segment = TextSegment.from(text, metadata);
 
@@ -91,6 +92,8 @@ public class ProductEmbeddingService {
                     } else if (product.getShortDescription() != null) {
                          text += " " + product.getShortDescription();
                     }
+
+                    text = text.length() > 1200 ? text.substring(0, 1200) : text;
 
                     Response<dev.langchain4j.data.embedding.Embedding> embeddingResponse = embeddingModel.embed(text);
 
