@@ -1,0 +1,85 @@
+package sk.tany.rest.api.service.common;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import sk.tany.rest.api.domain.auth.AuthorizationCode;
+import sk.tany.rest.api.domain.auth.AuthorizationCodeRepository;
+import sk.tany.rest.api.domain.auth.MagicLinkToken;
+import sk.tany.rest.api.domain.auth.MagicLinkTokenRepository;
+import sk.tany.rest.api.domain.payment.BesteronPayment;
+import sk.tany.rest.api.domain.payment.BesteronPaymentRepository;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class CleanupServiceTest {
+
+    @Mock
+    private AuthorizationCodeRepository authorizationCodeRepository;
+    @Mock
+    private MagicLinkTokenRepository magicLinkTokenRepository;
+    @Mock
+    private BesteronPaymentRepository besteronPaymentRepository;
+
+    private CleanupService cleanupService;
+
+    @BeforeEach
+    void setUp() {
+        cleanupService = new CleanupService(authorizationCodeRepository, magicLinkTokenRepository, besteronPaymentRepository);
+    }
+
+    @Test
+    void cleanupAuthorizationCodes_ShouldDeleteExpiredCodes() {
+        AuthorizationCode expired = new AuthorizationCode();
+        expired.setCreatedDate(Instant.now().minus(31, ChronoUnit.SECONDS));
+
+        AuthorizationCode active = new AuthorizationCode();
+        active.setCreatedDate(Instant.now().minus(29, ChronoUnit.SECONDS));
+
+        when(authorizationCodeRepository.findAll()).thenReturn(List.of(expired, active));
+
+        cleanupService.cleanupAuthorizationCodes();
+
+        verify(authorizationCodeRepository).delete(expired);
+        verify(authorizationCodeRepository, never()).delete(active);
+    }
+
+    @Test
+    void cleanupMagicLinkTokens_ShouldDeleteExpiredTokens() {
+        MagicLinkToken expired = new MagicLinkToken();
+        expired.setCreatedDate(Instant.now().minus(301, ChronoUnit.SECONDS));
+
+        MagicLinkToken active = new MagicLinkToken();
+        active.setCreatedDate(Instant.now().minus(299, ChronoUnit.SECONDS));
+
+        when(magicLinkTokenRepository.findAll()).thenReturn(List.of(expired, active));
+
+        cleanupService.cleanupMagicLinkTokens();
+
+        verify(magicLinkTokenRepository).delete(expired);
+        verify(magicLinkTokenRepository, never()).delete(active);
+    }
+
+    @Test
+    void cleanupBesteronPayments_ShouldDeleteExpiredPayments() {
+        BesteronPayment expired = new BesteronPayment();
+        expired.setCreatedDate(Instant.now().minus(7, ChronoUnit.DAYS).minus(1, ChronoUnit.MINUTES));
+
+        BesteronPayment active = new BesteronPayment();
+        active.setCreatedDate(Instant.now().minus(7, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES));
+
+        when(besteronPaymentRepository.findAll()).thenReturn(List.of(expired, active));
+
+        cleanupService.cleanupBesteronPayments();
+
+        verify(besteronPaymentRepository).delete(expired);
+        verify(besteronPaymentRepository, never()).delete(active);
+    }
+}
