@@ -47,6 +47,7 @@ security:
     - /api/login/**
     - /api/customer/**
     - /api/cart/**
+    - /api/reviews/**
     - /api/orders/**
     - /api/products/**
     - /api/carriers/**
