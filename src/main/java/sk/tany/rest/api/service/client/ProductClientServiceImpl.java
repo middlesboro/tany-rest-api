@@ -13,6 +13,8 @@ import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.exception.ProductException;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -21,30 +23,44 @@ public class ProductClientServiceImpl implements ProductClientService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final ProductSearchEngine productSearchEngine;
+    private final WishlistClientService wishlistClientService;
 
     @Override
     public Page<ProductClientDto> findAll(Pageable pageable) {
-        return productRepository.findAll(pageable).map(productMapper::toClientDto);
+        Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
+        return productRepository.findAll(pageable).map(product -> {
+            ProductClientDto dto = productMapper.toClientDto(product);
+            dto.setInWishlist(wishlistProductIds.contains(product.getId()));
+            return dto;
+        });
     }
 
     @Override
     public Optional<ProductClientDto> findById(String id) {
+        Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
         return productRepository.findById(id).map(product -> {
             ProductClientDto dto = productMapper.toClientDto(product);
             dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
+            dto.setInWishlist(wishlistProductIds.contains(product.getId()));
             return dto;
         });
     }
 
     @Override
     public Page<ProductClientDto> search(String categoryId, Pageable pageable) {
-        return productRepository.findByCategoryIds(categoryId, pageable).map(productMapper::toClientDto);
+        Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
+        return productRepository.findByCategoryIds(categoryId, pageable).map(product -> {
+            ProductClientDto dto = productMapper.toClientDto(product);
+            dto.setInWishlist(wishlistProductIds.contains(product.getId()));
+            return dto;
+        });
     }
 
     @Override
     public ProductClientSearchDto search(String categoryId, sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable) {
         java.util.List<Product> products = productSearchEngine.search(categoryId, request);
         java.util.List<sk.tany.rest.api.dto.FilterParameterDto> filters = productSearchEngine.getFilterParametersForCategoryWithFilter(categoryId, request);
+        Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
 
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), products.size());
@@ -56,6 +72,7 @@ public class ProductClientServiceImpl implements ProductClientService {
                     .map(product -> {
                         ProductClientDto dto = productMapper.toClientDto(product);
                         dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
+                        dto.setInWishlist(wishlistProductIds.contains(product.getId()));
                         return dto;
                     })
                     .toList();
@@ -70,14 +87,24 @@ public class ProductClientServiceImpl implements ProductClientService {
 
     @Override
     public java.util.List<ProductClientDto> findAllByIds(Iterable<String> ids) {
-        return productRepository.findAllById(ids).stream().map(productMapper::toClientDto).toList();
+        Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
+        return productRepository.findAllById(ids).stream().map(product -> {
+            ProductClientDto dto = productMapper.toClientDto(product);
+            dto.setInWishlist(wishlistProductIds.contains(product.getId()));
+            return dto;
+        }).toList();
     }
 
     @Override
     public java.util.List<ProductClientDto> searchProducts(String query) {
+        Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
         return productSearchEngine.searchAndSort(query)
                 .stream()
-                .map(productMapper::toClientDto)
+                .map(product -> {
+                    ProductClientDto dto = productMapper.toClientDto(product);
+                    dto.setInWishlist(wishlistProductIds.contains(product.getId()));
+                    return dto;
+                })
                 .toList();
     }
 

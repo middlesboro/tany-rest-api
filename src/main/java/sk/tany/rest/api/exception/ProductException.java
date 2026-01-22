@@ -33,4 +33,15 @@ public class ProductException extends BaseException {
             return HttpStatus.BAD_REQUEST;
         }
     }
+
+    public static final class Conflict extends ProductException {
+        public Conflict(String message) {
+            super(message);
+        }
+
+        @Override
+        public HttpStatus getHttpStatus() {
+            return HttpStatus.CONFLICT;
+        }
+    }
 }
