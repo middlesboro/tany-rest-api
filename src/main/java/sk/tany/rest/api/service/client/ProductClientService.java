@@ -14,6 +14,7 @@ public interface ProductClientService {
     ProductClientSearchDto search(String categoryId, sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable);
     java.util.List<ProductClientDto> findAllByIds(Iterable<String> ids);
     java.util.List<ProductClientDto> searchProducts(String query);
+    java.util.List<ProductClientDto> getRelatedProducts(String productId);
 
     void updateProductStock(String productId, Integer quantityChange);
 }
