@@ -76,10 +76,10 @@ public class EmailNotificationSchedulerService {
             String template = loadTemplate();
             StringBuilder productsListHtml = new StringBuilder();
             for (Product product : products) {
-                productsListHtml.append("<li>")
-                        .append("<strong>").append(product.getTitle()).append("</strong>")
-                        .append(" - ").append(product.getPrice()).append(" €")
-                        .append("</li>");
+                productsListHtml.append("<tr>")
+                        .append("<td>").append(product.getTitle()).append("</td>")
+                        .append("<td>").append(product.getPrice()).append(" €</td>")
+                        .append("</tr>");
             }
 
             String body = template.replace("{{PRODUCTS_LIST}}", productsListHtml.toString());
