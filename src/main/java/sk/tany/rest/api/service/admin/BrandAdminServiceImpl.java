@@ -8,6 +8,7 @@ import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.mapper.BrandMapper;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.exception.BrandException;
 
 import java.util.Optional;
 
@@ -38,7 +39,7 @@ public class BrandAdminServiceImpl implements BrandAdminService {
 
     @Override
     public BrandDto update(String id, BrandDto brandDto) {
-        var brand = brandRepository.findById(id).orElseThrow(() -> new RuntimeException("Brand not found"));
+        var brand = brandRepository.findById(id).orElseThrow(() -> new BrandException.NotFound("Brand not found"));
         brandDto.setId(id);
         brandMapper.updateEntityFromDto(brandDto, brand);
         var savedBrand = brandRepository.save(brand);
@@ -47,7 +48,7 @@ public class BrandAdminServiceImpl implements BrandAdminService {
 
     @Override
     public BrandDto patch(String id, sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest patchDto) {
-        var brand = brandRepository.findById(id).orElseThrow(() -> new RuntimeException("Brand not found"));
+        var brand = brandRepository.findById(id).orElseThrow(() -> new BrandException.NotFound("Brand not found"));
         brandMapper.updateEntityFromPatch(patchDto, brand);
         var savedBrand = brandRepository.save(brand);
         return brandMapper.toDto(savedBrand);

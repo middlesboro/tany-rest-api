@@ -12,6 +12,7 @@ import sk.tany.rest.api.dto.admin.cartdiscount.create.CartDiscountCreateRequest;
 import sk.tany.rest.api.dto.admin.cartdiscount.list.CartDiscountListResponse;
 import sk.tany.rest.api.dto.admin.cartdiscount.update.CartDiscountUpdateRequest;
 import sk.tany.rest.api.mapper.CartDiscountMapper;
+import sk.tany.rest.api.exception.CartDiscountException;
 
 @Service
 @RequiredArgsConstructor
@@ -28,13 +29,13 @@ public class CartDiscountAdminService {
     public CartDiscountDto findById(String id) {
         return cartDiscountRepository.findById(id)
                 .map(cartDiscountMapper::toDto)
-                .orElseThrow(() -> new RuntimeException("Cart discount not found"));
+                .orElseThrow(() -> new CartDiscountException.NotFound("Cart discount not found"));
     }
 
 
     public CartDiscountDto create(CartDiscountCreateRequest request) {
         if (request.getCode() != null && cartDiscountRepository.existsByCode(request.getCode())) {
-            throw new RuntimeException("Discount code already exists");
+            throw new CartDiscountException.BadRequest("Discount code already exists");
         }
         CartDiscount cartDiscount = cartDiscountMapper.toEntity(request);
         return cartDiscountMapper.toDto(cartDiscountRepository.save(cartDiscount));
@@ -43,11 +44,11 @@ public class CartDiscountAdminService {
 
     public CartDiscountDto update(String id, CartDiscountUpdateRequest request) {
         CartDiscount cartDiscount = cartDiscountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cart discount not found"));
+                .orElseThrow(() -> new CartDiscountException.NotFound("Cart discount not found"));
 
         if (request.getCode() != null && !request.getCode().equals(cartDiscount.getCode())) {
             if (cartDiscountRepository.existsByCode(request.getCode())) {
-                throw new RuntimeException("Discount code already exists");
+                throw new CartDiscountException.BadRequest("Discount code already exists");
             }
         }
 

@@ -18,6 +18,8 @@ import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.mapper.CustomerMapper;
+import sk.tany.rest.api.exception.AuthenticationException;
+import sk.tany.rest.api.exception.CustomerException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -165,12 +167,12 @@ public class CustomerClientServiceImpl implements CustomerClientService {
     public CustomerDto updateCustomer(CustomerDto customerDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+            throw new AuthenticationException.InvalidToken("User not authenticated");
         }
 
         String email = authentication.getName();
         Customer customer = customerRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+                .orElseThrow(() -> new CustomerException.NotFound("Customer not found"));
 
         if (customerDto.getFirstname() != null) {
             customer.setFirstname(customerDto.getFirstname());
@@ -198,12 +200,12 @@ public class CustomerClientServiceImpl implements CustomerClientService {
     public CustomerDto getCurrentCustomer() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+            throw new AuthenticationException.InvalidToken("User not authenticated");
         }
 
         String email = authentication.getName();
         return customerRepository.findByEmail(email)
                 .map(customerMapper::toDto)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+                .orElseThrow(() -> new CustomerException.NotFound("Customer not found"));
     }
 }

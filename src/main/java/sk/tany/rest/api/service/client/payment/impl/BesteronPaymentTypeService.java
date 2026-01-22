@@ -28,6 +28,8 @@ import sk.tany.rest.api.domain.payment.enums.PaymentStatus;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTransactionResponse;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
+import sk.tany.rest.api.exception.PaymentException;
+import sk.tany.rest.api.exception.CustomerException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -77,7 +79,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
                     .build();
         } catch (Exception e) {
             log.error("Failed to create Besteron payment link for order {}", order.getId(), e);
-            throw new RuntimeException("Failed to generate Besteron payment link", e);
+            throw new PaymentException("Failed to generate Besteron payment link", e);
         }
     }
 
@@ -153,7 +155,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
         );
 
         if (response.getBody() == null || response.getBody().getAccessToken() == null) {
-            throw new IllegalStateException("Failed to retrieve access token from Besteron");
+            throw new PaymentException("Failed to retrieve access token from Besteron");
         }
 
         return response.getBody().getAccessToken();
@@ -161,7 +163,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
 
     private String createPaymentIntent(OrderDto order, String token) {
         Customer customer = customerRepository.findById(order.getCustomerId())
-                .orElseThrow(() -> new IllegalStateException("Customer not found for order: " + order.getId()));
+                .orElseThrow(() -> new CustomerException.NotFound("Customer not found for order: " + order.getId()));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -209,7 +211,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
         );
 
         if (response.getBody() == null || response.getBody().getRedirectUrl() == null) {
-            throw new IllegalStateException("Failed to retrieve redirect URL from Besteron");
+            throw new PaymentException("Failed to retrieve redirect URL from Besteron");
         }
 
         BesteronPayment payment = new BesteronPayment();

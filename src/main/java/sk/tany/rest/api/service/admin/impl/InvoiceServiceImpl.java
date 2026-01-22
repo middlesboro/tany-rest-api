@@ -20,6 +20,8 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
 import sk.tany.rest.api.service.admin.InvoiceService;
+import sk.tany.rest.api.exception.InvoiceException;
+import sk.tany.rest.api.exception.OrderException;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
@@ -62,7 +64,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public byte[] generateInvoice(String orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+                .orElseThrow(() -> new OrderException.NotFound("Order not found: " + orderId));
 
         Customer customer = null;
         if (order.getCustomerId() != null) {
@@ -100,7 +102,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             document.close();
             return baos.toByteArray();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to generate invoice", e);
+            throw new InvoiceException("Failed to generate invoice", e);
         }
     }
 

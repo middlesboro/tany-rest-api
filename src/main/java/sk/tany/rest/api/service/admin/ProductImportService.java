@@ -29,6 +29,7 @@ import sk.tany.rest.api.domain.supplier.Supplier;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
+import sk.tany.rest.api.exception.ImportException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,7 +91,7 @@ public class ProductImportService {
 
         } catch (IOException e) {
             log.error("Error importing products", e);
-            throw new RuntimeException("Error importing products", e);
+            throw new ImportException("Error importing products", e);
         }
     }
 

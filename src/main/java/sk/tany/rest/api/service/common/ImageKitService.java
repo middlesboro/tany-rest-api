@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
+import sk.tany.rest.api.exception.ImageException;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -28,7 +29,7 @@ public class ImageKitService implements ImageService {
             return upload(file.getBytes(), UUID.randomUUID().toString(), type);
         } catch (IOException e) {
             log.error("Error while reading file bytes", e);
-            throw new RuntimeException("Error while reading file bytes", e);
+            throw new ImageException("Error while reading file bytes", e);
         }
     }
 
@@ -48,10 +49,10 @@ public class ImageKitService implements ImageService {
             return result.getUrl();
         } catch (InternalServerException e) {
             log.error("Error while uploading image to ImageKit", e);
-            throw new RuntimeException("Error while uploading image to ImageKit", e);
+            throw new ImageException("Error while uploading image to ImageKit", e);
         } catch (Exception e) {
             log.error("Unexpected error while uploading image to ImageKit", e);
-            throw new RuntimeException("Unexpected error while uploading image to ImageKit", e);
+            throw new ImageException("Unexpected error while uploading image to ImageKit", e);
         }
     }
 
@@ -73,13 +74,13 @@ public class ImageKitService implements ImageService {
             log.info("Image {} deleted successfully", url);
         } catch (Exception e) {
             log.error("Error while deleting image from ImageKit", e);
-            throw new RuntimeException("Error while deleting image from ImageKit", e);
+            throw new ImageException("Error while deleting image from ImageKit", e);
         }
     }
 
     private String getFileNameFromUrl(String url) {
         if (url == null || url.isEmpty()) {
-            throw new IllegalArgumentException("URL cannot be null or empty");
+            throw new ImageException.BadRequest("URL cannot be null or empty");
         }
         int lastSlashIndex = url.lastIndexOf('/');
         if (lastSlashIndex == -1) {

@@ -14,6 +14,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
+import sk.tany.rest.api.exception.PaymentException;
+
 @Service
 @Slf4j
 public class GlobalPaymentsSigner {
@@ -74,7 +76,7 @@ public class GlobalPaymentsSigner {
             return Base64.getEncoder().encodeToString(signedBytes);
         } catch (Exception e) {
             log.error("Error signing text: {}", text, e);
-            throw new RuntimeException("Failed to sign text", e);
+            throw new PaymentException("Failed to sign text", e);
         }
     }
 

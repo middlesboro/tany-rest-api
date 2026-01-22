@@ -20,6 +20,7 @@ import sk.tany.rest.api.dto.admin.review.ReviewAdminListResponse;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminUpdateRequest;
 import sk.tany.rest.api.service.admin.ReviewAdminService;
 import sk.tany.rest.api.service.mapper.ReviewMapper;
+import sk.tany.rest.api.exception.ReviewException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +49,7 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
     public ReviewAdminDetailResponse findById(String id) {
         return repository.findById(id)
                 .map(mapper::toAdminDetailResponse)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
+                .orElseThrow(() -> new ReviewException.NotFound("Review not found"));
     }
 
     @Override
@@ -61,7 +62,7 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
     @Override
     public ReviewAdminDetailResponse update(String id, ReviewAdminUpdateRequest request) {
         Review review = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
+                .orElseThrow(() -> new ReviewException.NotFound("Review not found"));
         mapper.updateEntityFromRequest(request, review);
         Review saved = repository.save(review);
         return mapper.toAdminDetailResponse(saved);
@@ -70,7 +71,7 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
     @Override
     public void delete(String id) {
         if (!repository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found");
+            throw new ReviewException.NotFound("Review not found");
         }
         repository.deleteById(id);
     }
@@ -134,7 +135,7 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
             }
 
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to import reviews", e);
+            throw new ReviewException("Failed to import reviews", e);
         }
     }
 }
