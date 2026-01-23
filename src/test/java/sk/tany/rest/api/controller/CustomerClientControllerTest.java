@@ -107,6 +107,7 @@ class CustomerClientControllerTest {
         CustomerClientUpdateResponse response = new CustomerClientUpdateResponse();
 
         when(customerClientApiMapper.toDto(request)).thenReturn(customerDto);
+        when(customerService.getCurrentCustomer()).thenReturn(customerDto);
         when(customerService.updateCustomer(customerDto)).thenReturn(updatedCustomer);
         when(customerClientApiMapper.toUpdateResponse(updatedCustomer)).thenReturn(response);
 
@@ -116,5 +117,25 @@ class CustomerClientControllerTest {
                 .andExpect(status().isOk());
 
         verify(customerService).updateCustomer(customerDto);
+    }
+
+    @Test
+    void updateCustomer_WithDifferentId_ReturnsForbidden() throws Exception {
+        CustomerClientUpdateRequest request = new CustomerClientUpdateRequest();
+        request.setId("id1");
+
+        CustomerDto requestCustomerDto = new CustomerDto();
+        requestCustomerDto.setId("id1");
+
+        CustomerDto currentCustomerDto = new CustomerDto();
+        currentCustomerDto.setId("id2");
+
+        when(customerClientApiMapper.toDto(request)).thenReturn(requestCustomerDto);
+        when(customerService.getCurrentCustomer()).thenReturn(currentCustomerDto);
+
+        mockMvc.perform(put("/api/customer")
+                        .contentType("application/json")
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isForbidden());
     }
 }

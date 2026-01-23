@@ -1,6 +1,7 @@
 package sk.tany.rest.api.controller.client;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.client.customer.get.CustomerClientDetailResponse;
@@ -39,11 +41,14 @@ public class CustomerClientController {
         return ResponseEntity.ok(customerClientApiMapper.toDetailResponse(customerDto));
     }
 
-    // todo add correct role which is needed e.g. CUSTOMER and check if the customer is updating own data
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @PutMapping
     public ResponseEntity<CustomerClientUpdateResponse> updateCustomer(@RequestBody CustomerClientUpdateRequest request) {
         CustomerDto customerDto = customerClientApiMapper.toDto(request);
+        CustomerDto currentCustomer = customerService.getCurrentCustomer();
+        if (customerDto.getId() != null && !customerDto.getId().equals(currentCustomer.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot update another customer's data");
+        }
         CustomerDto updatedCustomer = customerService.updateCustomer(customerDto);
         return ResponseEntity.ok(customerClientApiMapper.toUpdateResponse(updatedCustomer));
     }
