@@ -57,6 +57,7 @@ security:
     - /api/pages/**
     - /v3/api-docs/**
     - /swagger-ui/**
+    - /auth/magic-link/**
 
 logging:
   level:
