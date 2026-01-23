@@ -12,19 +12,15 @@ import sk.tany.rest.api.service.common.EmailService;
 
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
         "prestashop.url=http://mock-prestashop.com",
         "prestashop.key=mock-key",
-        "eshop.frontend-url=http://127.0.0.1:3000",
+        "eshop.frontend-url=http://127.0.0.1:3001",
         "eshop.base-url=http://localhost:8080"
 })
 @AutoConfigureMockMvc

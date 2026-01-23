@@ -18,7 +18,8 @@ jwt:
 
 eshop:
   base-url: ${ESHOP_BASE_URL:http://localhost:8080}
-  frontend-url: ${ESHOP_FRONTEND_URL:http://localhost:3000}
+  frontend-admin-url: ${ESHOP_FRONTEND_URL:http://localhost:3000}
+  frontend-url: ${ESHOP_FRONTEND_URL:http://localhost:3001}
   bank-account:
     iban: ${ESHOP_BANK_IBAN:SK52 8360 5207 0042 0571 4953}
     bic: ${ESHOP_BANK_BIC:BREXSKBX}
@@ -57,9 +58,9 @@ security:
     - /api/pages/**
     - /v3/api-docs/**
     - /swagger-ui/**
-    - /auth/magic-link/**
+    - /api/auth/magic-link/**
 
 logging:
   level:
-    org.springframework.security: DEBUG
+    org.springframework.security: TRACE
     sk.tany: ${TANY_LEVEL_LOG:INFO}
