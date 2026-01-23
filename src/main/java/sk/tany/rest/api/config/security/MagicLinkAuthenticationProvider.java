@@ -50,7 +50,7 @@ public class MagicLinkAuthenticationProvider implements AuthenticationProvider {
                     .orElseThrow(() -> new BadCredentialsException("User not found"));
 
             List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority(customer.getRole() != null ? customer.getRole().name() : "USER")
+                    new SimpleGrantedAuthority(customer.getRole() != null ? customer.getRole().name() : "GUEST")
             );
 
             return new UsernamePasswordAuthenticationToken(customer.getEmail(), null, authorities);

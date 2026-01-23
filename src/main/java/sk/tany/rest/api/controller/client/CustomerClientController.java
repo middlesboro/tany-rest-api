@@ -2,7 +2,13 @@ package sk.tany.rest.api.controller.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.client.customer.get.CustomerClientDetailResponse;
@@ -26,12 +32,15 @@ public class CustomerClientController {
         return ResponseEntity.ok(customerClientApiMapper.toGetResponse(customerContext));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @GetMapping
     public ResponseEntity<CustomerClientDetailResponse> getCustomer() {
         CustomerDto customerDto = customerService.getCurrentCustomer();
         return ResponseEntity.ok(customerClientApiMapper.toDetailResponse(customerDto));
     }
 
+    // todo add correct role which is needed e.g. CUSTOMER and check if the customer is updating own data
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @PutMapping
     public ResponseEntity<CustomerClientUpdateResponse> updateCustomer(@RequestBody CustomerClientUpdateRequest request) {
         CustomerDto customerDto = customerClientApiMapper.toDto(request);
