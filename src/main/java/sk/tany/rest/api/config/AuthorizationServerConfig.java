@@ -16,7 +16,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
@@ -38,6 +37,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -46,6 +46,9 @@ public class AuthorizationServerConfig {
 
     @Value("${eshop.frontend-url}")
     private String frontendUrl;
+
+    @Value("${eshop.frontend-admin-url}")
+    private String frontendAdminUrl;
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -104,18 +107,25 @@ public class AuthorizationServerConfig {
 
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient publicClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                .clientId("public-client")
+        RegisteredClient publicClient = createClient("public-client", frontendUrl, "openid", "profile");
+        RegisteredClient adminClient = createClient("admin-client", frontendAdminUrl, "openid", "profile");
+        return new InMemoryRegisteredClientRepository(publicClient, adminClient);
+    }
+
+    // Pomocná metóda, aby si neopakoval kód
+    private RegisteredClient createClient(String clientId, String redirectUri, String... scopes) {
+        return RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId(clientId)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .redirectUri(frontendUrl)
-                .scope(OidcScopes.OPENID)
-                .scope(OidcScopes.PROFILE)
-                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).requireProofKey(true).build())
+                .redirectUri(redirectUri)
+                .scopes(s -> s.addAll(List.of(scopes)))
+                .clientSettings(ClientSettings.builder()
+                        .requireAuthorizationConsent(false)
+                        .requireProofKey(true)
+                        .build())
                 .build();
-
-        return new InMemoryRegisteredClientRepository(publicClient);
     }
 
     @Bean
