@@ -33,10 +33,17 @@ import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
 import sk.tany.rest.api.config.security.MagicLinkLoginFilter;
 
+import sk.tany.rest.api.domain.jwk.JwkKey;
+import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
+
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -44,11 +51,17 @@ import java.util.UUID;
 @Configuration(proxyBeanMethods = false)
 public class AuthorizationServerConfig {
 
+    private final JwkKeyRepository jwkKeyRepository;
+
     @Value("${eshop.frontend-url}")
     private String frontendUrl;
 
     @Value("${eshop.frontend-admin-url}")
     private String frontendAdminUrl;
+
+    public AuthorizationServerConfig(JwkKeyRepository jwkKeyRepository) {
+        this.jwkKeyRepository = jwkKeyRepository;
+    }
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -79,24 +92,62 @@ public class AuthorizationServerConfig {
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
-        KeyPair keyPair = generateRsaKey();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+        JwkKey jwkKey;
+        List<JwkKey> all = jwkKeyRepository.findAll();
+        if (!all.isEmpty()) {
+            jwkKey = all.get(0);
+        } else {
+            jwkKey = generateAndSaveRsaKey();
+        }
+
+        RSAPublicKey publicKey = getPublicKey(jwkKey.getPublicKey());
+        RSAPrivateKey privateKey = getPrivateKey(jwkKey.getPrivateKey());
         RSAKey rsaKey = new RSAKey.Builder(publicKey)
                 .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
+                .keyID(jwkKey.getKeyId())
                 .build();
         JWKSet jwkSet = new JWKSet(rsaKey);
         return new ImmutableJWKSet<>(jwkSet);
     }
 
-    private static KeyPair generateRsaKey() {
+    private JwkKey generateAndSaveRsaKey() {
+        KeyPair keyPair = generateRsaKey();
+        JwkKey jwkKey = new JwkKey();
+        jwkKey.setKeyId(UUID.randomUUID().toString());
+        jwkKey.setPublicKey(Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()));
+        jwkKey.setPrivateKey(Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()));
+        return jwkKeyRepository.save(jwkKey);
+    }
+
+    private KeyPair generateRsaKey() {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
             keyPairGenerator.initialize(2048);
             return keyPairGenerator.generateKeyPair();
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
+        }
+    }
+
+    private RSAPublicKey getPublicKey(String key) {
+        try {
+            byte[] byteKey = Base64.getDecoder().decode(key.getBytes());
+            X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return (RSAPublicKey) kf.generatePublic(X509publicKey);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private RSAPrivateKey getPrivateKey(String key) {
+        try {
+            byte[] byteKey = Base64.getDecoder().decode(key.getBytes());
+            PKCS8EncodedKeySpec PKCS8privateKey = new PKCS8EncodedKeySpec(byteKey);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return (RSAPrivateKey) kf.generatePrivate(PKCS8privateKey);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
     }
 
