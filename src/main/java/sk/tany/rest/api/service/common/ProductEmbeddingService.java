@@ -47,7 +47,7 @@ public class ProductEmbeddingService {
             int count = 0;
             for (Product product : products) {
                 if (product.isActive() && product.getTitle() != null) {
-                    addInternal(product);
+//                    addInternal(product);
                     count++;
                 }
             }
