@@ -1,12 +1,16 @@
 package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.wishlist.Wishlist;
 import sk.tany.rest.api.domain.wishlist.WishlistRepository;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.exception.ProductException;
 
 import java.util.Collections;
@@ -20,6 +24,7 @@ public class WishlistClientServiceImpl implements WishlistClientService {
 
     private final WishlistRepository wishlistRepository;
     private final CustomerRepository customerRepository;
+    private final ProductClientService productClientService;
 
     private String getCurrentCustomerId() {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -66,5 +71,24 @@ public class WishlistClientServiceImpl implements WishlistClientService {
         return wishlistRepository.findByCustomerId(customer.get().getId()).stream()
                 .map(Wishlist::getProductId)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<ProductClientDto> getWishlist(String customerId, Pageable pageable) {
+        List<String> productIds = wishlistRepository.findByCustomerId(customerId).stream()
+                .map(Wishlist::getProductId)
+                .collect(Collectors.toList());
+
+        List<ProductClientDto> products = productClientService.findAllByIds(productIds);
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), products.size());
+
+        if (start > products.size()) {
+            return new PageImpl<>(List.of(), pageable, products.size());
+        }
+
+        List<ProductClientDto> pageContent = products.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, products.size());
     }
 }
