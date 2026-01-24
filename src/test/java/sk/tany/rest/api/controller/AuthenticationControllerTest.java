@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "eshop.base-url=http://localhost:8080"
 })
 @AutoConfigureMockMvc
-public class AuthorizationControllerTest {
+public class AuthenticationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -8,7 +8,6 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import sk.tany.rest.api.exception.AuthenticationException;
 import sk.tany.rest.api.exception.BaseException;
 
 @Slf4j
