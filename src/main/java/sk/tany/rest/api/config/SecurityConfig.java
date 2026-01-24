@@ -21,6 +21,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -44,6 +45,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import sk.tany.rest.api.config.security.MagicLinkLoginFilter;
+import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.jwk.JwkKey;
 import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
 
@@ -193,6 +195,12 @@ public class SecurityConfig {
                 context.getClaims().claims((claims) -> {
                     Set<String> roles = AuthorityUtils.authorityListToSet(context.getPrincipal().getAuthorities());
                     claims.put("roles", roles);
+
+                    Authentication principal = context.getPrincipal();
+                    if (principal.getPrincipal() instanceof Customer customer) {
+                        claims.put("customerId", customer.getId());
+                        context.getClaims().subject(customer.getEmail());
+                    }
                 });
             }
         };

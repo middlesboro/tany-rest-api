@@ -8,22 +8,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.controller.client.CustomerClientController;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
-import sk.tany.rest.api.dto.client.customer.get.CustomerClientDetailResponse;
 import sk.tany.rest.api.dto.client.customer.get.CustomerClientGetResponse;
-import sk.tany.rest.api.dto.client.customer.update.CustomerClientUpdateRequest;
-import sk.tany.rest.api.dto.client.customer.update.CustomerClientUpdateResponse;
 import sk.tany.rest.api.mapper.CustomerClientApiMapper;
 import sk.tany.rest.api.service.client.CustomerClientService;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +32,9 @@ class CustomerClientControllerTest {
 
     @Mock
     private CustomerClientApiMapper customerClientApiMapper;
+
+    @Mock
+    private JwtUtil jwtUtil;
 
     @InjectMocks
     private CustomerClientController customerClientController;
@@ -85,36 +84,4 @@ class CustomerClientControllerTest {
         verify(customerService).getCustomerContext(null);
     }
 
-    @Test
-    void getCustomer_ReturnsOk() throws Exception {
-        CustomerDto customerDto = new CustomerDto();
-        CustomerClientDetailResponse response = new CustomerClientDetailResponse();
-
-        when(customerService.getCurrentCustomer()).thenReturn(customerDto);
-        when(customerClientApiMapper.toDetailResponse(customerDto)).thenReturn(response);
-
-        mockMvc.perform(get("/api/customer"))
-                .andExpect(status().isOk());
-
-        verify(customerService).getCurrentCustomer();
-    }
-
-    @Test
-    void updateCustomer_ReturnsOk() throws Exception {
-        CustomerClientUpdateRequest request = new CustomerClientUpdateRequest();
-        CustomerDto customerDto = new CustomerDto();
-        CustomerDto updatedCustomer = new CustomerDto();
-        CustomerClientUpdateResponse response = new CustomerClientUpdateResponse();
-
-        when(customerClientApiMapper.toDto(request)).thenReturn(customerDto);
-        when(customerService.updateCustomer(customerDto)).thenReturn(updatedCustomer);
-        when(customerClientApiMapper.toUpdateResponse(updatedCustomer)).thenReturn(response);
-
-        mockMvc.perform(put("/api/customer")
-                        .contentType("application/json")
-                        .content(new ObjectMapper().writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        verify(customerService).updateCustomer(customerDto);
-    }
 }

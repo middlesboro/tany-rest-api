@@ -2,11 +2,10 @@ package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.CarrierDto;
@@ -17,9 +16,8 @@ import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
-import sk.tany.rest.api.mapper.CustomerMapper;
-import sk.tany.rest.api.exception.AuthenticationException;
 import sk.tany.rest.api.exception.CustomerException;
+import sk.tany.rest.api.mapper.CustomerMapper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,6 +35,7 @@ public class CustomerClientServiceImpl implements CustomerClientService {
     private final ProductClientService productService;
     private final CarrierClientService carrierService;
     private final PaymentClientService paymentService;
+    private final SecurityUtil securityUtil;
 
     public CustomerContextDto getCustomerContext(String cartId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -165,13 +164,8 @@ public class CustomerClientServiceImpl implements CustomerClientService {
 
     @Override
     public CustomerDto updateCustomer(CustomerDto customerDto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AuthenticationException.InvalidToken("User not authenticated");
-        }
-
-        String email = authentication.getName();
-        Customer customer = customerRepository.findByEmail(email)
+        String userId = securityUtil.getLoggedInUserId();
+        Customer customer = customerRepository.findById(userId)
                 .orElseThrow(() -> new CustomerException.NotFound("Customer not found"));
 
         if (customerDto.getFirstname() != null) {
@@ -198,13 +192,8 @@ public class CustomerClientServiceImpl implements CustomerClientService {
 
     @Override
     public CustomerDto getCurrentCustomer() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AuthenticationException.InvalidToken("User not authenticated");
-        }
-
-        String email = authentication.getName();
-        return customerRepository.findByEmail(email)
+        String userId = securityUtil.getLoggedInUserId();
+        return customerRepository.findById(userId)
                 .map(customerMapper::toDto)
                 .orElseThrow(() -> new CustomerException.NotFound("Customer not found"));
     }

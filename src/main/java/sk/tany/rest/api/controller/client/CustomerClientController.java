@@ -3,6 +3,8 @@ package sk.tany.rest.api.controller.client;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,18 +34,19 @@ public class CustomerClientController {
         return ResponseEntity.ok(customerClientApiMapper.toGetResponse(customerContext));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @GetMapping
     public ResponseEntity<CustomerClientDetailResponse> getCustomer() {
         CustomerDto customerDto = customerService.getCurrentCustomer();
         return ResponseEntity.ok(customerClientApiMapper.toDetailResponse(customerDto));
     }
 
-    // todo add correct role which is needed e.g. CUSTOMER and check if the customer is updating own data
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @PutMapping
-    public ResponseEntity<CustomerClientUpdateResponse> updateCustomer(@RequestBody CustomerClientUpdateRequest request) {
+    public ResponseEntity<CustomerClientUpdateResponse> updateCustomer(@RequestBody CustomerClientUpdateRequest request, @AuthenticationPrincipal Jwt jwt) {
         CustomerDto customerDto = customerClientApiMapper.toDto(request);
+        customerDto.setId(jwt.getClaimAsString("customerId"));
+
         CustomerDto updatedCustomer = customerService.updateCustomer(customerDto);
         return ResponseEntity.ok(customerClientApiMapper.toUpdateResponse(updatedCustomer));
     }
