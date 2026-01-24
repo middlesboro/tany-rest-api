@@ -9,10 +9,14 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
+import sk.tany.rest.api.dto.client.review.ProductRatingDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.exception.ProductException;
 import sk.tany.rest.api.service.common.ProductEmbeddingService;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.HashSet;
@@ -26,15 +30,13 @@ public class ProductClientServiceImpl implements ProductClientService {
     private final ProductSearchEngine productSearchEngine;
     private final WishlistClientService wishlistClientService;
     private final ProductEmbeddingService productEmbeddingService;
+    private final ReviewClientService reviewClientService;
 
     @Override
     public Page<ProductClientDto> findAll(Pageable pageable) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        return productRepository.findAll(pageable).map(product -> {
-            ProductClientDto dto = productMapper.toClientDto(product);
-            dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-            return dto;
-        });
+        Page<Product> products = productRepository.findAll(pageable);
+        return mapToEnhancedDtos(products, wishlistProductIds);
     }
 
     @Override
@@ -44,6 +46,9 @@ public class ProductClientServiceImpl implements ProductClientService {
             ProductClientDto dto = productMapper.toClientDto(product);
             dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
+            ProductRatingDto rating = reviewClientService.getProductRating(product.getId());
+            dto.setAverageRating(rating.getAverageRating());
+            dto.setReviewsCount(rating.getReviewsCount());
             return dto;
         });
     }
@@ -51,11 +56,8 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public Page<ProductClientDto> search(String categoryId, Pageable pageable) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        return productRepository.findByCategoryIds(categoryId, pageable).map(product -> {
-            ProductClientDto dto = productMapper.toClientDto(product);
-            dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-            return dto;
-        });
+        Page<Product> products = productRepository.findByCategoryIds(categoryId, pageable);
+        return mapToEnhancedDtos(products, wishlistProductIds);
     }
 
     @Override
@@ -70,11 +72,18 @@ public class ProductClientServiceImpl implements ProductClientService {
         if (start > products.size()) {
             pageContent = java.util.Collections.emptyList();
         } else {
-            pageContent = products.subList(start, end).stream()
+            List<Product> subList = products.subList(start, end);
+            List<String> productIds = subList.stream().map(Product::getId).toList();
+            Map<String, ProductRatingDto> ratings = reviewClientService.getProductRatings(productIds);
+
+            pageContent = subList.stream()
                     .map(product -> {
                         ProductClientDto dto = productMapper.toClientDto(product);
                         dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
                         dto.setInWishlist(wishlistProductIds.contains(product.getId()));
+                        ProductRatingDto rating = ratings.getOrDefault(product.getId(), new ProductRatingDto(BigDecimal.ZERO, 0));
+                        dto.setAverageRating(rating.getAverageRating());
+                        dto.setReviewsCount(rating.getReviewsCount());
                         return dto;
                     })
                     .toList();
@@ -90,24 +99,15 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public java.util.List<ProductClientDto> findAllByIds(Iterable<String> ids) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        return productRepository.findAllById(ids).stream().map(product -> {
-            ProductClientDto dto = productMapper.toClientDto(product);
-            dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-            return dto;
-        }).toList();
+        List<Product> products = productRepository.findAllById(ids);
+        return mapToEnhancedDtos(products, wishlistProductIds);
     }
 
     @Override
     public java.util.List<ProductClientDto> searchProducts(String query) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        return productSearchEngine.searchAndSort(query)
-                .stream()
-                .map(product -> {
-                    ProductClientDto dto = productMapper.toClientDto(product);
-                    dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-                    return dto;
-                })
-                .toList();
+        List<Product> products = productSearchEngine.searchAndSort(query);
+        return mapToEnhancedDtos(products, wishlistProductIds);
     }
 
     @Override
@@ -118,13 +118,37 @@ public class ProductClientServiceImpl implements ProductClientService {
         }
 
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        return productRepository.findAllById(relatedIds).stream()
-                .map(product -> {
-                    ProductClientDto dto = productMapper.toClientDto(product);
-                    dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-                    return dto;
-                })
-                .toList();
+        List<Product> products = productRepository.findAllById(relatedIds);
+        return mapToEnhancedDtos(products, wishlistProductIds);
+    }
+
+    private Page<ProductClientDto> mapToEnhancedDtos(Page<Product> productsPage, Set<String> wishlistProductIds) {
+        List<String> productIds = productsPage.getContent().stream().map(Product::getId).toList();
+        Map<String, ProductRatingDto> ratings = reviewClientService.getProductRatings(productIds);
+
+        return productsPage.map(product -> {
+            ProductClientDto dto = productMapper.toClientDto(product);
+            dto.setInWishlist(wishlistProductIds.contains(product.getId()));
+            ProductRatingDto rating = ratings.getOrDefault(product.getId(), new ProductRatingDto(BigDecimal.ZERO, 0));
+            dto.setAverageRating(rating.getAverageRating());
+            dto.setReviewsCount(rating.getReviewsCount());
+            return dto;
+        });
+    }
+
+    private List<ProductClientDto> mapToEnhancedDtos(List<Product> products, Set<String> wishlistProductIds) {
+        if (products.isEmpty()) return java.util.Collections.emptyList();
+        List<String> productIds = products.stream().map(Product::getId).toList();
+        Map<String, ProductRatingDto> ratings = reviewClientService.getProductRatings(productIds);
+
+        return products.stream().map(product -> {
+            ProductClientDto dto = productMapper.toClientDto(product);
+            dto.setInWishlist(wishlistProductIds.contains(product.getId()));
+            ProductRatingDto rating = ratings.getOrDefault(product.getId(), new ProductRatingDto(BigDecimal.ZERO, 0));
+            dto.setAverageRating(rating.getAverageRating());
+            dto.setReviewsCount(rating.getReviewsCount());
+            return dto;
+        }).toList();
     }
 
     @Override
