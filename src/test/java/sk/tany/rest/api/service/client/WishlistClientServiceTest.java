@@ -15,9 +15,12 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.wishlist.Wishlist;
 import sk.tany.rest.api.domain.wishlist.WishlistRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
+import sk.tany.rest.api.mapper.ProductMapper;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +40,10 @@ class WishlistClientServiceTest {
     private CustomerRepository customerRepository;
 
     @Mock
-    private ProductClientService productClientService;
+    private ProductRepository productRepository;
+
+    @Mock
+    private ProductMapper productMapper;
 
     @InjectMocks
     private WishlistClientServiceImpl wishlistClientService;
@@ -128,9 +134,13 @@ class WishlistClientServiceTest {
 
         when(wishlistRepository.findByCustomerId(customerId)).thenReturn(Collections.singletonList(wishlist));
 
+        Product product = new Product();
+        product.setId("prod1");
+        when(productRepository.findAllById(List.of("prod1"))).thenReturn(List.of(product));
+
         ProductClientDto productDto = new ProductClientDto();
         productDto.setId("prod1");
-        when(productClientService.findAllByIds(List.of("prod1"))).thenReturn(List.of(productDto));
+        when(productMapper.toClientDto(product)).thenReturn(productDto);
 
         Page<ProductClientDto> result = wishlistClientService.getWishlist(customerId, pageable);
 
