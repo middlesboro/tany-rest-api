@@ -27,4 +27,5 @@ public class ProductClientListResponse {
     private List<String> images;
     private ProductStatus status;
     private List<ProductLabelClientDto> productLabels;
+    private Boolean inWishlist;
 }

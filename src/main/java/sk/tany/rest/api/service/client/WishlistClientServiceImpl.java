@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.product.ProductRepository;
@@ -15,7 +16,6 @@ import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.exception.ProductException;
 import sk.tany.rest.api.mapper.ProductMapper;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,6 +28,7 @@ public class WishlistClientServiceImpl implements WishlistClientService {
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final SecurityUtil securityUtil;
 
     private String getCurrentCustomerId() {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -61,17 +62,7 @@ public class WishlistClientServiceImpl implements WishlistClientService {
 
     @Override
     public List<String> getWishlistProductIds() {
-        if (SecurityContextHolder.getContext().getAuthentication() == null ||
-            "anonymousUser".equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal())) {
-            return Collections.emptyList();
-        }
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Optional<Customer> customer = customerRepository.findByEmail(email);
-        if (customer.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return wishlistRepository.findByCustomerId(customer.get().getId()).stream()
+        return wishlistRepository.findByCustomerId(securityUtil.getLoggedInUserId()).stream()
                 .map(Wishlist::getProductId)
                 .collect(Collectors.toList());
     }

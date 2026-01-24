@@ -3,6 +3,7 @@ package sk.tany.rest.api.component;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import sk.tany.rest.api.exception.AuthenticationException;
 
@@ -15,8 +16,16 @@ public class SecurityUtil {
             throw new AuthenticationException.InvalidToken("User not authenticated");
         }
 
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        return (String) jwt.getClaims().get("customerId");
+        if (authentication instanceof JwtAuthenticationToken jwtAuthToken) {
+            Jwt jwt = jwtAuthToken.getToken();
+            return jwt.getClaimAsString("customerId");
+        }
+
+        if (authentication instanceof Jwt jwt) {
+            return (String) jwt.getClaims().get("customerId");
+        }
+
+        return null;
     }
 
 }

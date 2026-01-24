@@ -37,14 +37,12 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
 import sk.tany.rest.api.config.security.MagicLinkLoginFilter;
-import sk.tany.rest.api.config.security.PublicUrlTokenIgnorerFilter;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.jwk.JwkKey;
 import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
@@ -112,7 +110,6 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .securityContext(context -> context.securityContextRepository(repo))
-                .addFilterBefore(new PublicUrlTokenIgnorerFilter(securityProperties), BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> {
                     // Tvoje dynamické výnimky zo SecurityProperties
                     securityProperties.getExcludedUrls().forEach(url -> {
