@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.controller.client.CustomerClientController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import sk.tany.rest.api.dto.CustomerContextCartDto;
@@ -36,6 +37,9 @@ class CustomerClientControllerTest {
 
     @Mock
     private CustomerClientApiMapper customerClientApiMapper;
+
+    @Mock
+    private JwtUtil jwtUtil;
 
     @InjectMocks
     private CustomerClientController customerClientController;
@@ -134,6 +138,28 @@ class CustomerClientControllerTest {
         when(customerService.getCurrentCustomer()).thenReturn(currentCustomerDto);
 
         mockMvc.perform(put("/api/customer")
+                        .contentType("application/json")
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateCustomer_WithTokenMismatch_ReturnsForbidden() throws Exception {
+        CustomerClientUpdateRequest request = new CustomerClientUpdateRequest();
+        request.setId("id1");
+
+        CustomerDto requestCustomerDto = new CustomerDto();
+        requestCustomerDto.setId("id1");
+
+        CustomerDto currentCustomerDto = new CustomerDto();
+        currentCustomerDto.setId("id1");
+
+        when(customerClientApiMapper.toDto(request)).thenReturn(requestCustomerDto);
+        when(customerService.getCurrentCustomer()).thenReturn(currentCustomerDto);
+        when(jwtUtil.extractClaim(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any())).thenReturn("id2");
+
+        mockMvc.perform(put("/api/customer")
+                        .header("Authorization", "Bearer token")
                         .contentType("application/json")
                         .content(new ObjectMapper().writeValueAsString(request)))
                 .andExpect(status().isForbidden());

@@ -123,6 +123,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
              .orElseThrow(() -> new AuthenticationException.AuthorizationFailed("Customer not found"));
 
         List<String> roles = List.of(customer.getRole() != null ? customer.getRole().name() : "USER");
-        return jwtUtil.generateSessionToken(customer.getEmail(), roles);
+        return jwtUtil.generateSessionToken(customer.getEmail(), customer.getId(), roles);
     }
 }
