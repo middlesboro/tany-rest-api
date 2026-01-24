@@ -7,6 +7,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,7 +17,7 @@ import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.wishlist.Wishlist;
 import sk.tany.rest.api.domain.wishlist.WishlistRepository;
-import sk.tany.rest.api.exception.ProductException;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +35,9 @@ class WishlistClientServiceTest {
 
     @Mock
     private CustomerRepository customerRepository;
+
+    @Mock
+    private ProductClientService productClientService;
 
     @InjectMocks
     private WishlistClientServiceImpl wishlistClientService;
@@ -112,5 +118,23 @@ class WishlistClientServiceTest {
          List<String> result = wishlistClientService.getWishlistProductIds();
 
          assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void getWishlist_ShouldReturnPageOfProducts() {
+        String customerId = "cust1";
+        Pageable pageable = PageRequest.of(0, 10);
+        Wishlist wishlist = new Wishlist("1", customerId, "prod1", null);
+
+        when(wishlistRepository.findByCustomerId(customerId)).thenReturn(Collections.singletonList(wishlist));
+
+        ProductClientDto productDto = new ProductClientDto();
+        productDto.setId("prod1");
+        when(productClientService.findAllByIds(List.of("prod1"))).thenReturn(List.of(productDto));
+
+        Page<ProductClientDto> result = wishlistClientService.getWishlist(customerId, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("prod1", result.getContent().get(0).getId());
     }
 }
