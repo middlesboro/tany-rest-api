@@ -8,10 +8,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.wishlist.Wishlist;
 import sk.tany.rest.api.domain.wishlist.WishlistRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.exception.ProductException;
+import sk.tany.rest.api.mapper.ProductMapper;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +26,8 @@ public class WishlistClientServiceImpl implements WishlistClientService {
 
     private final WishlistRepository wishlistRepository;
     private final CustomerRepository customerRepository;
-    private final ProductClientService productClientService;
+    private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
     private String getCurrentCustomerId() {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -79,7 +82,13 @@ public class WishlistClientServiceImpl implements WishlistClientService {
                 .map(Wishlist::getProductId)
                 .collect(Collectors.toList());
 
-        List<ProductClientDto> products = productClientService.findAllByIds(productIds);
+        List<ProductClientDto> products = productRepository.findAllById(productIds).stream()
+                .map(product -> {
+                    ProductClientDto dto = productMapper.toClientDto(product);
+                    dto.setInWishlist(true);
+                    return dto;
+                })
+                .collect(Collectors.toList());
 
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), products.size());
