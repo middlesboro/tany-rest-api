@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 public class CustomerClientUpdateRequest {
-    private String id;
     private String firstname;
     private String lastname;
     private String email;

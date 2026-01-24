@@ -17,7 +17,7 @@ public class Customer {
     private String firstname;
     private String lastname;
     private String phone;
-    private Role role;
+    private Role role = Role.CUSTOMER;
     private Address address;
     private Address invoiceAddress;
     private Address deliveryAddress;

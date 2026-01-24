@@ -13,6 +13,7 @@ import sk.tany.rest.api.domain.auth.MagicLinkTokenRepository;
 import sk.tany.rest.api.domain.auth.MagicLinkTokenState;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.customer.Role;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -50,10 +51,10 @@ public class MagicLinkAuthenticationProvider implements AuthenticationProvider {
                     .orElseThrow(() -> new BadCredentialsException("User not found"));
 
             List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority(customer.getRole() != null ? customer.getRole().name() : "GUEST")
+                    new SimpleGrantedAuthority(customer.getRole() == null ? Role.CUSTOMER.name() : customer.getRole().name())
             );
 
-            return new UsernamePasswordAuthenticationToken(customer.getEmail(), null, authorities);
+            return new UsernamePasswordAuthenticationToken(customer, null, authorities);
         }
     }
 
