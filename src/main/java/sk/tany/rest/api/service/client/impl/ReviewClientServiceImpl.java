@@ -11,6 +11,7 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
 import sk.tany.rest.api.domain.review.ReviewRepository;
+import sk.tany.rest.api.dto.client.review.ProductRatingDto;
 import sk.tany.rest.api.dto.client.review.ReviewClientCreateRequest;
 import sk.tany.rest.api.dto.client.review.ReviewClientListResponse;
 import sk.tany.rest.api.dto.client.review.ReviewClientProductResponse;
@@ -19,7 +20,9 @@ import sk.tany.rest.api.service.mapper.ReviewMapper;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -96,6 +99,54 @@ public class ReviewClientServiceImpl implements ReviewClientService {
         review.setActive(true);
         repository.save(review);
         recalculateProductStats(request.getProductId());
+    }
+
+    @Override
+    public ProductRatingDto getProductRating(String productId) {
+        List<Review> activeReviews = repository.findAllByProductId(productId).stream()
+                .filter(Review::isActive)
+                .toList();
+
+        BigDecimal averageRating = BigDecimal.ZERO;
+        int reviewsCount = activeReviews.size();
+
+        if (reviewsCount > 0) {
+            double average = activeReviews.stream()
+                    .mapToInt(Review::getRating)
+                    .average()
+                    .orElse(0.0);
+            averageRating = BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP);
+        }
+        return new ProductRatingDto(averageRating, reviewsCount);
+    }
+
+    @Override
+    public Map<String, ProductRatingDto> getProductRatings(Collection<String> productIds) {
+        List<Review> reviews = repository.findAllByProductIds(productIds);
+
+        Map<String, List<Review>> reviewsByProduct = reviews.stream()
+                .filter(Review::isActive)
+                .collect(Collectors.groupingBy(Review::getProductId));
+
+        Map<String, ProductRatingDto> result = new java.util.HashMap<>();
+
+        for (String productId : productIds) {
+            List<Review> productReviews = reviewsByProduct.getOrDefault(productId, List.of());
+
+            BigDecimal averageRating = BigDecimal.ZERO;
+            int reviewsCount = productReviews.size();
+
+            if (reviewsCount > 0) {
+                double average = productReviews.stream()
+                        .mapToInt(Review::getRating)
+                        .average()
+                        .orElse(0.0);
+                averageRating = BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP);
+            }
+            result.put(productId, new ProductRatingDto(averageRating, reviewsCount));
+        }
+
+        return result;
     }
 
     private void recalculateProductStats(String productId) {
