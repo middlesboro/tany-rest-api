@@ -44,9 +44,10 @@ prestashop:
   key: ${PRESTASHOP_KEY}
 
 security:
+  access-token-validity: ${ACCESS_TOKEN_VALIDITY:1} # in hours
   excluded-urls:
     - /api/login/**
-    - /api/customer/**
+    - /api/customer/context
     - /api/cart/**
     - /api/reviews/**
     - /api/orders/**

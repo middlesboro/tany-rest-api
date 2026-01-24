@@ -5,7 +5,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,18 +32,19 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
 import sk.tany.rest.api.config.security.MagicLinkLoginFilter;
+import sk.tany.rest.api.config.security.PublicUrlTokenIgnorerFilter;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.jwk.JwkKey;
 import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
@@ -56,11 +56,11 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -77,7 +77,6 @@ public class SecurityConfig {
     @Value("${eshop.frontend-admin-url}")
     private String frontendAdminUrl;
 
-    // --- 1. FILTER CHAIN PRE AUTHORIZATION SERVER ---
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authorizationServerSecurityFilterChain(
@@ -112,7 +111,8 @@ public class SecurityConfig {
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http, SecurityContextRepository repo) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .securityContext(context -> context.securityContextRepository(repo)) // Zdieľaná session
+                .securityContext(context -> context.securityContextRepository(repo))
+                .addFilterBefore(new PublicUrlTokenIgnorerFilter(securityProperties), BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> {
                     // Tvoje dynamické výnimky zo SecurityProperties
                     securityProperties.getExcludedUrls().forEach(url -> {
@@ -127,13 +127,8 @@ public class SecurityConfig {
                 })
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                        // Custom handling for requests that don't require authentication. Otherwise, public URLs would return 401.
                         .authenticationEntryPoint((request, response, authException) -> {
-                            if (isPublicUrl(request)) {
-                                request.getRequestDispatcher(request.getServletPath()).forward(request, response);
-                            } else {
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
-                            }
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
                         })
                 );
 
@@ -159,9 +154,11 @@ public class SecurityConfig {
                 .clientId(clientId)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .redirectUri(redirectUri + "/oauth/callback")
                 .scopes(s -> s.addAll(List.of(scopes)))
+                .tokenSettings(TokenSettings.builder()
+                        .accessTokenTimeToLive(Duration.ofHours(securityProperties.getAccessTokenValidity()))
+                        .build())
                 .clientSettings(ClientSettings.builder()
                         .requireAuthorizationConsent(false)
                         .requireProofKey(true)
@@ -191,17 +188,18 @@ public class SecurityConfig {
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer() {
         return (context) -> {
-            if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
-                context.getClaims().claims((claims) -> {
-                    Set<String> roles = AuthorityUtils.authorityListToSet(context.getPrincipal().getAuthorities());
-                    claims.put("roles", roles);
+            if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType()) || "id_token".equals(context.getTokenType().getValue())) {
+                Authentication principal = context.getPrincipal();
 
-                    Authentication principal = context.getPrincipal();
-                    if (principal.getPrincipal() instanceof Customer customer) {
+                if (principal.getPrincipal() instanceof Customer customer) {
+                    context.getClaims().subject(customer.getEmail());
+
+                    context.getClaims().claims(claims -> {
                         claims.put("customerId", customer.getId());
-                        context.getClaims().subject(customer.getEmail());
-                    }
-                });
+                        Set<String> roles = AuthorityUtils.authorityListToSet(principal.getAuthorities());
+                        claims.put("roles", roles);
+                    });
+                }
             }
         };
     }
@@ -254,18 +252,4 @@ public class SecurityConfig {
         } catch (Exception e) { throw new IllegalStateException(e); }
     }
 
-    private boolean isPublicUrl(HttpServletRequest request) {
-        List<RequestMatcher> publicMatchers = securityProperties.getExcludedUrls().stream()
-                .map(url -> {
-                    String[] parts = url.split(" ");
-                    if (parts.length > 1) {
-                        return new AntPathRequestMatcher(parts[1], parts[0]);
-                    } else {
-                        return new AntPathRequestMatcher(parts[0]);
-                    }
-                })
-                .collect(Collectors.toList());
-
-        return publicMatchers.stream().anyMatch(matcher -> matcher.matches(request));
-    }
 }

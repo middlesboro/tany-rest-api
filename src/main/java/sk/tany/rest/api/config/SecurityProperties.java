@@ -11,5 +11,6 @@ import java.util.List;
 @Configuration
 @ConfigurationProperties(prefix = "security")
 public class SecurityProperties {
+    private Integer accessTokenValidity;
     private List<String> excludedUrls = new ArrayList<>();
 }
