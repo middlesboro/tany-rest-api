@@ -2,16 +2,23 @@ package sk.tany.rest.api.controller.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddItemRequest;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddProductResponse;
-import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemRequest;
-import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemResponse;
 import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierRequest;
 import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierResponse;
 import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentRequest;
 import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentResponse;
+import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemRequest;
+import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemResponse;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateRequest;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateResponse;
 import sk.tany.rest.api.mapper.CartClientApiMapper;
@@ -71,6 +78,8 @@ public class CartClientController {
         CartDto updatedCart = cartService.save(cartDto);
         if (Boolean.TRUE.equals(request.getDiscountForNewsletter())) {
             updatedCart = cartService.addDiscount(updatedCart.getCartId(), "zlava10");
+        } else {
+            updatedCart = cartService.removeDiscount(updatedCart.getCartId(), "zlava10");
         }
         return ResponseEntity.ok(cartClientApiMapper.toUpdateResponse(updatedCart));
     }
