@@ -7,8 +7,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.web.servlet.MockMvc;
-import sk.tany.rest.api.component.JwtUtil;
+import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
+import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
 import sk.tany.rest.api.dto.client.review.ReviewClientListResponse;
 import sk.tany.rest.api.dto.client.review.ReviewClientProductResponse;
 import sk.tany.rest.api.service.client.ReviewClientService;
@@ -32,7 +34,13 @@ class ReviewClientControllerTest {
     private ReviewClientService reviewClientService;
 
     @MockBean
-    private JwtUtil jwtUtil;
+    private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
+
+    @MockBean
+    private JwkKeyRepository jwkKeyRepository;
+
+    @MockBean
+    private SecurityContextRepository securityContextRepository;
 
     @Test
     @WithMockUser

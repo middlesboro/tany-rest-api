@@ -9,7 +9,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.controller.admin.BrandAdminController;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.service.admin.BrandAdminService;
@@ -19,6 +18,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Import;
 import sk.tany.rest.api.config.SecurityConfig;
 import sk.tany.rest.api.config.SecurityProperties;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
+import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
 import sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest;
 
 import java.util.Optional;
@@ -52,7 +54,13 @@ class BrandAdminControllerTest {
     private PrestaShopImportService prestaShopImportService;
 
     @MockBean
-    private JwtUtil jwtUtil;
+    private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
+
+    @MockBean
+    private JwkKeyRepository jwkKeyRepository;
+
+    @MockBean
+    private AuthorizationServerSettings authorizationServerSettings;
 
     @Test
     @WithMockUser(roles = "ADMIN")

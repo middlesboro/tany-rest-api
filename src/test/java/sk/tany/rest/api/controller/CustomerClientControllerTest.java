@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import sk.tany.rest.api.component.JwtUtil;
 import sk.tany.rest.api.controller.client.CustomerClientController;
 import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
@@ -32,9 +31,6 @@ class CustomerClientControllerTest {
 
     @Mock
     private CustomerClientApiMapper customerClientApiMapper;
-
-    @Mock
-    private JwtUtil jwtUtil;
 
     @InjectMocks
     private CustomerClientController customerClientController;
