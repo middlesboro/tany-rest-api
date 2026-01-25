@@ -19,6 +19,8 @@ import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderItem;
 import sk.tany.rest.api.domain.order.OrderRepository;
+import sk.tany.rest.api.domain.order.OrderStatus;
+import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.productsales.ProductSales;
@@ -47,6 +49,7 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -115,6 +118,8 @@ public class OrderClientServiceImpl implements OrderClientService {
         }
 
         Order order = new Order();
+        order.setStatus(OrderStatus.CREATED);
+        order.getStatusHistory().add(new OrderStatusHistory(OrderStatus.CREATED, Instant.now()));
         order.setCartId(orderDto.getCartId());
         order.setNote(orderDto.getNote());
         order.setCustomerId(getCurrentCustomerId());

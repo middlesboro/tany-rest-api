@@ -1,6 +1,7 @@
 package sk.tany.rest.api.dto.admin.order.patch;
 
 import lombok.Data;
+import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 
@@ -23,4 +24,5 @@ public class OrderPatchRequest {
     private Boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
     private String note;
+    private OrderStatus status;
 }

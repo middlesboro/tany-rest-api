@@ -41,5 +41,6 @@ public class Order {
     private String note;
     private PriceBreakDown priceBreakDown;
     private OrderStatus status = OrderStatus.CREATED;
+    private List<OrderStatusHistory> statusHistory = new java.util.ArrayList<>();
 
 }
