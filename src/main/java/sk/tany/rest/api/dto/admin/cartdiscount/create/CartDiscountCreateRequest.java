@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 public class CartDiscountCreateRequest {
     private String title;
+    private String description;
     private String code;
     private DiscountType discountType;
     private BigDecimal value;

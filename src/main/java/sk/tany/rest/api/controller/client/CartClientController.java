@@ -69,6 +69,9 @@ public class CartClientController {
         }
 
         CartDto updatedCart = cartService.save(cartDto);
+        if (Boolean.TRUE.equals(request.getDiscountForNewsletter())) {
+            updatedCart = cartService.addDiscount(updatedCart.getCartId(), "zlava10");
+        }
         return ResponseEntity.ok(cartClientApiMapper.toUpdateResponse(updatedCart));
     }
 
