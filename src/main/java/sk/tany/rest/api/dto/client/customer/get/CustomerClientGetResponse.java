@@ -19,6 +19,7 @@ import java.util.List;
 public class CustomerClientGetResponse {
     private CustomerDto customerDto;
     private CustomerContextCartDto cartDto;
+    private boolean discountForNewsletter;
 
     @Data
     @NoArgsConstructor

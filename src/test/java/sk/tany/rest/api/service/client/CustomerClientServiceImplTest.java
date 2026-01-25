@@ -169,4 +169,48 @@ class CustomerClientServiceImplTest {
         assertTrue(contextCart.getPayments().get(0).isSelected());
         assertFalse(contextCart.getPayments().get(1).isSelected());
     }
+
+    @Test
+    void getCustomerContext_SetsDiscountForNewsletter_WhenDiscountApplied() {
+        // Arrange
+        String cartId = "cart1";
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+
+        sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto discount = new sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto();
+        discount.setCode("zlava10");
+        cartDto.setAppliedDiscounts(List.of(discount));
+
+        when(cartService.getOrCreateCart(cartId, null)).thenReturn(cartDto);
+        when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+        when(paymentService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // Act
+        CustomerContextDto result = customerClientService.getCustomerContext(cartId);
+
+        // Assert
+        assertTrue(result.isDiscountForNewsletter());
+    }
+
+    @Test
+    void getCustomerContext_SetsDiscountForNewsletter_WhenDiscountNotApplied() {
+        // Arrange
+        String cartId = "cart1";
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+
+        sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto discount = new sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto();
+        discount.setCode("other");
+        cartDto.setAppliedDiscounts(List.of(discount));
+
+        when(cartService.getOrCreateCart(cartId, null)).thenReturn(cartDto);
+        when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+        when(paymentService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // Act
+        CustomerContextDto result = customerClientService.getCustomerContext(cartId);
+
+        // Assert
+        assertFalse(result.isDiscountForNewsletter());
+    }
 }

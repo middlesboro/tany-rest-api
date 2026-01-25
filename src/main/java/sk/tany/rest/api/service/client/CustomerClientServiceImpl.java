@@ -146,7 +146,10 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         customerContextCartDto.setFreeShipping(cartDto.isFreeShipping());
         customerContextCartDto.setPriceBreakDown(cartDto.getPriceBreakDown());
 
-        return new CustomerContextDto(customerDto, customerContextCartDto);
+        boolean discountForNewsletter = cartDto.getAppliedDiscounts() != null &&
+                cartDto.getAppliedDiscounts().stream().anyMatch(d -> "zlava10".equalsIgnoreCase(d.getCode()));
+
+        return new CustomerContextDto(customerDto, customerContextCartDto, discountForNewsletter);
     }
 
     public CustomerDto findByEmail(String email) {
