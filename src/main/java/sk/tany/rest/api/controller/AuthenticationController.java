@@ -1,7 +1,9 @@
 package sk.tany.rest.api.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +17,10 @@ import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.customer.Role;
 import sk.tany.rest.api.service.common.EmailService;
+import org.springframework.util.FileCopyUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -26,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RestController
 @RequestMapping("/auth/magic-link")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationController {
 
     private final CustomerRepository customerRepository;
@@ -63,11 +69,23 @@ public class AuthenticationController {
             Customer customer = customerOptional.get();
             String baseUrl = customer.getRole() == Role.ADMIN ? frontendAdminUrl : frontendUrl;
             String link = baseUrl + "/magic-link?token=" + exchangeToken;
-            String body = "<p>Click here to login: <a href=\"" + link + "\">" + link + "</a></p>";
-            emailService.sendEmail(email, "Magic Link Login", body, true, null);
+
+            String body = loadTemplate().replace("{{link}}", link);
+            emailService.sendEmail(email, "Odkaz pre prihlásenie", body, true, null);
         }
 
         // Always return 200 OK to prevent email enumeration
         return ResponseEntity.ok().build();
+    }
+
+    private String loadTemplate() {
+        try {
+            ClassPathResource resource = new ClassPathResource("templates/email/magic_link.html");
+            byte[] data = FileCopyUtils.copyToByteArray(resource.getInputStream());
+            return new String(data, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error("Failed to load magic link template", e);
+            return "<p>Click here to login: <a href=\"{{link}}\">{{link}}</a></p>";
+        }
     }
 }
