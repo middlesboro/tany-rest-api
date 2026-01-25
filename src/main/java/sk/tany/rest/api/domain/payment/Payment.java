@@ -14,6 +14,7 @@ public class Payment {
     private String name;
     private PaymentType type;
     private BigDecimal price;
+    private Integer order;
     private String description;
     private String image;
     private boolean active;

@@ -12,6 +12,7 @@ public class PaymentDto {
     private String name;
     private String description;
     private String image;
+    private Integer order;
     private BigDecimal wholesalePrice;
     private BigDecimal priceWithoutVat;
     private BigDecimal price;
