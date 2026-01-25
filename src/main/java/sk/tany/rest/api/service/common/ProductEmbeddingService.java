@@ -10,6 +10,7 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -26,11 +27,18 @@ public class ProductEmbeddingService {
 
     private final ProductRepository productRepository;
 
+    @Value("${eshop.load-related-products:true}")
+    private boolean loadRelatedProducts;
+
     private volatile EmbeddingStore<TextSegment> embeddingStore;
     private volatile EmbeddingModel embeddingModel;
 
     @EventListener(ApplicationReadyEvent.class)
     public void startBackgroundInitialization() {
+        if (!loadRelatedProducts) {
+            log.info("ProductEmbeddingService initialization skipped by configuration.");
+            return;
+        }
         new Thread(this::init).start();
     }
 

@@ -22,8 +22,12 @@ class ProductEmbeddingServiceTest {
     private ProductEmbeddingService productEmbeddingService;
 
     @Test
-    void shouldInitializeInBackground() {
+    void shouldInitializeInBackground() throws Exception {
         // Given
+        java.lang.reflect.Field field = ProductEmbeddingService.class.getDeclaredField("loadRelatedProducts");
+        field.setAccessible(true);
+        field.set(productEmbeddingService, true);
+
         when(productRepository.findAll()).thenReturn(java.util.Collections.emptyList());
 
         // When
