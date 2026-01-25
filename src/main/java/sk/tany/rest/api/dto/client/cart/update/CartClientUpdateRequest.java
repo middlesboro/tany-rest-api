@@ -23,6 +23,7 @@ public class CartClientUpdateRequest {
     private String phone;
     private AddressDto invoiceAddress;
     private AddressDto deliveryAddress;
+    private Boolean discountForNewsletter;
     private Instant createDate;
     private Instant updateDate;
 

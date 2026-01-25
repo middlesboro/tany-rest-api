@@ -11,6 +11,7 @@ import java.util.List;
 public class CartDiscountDto {
     private String id;
     private String title;
+    private String description;
     private String code;
     private DiscountType discountType;
     private BigDecimal value;

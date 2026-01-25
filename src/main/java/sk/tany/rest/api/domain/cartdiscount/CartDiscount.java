@@ -13,6 +13,7 @@ public class CartDiscount {
     private String id;
     private String code;
     private String title;
+    private String description;
     private BigDecimal value;
     private boolean percentage;
     private boolean active;
