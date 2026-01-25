@@ -28,6 +28,8 @@ import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.helper.OrderHelper;
@@ -357,5 +359,11 @@ public class OrderClientServiceImpl implements OrderClientService {
                     return dto;
                 })
                 .orElseThrow(() -> new OrderException.NotFound("Order not found or access denied"));
+    }
+
+    @Override
+    public Page<OrderDto> getOrders(String customerId, Pageable pageable) {
+        return orderRepository.findAllByCustomerId(customerId, pageable)
+                .map(orderMapper::toDto);
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.product.Product;
@@ -44,6 +45,9 @@ class WishlistClientServiceTest {
 
     @Mock
     private ProductMapper productMapper;
+
+    @Mock
+    private SecurityUtil securityUtil;
 
     @InjectMocks
     private WishlistClientServiceImpl wishlistClientService;
@@ -106,8 +110,7 @@ class WishlistClientServiceTest {
 
     @Test
     void getWishlistProductIds_ShouldReturnIds() {
-        mockUser("user@example.com", "cust1");
-        when(securityContext.getAuthentication().getPrincipal()).thenReturn("user@example.com");
+        when(securityUtil.getLoggedInUserId()).thenReturn("cust1");
         Wishlist wishlist = new Wishlist("1", "cust1", "prod1", null);
         when(wishlistRepository.findByCustomerId("cust1")).thenReturn(Collections.singletonList(wishlist));
 
@@ -119,7 +122,8 @@ class WishlistClientServiceTest {
 
     @Test
     void getWishlistProductIds_ShouldReturnEmpty_WhenNotLoggedIn() {
-         when(securityContext.getAuthentication()).thenReturn(null);
+         when(securityUtil.getLoggedInUserId()).thenReturn(null);
+         when(wishlistRepository.findByCustomerId(null)).thenReturn(Collections.emptyList());
 
          List<String> result = wishlistClientService.getWishlistProductIds();
 
