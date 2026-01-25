@@ -88,6 +88,10 @@ public class CustomerClientServiceImpl implements CustomerClientService {
                         .filter(item -> item.getProductId().equals(product.getId()))
                         .findFirst()
                         .ifPresent(item -> product.setQuantity(item.getQuantity()));
+
+                if (product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(BigDecimal.ZERO) >= 0) {
+                    product.setPrice(product.getDiscountPrice());
+                }
                 products.add(product);
             }
         }

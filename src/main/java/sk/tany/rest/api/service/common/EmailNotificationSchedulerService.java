@@ -76,9 +76,12 @@ public class EmailNotificationSchedulerService {
             String template = loadTemplate();
             StringBuilder productsListHtml = new StringBuilder();
             for (Product product : products) {
+                java.math.BigDecimal price = product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(java.math.BigDecimal.ZERO) >= 0
+                        ? product.getDiscountPrice()
+                        : product.getPrice();
                 productsListHtml.append("<tr>")
                         .append("<td>").append(product.getTitle()).append("</td>")
-                        .append("<td>").append(product.getPrice()).append(" €</td>")
+                        .append("<td>").append(price).append(" €</td>")
                         .append("</tr>");
             }
 
