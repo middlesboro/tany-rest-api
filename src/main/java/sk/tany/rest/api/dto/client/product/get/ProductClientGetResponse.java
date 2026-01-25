@@ -27,4 +27,6 @@ public class ProductClientGetResponse {
     private List<String> images;
     private ProductStatus status;
     private List<ProductLabelClientDto> productLabels;
+    private Boolean inWishlist;
+    private BigDecimal averageRating;
 }

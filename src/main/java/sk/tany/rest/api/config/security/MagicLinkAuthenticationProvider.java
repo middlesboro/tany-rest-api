@@ -16,7 +16,7 @@ import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.customer.Role;
 
 import java.time.Instant;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -50,9 +50,11 @@ public class MagicLinkAuthenticationProvider implements AuthenticationProvider {
             Customer customer = customerRepository.findByEmail(magicLinkToken.getCustomerEmail())
                     .orElseThrow(() -> new BadCredentialsException("User not found"));
 
-            List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority(customer.getRole() == null ? Role.CUSTOMER.name() : customer.getRole().name())
-            );
+            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+            if (customer.getRole() == Role.ADMIN) {
+                authorities.add(new SimpleGrantedAuthority(Role.ADMIN.name()));
+            }
+            authorities.add(new SimpleGrantedAuthority(customer.getRole() == null ? Role.CUSTOMER.name() : customer.getRole().name()));
 
             return new UsernamePasswordAuthenticationToken(customer, null, authorities);
         }

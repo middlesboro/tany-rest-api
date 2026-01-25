@@ -28,4 +28,5 @@ public class ProductClientListResponse {
     private ProductStatus status;
     private List<ProductLabelClientDto> productLabels;
     private Boolean inWishlist;
+    private BigDecimal averageRating;
 }
