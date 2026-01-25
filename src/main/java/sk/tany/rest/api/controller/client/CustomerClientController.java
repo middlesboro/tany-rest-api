@@ -1,11 +1,13 @@
 package sk.tany.rest.api.controller.client;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,8 +19,10 @@ import sk.tany.rest.api.dto.client.customer.get.CustomerClientDetailResponse;
 import sk.tany.rest.api.dto.client.customer.get.CustomerClientGetResponse;
 import sk.tany.rest.api.dto.client.customer.update.CustomerClientUpdateRequest;
 import sk.tany.rest.api.dto.client.customer.update.CustomerClientUpdateResponse;
+import sk.tany.rest.api.dto.client.emailnotification.EmailNotificationCreateRequest;
 import sk.tany.rest.api.mapper.CustomerClientApiMapper;
 import sk.tany.rest.api.service.client.CustomerClientService;
+import sk.tany.rest.api.service.client.emailnotification.EmailNotificationClientService;
 
 @RestController
 @RequestMapping("/api/customer")
@@ -27,6 +31,7 @@ public class CustomerClientController {
 
     private final CustomerClientService customerService;
     private final CustomerClientApiMapper customerClientApiMapper;
+    private final EmailNotificationClientService emailNotificationClientService;
 
     @GetMapping("/context")
     public ResponseEntity<CustomerClientGetResponse> getCustomerContext(@RequestParam(required = false) String cartId) {
@@ -50,4 +55,11 @@ public class CustomerClientController {
         CustomerDto updatedCustomer = customerService.updateCustomer(customerDto);
         return ResponseEntity.ok(customerClientApiMapper.toUpdateResponse(updatedCustomer));
     }
+
+    @PostMapping("/email-notification")
+    @Operation(summary = "Create email notification", description = "Creates a new email notification for a product back in stock.")
+    public void createNotification(@RequestBody EmailNotificationCreateRequest request) {
+        emailNotificationClientService.createNotification(request);
+    }
+
 }

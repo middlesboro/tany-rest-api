@@ -49,6 +49,7 @@ security:
   excluded-urls:
     - /api/login/**
     - /api/customer/context
+    - /api/customer/email-notification
     - /api/cart/**
     - /api/reviews/**
     - /api/orders/**
