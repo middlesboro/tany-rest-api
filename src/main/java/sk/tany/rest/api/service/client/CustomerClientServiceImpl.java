@@ -128,9 +128,10 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         }
         customerContextCartDto.setCarriers(carriers);
 
-        List<PaymentDto> payments = paymentService.findAll(Pageable.unpaged()).getContent();
+        List<PaymentDto> payments = new ArrayList<>(paymentService.findAll(Pageable.unpaged()).getContent());
         CartDto finalCartDto1 = cartDto;
         payments.forEach(payment -> payment.setSelected(payment.getId().equals(finalCartDto1.getSelectedPaymentId())));
+        payments.sort(Comparator.comparing(PaymentDto::getOrder, Comparator.nullsLast(Comparator.naturalOrder())));
         if (payments.stream().noneMatch(PaymentDto::isSelected) && !payments.isEmpty()) {
             payments.getFirst().setSelected(true);
         }
