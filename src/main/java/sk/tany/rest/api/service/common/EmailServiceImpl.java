@@ -28,6 +28,10 @@ public class EmailServiceImpl implements EmailService {
 
         email.setFrom(fromName, fromEmail);
         email.addRecipient("", to);
+
+        if (subject != null && !subject.endsWith(" - Tany.sk")) {
+            subject = subject + " - Tany.sk";
+        }
         email.setSubject(subject);
 
         if (isHtml) {
