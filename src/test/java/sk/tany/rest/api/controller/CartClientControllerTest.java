@@ -6,8 +6,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.web.servlet.MockMvc;
-import sk.tany.rest.api.component.JwtUtil;
+import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
 import sk.tany.rest.api.controller.client.CartClientController;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddItemRequest;
@@ -39,7 +40,10 @@ public class CartClientControllerTest {
     private CartClientService cartService;
 
     @MockBean
-    private JwtUtil jwtUtil;
+    private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
+
+    @MockBean
+    private SecurityContextRepository securityContextRepository;
 
     @MockBean
     private CartClientApiMapper cartClientApiMapper;

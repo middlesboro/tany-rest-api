@@ -5,9 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import sk.tany.rest.api.component.JwtUtil;
+import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
 import sk.tany.rest.api.dto.PageContentDto;
 import sk.tany.rest.api.dto.client.pagecontent.get.PageContentClientGetResponse;
 import sk.tany.rest.api.mapper.PageContentClientApiMapper;
@@ -35,7 +36,10 @@ public class PageContentClientControllerTest {
     private PageContentClientApiMapper apiMapper;
 
     @MockBean
-    private JwtUtil jwtUtil;
+    private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
+
+    @MockBean
+    private SecurityContextRepository securityContextRepository;
 
     @Test
     void getPageBySlug_shouldReturnOk() throws Exception {

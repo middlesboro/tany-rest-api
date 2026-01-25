@@ -8,8 +8,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.web.servlet.MockMvc;
-import sk.tany.rest.api.component.JwtUtil;
+import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminDetailResponse;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminListResponse;
@@ -37,7 +38,10 @@ class ReviewAdminControllerTest {
     private ReviewAdminService reviewAdminService;
 
     @MockBean
-    private JwtUtil jwtUtil;
+    private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
+
+    @MockBean
+    private SecurityContextRepository securityContextRepository;
 
     @Test
     @WithMockUser(roles = "ADMIN")
