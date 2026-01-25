@@ -38,4 +38,5 @@ public class OrderDto {
     private String lastname;
     private String note;
     private PriceBreakDown priceBreakDown;
+    private List<OrderStatusHistoryDto> statusHistory;
 }

@@ -3,6 +3,7 @@ package sk.tany.rest.api.dto.admin.order.get;
 import lombok.Data;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.OrderItemDto;
+import sk.tany.rest.api.dto.OrderStatusHistoryDto;
 import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.math.BigDecimal;
@@ -27,4 +28,5 @@ public class OrderAdminGetResponse {
     private String note;
     private PriceBreakDown priceBreakDown;
     private String selectedPickupPointName;
+    private List<OrderStatusHistoryDto> statusHistory;
 }

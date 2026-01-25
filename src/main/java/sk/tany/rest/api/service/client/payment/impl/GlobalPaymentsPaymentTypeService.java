@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
+import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.GlobalPaymentsPaymentRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.dto.GlobalPaymentDetailsDto;
@@ -18,6 +19,8 @@ import sk.tany.rest.api.service.common.GlobalPaymentsSigner;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 
 @Service
@@ -110,8 +113,14 @@ public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
 
         if (isValid) {
             orderRepository.findById(md).ifPresent(order -> {
-                order.setStatus(OrderStatus.PAID);
-                orderRepository.save(order);
+                if (order.getStatus() != OrderStatus.PAID) {
+                    order.setStatus(OrderStatus.PAID);
+                    if (order.getStatusHistory() == null) {
+                        order.setStatusHistory(new ArrayList<>());
+                    }
+                    order.getStatusHistory().add(new OrderStatusHistory(OrderStatus.PAID, Instant.now()));
+                    orderRepository.save(order);
+                }
             });
         }
 

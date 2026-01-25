@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import sk.tany.rest.api.domain.carrier.CarrierType;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.PaymentType;
+import sk.tany.rest.api.dto.OrderStatusHistoryDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -34,6 +35,7 @@ public class OrderClientGetResponse {
     private String lastname;
     private OrderStatus status;
     private sk.tany.rest.api.dto.PriceBreakDown priceBreakDown;
+    private List<OrderStatusHistoryDto> statusHistory;
 
     @Data
     @NoArgsConstructor

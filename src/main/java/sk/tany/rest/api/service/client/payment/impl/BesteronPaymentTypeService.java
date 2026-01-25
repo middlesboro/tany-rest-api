@@ -15,6 +15,7 @@ import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
+import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.BesteronPayment;
 import sk.tany.rest.api.domain.payment.BesteronPaymentRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
@@ -32,6 +33,7 @@ import sk.tany.rest.api.exception.PaymentException;
 import sk.tany.rest.api.exception.CustomerException;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -110,8 +112,14 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
 
                 if ("Completed".equalsIgnoreCase(status)) {
                     orderRepository.findById(orderId).ifPresent(order -> {
-                        order.setStatus(OrderStatus.PAID);
-                        orderRepository.save(order);
+                        if (order.getStatus() != OrderStatus.PAID) {
+                            order.setStatus(OrderStatus.PAID);
+                            if (order.getStatusHistory() == null) {
+                                order.setStatusHistory(new ArrayList<>());
+                            }
+                            order.getStatusHistory().add(new OrderStatusHistory(OrderStatus.PAID, Instant.now()));
+                            orderRepository.save(order);
+                        }
                     });
                 }
                 return paymentStatus.name();
