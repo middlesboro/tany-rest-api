@@ -25,4 +25,7 @@ public class ProductSearchResponse {
     private String brandId;
     private List<String> images;
     private ProductStatus status;
+    private BigDecimal discountValue;
+    private BigDecimal discountPercentualValue;
+    private BigDecimal discountPrice;
 }

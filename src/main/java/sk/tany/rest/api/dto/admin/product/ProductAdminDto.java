@@ -36,4 +36,7 @@ public class ProductAdminDto {
     private Integer reviewsCount;
     private List<ProductFilterParameterDto> productFilterParameters = new ArrayList<>();
     private List<ProductLabelDto> productLabels = new ArrayList<>();
+    private BigDecimal discountValue;
+    private BigDecimal discountPercentualValue;
+    private BigDecimal discountPrice;
 }

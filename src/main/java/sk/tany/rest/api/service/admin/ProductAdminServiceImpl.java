@@ -48,6 +48,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     public ProductAdminDto save(ProductAdminDto productDto) {
         var product = productMapper.toEntity(productDto);
         recalculateReviewStatistics(product);
+        calculateProductDiscounts(product);
         var savedProduct = productRepository.save(product);
         productSearchEngine.addProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
@@ -58,6 +59,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         productDto.setId(id);
         var product = productMapper.toEntity(productDto);
         recalculateReviewStatistics(product);
+        calculateProductDiscounts(product);
         var savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
@@ -67,7 +69,17 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     public ProductAdminDto patch(String id, sk.tany.rest.api.dto.admin.product.patch.ProductPatchRequest patchDto) {
         var product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
         recalculateReviewStatistics(product);
+
+        if (patchDto.getDiscountValue() != null) {
+            if (patchDto.getDiscountPrice() == null) {
+                product.setDiscountPrice(null);
+            }
+        } else if (patchDto.getDiscountPrice() != null) {
+            product.setDiscountValue(null);
+        }
+
         productMapper.updateEntityFromPatch(patchDto, product);
+        calculateProductDiscounts(product);
         var savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
@@ -108,6 +120,35 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         return productRepository.findAllByProductFilterParametersFilterParameterValueId(filterParameterValueId).stream()
                 .map(productMapper::toAdminDto)
                 .toList();
+    }
+
+    private void calculateProductDiscounts(Product product) {
+        BigDecimal price = product.getPrice();
+        if (price == null || price.compareTo(BigDecimal.ZERO) == 0) {
+            product.setDiscountValue(null);
+            product.setDiscountPrice(null);
+            product.setDiscountPercentualValue(null);
+            return;
+        }
+
+        if (product.getDiscountValue() != null) {
+            BigDecimal discountPrice = price.subtract(product.getDiscountValue());
+            if (discountPrice.compareTo(BigDecimal.ZERO) < 0) discountPrice = BigDecimal.ZERO;
+            product.setDiscountPrice(discountPrice);
+        } else if (product.getDiscountPrice() != null) {
+            BigDecimal discountValue = price.subtract(product.getDiscountPrice());
+            if (discountValue.compareTo(BigDecimal.ZERO) < 0) discountValue = BigDecimal.ZERO;
+            product.setDiscountValue(discountValue);
+        }
+
+        if (product.getDiscountValue() != null && price.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal percent = product.getDiscountValue()
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(price, 2, RoundingMode.HALF_UP);
+            product.setDiscountPercentualValue(percent);
+        } else {
+            product.setDiscountPercentualValue(null);
+        }
     }
 
     private void recalculateReviewStatistics(Product product) {

@@ -314,12 +314,29 @@ public class CartClientServiceImpl implements CartClientService {
         for (CartItem item : cartDto.getItems()) {
             ProductClientDto product = productMap.get(item.getProductId());
             if (product != null) {
-                item.setPrice(product.getPrice());
+                BigDecimal effectivePrice = product.getPrice();
+                BigDecimal effectivePriceWithoutVat = product.getPriceWithoutVat() != null ? product.getPriceWithoutVat() : product.getPrice();
+
+                if (product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(BigDecimal.ZERO) >= 0) {
+                    BigDecimal originalPrice = product.getPrice();
+                    BigDecimal originalPriceWithoutVat = effectivePriceWithoutVat;
+
+                    effectivePrice = product.getDiscountPrice();
+
+                    if (originalPrice != null && originalPrice.compareTo(BigDecimal.ZERO) != 0) {
+                        BigDecimal ratio = originalPriceWithoutVat.divide(originalPrice, 4, RoundingMode.HALF_UP);
+                        effectivePriceWithoutVat = effectivePrice.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                    } else {
+                        effectivePriceWithoutVat = effectivePrice;
+                    }
+                }
+
+                item.setPrice(effectivePrice);
                 item.setImage((product.getImages() != null && !product.getImages().isEmpty()) ? product.getImages().get(0) : null);
                 item.setTitle(product.getTitle());
 
-                BigDecimal priceWithVat = product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal priceWithoutVat = (product.getPriceWithoutVat() != null ? product.getPriceWithoutVat() : product.getPrice())
+                BigDecimal priceWithVat = effectivePrice.multiply(BigDecimal.valueOf(item.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal priceWithoutVat = effectivePriceWithoutVat
                         .multiply(BigDecimal.valueOf(item.getQuantity())).setScale(2, RoundingMode.HALF_UP);
                 BigDecimal vatValue = priceWithVat.subtract(priceWithoutVat).setScale(2, RoundingMode.HALF_UP);
 

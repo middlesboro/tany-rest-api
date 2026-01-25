@@ -31,4 +31,7 @@ public class ProductGetResponse {
     private Boolean active;
     private List<ProductFilterParameterDto> productFilterParameters;
     private List<String> productLabelIds;
+    private BigDecimal discountValue;
+    private BigDecimal discountPercentualValue;
+    private BigDecimal discountPrice;
 }

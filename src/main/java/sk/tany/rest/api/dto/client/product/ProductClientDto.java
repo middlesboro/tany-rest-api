@@ -37,4 +37,7 @@ public class ProductClientDto {
     private List<ProductFilterParameterDto> productFilterParameters = new ArrayList<>();
     private List<ProductLabelDto> productLabels = new ArrayList<>();
     private Boolean inWishlist;
+    private BigDecimal discountValue;
+    private BigDecimal discountPercentualValue;
+    private BigDecimal discountPrice;
 }
