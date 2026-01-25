@@ -20,6 +20,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Base64;
+import java.util.Locale;
 
 @Service
 @Slf4j
@@ -75,16 +76,16 @@ public class BankTransferPaymentTypeService implements PaymentTypeService {
             if (vs == null) {
                 return null;
             }
-            String amount = order.getFinalPrice() != null ? order.getFinalPrice().toString() : "0";
             String pi = "/VS" + vs;
             String msg = "Objednavka " + vs;
 
             return "https://payme.sk?V=1" +
                     "&IBAN=" + iban +
-                    "&AM=" + amount +
+                    "&AM=" + String.format(Locale.US, "%.2f", order.getFinalPrice()) + // Locale.US to ensure dot as decimal separator
                     "&CC=EUR" +
                     "&PI=" + URLEncoder.encode(pi, StandardCharsets.UTF_8) +
-                    "&MSG=" + URLEncoder.encode(msg, StandardCharsets.UTF_8);
+                    "&MSG=" + URLEncoder.encode(msg, StandardCharsets.UTF_8) +
+                    "&CN=" + URLEncoder.encode("Bc Tatiana Grňová - Tany.sk", StandardCharsets.UTF_8); // todo change to config
         } catch (Exception e) {
             log.error("Error generating Payme link for order {}", order.getId(), e);
             return null;

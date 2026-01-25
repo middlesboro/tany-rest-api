@@ -9,12 +9,15 @@ import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.dto.OrderStatusHistoryDto;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Data
 public class OrderClientGetResponse {
     private String id;
     private String cartId;
+    private Instant createDate;
+    private Long orderIdentifier;
     private BigDecimal finalPrice;
     private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;

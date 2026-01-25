@@ -6,12 +6,14 @@ import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.PaymentType;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Data
 public class OrderDto {
     private String id;
     private Long orderIdentifier;
+    private Instant createDate;
     private String cartId;
     private BigDecimal finalPrice;
     private BigDecimal deliveryPrice;

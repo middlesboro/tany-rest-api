@@ -5,12 +5,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Data
 public class OrderClientListResponse {
     private String id;
     private String cartId;
+    private Instant createDate;
+    private Long orderIdentifier;
     private BigDecimal finalPrice;
     private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;

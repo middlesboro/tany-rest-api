@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +39,14 @@ public class OrderClientController {
         return orderClientApiMapper.toCreateResponse(createdOrder);
     }
 
-    // todo this have to be under authentication
+    @Operation(summary = "Get order confirmation")
+    @GetMapping("/{id}/confirmation")
+    public OrderClientGetResponse getOrderConfirmation(@PathVariable String id) {
+        OrderDto order = orderClientService.getOrder(id);
+        return orderClientApiMapper.toGetResponse(order);
+    }
+
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(summary = "Get order details")
     @GetMapping("/{id}")
     public OrderClientGetResponse getOrder(@PathVariable String id) {
@@ -46,6 +54,7 @@ public class OrderClientController {
         return orderClientApiMapper.toGetResponse(order);
     }
 
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(summary = "Get all orders")
     @GetMapping
     public Page<OrderClientListResponse> getOrders(Pageable pageable) {
