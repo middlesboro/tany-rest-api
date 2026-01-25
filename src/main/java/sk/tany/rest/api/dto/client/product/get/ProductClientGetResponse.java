@@ -29,4 +29,7 @@ public class ProductClientGetResponse {
     private List<ProductLabelClientDto> productLabels;
     private Boolean inWishlist;
     private BigDecimal averageRating;
+    private BigDecimal discountValue;
+    private BigDecimal discountPercentualValue;
+    private BigDecimal discountPrice;
 }

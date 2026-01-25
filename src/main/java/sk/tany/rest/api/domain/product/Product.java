@@ -38,5 +38,8 @@ public class Product {
     private Integer reviewsCount;
     private List<ProductFilterParameter> productFilterParameters;
     private List<String> productLabelIds;
+    private BigDecimal discountValue;
+    private BigDecimal discountPercentualValue;
+    private BigDecimal discountPrice;
 
 }

@@ -28,4 +28,7 @@ public class ProductListResponse {
     private ProductStatus status;
     private Boolean active;
     private List<ProductFilterParameterDto> productFilterParameters;
+    private BigDecimal discountValue;
+    private BigDecimal discountPercentualValue;
+    private BigDecimal discountPrice;
 }
