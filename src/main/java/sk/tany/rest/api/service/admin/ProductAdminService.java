@@ -19,4 +19,6 @@ public interface ProductAdminService {
     java.util.List<ProductAdminDto> searchByQuery(String query);
     java.util.List<ProductAdminDto> findAllByIds(Iterable<String> ids);
     java.util.List<ProductAdminDto> findAllByFilterParameterValueId(String filterParameterValueId);
+
+    void generateMissingSlugs();
 }

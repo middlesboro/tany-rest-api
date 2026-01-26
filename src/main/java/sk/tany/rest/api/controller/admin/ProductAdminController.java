@@ -57,6 +57,12 @@ public class ProductAdminController {
         return new ResponseEntity<>(productAdminApiMapper.toCreateResponse(savedProduct), HttpStatus.CREATED);
     }
 
+    @PostMapping("/generate-missing-slugs")
+    public ResponseEntity<Void> generateMissingSlugs() {
+        productService.generateMissingSlugs();
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping
     public Page<ProductListResponse> getProducts(@RequestParam(value = "query", required = false) String query, @RequestParam(value = "priceFrom", required = false) BigDecimal priceFrom,
                                                  @RequestParam(value = "priceTo", required = false) BigDecimal priceTo, @RequestParam(value = "brandId", required = false) String brandId,
