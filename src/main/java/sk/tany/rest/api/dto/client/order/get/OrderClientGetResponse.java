@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import sk.tany.rest.api.domain.carrier.CarrierType;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.PaymentType;
+import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.OrderStatusHistoryDto;
 
 import java.math.BigDecimal;
@@ -50,14 +51,5 @@ public class OrderClientGetResponse {
         private BigDecimal price;
         private String image;
         private String slug;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AddressDto {
-        private String street;
-        private String city;
-        private String zip;
     }
 }

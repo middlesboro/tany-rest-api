@@ -3,6 +3,7 @@ package sk.tany.rest.api.dto.client.cart.update;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.math.BigDecimal;
@@ -42,14 +43,5 @@ public class CartClientUpdateResponse {
             this.productId = productId;
             this.quantity = quantity;
         }
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AddressDto {
-        private String street;
-        private String city;
-        private String zip;
     }
 }

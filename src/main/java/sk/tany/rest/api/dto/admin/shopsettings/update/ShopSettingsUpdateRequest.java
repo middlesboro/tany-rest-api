@@ -19,4 +19,5 @@ public class ShopSettingsUpdateRequest {
     private String dic;
     private String vatNumber;
     private BigDecimal vat;
+    private String defaultCountry;
 }

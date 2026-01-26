@@ -12,7 +12,7 @@ import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.OrderStatusHistoryDto;
 import sk.tany.rest.api.dto.admin.order.patch.OrderPatchRequest;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = AddressMapper.class)
 public interface OrderMapper {
     OrderDto toDto(Order order);
     Order toEntity(OrderDto orderDto);

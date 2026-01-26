@@ -11,6 +11,7 @@ public class ShopSettings {
     private String id;
     private String key;
     private String value;
+    private String defaultCountry;
     private Instant createdDate;
     private Instant updateDate;
 }

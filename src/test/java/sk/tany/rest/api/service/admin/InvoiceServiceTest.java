@@ -77,7 +77,7 @@ public class InvoiceServiceTest {
         pbd.setTotalPriceVatValue(new BigDecimal("8.00"));
         order.setPriceBreakDown(pbd);
 
-        Address address = new Address("Street 1", "City", "12345");
+        Address address = new Address("Street 1", "City", "12345", "Slovakia");
         order.setInvoiceAddress(address);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));

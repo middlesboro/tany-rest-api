@@ -9,6 +9,7 @@ import sk.tany.rest.api.domain.cartdiscount.DiscountType;
 import sk.tany.rest.api.domain.customer.Role;
 import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.domain.product.ProductStatus;
+import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.math.BigDecimal;
@@ -33,15 +34,6 @@ public class CustomerClientGetResponse {
         private Role role;
         private AddressDto invoiceAddress;
         private AddressDto deliveryAddress;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AddressDto {
-        private String street;
-        private String city;
-        private String zip;
     }
 
     @Data
