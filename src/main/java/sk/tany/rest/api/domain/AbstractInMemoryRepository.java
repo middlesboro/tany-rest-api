@@ -87,9 +87,8 @@ public abstract class AbstractInMemoryRepository<T> {
 
     public T save(T entity) {
         String id = getId(entity);
-        boolean isNew = (id == null);
 
-        if (isNew) {
+        if (id == null) {
             id = UUID.randomUUID().toString();
             setId(entity, id);
             setCreatedDate(entity);
@@ -98,11 +97,7 @@ public abstract class AbstractInMemoryRepository<T> {
 
         memoryCache.put(id, entity);
 
-        if (isNew) {
-            repository.insert(entity);
-        } else {
-            repository.update(entity);
-        }
+        repository.update(entity, true);
 
         return entity;
     }
