@@ -225,8 +225,43 @@ public class OrderClientServiceImpl implements OrderClientService {
 
         sendOrderCreatedEmail(savedOrder, carrier, payment);
 
+        updateCustomerFromOrder(savedOrder);
+
         // Return full DTO
         return getOrder(savedOrder.getId());
+    }
+
+    private void updateCustomerFromOrder(Order order) {
+        if (order.getCustomerId() == null) {
+            return;
+        }
+        customerRepository.findById(order.getCustomerId()).ifPresent(customer -> {
+            boolean changed = false;
+            if (!org.springframework.util.StringUtils.hasText(customer.getFirstname()) && org.springframework.util.StringUtils.hasText(order.getFirstname())) {
+                customer.setFirstname(order.getFirstname());
+                changed = true;
+            }
+            if (!org.springframework.util.StringUtils.hasText(customer.getLastname()) && org.springframework.util.StringUtils.hasText(order.getLastname())) {
+                customer.setLastname(order.getLastname());
+                changed = true;
+            }
+            if (!org.springframework.util.StringUtils.hasText(customer.getPhone()) && org.springframework.util.StringUtils.hasText(order.getPhone())) {
+                customer.setPhone(order.getPhone());
+                changed = true;
+            }
+            if (customer.getInvoiceAddress() == null && order.getInvoiceAddress() != null) {
+                customer.setInvoiceAddress(order.getInvoiceAddress());
+                changed = true;
+            }
+            if (customer.getDeliveryAddress() == null && order.getDeliveryAddress() != null) {
+                customer.setDeliveryAddress(order.getDeliveryAddress());
+                changed = true;
+            }
+
+            if (changed) {
+                customerRepository.save(customer);
+            }
+        });
     }
 
     private void sendOrderCreatedEmail(Order order, Carrier carrier, Payment payment) {
