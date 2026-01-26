@@ -36,4 +36,12 @@ public class ReviewRepository extends AbstractInMemoryRepository<Review> {
                 .filter(r -> r.getProductId() != null && idsSet.contains(r.getProductId()))
                 .collect(Collectors.toList());
     }
+
+    public boolean existsDuplicate(String customerId, String customerName, String title, String text) {
+        return memoryCache.values().stream()
+                .anyMatch(r -> java.util.Objects.equals(customerId, r.getCustomerId()) &&
+                        java.util.Objects.equals(customerName, r.getCustomerName()) &&
+                        java.util.Objects.equals(title, r.getTitle()) &&
+                        java.util.Objects.equals(text, r.getText()));
+    }
 }
