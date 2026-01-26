@@ -39,4 +39,5 @@ public class ProductAdminDto {
     private BigDecimal discountValue;
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
+    private BigDecimal discountPriceWithoutVat;
 }

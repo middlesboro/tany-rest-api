@@ -128,6 +128,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
             product.setDiscountValue(null);
             product.setDiscountPrice(null);
             product.setDiscountPercentualValue(null);
+            product.setDiscountPriceWithoutVat(null);
             return;
         }
 
@@ -148,6 +149,15 @@ public class ProductAdminServiceImpl implements ProductAdminService {
             product.setDiscountPercentualValue(percent);
         } else {
             product.setDiscountPercentualValue(null);
+        }
+
+        if (product.getDiscountPrice() != null && product.getPriceWithoutVat() != null && price.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal discountPriceWithoutVat = product.getDiscountPrice()
+                    .multiply(product.getPriceWithoutVat())
+                    .divide(price, 2, RoundingMode.HALF_UP);
+            product.setDiscountPriceWithoutVat(discountPriceWithoutVat);
+        } else {
+            product.setDiscountPriceWithoutVat(null);
         }
     }
 
