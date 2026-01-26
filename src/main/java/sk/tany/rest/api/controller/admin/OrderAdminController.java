@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.domain.order.OrderRepository;
+import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.admin.order.create.OrderAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.order.create.OrderAdminCreateResponse;
@@ -27,6 +29,9 @@ import sk.tany.rest.api.dto.admin.order.update.OrderAdminUpdateResponse;
 import sk.tany.rest.api.mapper.OrderAdminApiMapper;
 import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.admin.OrderAdminService;
+
+import java.math.BigDecimal;
+import java.time.Instant;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -46,8 +51,17 @@ public class OrderAdminController {
     }
 
     @GetMapping
-    public Page<OrderAdminListResponse> getOrders(Pageable pageable) {
-        return orderService.findAll(pageable)
+    public Page<OrderAdminListResponse> getOrders(
+            @RequestParam(required = false) Long orderIdentifier,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) BigDecimal priceFrom,
+            @RequestParam(required = false) BigDecimal priceTo,
+            @RequestParam(required = false) String carrierId,
+            @RequestParam(required = false) String paymentId,
+            @RequestParam(required = false) Instant createDateFrom,
+            @RequestParam(required = false) Instant createDateTo,
+            Pageable pageable) {
+        return orderService.findAll(orderIdentifier, status, priceFrom, priceTo, carrierId, paymentId, createDateFrom, createDateTo, pageable)
                 .map(orderAdminApiMapper::toListResponse);
     }
 

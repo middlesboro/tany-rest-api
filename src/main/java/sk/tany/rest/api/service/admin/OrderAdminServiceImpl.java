@@ -11,6 +11,7 @@ import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.mapper.OrderMapper;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -23,8 +24,8 @@ public class OrderAdminServiceImpl implements OrderAdminService {
     private final OrderMapper orderMapper;
 
     @Override
-    public Page<OrderDto> findAll(Pageable pageable) {
-        return orderRepository.findAll(pageable).map(orderMapper::toDto);
+    public Page<OrderDto> findAll(Long orderIdentifier, OrderStatus status, BigDecimal priceFrom, BigDecimal priceTo, String carrierId, String paymentId, Instant createDateFrom, Instant createDateTo, Pageable pageable) {
+        return orderRepository.findAll(orderIdentifier, status, priceFrom, priceTo, carrierId, paymentId, createDateFrom, createDateTo, pageable).map(orderMapper::toDto);
     }
 
     @Override
