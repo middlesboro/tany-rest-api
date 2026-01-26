@@ -41,6 +41,14 @@ public class ProductClientController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<ProductClientGetResponse> getProductBySlug(@PathVariable String slug) {
+        return productService.findBySlug(slug)
+                .map(productClientApiMapper::toGetResponse)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/{id}/related")
     public java.util.List<ProductClientListResponse> getRelatedProducts(@PathVariable String id) {
         return productService.getRelatedProducts(id)

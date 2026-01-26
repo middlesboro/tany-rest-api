@@ -54,6 +54,20 @@ public class ProductClientServiceImpl implements ProductClientService {
     }
 
     @Override
+    public Optional<ProductClientDto> findBySlug(String slug) {
+        Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
+        return productRepository.findBySlug(slug).map(product -> {
+            ProductClientDto dto = productMapper.toClientDto(product);
+            dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
+            dto.setInWishlist(wishlistProductIds.contains(product.getId()));
+            ProductRatingDto rating = reviewClientService.getProductRating(product.getId());
+            dto.setAverageRating(rating.getAverageRating());
+            dto.setReviewsCount(rating.getReviewsCount());
+            return dto;
+        });
+    }
+
+    @Override
     public Page<ProductClientDto> search(String categoryId, Pageable pageable) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
         Page<Product> products = productRepository.findByCategoryIds(categoryId, pageable);

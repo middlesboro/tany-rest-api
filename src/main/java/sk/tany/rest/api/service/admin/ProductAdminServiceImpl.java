@@ -13,6 +13,8 @@ import sk.tany.rest.api.domain.review.ReviewRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.component.SlugGenerator;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,6 +30,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final ProductSearchEngine productSearchEngine;
     private final ImageService imageService;
     private final ReviewRepository reviewRepository;
+    private final SlugGenerator slugGenerator;
 
     @Override
     public Page<ProductAdminDto> findAll(Pageable pageable) {
@@ -49,6 +52,9 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         var product = productMapper.toEntity(productDto);
         recalculateReviewStatistics(product);
         calculateProductDiscounts(product);
+        if (StringUtils.isBlank(product.getSlug())) {
+            product.setSlug(slugGenerator.generateSlug(product.getTitle(), null));
+        }
         var savedProduct = productRepository.save(product);
         productSearchEngine.addProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
@@ -60,6 +66,9 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         var product = productMapper.toEntity(productDto);
         recalculateReviewStatistics(product);
         calculateProductDiscounts(product);
+        if (StringUtils.isBlank(product.getSlug())) {
+            product.setSlug(slugGenerator.generateSlug(product.getTitle(), id));
+        }
         var savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
@@ -120,6 +129,18 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         return productRepository.findAllByProductFilterParametersFilterParameterValueId(filterParameterValueId).stream()
                 .map(productMapper::toAdminDto)
                 .toList();
+    }
+
+    @Override
+    public void generateMissingSlugs() {
+        List<Product> products = productRepository.findAll();
+        for (Product product : products) {
+            if (StringUtils.isBlank(product.getSlug())) {
+                product.setSlug(slugGenerator.generateSlug(product.getTitle(), product.getId()));
+                productRepository.save(product);
+                productSearchEngine.updateProduct(product);
+            }
+        }
     }
 
     private void calculateProductDiscounts(Product product) {

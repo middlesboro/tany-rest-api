@@ -444,4 +444,21 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
         }
         return new PageImpl<>(filtered.subList(start, end), pageable, filtered.size());
     }
+
+    public Optional<Product> findBySlug(String slug) {
+        if (slug == null) {
+            return Optional.empty();
+        }
+        return memoryCache.values().stream()
+                .filter(p -> slug.equals(p.getSlug()))
+                .findFirst();
+    }
+
+    public boolean existsBySlug(String slug, String excludeId) {
+        if (slug == null) {
+            return false;
+        }
+        return memoryCache.values().stream()
+                .anyMatch(p -> slug.equals(p.getSlug()) && (excludeId == null || !p.getId().equals(excludeId)));
+    }
 }

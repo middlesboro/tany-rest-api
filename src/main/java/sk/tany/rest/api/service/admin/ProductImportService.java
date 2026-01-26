@@ -30,6 +30,7 @@ import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
 import sk.tany.rest.api.exception.ImportException;
+import sk.tany.rest.api.component.SlugGenerator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,6 +60,7 @@ public class ProductImportService {
     private final BrandRepository brandRepository;
     private final ObjectMapper objectMapper;
     private final ProductSearchEngine productSearchEngine;
+    private final SlugGenerator slugGenerator;
 
 
     public void importProducts() {
@@ -255,6 +257,10 @@ public class ProductImportService {
             }
         }
         product.setProductFilterParameters(productFilters);
+
+        if (StringUtils.isBlank(product.getSlug())) {
+            product.setSlug(slugGenerator.generateSlug(product.getTitle(), product.getId()));
+        }
 
         Product savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
