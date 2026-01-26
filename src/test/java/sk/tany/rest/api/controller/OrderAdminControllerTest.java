@@ -57,14 +57,14 @@ class OrderAdminControllerTest {
         OrderAdminListResponse response = new OrderAdminListResponse();
         response.setId("123");
 
-        when(orderService.findAll(pageable)).thenReturn(orderPage);
+        when(orderService.findAll(null, null, null, null, null, null, null, null, pageable)).thenReturn(orderPage);
         when(orderAdminApiMapper.toListResponse(orderDto)).thenReturn(response);
 
-        Page<OrderAdminListResponse> result = orderAdminController.getOrders(pageable);
+        Page<OrderAdminListResponse> result = orderAdminController.getOrders(null, null, null, null, null, null, null, null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("123", result.getContent().get(0).getId());
-        verify(orderService, times(1)).findAll(pageable);
+        verify(orderService, times(1)).findAll(null, null, null, null, null, null, null, null, pageable);
     }
 
     @Test
