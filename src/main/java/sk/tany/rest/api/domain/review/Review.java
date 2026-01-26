@@ -15,6 +15,7 @@ public class Review {
     private Integer rating;
     private String title;
     private String email;
+    private String customerId;
     private String customerName;
     private boolean active;
     private Instant createDate;

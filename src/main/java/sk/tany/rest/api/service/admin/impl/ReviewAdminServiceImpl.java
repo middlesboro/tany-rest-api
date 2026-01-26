@@ -106,15 +106,26 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
                         if (productOptional.isPresent()) {
                             Product product = productOptional.get();
                             review.setProductId(product.getId());
-                            review.setText(item.get("text_review").asText());
+                            String text = item.get("text_review").asText();
+                            review.setText(text);
                             review.setRating(Integer.parseInt(item.get("rating").asText()));
                             // Mapping title from "title_review"
+                            String title = null;
                             if (item.has("title_review")) {
-                                review.setTitle(item.get("title_review").asText());
+                                title = item.get("title_review").asText();
+                                review.setTitle(title);
                             }
                             review.setEmail(item.get("email").asText());
                             review.setActive("1".equals(item.get("is_active").asText()));
-                            review.setCustomerName(item.get("customer_name").asText());
+                            String customerName = item.get("customer_name").asText();
+                            review.setCustomerName(customerName);
+
+                            String customerId = item.has("id_customer") ? item.get("id_customer").asText() : null;
+                            review.setCustomerId(customerId);
+
+                            if (repository.existsDuplicate(customerId, customerName, title, text)) {
+                                continue;
+                            }
 
                             if (item.has("time_add")) {
                                 String timeAdd = item.get("time_add").asText();

@@ -52,6 +52,34 @@ class ReviewRepositoryTest {
         assertEquals(1, result.get(2).getRating());
     }
 
+    @Test
+    void existsDuplicate_shouldReturnTrue_whenDuplicateExists() throws Exception {
+        Review review = new Review();
+        review.setId("1");
+        review.setCustomerId("123");
+        review.setCustomerName("John");
+        review.setTitle("Great");
+        review.setText("Good product");
+        injectReview("1", review);
+
+        boolean exists = repository.existsDuplicate("123", "John", "Great", "Good product");
+        assertEquals(true, exists);
+    }
+
+    @Test
+    void existsDuplicate_shouldReturnFalse_whenNoDuplicate() throws Exception {
+        Review review = new Review();
+        review.setId("1");
+        review.setCustomerId("123");
+        review.setCustomerName("John");
+        review.setTitle("Great");
+        review.setText("Good product");
+        injectReview("1", review);
+
+        boolean exists = repository.existsDuplicate("124", "John", "Great", "Good product");
+        assertEquals(false, exists);
+    }
+
     @SuppressWarnings("unchecked")
     private void injectReview(String id, Review review) throws Exception {
         Field cacheField = AbstractInMemoryRepository.class.getDeclaredField("memoryCache");
