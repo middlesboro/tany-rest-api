@@ -30,6 +30,7 @@ import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.mapper.OrderMapper;
+import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.client.CartClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.EmailService;
@@ -80,6 +81,8 @@ class OrderClientServiceImplTest {
     private CartRepository cartRepository;
     @Mock
     private CartClientService cartService;
+    @Mock
+    private InvoiceService invoiceService;
 
     @InjectMocks
     private OrderClientServiceImpl orderClientService;
@@ -225,5 +228,93 @@ class OrderClientServiceImplTest {
         // verify(emailService, times(1)).sendEmail(eq("user@example.com"), anyString(), anyString(), eq(true), any(File.class));
         verify(orderRepository, times(1)).save(any(Order.class));
         verify(productSalesRepository, times(1)).save(any(ProductSales.class));
+    }
+
+    @Test
+    void createOrder_shouldUpdateCustomerData_whenMissing() {
+        OrderDto orderDto = new OrderDto();
+        orderDto.setCartId("cart1");
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId("cart1");
+        cartDto.setFirstname("John");
+        cartDto.setLastname("Doe");
+        cartDto.setPhone("123456789");
+        cartDto.setItems(Collections.singletonList(new CartItem("p1", 1)));
+
+        when(cartService.getOrCreateCart("cart1", null)).thenReturn(cartDto);
+
+        Customer customer = new Customer();
+        customer.setId("cust1");
+        customer.setEmail("user@example.com");
+        // Missing firstname, lastname, phone
+
+        when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.of(customer));
+        when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
+
+        Order savedOrder = new Order();
+        savedOrder.setId("order1");
+        savedOrder.setCustomerId("cust1");
+        savedOrder.setFirstname("John");
+        savedOrder.setLastname("Doe");
+        savedOrder.setPhone("123456789");
+        savedOrder.setItems(Collections.emptyList());
+
+        when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
+        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+        when(orderRepository.findById("order1")).thenReturn(Optional.of(savedOrder));
+        when(orderMapper.toDto(savedOrder)).thenReturn(new OrderDto());
+
+        orderClientService.createOrder(orderDto);
+
+        verify(customerRepository).save(customer);
+        org.junit.jupiter.api.Assertions.assertEquals("John", customer.getFirstname());
+        org.junit.jupiter.api.Assertions.assertEquals("Doe", customer.getLastname());
+        org.junit.jupiter.api.Assertions.assertEquals("123456789", customer.getPhone());
+    }
+
+    @Test
+    void createOrder_shouldNotUpdateCustomerData_whenPresent() {
+        OrderDto orderDto = new OrderDto();
+        orderDto.setCartId("cart1");
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId("cart1");
+        cartDto.setFirstname("John");
+        cartDto.setLastname("Doe");
+        cartDto.setPhone("123456789");
+        cartDto.setItems(Collections.singletonList(new CartItem("p1", 1)));
+
+        when(cartService.getOrCreateCart("cart1", null)).thenReturn(cartDto);
+
+        Customer customer = new Customer();
+        customer.setId("cust1");
+        customer.setEmail("user@example.com");
+        customer.setFirstname("Existing");
+        customer.setLastname("User");
+        customer.setPhone("987654321");
+
+        when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.of(customer));
+        when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
+
+        Order savedOrder = new Order();
+        savedOrder.setId("order1");
+        savedOrder.setCustomerId("cust1");
+        savedOrder.setFirstname("John");
+        savedOrder.setLastname("Doe");
+        savedOrder.setPhone("123456789");
+        savedOrder.setItems(Collections.emptyList());
+
+        when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
+        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+        when(orderRepository.findById("order1")).thenReturn(Optional.of(savedOrder));
+        when(orderMapper.toDto(savedOrder)).thenReturn(new OrderDto());
+
+        orderClientService.createOrder(orderDto);
+
+        verify(customerRepository, times(0)).save(customer);
+        org.junit.jupiter.api.Assertions.assertEquals("Existing", customer.getFirstname());
+        org.junit.jupiter.api.Assertions.assertEquals("User", customer.getLastname());
+        org.junit.jupiter.api.Assertions.assertEquals("987654321", customer.getPhone());
     }
 }
