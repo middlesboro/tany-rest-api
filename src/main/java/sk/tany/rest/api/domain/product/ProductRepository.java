@@ -208,15 +208,17 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
 
                     return true;
                 })
-                .sorted((p1, p2) -> {
-                    if (finalNormalizedQuery != null) {
-                        Double score1 = calculateRelevance(p1.getTitle(), finalNormalizedQuery);
-                        Double score2 = calculateRelevance(p2.getTitle(), finalNormalizedQuery);
-                        return score2.compareTo(score1);
-                    }
-                    return 0;
-                })
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (pageable.getSort().isSorted()) {
+            sort(filteredProducts, pageable.getSort());
+        } else if (finalNormalizedQuery != null) {
+            filteredProducts.sort((p1, p2) -> {
+                Double score1 = calculateRelevance(p1.getTitle(), finalNormalizedQuery);
+                Double score2 = calculateRelevance(p2.getTitle(), finalNormalizedQuery);
+                return score2.compareTo(score1);
+            });
+        }
 
         if (pageable.isUnpaged()) {
             return new PageImpl<>(filteredProducts, pageable, filteredProducts.size());
@@ -429,8 +431,13 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
         Set<String> categoryIds = getAllCategoryIdsIncludingSubcategories(categoryId);
         List<Product> filtered = memoryCache.values().stream()
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
-                .sorted(Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (pageable.getSort().isSorted()) {
+            sort(filtered, pageable.getSort());
+        } else {
+            filtered.sort(Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+        }
 
         if (pageable.isUnpaged()) {
             return new PageImpl<>(filtered, pageable, filtered.size());

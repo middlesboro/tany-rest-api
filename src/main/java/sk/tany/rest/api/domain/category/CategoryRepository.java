@@ -11,9 +11,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -62,15 +64,20 @@ public class CategoryRepository extends AbstractInMemoryRepository<Category> {
                     }
                     return true;
                 })
-                .sorted((c1, c2) -> {
-                    if (finalNormalizedQuery != null) {
-                        Double score1 = calculateRelevance(c1.getTitle(), finalNormalizedQuery);
-                        Double score2 = calculateRelevance(c2.getTitle(), finalNormalizedQuery);
-                        return score2.compareTo(score1);
-                    }
-                    return StringUtils.compareIgnoreCase(c1.getTitle(), c2.getTitle());
-                })
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (pageable.getSort().isSorted()) {
+            sort(filteredCategories, pageable.getSort());
+        } else {
+            filteredCategories.sort((c1, c2) -> {
+                if (finalNormalizedQuery != null) {
+                    Double score1 = calculateRelevance(c1.getTitle(), finalNormalizedQuery);
+                    Double score2 = calculateRelevance(c2.getTitle(), finalNormalizedQuery);
+                    return score2.compareTo(score1);
+                }
+                return StringUtils.compareIgnoreCase(c1.getTitle(), c2.getTitle());
+            });
+        }
 
         if (pageable.isUnpaged()) {
             return new PageImpl<>(filteredCategories, pageable, filteredCategories.size());
