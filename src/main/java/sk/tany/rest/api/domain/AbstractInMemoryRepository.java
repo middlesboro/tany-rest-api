@@ -8,10 +8,12 @@ import org.dizitart.no2.objects.filters.ObjectFilters;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +54,10 @@ public abstract class AbstractInMemoryRepository<T> {
 
     public Page<T> findAll(Pageable pageable) {
         List<T> all = findAll();
+        if (pageable.getSort().isSorted()) {
+            sort(all, pageable.getSort());
+        }
+
         if (pageable.isUnpaged()) {
             return new PageImpl<>(all, pageable, all.size());
         }
@@ -203,6 +209,78 @@ public abstract class AbstractInMemoryRepository<T> {
             }
         } catch (Exception e) {
              // Ignore
+        }
+    }
+
+    protected void sort(List<T> list, Sort sort) {
+        if (sort.isUnsorted()) {
+            return;
+        }
+
+        Comparator<T> comparator = null;
+
+        for (Sort.Order order : sort) {
+            Comparator<T> currentComparator = (o1, o2) -> {
+                Object v1 = getFieldValue(o1, order.getProperty());
+                Object v2 = getFieldValue(o2, order.getProperty());
+
+                if (v1 == null && v2 == null) {
+                    return 0;
+                } else if (v1 == null) {
+                    return order.getNullHandling() == Sort.NullHandling.NULLS_FIRST ? -1 : 1;
+                } else if (v2 == null) {
+                    return order.getNullHandling() == Sort.NullHandling.NULLS_FIRST ? 1 : -1;
+                }
+
+                if (v1 instanceof Comparable && v2 instanceof Comparable) {
+                    int result;
+                    if (order.isIgnoreCase() && v1 instanceof String && v2 instanceof String) {
+                        result = ((String) v1).compareToIgnoreCase((String) v2);
+                    } else {
+                        // Unchecked cast is safe because of check above
+                        result = ((Comparable) v1).compareTo(v2);
+                    }
+                    return result;
+                }
+                return 0;
+            };
+
+            if (order.isDescending()) {
+                currentComparator = currentComparator.reversed();
+            }
+
+            if (comparator == null) {
+                comparator = currentComparator;
+            } else {
+                comparator = comparator.thenComparing(currentComparator);
+            }
+        }
+
+        if (comparator != null) {
+            list.sort(comparator);
+        }
+    }
+
+    private Object getFieldValue(T entity, String fieldName) {
+        try {
+            Field field = getField(type, fieldName);
+            field.setAccessible(true);
+            return field.get(entity);
+        } catch (Exception e) {
+            log.warn("Could not get value for field {} on {}", fieldName, type.getSimpleName());
+            return null;
+        }
+    }
+
+    private Field getField(Class<?> clazz, String fieldName) {
+        try {
+            return clazz.getDeclaredField(fieldName);
+        } catch (NoSuchFieldException e) {
+            Class<?> superclass = clazz.getSuperclass();
+            if (superclass != null) {
+                return getField(superclass, fieldName);
+            }
+            throw new RuntimeException(e);
         }
     }
 }
