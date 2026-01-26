@@ -101,7 +101,7 @@ public class OrderClientServiceImpl implements OrderClientService {
 
     private Address mapAddress(AddressDto dto) {
         if (dto == null) return null;
-        return new Address(dto.getStreet(), dto.getCity(), dto.getZip());
+        return new Address(dto.getStreet(), dto.getCity(), dto.getZip(), dto.getCountry());
     }
 
     @Override

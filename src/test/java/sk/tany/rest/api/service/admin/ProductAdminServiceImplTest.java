@@ -35,6 +35,8 @@ class ProductAdminServiceImplTest {
     private ImageService imageService;
     @Mock
     private ReviewRepository reviewRepository;
+    @Mock
+    private sk.tany.rest.api.component.SlugGenerator slugGenerator;
 
     @InjectMocks
     private ProductAdminServiceImpl productAdminService;
