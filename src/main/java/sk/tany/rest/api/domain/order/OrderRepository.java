@@ -28,8 +28,13 @@ public class OrderRepository extends AbstractInMemoryRepository<Order> {
     public Page<Order> findAllByCustomerId(String customerId, Pageable pageable) {
         List<Order> all = memoryCache.values().stream()
                 .filter(o -> o.getCustomerId() != null && o.getCustomerId().equals(customerId))
-                .sorted(Comparator.comparing(Order::getCreateDate, Comparator.nullsLast(Comparator.reverseOrder())))
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(java.util.ArrayList::new));
+
+        if (pageable.getSort().isSorted()) {
+            sort(all, pageable.getSort());
+        } else {
+            all.sort(Comparator.comparing(Order::getCreateDate, Comparator.nullsLast(Comparator.reverseOrder())));
+        }
 
         if (pageable.isUnpaged()) {
             return new PageImpl<>(all, pageable, all.size());
