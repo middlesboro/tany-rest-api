@@ -18,8 +18,12 @@ import sk.tany.rest.api.dto.client.order.create.OrderClientCreateRequest;
 import sk.tany.rest.api.dto.client.order.create.OrderClientCreateResponse;
 import sk.tany.rest.api.dto.client.order.get.OrderClientGetResponse;
 import sk.tany.rest.api.dto.client.order.list.OrderClientListResponse;
+import sk.tany.rest.api.exception.AuthenticationException;
 import sk.tany.rest.api.mapper.OrderClientApiMapper;
 import sk.tany.rest.api.service.client.OrderClientService;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -43,6 +47,14 @@ public class OrderClientController {
     @GetMapping("/{id}/confirmation")
     public OrderClientGetResponse getOrderConfirmation(@PathVariable String id) {
         OrderDto order = orderClientService.getOrder(id);
+
+        if (order.getCreateDate().plus(20, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+            String loggedInUserId = securityUtil.getLoggedInUserId();
+            if (loggedInUserId == null || order.getCustomerId() == null || !order.getCustomerId().equals(loggedInUserId)) {
+                throw new AuthenticationException.InvalidToken("Access denied");
+            }
+        }
+
         return orderClientApiMapper.toGetResponse(order);
     }
 
