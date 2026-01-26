@@ -2,6 +2,7 @@ package sk.tany.rest.api.service.common;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,9 @@ public class EmailNotificationSchedulerService {
     private final EmailNotificationRepository emailNotificationRepository;
     private final ProductRepository productRepository;
     private final EmailService emailService;
+
+    @Value("${eshop.frontend-url}")
+    private String frontendUrl;
 
     @Scheduled(cron = "0 */30 * * * *")
     public void processBackInStockNotifications() {
@@ -79,8 +83,9 @@ public class EmailNotificationSchedulerService {
                 java.math.BigDecimal price = product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(java.math.BigDecimal.ZERO) >= 0
                         ? product.getDiscountPrice()
                         : product.getPrice();
+                String productUrl = frontendUrl + "/produkt/" + product.getSlug();
                 productsListHtml.append("<tr>")
-                        .append("<td>").append(product.getTitle()).append("</td>")
+                        .append("<td><a href='").append(productUrl).append("'>").append(product.getTitle()).append("</a></td>")
                         .append("<td>").append(price).append(" €</td>")
                         .append("</tr>");
             }
