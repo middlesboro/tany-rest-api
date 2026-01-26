@@ -16,11 +16,11 @@ import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
 import sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
-import sk.tany.rest.api.mapper.CartDiscountMapper;
-import sk.tany.rest.api.mapper.CartMapper;
+import sk.tany.rest.api.exception.CartDiscountException;
 import sk.tany.rest.api.exception.CartException;
 import sk.tany.rest.api.exception.ProductException;
-import sk.tany.rest.api.exception.CartDiscountException;
+import sk.tany.rest.api.mapper.CartDiscountMapper;
+import sk.tany.rest.api.mapper.CartMapper;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -478,32 +478,21 @@ public class CartClientServiceImpl implements CartClientService {
                      }
                  }
 
-                 BigDecimal carrierPrice = carrier.getPrice(); // Default price
-                 if (carrier.getRanges() != null) {
-                    final BigDecimal finalWeight = weight;
-                     carrierPrice = carrier.getRanges().stream()
-                             .filter(range ->
-                                     (range.getWeightFrom() == null || finalWeight.compareTo(range.getWeightFrom()) >= 0) &&
-                                     (range.getWeightTo() == null || finalWeight.compareTo(range.getWeightTo()) <= 0)
-                             )
-                             .findFirst()
-                             .map(CarrierPriceRange::getPrice)
-                             .orElse(carrierPrice);
+                 final BigDecimal finalWeight = weight;
+                 CarrierPriceRange finalPriceRange = carrier.getRanges().stream()
+                         .filter(range ->
+                                 (range.getWeightFrom() == null || finalWeight.compareTo(range.getWeightFrom()) >= 0) &&
+                                         (range.getWeightTo() == null || finalWeight.compareTo(range.getWeightTo()) <= 0)
+                         )
+                         .findFirst().orElse(null);
+
+                 if (finalPriceRange == null) {
+                     throw new CartException.BadRequest("Carrier not available for the given cart weight");
                  }
 
-                 finalPrice = finalPrice.add(carrierPrice);
-
-                 BigDecimal carrierWithVat = carrierPrice.setScale(2, RoundingMode.HALF_UP);
-                 BigDecimal carrierWithoutVat = (carrier.getPriceWithoutVat() != null ? carrier.getPriceWithoutVat() : carrierPrice).setScale(2, RoundingMode.HALF_UP);
-                 // If price is different from base price due to range, we might not have 'priceWithoutVat' for that range.
-                 // Assuming proportional tax if range price is used.
-                 if (carrier.getPrice() != null && carrier.getPrice().compareTo(BigDecimal.ZERO) != 0 && carrier.getPriceWithoutVat() != null) {
-                     BigDecimal ratio = carrier.getPrice().divide(carrier.getPriceWithoutVat(), 4, RoundingMode.HALF_UP);
-                     carrierWithoutVat = carrierWithVat.divide(ratio, 2, RoundingMode.HALF_UP);
-                 }
-
-                 BigDecimal carrierVatValue = carrierWithVat.subtract(carrierWithoutVat);
-                 breakdown.getItems().add(new PriceItem(PriceItemType.CARRIER, carrier.getId(), carrier.getName(), 1, carrierWithVat, carrierWithoutVat, carrierVatValue));
+                 finalPrice = finalPrice.add(finalPriceRange.getPrice());
+                 breakdown.getItems().add(new PriceItem(PriceItemType.CARRIER, carrier.getId(), carrier.getName(),
+                         1, finalPriceRange.getPrice(), finalPriceRange.getPriceWithoutVat(), finalPriceRange.getVatValue()));
              }
         }
 
@@ -511,16 +500,13 @@ public class CartClientServiceImpl implements CartClientService {
         if (cartDto.getSelectedPaymentId() != null) {
             paymentRepository.findById(cartDto.getSelectedPaymentId())
                 .ifPresent(payment -> {
-                    BigDecimal paymentPrice = payment.getPrice().setScale(2, RoundingMode.HALF_UP);
-                    // Assuming payment price is gross. No explicit VAT info in entity.
-                    BigDecimal paymentWithoutVat = paymentPrice; // Fallback
-                    BigDecimal paymentVatValue = BigDecimal.ZERO;
+                    BigDecimal paymentPrice = payment.getPrice();
+                    BigDecimal paymentWithoutVat = payment.getPriceWithoutVat();
+                    BigDecimal paymentVatValue = payment.getVatValue();
 
                     breakdown.getItems().add(new PriceItem(PriceItemType.PAYMENT, payment.getId(), payment.getName(), 1, paymentPrice, paymentWithoutVat, paymentVatValue));
                 });
-             // Payment price is usually added to final price? The previous code didn't add it to finalPrice variable,
-             // but usually it should be. The commented out code suggested it.
-             // I will add it to finalPrice if found.
+
              Optional<sk.tany.rest.api.domain.payment.Payment> pOpt = paymentRepository.findById(cartDto.getSelectedPaymentId());
              if (pOpt.isPresent()) {
                  finalPrice = finalPrice.add(pOpt.get().getPrice());

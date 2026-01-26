@@ -128,6 +128,8 @@ public class CustomerClientGetResponse {
     @AllArgsConstructor
     public static class CarrierPriceRangeDto {
         private BigDecimal price;
+        private BigDecimal priceWithoutVat;
+        private BigDecimal vatValue;
         private BigDecimal weightFrom;
         private BigDecimal weightTo;
     }
@@ -141,6 +143,8 @@ public class CustomerClientGetResponse {
         private String description;
         private String image;
         private BigDecimal price;
+        private BigDecimal priceWithoutVat;
+        private BigDecimal vatValue;
         private PaymentType type;
         private Instant createdDate;
         private Instant updateDate;

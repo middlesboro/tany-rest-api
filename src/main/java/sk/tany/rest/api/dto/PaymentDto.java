@@ -13,9 +13,9 @@ public class PaymentDto {
     private String description;
     private String image;
     private Integer order;
-    private BigDecimal wholesalePrice;
-    private BigDecimal priceWithoutVat;
     private BigDecimal price;
+    private BigDecimal priceWithoutVat;
+    private BigDecimal vatValue;
     private PaymentType type;
     private Instant createdDate;
     private Instant updateDate;

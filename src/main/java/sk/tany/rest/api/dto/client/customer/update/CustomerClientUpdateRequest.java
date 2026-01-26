@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 public class CustomerClientUpdateRequest {
     private String firstname;
     private String lastname;
-    private String email;
+    private String phone;
     private AddressDto invoiceAddress;
     private AddressDto deliveryAddress;
 

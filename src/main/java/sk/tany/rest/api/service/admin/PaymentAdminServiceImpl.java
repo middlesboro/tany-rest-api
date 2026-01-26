@@ -9,6 +9,8 @@ import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.mapper.PaymentMapper;
 import sk.tany.rest.api.service.common.ImageService;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
 
 @Service
@@ -31,6 +33,7 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
 
     @Override
     public PaymentDto save(PaymentDto paymentDto) {
+        processPrice(paymentDto);
         var payment = paymentMapper.toEntity(paymentDto);
         var savedPayment = paymentRepository.save(payment);
         return paymentMapper.toDto(savedPayment);
@@ -39,15 +42,8 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
     @Override
     public PaymentDto update(String id, PaymentDto paymentDto) {
         paymentDto.setId(id);
+        processPrice(paymentDto);
         var payment = paymentMapper.toEntity(paymentDto);
-        var savedPayment = paymentRepository.save(payment);
-        return paymentMapper.toDto(savedPayment);
-    }
-
-    @Override
-    public PaymentDto patch(String id, sk.tany.rest.api.dto.admin.payment.patch.PaymentPatchRequest patchDto) {
-        var payment = paymentRepository.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));
-        paymentMapper.updateEntityFromPatch(patchDto, payment);
         var savedPayment = paymentRepository.save(payment);
         return paymentMapper.toDto(savedPayment);
     }
@@ -60,6 +56,19 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
                 imageService.delete(payment.get().getImage());
             }
             paymentRepository.deleteById(id);
+        }
+    }
+
+    // todo take vat from shop settings. create helper method
+    private void processPrice(PaymentDto paymentDto) {
+        if (paymentDto.getPrice() != null && paymentDto.getPrice().compareTo(BigDecimal.ZERO) > 0) {
+            paymentDto.setPrice(paymentDto.getPrice().setScale(2, RoundingMode.HALF_UP));
+            paymentDto.setPriceWithoutVat(paymentDto.getPrice().divide(new BigDecimal("1.23"), RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP));
+            paymentDto.setVatValue(paymentDto.getPrice().subtract(paymentDto.getPriceWithoutVat()));
+        } else {
+            paymentDto.setPrice(BigDecimal.ZERO);
+            paymentDto.setPriceWithoutVat(BigDecimal.ZERO);
+            paymentDto.setVatValue(BigDecimal.ZERO);
         }
     }
 }

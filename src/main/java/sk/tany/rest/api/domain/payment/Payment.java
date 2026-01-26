@@ -2,6 +2,7 @@ package sk.tany.rest.api.domain.payment;
 
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -14,6 +15,8 @@ public class Payment {
     private String name;
     private PaymentType type;
     private BigDecimal price;
+    private BigDecimal priceWithoutVat;
+    private BigDecimal vatValue;
     private Integer order;
     private String description;
     private String image;

@@ -1,6 +1,13 @@
 package sk.tany.rest.api.service.admin.impl;
 
-import com.lowagie.text.*;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
@@ -8,22 +15,22 @@ import com.lowagie.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.carrier.Carrier;
-import sk.tany.rest.api.domain.customer.Customer;
-import sk.tany.rest.api.domain.order.Order;
-import sk.tany.rest.api.domain.payment.Payment;
-import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
+import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
+import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
-import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.exception.InvoiceException;
 import sk.tany.rest.api.exception.OrderException;
+import sk.tany.rest.api.service.admin.InvoiceService;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -86,7 +93,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                     order.getPriceBreakDown().getItems().stream()
                             .filter(i -> i.getType() == PriceItemType.PRODUCT)
                             .map(PriceItem::getId)
-                            .collect(Collectors.toList())
+                            .toList()
             ).stream().collect(Collectors.toMap(Product::getId, p -> p));
         } else {
             productMap = Map.of();
@@ -303,10 +310,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         totalTable.addCell(createLabelCell("Suma bez DPH:"));
         totalTable.addCell(createRightAlignedCell(totalBase.toString() + " €", 10, false));
 
-        totalTable.addCell(createLabelCell("DPH (20%):"));
+        totalTable.addCell(createLabelCell("DPH (2š%):"));
         totalTable.addCell(createRightAlignedCell(totalVat.toString() + " €", 10, false));
 
-        PdfPCell totalLabel = new PdfPCell(new Paragraph("K ÚHRADE", getSlovakFont(12, Font.BOLD, BRAND_COLOR)));
+        PdfPCell totalLabel = new PdfPCell(new Paragraph("Spolu", getSlovakFont(12, Font.BOLD, BRAND_COLOR)));
         totalLabel.setBorder(Rectangle.TOP);
         totalLabel.setBorderColor(BRAND_COLOR);
         totalLabel.setPaddingTop(10);

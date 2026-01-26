@@ -2,6 +2,7 @@ package sk.tany.rest.api.service.client.impl;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -237,24 +238,22 @@ public class OrderClientServiceImpl implements OrderClientService {
         }
         customerRepository.findById(order.getCustomerId()).ifPresent(customer -> {
             boolean changed = false;
-            if (!org.springframework.util.StringUtils.hasText(customer.getFirstname()) && org.springframework.util.StringUtils.hasText(order.getFirstname())) {
+            if (StringUtils.isBlank(customer.getFirstname()) && StringUtils.isNotBlank(order.getFirstname())) {
                 customer.setFirstname(order.getFirstname());
                 changed = true;
             }
-            if (!org.springframework.util.StringUtils.hasText(customer.getLastname()) && org.springframework.util.StringUtils.hasText(order.getLastname())) {
+            if (StringUtils.isBlank(customer.getLastname()) && StringUtils.isNotBlank(order.getLastname())) {
                 customer.setLastname(order.getLastname());
                 changed = true;
             }
-            if (!org.springframework.util.StringUtils.hasText(customer.getPhone()) && org.springframework.util.StringUtils.hasText(order.getPhone())) {
+            if (StringUtils.isBlank(customer.getPhone()) && StringUtils.isNotBlank(order.getPhone())) {
                 customer.setPhone(order.getPhone());
                 changed = true;
             }
-            if (customer.getInvoiceAddress() == null && order.getInvoiceAddress() != null) {
-                customer.setInvoiceAddress(order.getInvoiceAddress());
+            if (updateCustomerAddressFromOrderAddress(customer.getInvoiceAddress(), order.getInvoiceAddress())) {
                 changed = true;
             }
-            if (customer.getDeliveryAddress() == null && order.getDeliveryAddress() != null) {
-                customer.setDeliveryAddress(order.getDeliveryAddress());
+            if (updateCustomerAddressFromOrderAddress(customer.getDeliveryAddress(), order.getDeliveryAddress())) {
                 changed = true;
             }
 
@@ -262,6 +261,24 @@ public class OrderClientServiceImpl implements OrderClientService {
                 customerRepository.save(customer);
             }
         });
+    }
+
+    private boolean updateCustomerAddressFromOrderAddress(Address customerAddress, Address orderAddress) {
+        boolean changed = false;
+        if (StringUtils.isBlank(customerAddress.getCity()) && StringUtils.isNotBlank(orderAddress.getCity())) {
+            customerAddress.setCity(orderAddress.getCity());
+            changed = true;
+        }
+        if (StringUtils.isBlank(customerAddress.getStreet()) && StringUtils.isNotBlank(orderAddress.getStreet())) {
+            customerAddress.setStreet(orderAddress.getStreet());
+            changed = true;
+        }
+        if (StringUtils.isBlank(customerAddress.getZip()) && StringUtils.isNotBlank(orderAddress.getZip())) {
+            customerAddress.setZip(orderAddress.getZip());
+            changed = true;
+        }
+
+        return changed;
     }
 
     private void sendOrderCreatedEmail(Order order, Carrier carrier, Payment payment) {

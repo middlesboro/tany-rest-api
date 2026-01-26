@@ -7,12 +7,14 @@ import sk.tany.rest.api.dto.OrderStatusHistoryDto;
 import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Data
 public class OrderAdminGetResponse {
     private String id;
     private String cartId;
+    private Instant createDate;
     private BigDecimal finalPrice;
     private BigDecimal carrierPrice;
     private BigDecimal paymentPrice;

@@ -10,6 +10,7 @@ public class CustomerClientDetailResponse {
     private String firstname;
     private String lastname;
     private String email;
+    private String phone;
     private AddressDto invoiceAddress;
     private AddressDto deliveryAddress;
 

@@ -11,6 +11,5 @@ public interface PaymentAdminService {
     Optional<PaymentDto> findById(String id);
     PaymentDto save(PaymentDto paymentDto);
     PaymentDto update(String id, PaymentDto paymentDto);
-    PaymentDto patch(String id, sk.tany.rest.api.dto.admin.payment.patch.PaymentPatchRequest patchDto);
     void deleteById(String id);
 }

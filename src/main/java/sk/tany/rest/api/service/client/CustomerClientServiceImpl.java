@@ -2,8 +2,6 @@ package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.customer.Customer;
@@ -38,16 +36,10 @@ public class CustomerClientServiceImpl implements CustomerClientService {
     private final SecurityUtil securityUtil;
 
     public CustomerContextDto getCustomerContext(String cartId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomerDto customerDto = null;
-        String customerId = null;
-
-        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof String) {
-            String email = (String) authentication.getPrincipal();
-            customerDto = findByEmail(email);
-            if (customerDto != null) {
-                customerId = customerDto.getId();
-            }
+        String customerId = securityUtil.getLoggedInUserId();
+        if (customerId != null) {
+            customerDto = findById(customerId).orElse(null);
         }
 
         CartDto cartDto = cartService.getOrCreateCart(cartId, customerId);
@@ -181,6 +173,9 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         }
         if (customerDto.getLastname() != null) {
             customer.setLastname(customerDto.getLastname());
+        }
+        if (customerDto.getPhone() != null) {
+            customer.setPhone(customerDto.getPhone());
         }
         // Email update might require verification in a real scenario, but based on requirements "edit all fields", we allow it.
         // However, if email changes, the principal might become invalid for future requests if not handled.
