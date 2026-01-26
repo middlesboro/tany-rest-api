@@ -3,6 +3,7 @@ package sk.tany.rest.api.dto.client.customer.get;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sk.tany.rest.api.dto.AddressDto;
 
 @Data
 public class CustomerClientDetailResponse {
@@ -13,13 +14,4 @@ public class CustomerClientDetailResponse {
     private String phone;
     private AddressDto invoiceAddress;
     private AddressDto deliveryAddress;
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AddressDto {
-        private String street;
-        private String city;
-        private String zip;
-    }
 }

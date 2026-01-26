@@ -28,11 +28,6 @@ public interface CustomerClientApiMapper {
     // Helpers for CartDiscountClientDto
     sk.tany.rest.api.dto.client.customer.get.CustomerClientGetResponse.CartDiscountClientDto toGetCartDiscountDto(sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto cartDiscountDto);
 
-    // Helpers for AddressDto
-    AddressDto toAddressDto(CustomerClientUpdateRequest.AddressDto addressDto);
-    CustomerClientUpdateResponse.AddressDto toUpdateAddress(AddressDto addressDto);
-    CustomerClientGetResponse.AddressDto toGetAddress(AddressDto addressDto);
-
     // Helpers for Nested CustomerClientGetResponse mapping
     CustomerClientGetResponse.CustomerDto toGetCustomerDto(CustomerDto customerDto);
     CustomerClientGetResponse.CustomerContextCartDto toGetCartDto(CustomerContextCartDto cartDto);

@@ -56,6 +56,8 @@ class ProductImportServiceTest {
     private ObjectMapper objectMapper;
     @Mock
     private ProductSearchEngine productSearchEngine;
+    @Mock
+    private sk.tany.rest.api.component.SlugGenerator slugGenerator;
 
     @InjectMocks
     private ProductImportService productImportService;

@@ -3,6 +3,7 @@ package sk.tany.rest.api.dto.client.order.create;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sk.tany.rest.api.dto.AddressDto;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -36,14 +37,5 @@ public class OrderClientCreateResponse {
         private Integer quantity;
         private BigDecimal price;
         private String image;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AddressDto {
-        private String street;
-        private String city;
-        private String zip;
     }
 }

@@ -9,7 +9,7 @@ import sk.tany.rest.api.domain.cart.Cart;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.admin.cart.patch.CartPatchRequest;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = AddressMapper.class)
 public interface CartMapper {
 
     @Mapping(target = "cartId", source = "id")

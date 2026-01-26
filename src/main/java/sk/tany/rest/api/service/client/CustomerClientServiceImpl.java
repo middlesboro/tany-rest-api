@@ -15,6 +15,7 @@ import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.exception.CustomerException;
+import sk.tany.rest.api.mapper.AddressMapper;
 import sk.tany.rest.api.mapper.CustomerMapper;
 
 import java.math.BigDecimal;
@@ -29,6 +30,7 @@ public class CustomerClientServiceImpl implements CustomerClientService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final AddressMapper addressMapper;
     private final CartClientService cartService;
     private final ProductClientService productService;
     private final CarrierClientService carrierService;
@@ -184,10 +186,10 @@ public class CustomerClientServiceImpl implements CustomerClientService {
             customer.setEmail(customerDto.getEmail());
         }
         if (customerDto.getInvoiceAddress() != null) {
-            customer.setInvoiceAddress(customerMapper.toEntity(customerDto.getInvoiceAddress()));
+            customer.setInvoiceAddress(addressMapper.toEntity(customerDto.getInvoiceAddress()));
         }
         if (customerDto.getDeliveryAddress() != null) {
-            customer.setDeliveryAddress(customerMapper.toEntity(customerDto.getDeliveryAddress()));
+            customer.setDeliveryAddress(addressMapper.toEntity(customerDto.getDeliveryAddress()));
         }
 
         return customerMapper.toDto(customerRepository.save(customer));
