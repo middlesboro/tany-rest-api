@@ -18,12 +18,12 @@ public class OrderAdminListResponse {
     private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;
     private List<OrderItemDto> items;
-    private String carrierId;
-    private String paymentId;
+    private String carrierName;
+    private String paymentName;
     private AddressDto deliveryAddress;
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
-    private String customerId;
+    private String customerName;
     private String note;
     private OrderStatus status;
 }
