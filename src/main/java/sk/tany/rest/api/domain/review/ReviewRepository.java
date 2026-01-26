@@ -1,6 +1,7 @@
 package sk.tany.rest.api.domain.review;
 
 import org.dizitart.no2.Nitrite;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
@@ -21,6 +22,12 @@ public class ReviewRepository extends AbstractInMemoryRepository<Review> {
         return memoryCache.values().stream()
                 .filter(r -> r.getProductId() != null && r.getProductId().equals(productId))
                 .collect(Collectors.toList());
+    }
+
+    public List<Review> findAllByProductId(String productId, Sort sort) {
+        List<Review> reviews = findAllByProductId(productId);
+        sort(reviews, sort);
+        return reviews;
     }
 
     public List<Review> findAllByProductIds(Collection<String> productIds) {

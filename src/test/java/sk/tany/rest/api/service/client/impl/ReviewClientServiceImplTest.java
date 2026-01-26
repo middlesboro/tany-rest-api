@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,7 +65,7 @@ class ReviewClientServiceImplTest {
     @Test
     void findAllByProductId_shouldRecalculateStatsOnTheFly() {
         when(productRepository.findById("product1")).thenReturn(Optional.of(product));
-        when(reviewRepository.findAllByProductId("product1")).thenReturn(List.of(review1, review2));
+        when(reviewRepository.findAllByProductId(eq("product1"), any(Sort.class))).thenReturn(List.of(review1, review2));
         when(reviewMapper.toClientListResponse(any())).thenReturn(new ReviewClientListResponse());
 
         ReviewClientProductResponse response = service.findAllByProductId("product1", Pageable.unpaged());
@@ -73,5 +75,19 @@ class ReviewClientServiceImplTest {
         // Count is 2
         assertEquals(BigDecimal.valueOf(4.0), response.getAverageRating());
         assertEquals(2, response.getReviewsCount());
+    }
+
+    @Test
+    void findAllByProductId_shouldPassSortToRepository() {
+        when(productRepository.findById("product1")).thenReturn(Optional.of(product));
+        Sort sort = Sort.by("rating").descending();
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10, sort);
+
+        when(reviewRepository.findAllByProductId("product1", sort)).thenReturn(List.of(review1, review2));
+        when(reviewMapper.toClientListResponse(any())).thenReturn(new ReviewClientListResponse());
+
+        service.findAllByProductId("product1", pageable);
+
+        verify(reviewRepository).findAllByProductId("product1", sort);
     }
 }

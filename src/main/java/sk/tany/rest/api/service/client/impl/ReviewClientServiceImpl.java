@@ -39,7 +39,7 @@ public class ReviewClientServiceImpl implements ReviewClientService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
 
         // Fetch all reviews and filter only active ones for client response
-        List<Review> activeReviews = repository.findAllByProductId(productId).stream()
+        List<Review> activeReviews = repository.findAllByProductId(productId, pageable.getSort()).stream()
                 .filter(Review::isActive)
                 .collect(Collectors.toList());
 
