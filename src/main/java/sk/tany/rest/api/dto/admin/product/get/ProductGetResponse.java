@@ -34,4 +34,5 @@ public class ProductGetResponse {
     private BigDecimal discountValue;
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
+    private BigDecimal discountPriceWithoutVat;
 }

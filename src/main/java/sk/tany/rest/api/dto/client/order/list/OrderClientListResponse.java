@@ -3,6 +3,7 @@ package sk.tany.rest.api.dto.client.order.list;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sk.tany.rest.api.domain.order.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -24,6 +25,7 @@ public class OrderClientListResponse {
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+    private OrderStatus status;
 
     @Data
     @NoArgsConstructor

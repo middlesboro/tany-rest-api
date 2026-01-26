@@ -50,7 +50,7 @@ public class OrderClientController {
 
         if (order.getCreateDate().plus(20, ChronoUnit.MINUTES).isBefore(Instant.now())) {
             String loggedInUserId = securityUtil.getLoggedInUserId();
-            if (loggedInUserId == null || order.getCustomerId() == null || !order.getCustomerId().equals(loggedInUserId)) {
+            if (order.getCustomerId() == null || !order.getCustomerId().equals(loggedInUserId)) {
                 throw new AuthenticationException.InvalidToken("Access denied");
             }
         }
@@ -58,6 +58,7 @@ public class OrderClientController {
         return orderClientApiMapper.toGetResponse(order);
     }
 
+    // verify it's really customer order
     @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(summary = "Get order details")
     @GetMapping("/{id}")
@@ -66,6 +67,7 @@ public class OrderClientController {
         return orderClientApiMapper.toGetResponse(order);
     }
 
+    // return just really customer orders
     @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(summary = "Get all orders")
     @GetMapping

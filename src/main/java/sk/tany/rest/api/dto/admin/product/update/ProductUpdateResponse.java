@@ -28,4 +28,6 @@ public class ProductUpdateResponse {
     private BigDecimal discountValue;
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
+    private BigDecimal discountPriceWithoutVat;
+    private BigDecimal wholesalePrice;
 }

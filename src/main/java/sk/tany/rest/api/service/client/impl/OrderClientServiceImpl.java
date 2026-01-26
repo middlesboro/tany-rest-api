@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
@@ -28,20 +30,16 @@ import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.OrderDto;
-import sk.tany.rest.api.dto.client.product.ProductClientDto;
-import sk.tany.rest.api.helper.OrderHelper;
-import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
+import sk.tany.rest.api.exception.OrderException;
+import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
-import sk.tany.rest.api.exception.OrderException;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,11 +48,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -323,11 +319,9 @@ public class OrderClientServiceImpl implements OrderClientService {
         }
     }
 
-    // todo do it e.g. accessible for 1h after creation. otherwise needed authorization. or find better solution
     @Override
     public OrderDto getOrder(String id) {
         return orderRepository.findById(id)
-//                .filter(order -> order.getCustomerId().equals(getCurrentCustomerId()))
                 .map(order -> {
                     OrderDto dto = orderMapper.toDto(order);
                     if (dto.getCarrierId() != null) {

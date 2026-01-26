@@ -83,7 +83,7 @@ public class EmailNotificationSchedulerService {
                 java.math.BigDecimal price = product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(java.math.BigDecimal.ZERO) >= 0
                         ? product.getDiscountPrice()
                         : product.getPrice();
-                String productUrl = frontendUrl + "/produkt/" + product.getSlug();
+                String productUrl = frontendUrl + "/products/" + product.getSlug();
                 productsListHtml.append("<tr>")
                         .append("<td><a href='").append(productUrl).append("'>").append(product.getTitle()).append("</a></td>")
                         .append("<td>").append(price).append(" €</td>")

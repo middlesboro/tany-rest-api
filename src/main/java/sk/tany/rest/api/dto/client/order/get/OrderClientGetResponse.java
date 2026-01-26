@@ -49,6 +49,7 @@ public class OrderClientGetResponse {
         private Integer quantity;
         private BigDecimal price;
         private String image;
+        private String slug;
     }
 
     @Data

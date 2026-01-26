@@ -14,7 +14,6 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -69,7 +68,7 @@ class EmailNotificationSchedulerServiceTest {
 
         String body = bodyCaptor.getValue();
         // Check for the link
-        String expectedLink = "<a href='http://localhost:3000/produkt/test-product'>Test Product</a>";
+        String expectedLink = "<a href='http://localhost:3000/products/test-product'>Test Product</a>";
         assertTrue(body.contains(expectedLink),
                 "Email body should contain clickable product link.\nExpected: " + expectedLink + "\nActual Body: " + body);
     }

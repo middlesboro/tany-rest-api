@@ -1,20 +1,20 @@
 package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
-import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
+import sk.tany.rest.api.component.SlugGenerator;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
 import sk.tany.rest.api.domain.review.ReviewRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
+import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
-import sk.tany.rest.api.component.SlugGenerator;
-import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -51,7 +51,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     public ProductAdminDto save(ProductAdminDto productDto) {
         var product = productMapper.toEntity(productDto);
         recalculateReviewStatistics(product);
-        calculateProductDiscounts(product);
+        calculateProductPrices(product);
         if (StringUtils.isBlank(product.getSlug())) {
             product.setSlug(slugGenerator.generateSlug(product.getTitle(), null));
         }
@@ -65,7 +65,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         productDto.setId(id);
         var product = productMapper.toEntity(productDto);
         recalculateReviewStatistics(product);
-        calculateProductDiscounts(product);
+        calculateProductPrices(product);
         if (StringUtils.isBlank(product.getSlug())) {
             product.setSlug(slugGenerator.generateSlug(product.getTitle(), id));
         }
@@ -88,7 +88,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         }
 
         productMapper.updateEntityFromPatch(patchDto, product);
-        calculateProductDiscounts(product);
+        calculateProductPrices(product);
         var savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
@@ -143,7 +143,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         }
     }
 
-    private void calculateProductDiscounts(Product product) {
+    private void calculateProductPrices(Product product) {
         BigDecimal price = product.getPrice();
         if (price == null || price.compareTo(BigDecimal.ZERO) == 0) {
             product.setDiscountValue(null);
@@ -152,6 +152,9 @@ public class ProductAdminServiceImpl implements ProductAdminService {
             product.setDiscountPriceWithoutVat(null);
             return;
         }
+
+        // todo take vat from shop settings
+        product.setPriceWithoutVat(product.getPrice().divide(new BigDecimal("1.23"), RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP));
 
         if (product.getDiscountValue() != null) {
             BigDecimal discountPrice = price.subtract(product.getDiscountValue());
