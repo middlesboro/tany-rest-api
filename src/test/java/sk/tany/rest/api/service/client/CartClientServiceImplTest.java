@@ -69,8 +69,7 @@ class CartClientServiceImplTest {
         autoDiscount.setValue(BigDecimal.valueOf(10)); // 10% off
         autoDiscount.setProductIds(List.of(productId)); // Applies to p1
 
-        when(cartDiscountRepository.findAllByCodeIsNullAndActiveTrue()).thenReturn(Collections.emptyList());
-        when(cartDiscountRepository.findAllByAutomaticTrueAndActiveTrue()).thenReturn(List.of(autoDiscount));
+        when(cartDiscountRepository.findApplicableAutomaticDiscounts(any(), any(), any())).thenReturn(List.of(autoDiscount));
 
         // Mock mapper to return a client DTO for the discount (needed for cartDto.setAppliedDiscounts)
         CartDiscountClientDto discountClientDto = new CartDiscountClientDto();
@@ -120,8 +119,7 @@ class CartClientServiceImplTest {
         autoDiscount.setValue(BigDecimal.valueOf(10));
         autoDiscount.setProductIds(List.of("different_product_id")); // Restriction does NOT match p1
 
-        when(cartDiscountRepository.findAllByCodeIsNullAndActiveTrue()).thenReturn(Collections.emptyList());
-        when(cartDiscountRepository.findAllByAutomaticTrueAndActiveTrue()).thenReturn(List.of(autoDiscount));
+        when(cartDiscountRepository.findApplicableAutomaticDiscounts(any(), any(), any())).thenReturn(Collections.emptyList());
 
         // Mock save
         when(cartRepository.save(any(Cart.class))).thenAnswer(invocation -> {

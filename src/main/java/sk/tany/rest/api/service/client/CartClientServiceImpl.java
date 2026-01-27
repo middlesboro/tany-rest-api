@@ -350,9 +350,16 @@ public class CartClientServiceImpl implements CartClientService {
         cartDto.setTotalPrice(productsTotal);
 
         // 2. Identify all applicable discounts
-        List<CartDiscount> automaticDiscounts = new ArrayList<>();
-        automaticDiscounts.addAll(cartDiscountRepository.findAllByCodeIsNullAndActiveTrue());
-        automaticDiscounts.addAll(cartDiscountRepository.findAllByAutomaticTrueAndActiveTrue());
+        Set<String> cartCategoryIds = new HashSet<>();
+        Set<String> cartBrandIds = new HashSet<>();
+        products.forEach(p -> {
+            if (p.getCategoryIds() != null) cartCategoryIds.addAll(p.getCategoryIds());
+            if (p.getBrandId() != null) cartBrandIds.add(p.getBrandId());
+        });
+
+        List<CartDiscount> automaticDiscounts = cartDiscountRepository.findApplicableAutomaticDiscounts(
+            new HashSet<>(productIds), cartCategoryIds, cartBrandIds
+        );
 
         List<String> manualCodes = new ArrayList<>();
         if (cartDto.getAppliedDiscounts() != null) {
