@@ -37,4 +37,10 @@ public class CartDiscountRepository extends AbstractInMemoryRepository<CartDisco
                 .filter(cd -> cd.getCode() == null && cd.isActive())
                 .collect(Collectors.toList());
     }
+
+    public List<CartDiscount> findAllByAutomaticTrueAndActiveTrue() {
+        return memoryCache.values().stream()
+                .filter(cd -> cd.isAutomatic() && cd.isActive())
+                .collect(Collectors.toList());
+    }
 }

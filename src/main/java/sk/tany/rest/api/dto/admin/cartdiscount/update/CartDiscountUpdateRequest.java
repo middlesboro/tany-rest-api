@@ -21,4 +21,5 @@ public class CartDiscountUpdateRequest {
     private List<String> productIds;
     private List<String> brandIds;
     private boolean active;
+    private boolean automatic;
 }

@@ -350,7 +350,10 @@ public class CartClientServiceImpl implements CartClientService {
         cartDto.setTotalPrice(productsTotal);
 
         // 2. Identify all applicable discounts
-        List<CartDiscount> automaticDiscounts = cartDiscountRepository.findAllByCodeIsNullAndActiveTrue();
+        List<CartDiscount> automaticDiscounts = new ArrayList<>();
+        automaticDiscounts.addAll(cartDiscountRepository.findAllByCodeIsNullAndActiveTrue());
+        automaticDiscounts.addAll(cartDiscountRepository.findAllByAutomaticTrueAndActiveTrue());
+
         List<String> manualCodes = new ArrayList<>();
         if (cartDto.getAppliedDiscounts() != null) {
             manualCodes = cartDto.getAppliedDiscounts().stream()
@@ -372,6 +375,7 @@ public class CartClientServiceImpl implements CartClientService {
         allDiscounts = allDiscounts.stream()
                 .filter(d -> (d.getDateFrom() == null || !now.isBefore(d.getDateFrom())) &&
                         (d.getDateTo() == null || !now.isAfter(d.getDateTo())))
+                .distinct()
                 .collect(Collectors.toList());
 
         BigDecimal totalDiscount = BigDecimal.ZERO;

@@ -22,6 +22,7 @@ public class CartDiscountDto {
     private List<String> productIds;
     private List<String> brandIds;
     private boolean active;
+    private boolean automatic;
     private Instant createDate;
     private Instant updateDate;
 }

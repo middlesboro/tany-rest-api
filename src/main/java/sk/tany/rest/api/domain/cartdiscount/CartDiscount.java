@@ -17,6 +17,7 @@ public class CartDiscount {
     private BigDecimal value;
     private boolean percentage;
     private boolean active;
+    private boolean automatic;
     private boolean freeShipping;
     private BigDecimal minOrderPrice;
     private Instant dateFrom;
