@@ -29,6 +29,7 @@ public abstract class OrderAdminApiMapper {
     public abstract OrderDto toDto(OrderAdminCreateRequest request);
     public abstract OrderAdminCreateResponse toCreateResponse(OrderDto dto);
 
+    @Mapping(target = "customerName", expression = "java(resolveCustomerName(dto))")
     public abstract OrderAdminGetResponse toGetResponse(OrderDto dto);
 
     @Mapping(target = "customerName", expression = "java(resolveCustomerName(dto.getCustomerId()))")
@@ -63,5 +64,14 @@ public abstract class OrderAdminApiMapper {
         return paymentRepository.findById(paymentId)
                 .map(p -> p.getName())
                 .orElse(null);
+    }
+
+    @Named("resolveCustomerNameFromDto")
+    protected String resolveCustomerName(OrderDto dto) {
+        String name = resolveCustomerName(dto.getCustomerId());
+        if (name == null || name.isEmpty()) {
+            name = (dto.getFirstname() != null ? dto.getFirstname() : "") + " " + (dto.getLastname() != null ? dto.getLastname() : "");
+        }
+        return name != null ? name.trim() : null;
     }
 }
