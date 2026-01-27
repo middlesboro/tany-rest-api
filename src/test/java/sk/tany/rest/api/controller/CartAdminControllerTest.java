@@ -5,16 +5,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.controller.admin.CartAdminController;
-import sk.tany.rest.api.domain.customer.Customer;
-import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.admin.cart.list.CartAdminListResponse;
 import sk.tany.rest.api.service.admin.CartAdminService;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,9 +24,6 @@ class CartAdminControllerTest {
     @Mock
     private CartAdminService cartService;
 
-    @Mock
-    private CustomerRepository customerRepository;
-
     @InjectMocks
     private CartAdminController cartAdminController;
 
@@ -37,36 +33,31 @@ class CartAdminControllerTest {
     }
 
     @Test
-    void getAllCarts_ShouldReturnEnrichedResponse() {
+    void getAllCarts_ShouldReturnPageOfResponses() {
         // Arrange
         Instant now = Instant.now();
         String customerId = "cust-123";
         String cartId = "cart-456";
 
-        CartDto cartDto = new CartDto();
-        cartDto.setCartId(cartId);
-        cartDto.setCustomerId(customerId);
-        cartDto.setCreateDate(now);
-        cartDto.setUpdateDate(now);
+        CartAdminListResponse listResponse = new CartAdminListResponse();
+        listResponse.setCartId(cartId);
+        listResponse.setCustomerId(customerId);
+        listResponse.setCustomerName("John Doe");
+        listResponse.setCreateDate(now);
+        listResponse.setUpdateDate(now);
 
-        Customer customer = new Customer();
-        customer.setId(customerId);
-        customer.setFirstname("John");
-        customer.setLastname("Doe");
+        Page<CartAdminListResponse> page = new PageImpl<>(Collections.singletonList(listResponse));
 
-        when(cartService.findAll()).thenReturn(Collections.singletonList(cartDto));
-        when(customerRepository.findAllById(any())).thenReturn(Collections.singletonList(customer));
+        when(cartService.findAll(any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         // Act
-        List<CartAdminListResponse> response = cartAdminController.getAllCarts();
+        Page<CartAdminListResponse> result = cartAdminController.getAllCarts(null, null, null, null, null, Pageable.unpaged());
 
         // Assert
-        assertEquals(1, response.size());
-        CartAdminListResponse item = response.get(0);
+        assertEquals(1, result.getTotalElements());
+        CartAdminListResponse item = result.getContent().get(0);
         assertEquals(cartId, item.getCartId());
         assertEquals(customerId, item.getCustomerId());
         assertEquals("John Doe", item.getCustomerName());
-        assertEquals(now, item.getCreateDate());
-        assertEquals(now, item.getUpdateDate());
     }
 }
