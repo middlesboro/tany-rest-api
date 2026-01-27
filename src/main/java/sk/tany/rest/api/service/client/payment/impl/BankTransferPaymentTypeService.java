@@ -76,16 +76,14 @@ public class BankTransferPaymentTypeService implements PaymentTypeService {
             if (vs == null) {
                 return null;
             }
-            String pi = "/VS" + vs;
-            String msg = "Objednavka " + vs;
+            String msg = "Objednavka VS: " + vs;
 
             return "https://payme.sk?V=1" +
-                    "&IBAN=" + iban +
+                    "&IBAN=" + iban.replace(" ", "") +
                     "&AM=" + String.format(Locale.US, "%.2f", order.getFinalPrice()) + // Locale.US to ensure dot as decimal separator
                     "&CC=EUR" +
-                    "&PI=" + URLEncoder.encode(pi, StandardCharsets.UTF_8) +
                     "&MSG=" + URLEncoder.encode(msg, StandardCharsets.UTF_8) +
-                    "&CN=" + URLEncoder.encode("Bc Tatiana Grňová - Tany.sk", StandardCharsets.UTF_8); // todo change to config
+                    "&CN=" + URLEncoder.encode("Bc. Tatiana Grňová - Tany.sk", StandardCharsets.UTF_8); // todo change to config
         } catch (Exception e) {
             log.error("Error generating Payme link for order {}", order.getId(), e);
             return null;

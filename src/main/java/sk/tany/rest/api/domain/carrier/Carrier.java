@@ -3,7 +3,6 @@ package sk.tany.rest.api.domain.carrier;
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -15,9 +14,6 @@ public class Carrier {
     private Long prestashopId;
     private String name;
     private CarrierType type;
-    private BigDecimal wholesalePrice;
-    private BigDecimal priceWithoutVat;
-    private BigDecimal price;
     private Integer order;
     private String description;
     private String image;

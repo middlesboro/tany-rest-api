@@ -4,6 +4,7 @@ import lombok.Data;
 import sk.tany.rest.api.domain.order.OrderStatus;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Data
 public class OrderAdminListResponse {
@@ -15,4 +16,5 @@ public class OrderAdminListResponse {
     private String paymentName;
     private String customerName;
     private OrderStatus status;
+    private Instant createDate;
 }
