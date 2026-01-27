@@ -122,6 +122,7 @@ public class OrderClientServiceImpl implements OrderClientService {
         order.setCartId(orderDto.getCartId());
         order.setNote(orderDto.getNote());
         order.setCustomerId(getCurrentCustomerId());
+        order.setAuthenticatedUser(order.getCustomerId() != null);
 
         // Populate from Cart
         order.setFirstname(cartDto.getFirstname());
@@ -250,8 +251,14 @@ public class OrderClientServiceImpl implements OrderClientService {
                 customer.setPhone(order.getPhone());
                 changed = true;
             }
+            if (customer.getInvoiceAddress() == null && order.getInvoiceAddress() != null) {
+                customer.setInvoiceAddress(new Address());
+            }
             if (updateCustomerAddressFromOrderAddress(customer.getInvoiceAddress(), order.getInvoiceAddress())) {
                 changed = true;
+            }
+            if (customer.getDeliveryAddress() == null && order.getDeliveryAddress() != null) {
+                customer.setDeliveryAddress(new Address());
             }
             if (updateCustomerAddressFromOrderAddress(customer.getDeliveryAddress(), order.getDeliveryAddress())) {
                 changed = true;
@@ -264,6 +271,9 @@ public class OrderClientServiceImpl implements OrderClientService {
     }
 
     private boolean updateCustomerAddressFromOrderAddress(Address customerAddress, Address orderAddress) {
+        if (customerAddress == null || orderAddress == null) {
+            return false;
+        }
         boolean changed = false;
         if (StringUtils.isBlank(customerAddress.getCity()) && StringUtils.isNotBlank(orderAddress.getCity())) {
             customerAddress.setCity(orderAddress.getCity());
@@ -409,7 +419,7 @@ public class OrderClientServiceImpl implements OrderClientService {
 
     @Override
     public Page<OrderDto> getOrders(String customerId, Pageable pageable) {
-        return orderRepository.findAllByCustomerId(customerId, pageable)
+        return orderRepository.findAllByCustomerIdAndAuthenticatedUserTrue(customerId, pageable)
                 .map(orderMapper::toDto);
     }
 }

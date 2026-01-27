@@ -17,4 +17,5 @@ public class OrderAdminListResponse {
     private String customerName;
     private OrderStatus status;
     private Instant createDate;
+    private String carrierOrderStateLink;
 }

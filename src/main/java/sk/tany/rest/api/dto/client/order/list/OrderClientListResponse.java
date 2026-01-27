@@ -27,6 +27,8 @@ public class OrderClientListResponse {
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
     private OrderStatus status;
+    private String carrierOrderStateLink;
+    private boolean authenticatedUser;
 
     @Data
     @NoArgsConstructor
