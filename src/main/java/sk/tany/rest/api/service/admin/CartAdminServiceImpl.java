@@ -23,7 +23,15 @@ import sk.tany.rest.api.mapper.CartMapper;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,25 +47,25 @@ public class CartAdminServiceImpl implements CartAdminService {
     private final PaymentRepository paymentRepository;
 
     @Override
-    public Page<CartAdminListResponse> findAll(String cartId, Long orderIdentifier, String customerName, Instant createDateFrom, Instant createDateTo, Pageable pageable) {
+    public Page<CartAdminListResponse> findAll(String cartId, Long orderIdentifier, String customerName, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
 
         // OPTIMIZATION 1: Filter by Order Identifier
         if (orderIdentifier != null) {
-            return findAllByOrderIdentifier(cartId, orderIdentifier, customerName, createDateFrom, createDateTo, pageable);
+            return findAllByOrderIdentifier(cartId, orderIdentifier, customerName, dateFrom, dateTo, pageable);
         }
 
         // OPTIMIZATION 2: Simple Listing (No expensive filtering/sorting)
         if (customerName == null && !isSortedByDerivedField(pageable.getSort())) {
-            return findAllSimple(cartId, createDateFrom, createDateTo, pageable);
+            return findAllSimple(cartId, dateFrom, dateTo, pageable);
         }
 
         // FALLBACK: Full In-Memory Join (Required for complex filtering/sorting)
         // Note: This loads all entities into memory. This is acceptable for the current "In-Memory Repository" architecture
         // but would require refactoring for a production SQL database with large datasets.
-        return findAllFullJoin(cartId, null, customerName, createDateFrom, createDateTo, pageable);
+        return findAllFullJoin(cartId, null, customerName, dateFrom, dateTo, pageable);
     }
 
-    private Page<CartAdminListResponse> findAllByOrderIdentifier(String cartId, Long orderIdentifier, String customerName, Instant createDateFrom, Instant createDateTo, Pageable pageable) {
+    private Page<CartAdminListResponse> findAllByOrderIdentifier(String cartId, Long orderIdentifier, String customerName, LocalDate createDateFrom, LocalDate createDateTo, Pageable pageable) {
         // Find orders matching identifier (usually 0 or 1)
         List<Order> orders = orderRepository.findAll(orderIdentifier, null, null, null, null, null, null, null, Pageable.unpaged()).getContent();
 
@@ -77,17 +85,17 @@ public class CartAdminServiceImpl implements CartAdminService {
         return new PageImpl<>(result, pageable, result.size());
     }
 
-    private Page<CartAdminListResponse> findAllSimple(String cartId, Instant createDateFrom, Instant createDateTo, Pageable pageable) {
+    private Page<CartAdminListResponse> findAllSimple(String cartId, LocalDate createDateFrom, LocalDate createDateTo, Pageable pageable) {
         Stream<Cart> stream = cartRepository.findAll().stream();
 
         if (cartId != null) {
             stream = stream.filter(c -> c.getId() != null && c.getId().contains(cartId));
         }
         if (createDateFrom != null) {
-            stream = stream.filter(c -> c.getCreateDate() != null && !c.getCreateDate().isBefore(createDateFrom));
+            stream = stream.filter(c -> c.getCreateDate() != null && !createLocalDateFromInstant(c.getCreateDate()).isBefore(createDateFrom));
         }
         if (createDateTo != null) {
-            stream = stream.filter(c -> c.getCreateDate() != null && !c.getCreateDate().isAfter(createDateTo));
+            stream = stream.filter(c -> c.getCreateDate() != null && !createLocalDateFromInstant(c.getCreateDate()).isAfter(createDateTo));
         }
 
         List<Cart> filteredCarts = stream.collect(Collectors.toList());
@@ -136,7 +144,7 @@ public class CartAdminServiceImpl implements CartAdminService {
         return new PageImpl<>(content, pageable, filteredCarts.size());
     }
 
-    private Page<CartAdminListResponse> findAllFullJoin(String cartId, Long orderIdentifier, String customerName, Instant createDateFrom, Instant createDateTo, Pageable pageable) {
+    private Page<CartAdminListResponse> findAllFullJoin(String cartId, Long orderIdentifier, String customerName, LocalDate createDateFrom, LocalDate createDateTo, Pageable pageable) {
         // ... Logic from previous implementation ...
         // Fetch all data needed for in-memory join
         List<Cart> allCarts = cartRepository.findAll();
@@ -197,10 +205,10 @@ public class CartAdminServiceImpl implements CartAdminService {
             stream = stream.filter(r -> r.getCustomerName() != null && r.getCustomerName().toLowerCase().contains(lowerName));
         }
         if (createDateFrom != null) {
-            stream = stream.filter(r -> r.getCreateDate() != null && !r.getCreateDate().isBefore(createDateFrom));
+            stream = stream.filter(r -> r.getCreateDate() != null && !createLocalDateFromInstant(r.getCreateDate()).isBefore(createDateFrom));
         }
         if (createDateTo != null) {
-            stream = stream.filter(r -> r.getCreateDate() != null && !r.getCreateDate().isAfter(createDateTo));
+            stream = stream.filter(r -> r.getCreateDate() != null && !createLocalDateFromInstant(r.getCreateDate()).isAfter(createDateTo));
         }
 
         List<CartAdminListResponse> filtered = stream.collect(Collectors.toList());
@@ -309,11 +317,13 @@ public class CartAdminServiceImpl implements CartAdminService {
         return response;
     }
 
-    private boolean matchesFilters(CartAdminListResponse r, String cartId, String customerName, Instant from, Instant to) {
+    private boolean matchesFilters(CartAdminListResponse r, String cartId, String customerName, LocalDate from, LocalDate to) {
+
+
         if (cartId != null && (r.getCartId() == null || !r.getCartId().contains(cartId))) return false;
         if (customerName != null && (r.getCustomerName() == null || !r.getCustomerName().toLowerCase().contains(customerName.toLowerCase()))) return false;
-        if (from != null && (r.getCreateDate() == null || r.getCreateDate().isBefore(from))) return false;
-        if (to != null && (r.getCreateDate() == null || r.getCreateDate().isAfter(to))) return false;
+        if (from != null && (r.getCreateDate() == null || createLocalDateFromInstant(r.getCreateDate()).isBefore(from))) return false;
+        if (to != null && (r.getCreateDate() == null || createLocalDateFromInstant(r.getCreateDate()).isAfter(to))) return false;
         return true;
     }
 
@@ -354,5 +364,12 @@ public class CartAdminServiceImpl implements CartAdminService {
         var cart = cartRepository.findById(id).orElseThrow(() -> new RuntimeException("Cart not found"));
         cartMapper.updateEntityFromPatch(patchDto, cart);
         return cartMapper.toDto(cartRepository.save(cart));
+    }
+
+    private LocalDate createLocalDateFromInstant(Instant instant) {
+        if (instant == null) {
+            return null;
+        }
+        return instant.atZone(ZoneId.systemDefault()).toLocalDate();
     }
 }

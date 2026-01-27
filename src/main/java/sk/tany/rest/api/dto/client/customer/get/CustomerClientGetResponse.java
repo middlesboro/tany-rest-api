@@ -107,7 +107,6 @@ public class CustomerClientGetResponse {
         private String image;
         private Integer order;
         private CarrierType type;
-        private BigDecimal price;
         @JsonInclude(JsonInclude.Include.NON_NULL)
         private List<CarrierPriceRangeDto> ranges;
         private Instant createdDate;

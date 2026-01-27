@@ -47,6 +47,7 @@ prestashop:
 security:
   access-token-validity: ${ACCESS_TOKEN_VALIDITY:1} # in hours
   excluded-urls:
+    - /error
     - /api/login/**
     - /api/customer/context
     - /api/customer/email-notification
