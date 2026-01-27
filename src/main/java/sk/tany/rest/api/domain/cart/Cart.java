@@ -13,6 +13,7 @@ public class Cart {
     @Id
     private String id;
     private String cartId;
+    private String customerId;
     private List<CartItem> items;
     private String selectedCarrierId;
     private String selectedPaymentId;

@@ -1,12 +1,12 @@
 package sk.tany.rest.api.controller.admin;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import sk.tany.rest.api.domain.customer.Customer;
-import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.admin.cart.create.CartAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.cart.create.CartAdminCreateResponse;
@@ -18,11 +18,7 @@ import sk.tany.rest.api.dto.admin.cart.update.CartAdminUpdateResponse;
 import sk.tany.rest.api.mapper.CartAdminApiMapper;
 import sk.tany.rest.api.service.admin.CartAdminService;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.time.Instant;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -31,7 +27,6 @@ import java.util.stream.Collectors;
 public class CartAdminController {
 
     private final CartAdminService cartService;
-    private final CustomerRepository customerRepository;
     private final CartAdminApiMapper cartAdminApiMapper;
 
     @PostMapping
@@ -41,29 +36,14 @@ public class CartAdminController {
     }
 
     @GetMapping
-    public List<CartAdminListResponse> getAllCarts() {
-        List<CartDto> carts = cartService.findAll();
-        Set<String> customerIds = carts.stream()
-                .map(CartDto::getCustomerId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        List<Customer> customers = customerRepository.findAllById(customerIds);
-        Map<String, Customer> customerMap = customers.stream()
-                .collect(Collectors.toMap(Customer::getId, c -> c));
-
-        return carts.stream().map(cart -> {
-            CartAdminListResponse response = new CartAdminListResponse();
-            response.setCartId(cart.getCartId());
-            response.setCreateDate(cart.getCreateDate());
-            response.setUpdateDate(cart.getUpdateDate());
-            response.setCustomerId(cart.getCustomerId());
-            if (cart.getCustomerId() != null && customerMap.containsKey(cart.getCustomerId())) {
-                Customer c = customerMap.get(cart.getCustomerId());
-                response.setCustomerName(c.getFirstname() + " " + c.getLastname());
-            }
-            return response;
-        }).collect(Collectors.toList());
+    public Page<CartAdminListResponse> getAllCarts(
+            @RequestParam(required = false) String cartId,
+            @RequestParam(required = false) Long orderIdentifier,
+            @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) Instant createDateFrom,
+            @RequestParam(required = false) Instant createDateTo,
+            Pageable pageable) {
+        return cartService.findAll(cartId, orderIdentifier, customerName, createDateFrom, createDateTo, pageable);
     }
 
     @GetMapping("/{id}")

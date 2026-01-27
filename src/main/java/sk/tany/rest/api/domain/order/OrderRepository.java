@@ -23,6 +23,12 @@ public class OrderRepository extends AbstractInMemoryRepository<Order> {
         super(nitrite, Order.class);
     }
 
+    public java.util.Optional<Order> findByCartId(String cartId) {
+        return memoryCache.values().stream()
+                .filter(o -> o.getCartId() != null && o.getCartId().equals(cartId))
+                .findFirst();
+    }
+
     public List<Order> findAllByCustomerId(String customerId) {
         return memoryCache.values().stream()
                 .filter(o -> o.getCustomerId() != null && o.getCustomerId().equals(customerId))
