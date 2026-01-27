@@ -96,4 +96,52 @@ class CartClientServiceImplTest {
         assertNotNull(savedCart.getDiscountCodes());
         assertTrue(savedCart.getDiscountCodes().contains("AUTO_CODE"), "Cart should contain the automatic discount code");
     }
+
+    @Test
+    void addProductToCart_shouldNotApplyAutomaticDiscountIfProductRestrictionDoesNotMatch() {
+        // Given
+        String productId = "p1";
+        ProductClientDto productDto = new ProductClientDto();
+        productDto.setId(productId);
+        productDto.setTitle("Test Product");
+        productDto.setPrice(BigDecimal.valueOf(100));
+        productDto.setQuantity(10);
+
+        when(productService.findById(productId)).thenReturn(Optional.of(productDto));
+        when(productService.findAllByIds(List.of(productId))).thenReturn(List.of(productDto));
+
+        // Automatic discount definition for a DIFFERENT product
+        CartDiscount autoDiscount = new CartDiscount();
+        autoDiscount.setId("d1");
+        autoDiscount.setCode("AUTO_CODE_OTHER");
+        autoDiscount.setAutomatic(true);
+        autoDiscount.setActive(true);
+        autoDiscount.setDiscountType(DiscountType.PERCENTAGE);
+        autoDiscount.setValue(BigDecimal.valueOf(10));
+        autoDiscount.setProductIds(List.of("different_product_id")); // Restriction does NOT match p1
+
+        when(cartDiscountRepository.findAllByCodeIsNullAndActiveTrue()).thenReturn(Collections.emptyList());
+        when(cartDiscountRepository.findAllByAutomaticTrueAndActiveTrue()).thenReturn(List.of(autoDiscount));
+
+        // Mock save
+        when(cartRepository.save(any(Cart.class))).thenAnswer(invocation -> {
+            Cart c = invocation.getArgument(0);
+            c.setId("cart1");
+            return c;
+        });
+        when(cartMapper.toDto(any(Cart.class))).thenReturn(new CartDto());
+
+        // When
+        service.addProductToCart(null, productId, 1);
+
+        // Then
+        ArgumentCaptor<Cart> cartCaptor = ArgumentCaptor.forClass(Cart.class);
+        verify(cartRepository).save(cartCaptor.capture());
+
+        Cart savedCart = cartCaptor.getValue();
+        // The automatic discount should NOT be in the list because it wasn't applicable
+        if (savedCart.getDiscountCodes() != null) {
+            assertFalse(savedCart.getDiscountCodes().contains("AUTO_CODE_OTHER"), "Cart should NOT contain the automatic discount code if restriction doesn't match");
+        }
+    }
 }
