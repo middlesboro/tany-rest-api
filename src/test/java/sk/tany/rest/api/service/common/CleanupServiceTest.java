@@ -9,6 +9,9 @@ import sk.tany.rest.api.domain.auth.AuthorizationCode;
 import sk.tany.rest.api.domain.auth.AuthorizationCodeRepository;
 import sk.tany.rest.api.domain.auth.MagicLinkToken;
 import sk.tany.rest.api.domain.auth.MagicLinkTokenRepository;
+import sk.tany.rest.api.domain.cart.Cart;
+import sk.tany.rest.api.domain.cart.CartRepository;
+import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.payment.BesteronPayment;
 import sk.tany.rest.api.domain.payment.BesteronPaymentRepository;
 
@@ -27,12 +30,16 @@ class CleanupServiceTest {
     private MagicLinkTokenRepository magicLinkTokenRepository;
     @Mock
     private BesteronPaymentRepository besteronPaymentRepository;
+    @Mock
+    private CartRepository cartRepository;
+    @Mock
+    private OrderRepository orderRepository;
 
     private CleanupService cleanupService;
 
     @BeforeEach
     void setUp() {
-        cleanupService = new CleanupService(authorizationCodeRepository, magicLinkTokenRepository, besteronPaymentRepository);
+        cleanupService = new CleanupService(authorizationCodeRepository, magicLinkTokenRepository, besteronPaymentRepository, cartRepository, orderRepository);
     }
 
     @Test
@@ -81,5 +88,32 @@ class CleanupServiceTest {
 
         verify(besteronPaymentRepository).delete(expired);
         verify(besteronPaymentRepository, never()).delete(active);
+    }
+
+    @Test
+    void cleanupCarts_ShouldDeleteExpiredCartsWithoutOrders() {
+        Cart oldCartWithoutOrder = new Cart();
+        oldCartWithoutOrder.setId("1");
+        oldCartWithoutOrder.setCreateDate(Instant.now().minus(61, ChronoUnit.DAYS));
+
+        Cart oldCartWithOrder = new Cart();
+        oldCartWithOrder.setId("2");
+        oldCartWithOrder.setCreateDate(Instant.now().minus(61, ChronoUnit.DAYS));
+
+        Cart newCart = new Cart();
+        newCart.setId("3");
+        newCart.setCreateDate(Instant.now().minus(59, ChronoUnit.DAYS));
+
+        sk.tany.rest.api.domain.order.Order order = new sk.tany.rest.api.domain.order.Order();
+        order.setCartId("2");
+
+        when(cartRepository.findAll()).thenReturn(List.of(oldCartWithoutOrder, oldCartWithOrder, newCart));
+        when(orderRepository.findAll()).thenReturn(List.of(order));
+
+        cleanupService.cleanupCarts();
+
+        verify(cartRepository).delete(oldCartWithoutOrder);
+        verify(cartRepository, never()).delete(oldCartWithOrder);
+        verify(cartRepository, never()).delete(newCart);
     }
 }
