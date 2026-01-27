@@ -11,5 +11,4 @@ public class CartDiscountClientDto {
     private String title;
     private DiscountType discountType;
     private BigDecimal value;
-    private boolean freeShipping;
 }

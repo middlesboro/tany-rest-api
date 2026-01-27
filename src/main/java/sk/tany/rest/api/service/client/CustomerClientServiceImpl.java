@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.SecurityUtil;
+import sk.tany.rest.api.domain.cartdiscount.DiscountType;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.CarrierDto;
@@ -116,6 +117,13 @@ public class CustomerClientServiceImpl implements CustomerClientService {
             }
             carrier.setRanges(null);
         });
+        // if there is free shipping discount, set all carrier prices to 0
+        if (cartDto.getAppliedDiscounts() != null) {
+            List<CarrierDto> finalCarriers = carriers;
+            cartDto.getAppliedDiscounts().stream().filter(discount -> discount.getDiscountType() == DiscountType.FREE_SHIPPING)
+                    .findFirst()
+                    .ifPresent(cartDiscountClientDto -> finalCarriers.forEach(c -> c.setPrice(BigDecimal.ZERO)));
+        }
         carriers = carriers.stream().sorted(Comparator.comparing(CarrierDto::getOrder)).toList();
         if (carriers.stream().noneMatch(CarrierDto::isSelected) && !carriers.isEmpty()) {
             carriers.getFirst().setSelected(true);
@@ -142,7 +150,6 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         customerContextCartDto.setAppliedDiscounts(cartDto.getAppliedDiscounts());
         customerContextCartDto.setTotalDiscount(cartDto.getTotalDiscount());
         customerContextCartDto.setFinalPrice(cartDto.getFinalPrice());
-        customerContextCartDto.setFreeShipping(cartDto.isFreeShipping());
         customerContextCartDto.setPriceBreakDown(cartDto.getPriceBreakDown());
 
         boolean discountForNewsletter = cartDto.getAppliedDiscounts() != null &&

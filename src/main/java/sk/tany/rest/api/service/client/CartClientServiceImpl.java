@@ -135,7 +135,6 @@ public class CartClientServiceImpl implements CartClientService {
         resultDto.setTotalPrice(cartDto.getTotalPrice());
         resultDto.setTotalDiscount(cartDto.getTotalDiscount());
         resultDto.setFinalPrice(cartDto.getFinalPrice());
-        resultDto.setFreeShipping(cartDto.isFreeShipping());
         resultDto.setAppliedDiscounts(cartDto.getAppliedDiscounts());
         resultDto.setPriceBreakDown(cartDto.getPriceBreakDown());
 
@@ -350,7 +349,17 @@ public class CartClientServiceImpl implements CartClientService {
         cartDto.setTotalPrice(productsTotal);
 
         // 2. Identify all applicable discounts
-        List<CartDiscount> automaticDiscounts = cartDiscountRepository.findAllByCodeIsNullAndActiveTrue();
+        Set<String> cartCategoryIds = new HashSet<>();
+        Set<String> cartBrandIds = new HashSet<>();
+        products.forEach(p -> {
+            if (p.getCategoryIds() != null) cartCategoryIds.addAll(p.getCategoryIds());
+            if (p.getBrandId() != null) cartBrandIds.add(p.getBrandId());
+        });
+
+        List<CartDiscount> automaticDiscounts = cartDiscountRepository.findApplicableAutomaticDiscounts(
+            new HashSet<>(productIds), cartCategoryIds, cartBrandIds
+        );
+
         List<String> manualCodes = new ArrayList<>();
         if (cartDto.getAppliedDiscounts() != null) {
             manualCodes = cartDto.getAppliedDiscounts().stream()
@@ -372,6 +381,7 @@ public class CartClientServiceImpl implements CartClientService {
         allDiscounts = allDiscounts.stream()
                 .filter(d -> (d.getDateFrom() == null || !now.isBefore(d.getDateFrom())) &&
                         (d.getDateTo() == null || !now.isAfter(d.getDateTo())))
+                .distinct()
                 .collect(Collectors.toList());
 
         BigDecimal totalDiscount = BigDecimal.ZERO;
@@ -431,9 +441,12 @@ public class CartClientServiceImpl implements CartClientService {
                     discountAmount = discount.getValue().min(limit);
                 }
 
-                if (discount.isFreeShipping()) freeShipping = true;
+                if (discount.getDiscountType() == DiscountType.FREE_SHIPPING) {
+                    freeShipping = true;
+                    actuallyAppliedDiscounts.add(discount);
+                }
 
-                if (discountAmount.compareTo(BigDecimal.ZERO) > 0 || discount.isFreeShipping()) {
+                if (discountAmount.compareTo(BigDecimal.ZERO) > 0) {
                     totalDiscount = totalDiscount.add(discountAmount);
                     actuallyAppliedDiscounts.add(discount);
 
@@ -456,7 +469,6 @@ public class CartClientServiceImpl implements CartClientService {
             totalDiscount = productsTotal;
         }
         cartDto.setTotalDiscount(totalDiscount);
-        cartDto.setFreeShipping(freeShipping);
 
         List<CartDiscountClientDto> appliedDtos = actuallyAppliedDiscounts.stream()
                 .map(cartDiscountMapper::toClientDto)
@@ -466,7 +478,7 @@ public class CartClientServiceImpl implements CartClientService {
         BigDecimal finalPrice = productsTotal.subtract(totalDiscount);
 
         // Carrier
-        if (!freeShipping && cartDto.getSelectedCarrierId() != null) {
+        if (cartDto.getSelectedCarrierId() != null) {
              Optional<sk.tany.rest.api.domain.carrier.Carrier> carrierOpt = carrierRepository.findById(cartDto.getSelectedCarrierId());
              if (carrierOpt.isPresent()) {
                  sk.tany.rest.api.domain.carrier.Carrier carrier = carrierOpt.get();
@@ -490,9 +502,17 @@ public class CartClientServiceImpl implements CartClientService {
                      throw new CartException.BadRequest("Carrier not available for the given cart weight");
                  }
 
-                 finalPrice = finalPrice.add(finalPriceRange.getPrice());
-                 breakdown.getItems().add(new PriceItem(PriceItemType.CARRIER, carrier.getId(), carrier.getName(),
-                         1, finalPriceRange.getPrice(), finalPriceRange.getPriceWithoutVat(), finalPriceRange.getVatValue()));
+                 finalPrice =  freeShipping ? BigDecimal.ZERO : finalPrice.add(finalPriceRange.getPrice());
+                 breakdown.getItems().add(
+                         new PriceItem(
+                                 PriceItemType.CARRIER,
+                                 carrier.getId(),
+                                 carrier.getName(),
+                         1,
+                                 freeShipping ? BigDecimal.ZERO : finalPriceRange.getPrice(),
+                                 freeShipping ? BigDecimal.ZERO : finalPriceRange.getPriceWithoutVat(),
+                                 freeShipping ? BigDecimal.ZERO : finalPriceRange.getVatValue())
+                 );
              }
         }
 

@@ -15,13 +15,13 @@ public class CartDiscountDto {
     private String code;
     private DiscountType discountType;
     private BigDecimal value;
-    private boolean freeShipping;
     private Instant dateFrom;
     private Instant dateTo;
     private List<String> categoryIds;
     private List<String> productIds;
     private List<String> brandIds;
     private boolean active;
+    private boolean automatic;
     private Instant createDate;
     private Instant updateDate;
 }

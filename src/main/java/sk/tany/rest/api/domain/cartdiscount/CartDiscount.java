@@ -2,6 +2,7 @@ package sk.tany.rest.api.domain.cartdiscount;
 
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -17,7 +18,7 @@ public class CartDiscount {
     private BigDecimal value;
     private boolean percentage;
     private boolean active;
-    private boolean freeShipping;
+    private boolean automatic;
     private BigDecimal minOrderPrice;
     private Instant dateFrom;
     private Instant dateTo;
