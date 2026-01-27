@@ -1,5 +1,6 @@
 package sk.tany.rest.api.domain.cartdiscount;
 
+import org.apache.commons.lang3.StringUtils;
 import org.dizitart.no2.Nitrite;
 import org.springframework.stereotype.Repository;
 import sk.tany.rest.api.domain.AbstractInMemoryRepository;
@@ -48,7 +49,7 @@ public class CartDiscountRepository extends AbstractInMemoryRepository<CartDisco
 
     public List<CartDiscount> findApplicableAutomaticDiscounts(Set<String> productIds, Set<String> categoryIds, Set<String> brandIds) {
         return memoryCache.values().stream()
-                .filter(cd -> cd.isActive() && (cd.getCode() == null || cd.isAutomatic()))
+                .filter(cd -> cd.isActive() && (StringUtils.isBlank(cd.getCode()) || cd.isAutomatic()))
                 .filter(cd -> {
                     boolean hasProduct = cd.getProductIds() != null && !cd.getProductIds().isEmpty();
                     boolean hasCategory = cd.getCategoryIds() != null && !cd.getCategoryIds().isEmpty();

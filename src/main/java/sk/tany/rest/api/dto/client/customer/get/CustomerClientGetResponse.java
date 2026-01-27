@@ -58,7 +58,6 @@ public class CustomerClientGetResponse {
         private List<CartDiscountClientDto> appliedDiscounts;
         private BigDecimal totalDiscount;
         private BigDecimal finalPrice; // Total - Discount + Carrier + Payment
-        private boolean freeShipping;
         private PriceBreakDown priceBreakDown;
     }
 
@@ -67,9 +66,9 @@ public class CustomerClientGetResponse {
     @AllArgsConstructor
     public static class CartDiscountClientDto {
         private String code;
+        private String title;
         private DiscountType discountType;
         private BigDecimal value;
-        private boolean freeShipping;
     }
 
     @Data

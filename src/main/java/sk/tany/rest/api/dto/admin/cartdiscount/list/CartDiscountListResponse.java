@@ -13,7 +13,6 @@ public class CartDiscountListResponse {
     private String code;
     private DiscountType discountType;
     private BigDecimal value;
-    private boolean freeShipping;
     private Instant dateFrom;
     private Instant dateTo;
     private boolean active;
