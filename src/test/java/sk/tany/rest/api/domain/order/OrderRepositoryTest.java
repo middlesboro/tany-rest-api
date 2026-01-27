@@ -138,6 +138,30 @@ class OrderRepositoryTest {
         assertEquals(new BigDecimal("30.00"), result.getContent().get(2).getFinalPrice());
     }
 
+    @Test
+    void findAllByCustomerIdAndAuthenticatedUserTrue_shouldFilterCorrectly() throws Exception {
+        Order o1 = createOrder("1", 101L, OrderStatus.CREATED, new BigDecimal("10.00"), Instant.now());
+        o1.setCustomerId("c1");
+        o1.setAuthenticatedUser(true);
+
+        Order o2 = createOrder("2", 102L, OrderStatus.PAID, new BigDecimal("20.00"), Instant.now());
+        o2.setCustomerId("c1");
+        o2.setAuthenticatedUser(false);
+
+        Order o3 = createOrder("3", 103L, OrderStatus.PAID, new BigDecimal("30.00"), Instant.now());
+        o3.setCustomerId("c2");
+        o3.setAuthenticatedUser(true);
+
+        injectOrder(o1);
+        injectOrder(o2);
+        injectOrder(o3);
+
+        Page<Order> result = repository.findAllByCustomerIdAndAuthenticatedUserTrue("c1", PageRequest.of(0, 10));
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("1", result.getContent().get(0).getId());
+    }
+
     private Order createOrder(String id, Long identifier, OrderStatus status, BigDecimal price, Instant createDate) {
         Order order = new Order();
         order.setId(id);

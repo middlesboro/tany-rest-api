@@ -27,6 +27,7 @@ public class OrderClientCreateResponse {
     private AddressDto invoiceAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String customerId;
+    private String carrierOrderStateLink;
 
     @Data
     @NoArgsConstructor

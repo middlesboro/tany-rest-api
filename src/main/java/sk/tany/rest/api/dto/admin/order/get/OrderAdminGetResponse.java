@@ -34,4 +34,6 @@ public class OrderAdminGetResponse {
     private PriceBreakDown priceBreakDown;
     private String selectedPickupPointName;
     private List<OrderStatusHistoryDto> statusHistory;
+    private String carrierOrderStateLink;
+    private boolean authenticatedUser;
 }

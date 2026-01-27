@@ -40,6 +40,8 @@ public class OrderClientGetResponse {
     private OrderStatus status;
     private sk.tany.rest.api.dto.PriceBreakDown priceBreakDown;
     private List<OrderStatusHistoryDto> statusHistory;
+    private String carrierOrderStateLink;
+    private boolean authenticatedUser;
 
     @Data
     @NoArgsConstructor

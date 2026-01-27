@@ -57,6 +57,29 @@ public class OrderRepository extends AbstractInMemoryRepository<Order> {
         return new PageImpl<>(all.subList(start, end), pageable, all.size());
     }
 
+    public Page<Order> findAllByCustomerIdAndAuthenticatedUserTrue(String customerId, Pageable pageable) {
+        List<Order> all = memoryCache.values().stream()
+                .filter(o -> o.getCustomerId() != null && o.getCustomerId().equals(customerId))
+                .filter(Order::isAuthenticatedUser)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (pageable.getSort().isSorted()) {
+            sort(all, pageable.getSort());
+        } else {
+            all.sort(Comparator.comparing(Order::getCreateDate, Comparator.nullsLast(Comparator.reverseOrder())));
+        }
+
+        if (pageable.isUnpaged()) {
+            return new PageImpl<>(all, pageable, all.size());
+        }
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), all.size());
+        if (start > all.size()) {
+            return new PageImpl<>(List.of(), pageable, all.size());
+        }
+        return new PageImpl<>(all.subList(start, end), pageable, all.size());
+    }
+
     public Page<Order> findAll(Long orderIdentifier, OrderStatus status, BigDecimal priceFrom, BigDecimal priceTo, String carrierId, String paymentId, Instant createDateFrom, Instant createDateTo, Pageable pageable) {
         Stream<Order> stream = memoryCache.values().stream();
 

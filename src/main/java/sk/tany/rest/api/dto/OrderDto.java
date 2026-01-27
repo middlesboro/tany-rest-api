@@ -41,4 +41,6 @@ public class OrderDto {
     private String note;
     private PriceBreakDown priceBreakDown;
     private List<OrderStatusHistoryDto> statusHistory;
+    private String carrierOrderStateLink;
+    private boolean authenticatedUser;
 }

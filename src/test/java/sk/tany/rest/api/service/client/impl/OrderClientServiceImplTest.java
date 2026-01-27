@@ -317,4 +317,73 @@ class OrderClientServiceImplTest {
         org.junit.jupiter.api.Assertions.assertEquals("User", customer.getLastname());
         org.junit.jupiter.api.Assertions.assertEquals("987654321", customer.getPhone());
     }
+
+    @Test
+    void createOrder_shouldSetAuthenticatedUser() {
+        OrderDto orderDto = new OrderDto();
+        orderDto.setCartId("cart1");
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId("cart1");
+        cartDto.setItems(Collections.singletonList(new CartItem("p1", 1)));
+
+        when(cartService.getOrCreateCart("cart1", null)).thenReturn(cartDto);
+
+        // Mock authenticated user
+        Customer customer = new Customer();
+        customer.setId("cust1");
+        when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.of(customer));
+
+        Order savedOrder = new Order();
+        savedOrder.setId("order1");
+        savedOrder.setCustomerId("cust1");
+        savedOrder.setAuthenticatedUser(true);
+        savedOrder.setItems(Collections.emptyList());
+
+        when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order o = invocation.getArgument(0);
+            o.setId("order1");
+            return o;
+        });
+        when(orderRepository.findById("order1")).thenReturn(Optional.of(savedOrder));
+        when(orderMapper.toDto(savedOrder)).thenReturn(new OrderDto());
+
+        orderClientService.createOrder(orderDto);
+
+        verify(orderRepository).save(org.mockito.ArgumentMatchers.argThat(Order::isAuthenticatedUser));
+    }
+
+    @Test
+    void createOrder_shouldSetAuthenticatedUserFalse_whenNotLoggedIn() {
+        // Reset security context or return null email/customer
+        when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.empty());
+
+        OrderDto orderDto = new OrderDto();
+        orderDto.setCartId("cart1");
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId("cart1");
+        cartDto.setItems(Collections.singletonList(new CartItem("p1", 1)));
+
+        when(cartService.getOrCreateCart("cart1", null)).thenReturn(cartDto);
+
+        Order savedOrder = new Order();
+        savedOrder.setId("order1");
+        savedOrder.setAuthenticatedUser(false);
+        savedOrder.setItems(Collections.emptyList());
+
+        when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order o = invocation.getArgument(0);
+            o.setId("order1");
+            return o;
+        });
+        when(orderRepository.findById("order1")).thenReturn(Optional.of(savedOrder));
+        when(orderMapper.toDto(savedOrder)).thenReturn(new OrderDto());
+
+        orderClientService.createOrder(orderDto);
+
+        verify(orderRepository).save(org.mockito.ArgumentMatchers.argThat(o -> !o.isAuthenticatedUser()));
+    }
 }

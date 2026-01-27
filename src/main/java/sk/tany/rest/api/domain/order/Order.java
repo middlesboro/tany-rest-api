@@ -42,5 +42,7 @@ public class Order {
     private PriceBreakDown priceBreakDown;
     private OrderStatus status = OrderStatus.CREATED;
     private List<OrderStatusHistory> statusHistory = new java.util.ArrayList<>();
+    private String carrierOrderStateLink;
+    private boolean authenticatedUser;
 
 }
