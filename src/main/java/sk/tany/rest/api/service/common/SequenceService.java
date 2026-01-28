@@ -24,4 +24,14 @@ public class SequenceService {
         sequenceRepository.save(sequence);
         return nextVal;
     }
+
+    public synchronized void setSequence(String seqName, long value) {
+        Sequence sequence = sequenceRepository.findById(seqName).orElseGet(() -> {
+            Sequence newSeq = new Sequence();
+            newSeq.setId(seqName);
+            return newSeq;
+        });
+        sequence.setSeq(value);
+        sequenceRepository.save(sequence);
+    }
 }
