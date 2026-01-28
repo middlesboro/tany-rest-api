@@ -63,7 +63,7 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
     private void processPrice(PaymentDto paymentDto) {
         if (paymentDto.getPrice() != null && paymentDto.getPrice().compareTo(BigDecimal.ZERO) > 0) {
             paymentDto.setPrice(paymentDto.getPrice().setScale(2, RoundingMode.HALF_UP));
-            paymentDto.setPriceWithoutVat(paymentDto.getPrice().divide(new BigDecimal("1.23"), RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP));
+            paymentDto.setPriceWithoutVat(paymentDto.getPrice().divide(new BigDecimal("1.23"), 2, RoundingMode.HALF_UP));
             paymentDto.setVatValue(paymentDto.getPrice().subtract(paymentDto.getPriceWithoutVat()));
         } else {
             paymentDto.setPrice(BigDecimal.ZERO);

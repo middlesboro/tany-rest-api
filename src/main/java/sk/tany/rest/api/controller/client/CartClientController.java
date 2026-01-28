@@ -60,6 +60,8 @@ public class CartClientController {
         if (request.getEmail() != null) cartDto.setEmail(request.getEmail());
         if (request.getPhone() != null) cartDto.setPhone(request.getPhone());
 
+        if (request.getDiscountForNewsletter() != null) cartDto.setDiscountForNewsletter(request.getDiscountForNewsletter());
+
         if (request.getInvoiceAddress() != null) {
             sk.tany.rest.api.dto.AddressDto addr = new sk.tany.rest.api.dto.AddressDto();
             addr.setStreet(request.getInvoiceAddress().getStreet());

@@ -12,4 +12,5 @@ public class CarrierPriceRange {
     private BigDecimal price;
     private BigDecimal weightFrom;
     private BigDecimal weightTo;
+    private BigDecimal freeShippingThreshold;
 }

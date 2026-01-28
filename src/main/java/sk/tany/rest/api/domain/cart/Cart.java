@@ -27,6 +27,7 @@ public class Cart {
     private Address deliveryAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private List<String> discountCodes;
+    private boolean discountForNewsletter;
     private Instant createDate;
     private Instant updateDate;
 }

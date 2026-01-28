@@ -77,7 +77,7 @@ public class CarrierAdminServiceImpl implements CarrierAdminService {
                 if (price != null && price.compareTo(BigDecimal.ZERO) > 0) {
                     // todo take vat from shop settings. create helper method
                     range.setPrice(range.getPrice().setScale(2, RoundingMode.HALF_UP));
-                    range.setPriceWithoutVat(price.divide(new BigDecimal("1.23"), RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP));
+                    range.setPriceWithoutVat(price.divide(new BigDecimal("1.23"), 2, RoundingMode.HALF_UP));
                     range.setVatValue(price.subtract(range.getPriceWithoutVat()));
                 } else {
                     range.setPrice(BigDecimal.ZERO);
