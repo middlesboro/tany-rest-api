@@ -68,3 +68,8 @@ logging:
   level:
     org.springframework.security: TRACE
     sk.tany: ${TANY_LEVEL_LOG:INFO}
+
+admin:
+  database:
+    password: ${DATABASE_PASSWORD}
+    username: ${DATABASE_USERNAME}
