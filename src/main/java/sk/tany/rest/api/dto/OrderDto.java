@@ -39,6 +39,7 @@ public class OrderDto {
     private String firstname;
     private String lastname;
     private String note;
+    private List<String> cartDiscountIds;
     private PriceBreakDown priceBreakDown;
     private List<OrderStatusHistoryDto> statusHistory;
     private String carrierOrderStateLink;
