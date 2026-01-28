@@ -75,11 +75,17 @@ public class OrderAdminController {
 
     @GetMapping("/{id}/invoice")
     public ResponseEntity<byte[]> getOrderInvoice(@PathVariable String id) {
+        OrderDto order = orderService.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
         byte[] pdfBytes = invoiceService.generateInvoice(id);
+
+        String filename = "invoice_" + id + ".pdf";
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            filename = "dobropis_" + id + ".pdf";
+        }
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")
-                .header("Content-Disposition", "attachment; filename=invoice_" + id + ".pdf")
+                .header("Content-Disposition", "attachment; filename=" + filename)
                 .body(pdfBytes);
     }
 
