@@ -110,6 +110,69 @@ class OrderAdminServiceImplTest {
 
         org.junit.jupiter.api.Assertions.assertNotNull(inputDto.getPriceBreakDown());
         org.junit.jupiter.api.Assertions.assertFalse(inputDto.getPriceBreakDown().getItems().isEmpty());
+
+        // Check Breakdown Totals (Assuming VAT logic sets defaults if missing or simple calc)
+        // Since we didn't mock priceWithoutVat/vatValue in inputs, they might be derived or zero depending on implementation detail of "defaults"
+        // But we can check that breakdown structure is populated.
+        org.junit.jupiter.api.Assertions.assertNotNull(inputDto.getPriceBreakDown().getTotalPrice());
+    }
+
+    @Test
+    void createOrder_shouldApplyFreeShippingThreshold() {
+        // Given
+        OrderDto inputDto = new OrderDto();
+        inputDto.setCarrierId("carrier1");
+        inputDto.setPaymentId("payment1");
+        // High value item to trigger free shipping
+        OrderItemDto itemDto = new OrderItemDto();
+        itemDto.setId("prod1");
+        itemDto.setQuantity(1);
+        inputDto.setItems(List.of(itemDto));
+
+        Product product = new Product();
+        product.setId("prod1");
+        product.setTitle("Expensive Product");
+        product.setPrice(new BigDecimal("100.00"));
+        product.setWeight(new BigDecimal("1.0"));
+
+        Carrier carrier = new Carrier();
+        carrier.setId("carrier1");
+        carrier.setName("Test Carrier");
+        sk.tany.rest.api.domain.carrier.CarrierPriceRange range = new sk.tany.rest.api.domain.carrier.CarrierPriceRange();
+        range.setWeightFrom(new BigDecimal("0"));
+        range.setWeightTo(new BigDecimal("10"));
+        range.setPrice(new BigDecimal("10.00"));
+        range.setFreeShippingThreshold(new BigDecimal("50.00")); // Threshold met
+        carrier.setRanges(List.of(range));
+
+        Payment payment = new Payment();
+        payment.setId("payment1");
+        payment.setName("Test Payment");
+        payment.setPrice(new BigDecimal("0.00"));
+
+        when(productRepository.findById("prod1")).thenReturn(Optional.of(product));
+        when(carrierRepository.findById("carrier1")).thenReturn(Optional.of(carrier));
+        when(paymentRepository.findById("payment1")).thenReturn(Optional.of(payment));
+        when(sequenceService.getNextSequence("order_identifier")).thenReturn(101L);
+
+        Order savedOrder = new Order();
+        savedOrder.setId("newId2");
+        savedOrder.setOrderIdentifier(101L);
+        savedOrder.setFinalPrice(new BigDecimal("100.00")); // 100 + 0 (free ship) + 0
+
+        when(orderMapper.toEntity(any(OrderDto.class))).thenReturn(savedOrder);
+        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+
+        OrderDto resultDto = new OrderDto();
+        resultDto.setId("newId2");
+        when(orderMapper.toDto(savedOrder)).thenReturn(resultDto);
+
+        // When
+        orderAdminService.save(inputDto);
+
+        // Then
+        org.junit.jupiter.api.Assertions.assertEquals(BigDecimal.ZERO, inputDto.getDeliveryPrice());
+        org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("100.00"), inputDto.getFinalPrice());
     }
 
     @Test
