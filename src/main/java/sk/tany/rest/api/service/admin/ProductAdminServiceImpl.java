@@ -143,6 +143,16 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         }
     }
 
+    @Override
+    public void updateAllProductsQuantity(Integer quantity) {
+        List<Product> products = productRepository.findAll();
+        for (Product product : products) {
+            product.setQuantity(quantity);
+            var savedProduct = productRepository.save(product);
+            productSearchEngine.updateProduct(savedProduct);
+        }
+    }
+
     private void calculateProductPrices(Product product) {
         BigDecimal price = product.getPrice();
         if (price == null || price.compareTo(BigDecimal.ZERO) == 0) {
