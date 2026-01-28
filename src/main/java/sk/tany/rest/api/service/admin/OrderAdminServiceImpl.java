@@ -30,7 +30,11 @@ public class OrderAdminServiceImpl implements OrderAdminService {
     private final OrderMapper orderMapper;
     private final EmailService emailService;
 
+    @org.springframework.beans.factory.annotation.Value("${eshop.frontend-url}")
+    private String frontendUrl;
+
     private String emailTemplate;
+    private String emailPaidTemplate;
 
     @Override
     public Page<OrderDto> findAll(Long orderIdentifier, OrderStatus status, BigDecimal priceFrom, BigDecimal priceTo, String carrierId, String paymentId, Instant createDateFrom, Instant createDateTo, Pageable pageable) {
@@ -82,6 +86,8 @@ public class OrderAdminServiceImpl implements OrderAdminService {
 
         if (savedOrder.getStatus() == OrderStatus.SENT && oldStatus != OrderStatus.SENT) {
             sendOrderSentEmail(savedOrder);
+        } else if (savedOrder.getStatus() == OrderStatus.PAID && oldStatus != OrderStatus.PAID) {
+            sendOrderPaidEmail(savedOrder);
         }
 
         return orderMapper.toDto(savedOrder);
@@ -104,6 +110,8 @@ public class OrderAdminServiceImpl implements OrderAdminService {
 
         if (savedOrder.getStatus() == OrderStatus.SENT && oldStatus != OrderStatus.SENT) {
             sendOrderSentEmail(savedOrder);
+        } else if (savedOrder.getStatus() == OrderStatus.PAID && oldStatus != OrderStatus.PAID) {
+            sendOrderPaidEmail(savedOrder);
         }
 
         return orderMapper.toDto(savedOrder);
@@ -146,5 +154,39 @@ public class OrderAdminServiceImpl implements OrderAdminService {
             emailTemplate = new String(data, StandardCharsets.UTF_8);
         }
         return emailTemplate;
+    }
+
+    private void sendOrderPaidEmail(Order order) {
+        if (order.getEmail() == null || order.getEmail().isEmpty()) {
+            log.warn("Cannot send 'Order Paid' email: Customer email is missing for order {}", order.getOrderIdentifier());
+            return;
+        }
+        try {
+            String template = getEmailPaidTemplate();
+
+            String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
+            String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
+            String orderConfirmationLink = frontendUrl + "/order/confirmation/" + order.getId();
+
+            String body = template
+                    .replace("{{firstname}}", firstname)
+                    .replace("{{orderIdentifier}}", orderIdentifier)
+                    .replace("{{orderConfirmationLink}}", orderConfirmationLink);
+
+            emailService.sendEmail(order.getEmail(), "Order Paid", body, true, null);
+            log.info("Sent 'Order Paid' email for order {}", order.getOrderIdentifier());
+
+        } catch (Exception e) {
+            log.error("Failed to send 'Order Paid' email for order {}", order.getOrderIdentifier(), e);
+        }
+    }
+
+    private String getEmailPaidTemplate() throws java.io.IOException {
+        if (emailPaidTemplate == null) {
+            ClassPathResource resource = new ClassPathResource("templates/email/order_paid.html");
+            byte[] data = FileCopyUtils.copyToByteArray(resource.getInputStream());
+            emailPaidTemplate = new String(data, StandardCharsets.UTF_8);
+        }
+        return emailPaidTemplate;
     }
 }
