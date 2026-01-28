@@ -28,6 +28,7 @@ public class CartClientUpdateResponse {
     private Instant createDate;
     private Instant updateDate;
     private PriceBreakDown priceBreakDown;
+    private boolean discountForNewsletter;
 
     @Data
     @NoArgsConstructor

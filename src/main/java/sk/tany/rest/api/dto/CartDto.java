@@ -32,6 +32,7 @@ public class CartDto {
     private BigDecimal totalPrice; // Products total
     private BigDecimal totalDiscount;
     private BigDecimal finalPrice; // Total - Discount + Carrier + Payment
+    private boolean discountForNewsletter;
 
     private PriceBreakDown priceBreakDown;
 }

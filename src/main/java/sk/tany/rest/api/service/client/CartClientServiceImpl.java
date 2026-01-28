@@ -270,6 +270,10 @@ public class CartClientServiceImpl implements CartClientService {
             cartDto.getAppliedDiscounts().add(d);
         }
 
+        boolean discountForNewsletter = cartDto.getAppliedDiscounts() != null &&
+                cartDto.getAppliedDiscounts().stream().anyMatch(d -> "zlava10".equalsIgnoreCase(d.getCode()));
+        cartDto.setDiscountForNewsletter(discountForNewsletter);
+
         return save(cartDto);
     }
 
@@ -281,6 +285,10 @@ public class CartClientServiceImpl implements CartClientService {
         if (cartDto.getAppliedDiscounts() != null) {
             cartDto.getAppliedDiscounts().removeIf(d -> code.equals(d.getCode()));
         }
+
+        boolean discountForNewsletter = cartDto.getAppliedDiscounts() != null &&
+                cartDto.getAppliedDiscounts().stream().anyMatch(d -> "zlava10".equalsIgnoreCase(d.getCode()));
+        cartDto.setDiscountForNewsletter(discountForNewsletter);
 
         return save(cartDto);
     }

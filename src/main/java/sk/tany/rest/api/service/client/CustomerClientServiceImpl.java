@@ -113,7 +113,14 @@ public class CustomerClientServiceImpl implements CustomerClientService {
                                         (range.getWeightTo() == null || totalWeight.compareTo(range.getWeightTo()) <= 0)
                         )
                         .findFirst()
-                        .ifPresent(range -> carrier.setPrice(range.getPrice()));
+                        .ifPresent(range -> {
+                            BigDecimal freeShippingThreshold = range.getFreeShippingThreshold();
+                            if (freeShippingThreshold != null && customerContextCartDto.getTotalProductPrice().compareTo(freeShippingThreshold) >= 0) {
+                                carrier.setPrice(BigDecimal.ZERO);
+                            } else {
+                                carrier.setPrice(range.getPrice());
+                            }
+                        });
             }
             carrier.setRanges(null);
         });
@@ -152,10 +159,7 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         customerContextCartDto.setFinalPrice(cartDto.getFinalPrice());
         customerContextCartDto.setPriceBreakDown(cartDto.getPriceBreakDown());
 
-        boolean discountForNewsletter = cartDto.getAppliedDiscounts() != null &&
-                cartDto.getAppliedDiscounts().stream().anyMatch(d -> "zlava10".equalsIgnoreCase(d.getCode()));
-
-        return new CustomerContextDto(customerDto, customerContextCartDto, discountForNewsletter);
+        return new CustomerContextDto(customerDto, customerContextCartDto, cartDto.isDiscountForNewsletter());
     }
 
     public CustomerDto findByEmail(String email) {
