@@ -16,7 +16,12 @@ import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.client.payment.PaymentCallbackDto;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 import sk.tany.rest.api.service.common.GlobalPaymentsSigner;
+import sk.tany.rest.api.service.common.EmailService;
+import sk.tany.rest.api.domain.order.Order;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.FileCopyUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -31,6 +36,12 @@ public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
     private final GlobalPaymentsPaymentRepository globalPaymentsPaymentRepository;
     private final OrderRepository orderRepository;
     private final GlobalPaymentsSigner signer;
+    private final EmailService emailService;
+
+    @Value("${eshop.frontend-url}")
+    private String frontendUrl;
+
+    private String emailPaidTemplate;
 
     // todo load as config class
     @Value("${gpwebpay.merchant-number}")
@@ -119,12 +130,47 @@ public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
                         order.setStatusHistory(new ArrayList<>());
                     }
                     order.getStatusHistory().add(new OrderStatusHistory(OrderStatus.PAID, Instant.now()));
-                    orderRepository.save(order);
+                    Order savedOrder = orderRepository.save(order);
+                    sendOrderPaidEmail(savedOrder);
                 }
             });
         }
 
         return "PAID";
+    }
+
+    private void sendOrderPaidEmail(Order order) {
+        if (order.getEmail() == null || order.getEmail().isEmpty()) {
+            log.warn("Cannot send 'Order Paid' email: Customer email is missing for order {}", order.getOrderIdentifier());
+            return;
+        }
+        try {
+            String template = getEmailPaidTemplate();
+
+            String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
+            String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
+            String orderConfirmationLink = frontendUrl + "/order/confirmation/" + order.getId();
+
+            String body = template
+                    .replace("{{firstname}}", firstname)
+                    .replace("{{orderIdentifier}}", orderIdentifier)
+                    .replace("{{orderConfirmationLink}}", orderConfirmationLink);
+
+            emailService.sendEmail(order.getEmail(), "Order Paid", body, true, null);
+            log.info("Sent 'Order Paid' email for order {}", order.getOrderIdentifier());
+
+        } catch (Exception e) {
+            log.error("Failed to send 'Order Paid' email for order {}", order.getOrderIdentifier(), e);
+        }
+    }
+
+    private String getEmailPaidTemplate() throws java.io.IOException {
+        if (emailPaidTemplate == null) {
+            ClassPathResource resource = new ClassPathResource("templates/email/order_paid.html");
+            byte[] data = FileCopyUtils.copyToByteArray(resource.getInputStream());
+            emailPaidTemplate = new String(data, StandardCharsets.UTF_8);
+        }
+        return emailPaidTemplate;
     }
 
 }

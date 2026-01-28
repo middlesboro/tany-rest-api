@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Paid</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #2c3e50;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #2c3e50;
+            color: #ffffff;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background-color: #1a252f;
+        }
+        .order-info {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+        }
+        .footer {
+            background-color: #f9f9f9;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Order Paid</h1>
+        </div>
+        <div class="content">
+            <p>Hello <strong>{{firstname}}</strong>,</p>
+            <p>We have successfully received payment for your order <strong>#{{orderIdentifier}}</strong>.</p>
+
+            <div class="order-info">
+                <p>You can view your order confirmation using the link below:</p>
+                <a href="{{orderConfirmationLink}}" class="btn">View Order</a>
+            </div>
+
+            <p>If the button above does not work, copy and paste the following link into your browser:</p>
+            <p><a href="{{orderConfirmationLink}}">{{orderConfirmationLink}}</a></p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 E-Shop. All rights reserved.</p>
+            <p>If you have any questions, please contact our support.</p>
+        </div>
+    </div>
+</body>
+</html>

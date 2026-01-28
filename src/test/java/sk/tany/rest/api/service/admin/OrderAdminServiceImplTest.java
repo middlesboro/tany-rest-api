@@ -61,7 +61,7 @@ class OrderAdminServiceImplTest {
     }
 
     @Test
-    void update_shouldNotSendEmail_whenStatusDoesNotChangeToSent() {
+    void update_shouldSendEmail_whenStatusChangesToPaid() {
         String orderId = "123";
         OrderDto orderDto = new OrderDto();
         orderDto.setStatus(OrderStatus.PAID);
@@ -73,6 +73,33 @@ class OrderAdminServiceImplTest {
         Order updatedOrder = new Order();
         updatedOrder.setId(orderId);
         updatedOrder.setStatus(OrderStatus.PAID);
+        updatedOrder.setEmail("test@example.com");
+        updatedOrder.setFirstname("John");
+        updatedOrder.setOrderIdentifier(100L);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(existingOrder));
+        when(orderMapper.toEntity(orderDto)).thenReturn(updatedOrder);
+        when(orderRepository.save(updatedOrder)).thenReturn(updatedOrder);
+        when(orderMapper.toDto(updatedOrder)).thenReturn(orderDto);
+
+        orderAdminService.update(orderId, orderDto);
+
+        verify(emailService, times(1)).sendEmail(eq("test@example.com"), contains("Order Paid"), anyString(), eq(true), any());
+    }
+
+    @Test
+    void update_shouldNotSendEmail_whenStatusDoesNotChangeToSentOrPaid() {
+        String orderId = "123";
+        OrderDto orderDto = new OrderDto();
+        orderDto.setStatus(OrderStatus.CANCELED);
+
+        Order existingOrder = new Order();
+        existingOrder.setId(orderId);
+        existingOrder.setStatus(OrderStatus.CREATED);
+
+        Order updatedOrder = new Order();
+        updatedOrder.setId(orderId);
+        updatedOrder.setStatus(OrderStatus.CANCELED);
         updatedOrder.setEmail("test@example.com");
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(existingOrder));
