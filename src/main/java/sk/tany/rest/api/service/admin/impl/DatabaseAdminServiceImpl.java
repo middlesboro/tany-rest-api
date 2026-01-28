@@ -25,6 +25,8 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
 
     @Value("${admin.database.password}")
     private String databasePassword;
+    @Value("${admin.database.username}")
+    private String databaseUsername;
 
     @Override
     public File exportEncryptedDatabase() {
@@ -50,7 +52,7 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
             encryptedDb = Nitrite.builder()
                     .compressed()
                     .filePath(encryptedDbFile)
-                    .openOrCreate("admin", databasePassword);
+                    .openOrCreate(databaseUsername, databasePassword);
 
             // 2. Setup Piping
             // Use a large buffer for the pipe to improve performance (e.g. 64KB)
