@@ -338,6 +338,13 @@ public class InvoiceServiceImpl implements InvoiceService {
         footerNote.setAlignment(Element.ALIGN_CENTER);
         footerNote.setSpacingBefore(30);
         document.add(footerNote);
+
+        if (order.getStatus() == sk.tany.rest.api.domain.order.OrderStatus.PAID) {
+            Paragraph paidNote = new Paragraph("FAKTÚRA JE UŽ UHRADENÁ", getSlovakFont(12, Font.BOLD, BRAND_COLOR));
+            paidNote.setAlignment(Element.ALIGN_CENTER);
+            paidNote.setSpacingBefore(10);
+            document.add(paidNote);
+        }
     }
 
     private String formatDate(java.time.Instant date) {
