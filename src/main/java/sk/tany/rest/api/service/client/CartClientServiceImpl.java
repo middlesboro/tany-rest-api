@@ -502,16 +502,20 @@ public class CartClientServiceImpl implements CartClientService {
                      throw new CartException.BadRequest("Carrier not available for the given cart weight");
                  }
 
-                 finalPrice =  freeShipping ? BigDecimal.ZERO : finalPrice.add(finalPriceRange.getPrice());
+                 boolean thresholdMet = finalPriceRange.getFreeShippingThreshold() != null &&
+                         productsTotal.subtract(totalDiscount).compareTo(finalPriceRange.getFreeShippingThreshold()) >= 0;
+                 boolean isFreeShipping = freeShipping || thresholdMet;
+
+                 finalPrice =  isFreeShipping ? finalPrice : finalPrice.add(finalPriceRange.getPrice());
                  breakdown.getItems().add(
                          new PriceItem(
                                  PriceItemType.CARRIER,
                                  carrier.getId(),
                                  carrier.getName(),
                          1,
-                                 freeShipping ? BigDecimal.ZERO : finalPriceRange.getPrice(),
-                                 freeShipping ? BigDecimal.ZERO : finalPriceRange.getPriceWithoutVat(),
-                                 freeShipping ? BigDecimal.ZERO : finalPriceRange.getVatValue())
+                                 isFreeShipping ? BigDecimal.ZERO : finalPriceRange.getPrice(),
+                                 isFreeShipping ? BigDecimal.ZERO : finalPriceRange.getPriceWithoutVat(),
+                                 isFreeShipping ? BigDecimal.ZERO : finalPriceRange.getVatValue())
                  );
              }
         }

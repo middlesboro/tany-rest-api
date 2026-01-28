@@ -10,8 +10,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import sk.tany.rest.api.domain.cart.Cart;
 import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscount;
+import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscountRepository;
 import sk.tany.rest.api.domain.cartdiscount.DiscountType;
+import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
@@ -41,7 +43,10 @@ class CartClientServiceImplTest {
     private CartDiscountRepository cartDiscountRepository;
     @Mock
     private CartDiscountMapper cartDiscountMapper;
-    // We don't need CarrierRepository and PaymentRepository for this test if we don't set carrier/payment
+    @Mock
+    private CarrierRepository carrierRepository;
+    @Mock
+    private PaymentRepository paymentRepository;
 
     @InjectMocks
     private CartClientServiceImpl service;
@@ -141,5 +146,117 @@ class CartClientServiceImplTest {
         if (savedCart.getDiscountCodes() != null) {
             assertFalse(savedCart.getDiscountCodes().contains("AUTO_CODE_OTHER"), "Cart should NOT contain the automatic discount code if restriction doesn't match");
         }
+    }
+
+    @Test
+    void addCarrier_shouldApplyFreeShippingThreshold() {
+        // Given
+        String cartId = "cart1";
+        String carrierId = "carrier1";
+        String productId = "p1";
+
+        Cart cart = new Cart();
+        cart.setId(cartId);
+        when(cartRepository.findById(cartId)).thenReturn(Optional.of(cart));
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        cartDto.setItems(new ArrayList<>());
+        sk.tany.rest.api.dto.CartItem item = new sk.tany.rest.api.dto.CartItem(productId, 1);
+        item.setPrice(BigDecimal.valueOf(100));
+        cartDto.getItems().add(item);
+
+        // Mock mapper to return DTO from entity
+        // Called in findById (addCarrier) and findById (save)
+        when(cartMapper.toDto(any(Cart.class))).thenReturn(cartDto);
+
+        // Product Setup
+        ProductClientDto product = new ProductClientDto();
+        product.setId(productId);
+        product.setTitle("Product");
+        product.setPrice(BigDecimal.valueOf(100));
+        product.setWeight(BigDecimal.ONE);
+        when(productService.findAllByIds(anyList())).thenReturn(List.of(product));
+
+        // Carrier Setup
+        sk.tany.rest.api.domain.carrier.Carrier carrier = new sk.tany.rest.api.domain.carrier.Carrier();
+        carrier.setId(carrierId);
+        carrier.setName("Test Carrier");
+        sk.tany.rest.api.domain.carrier.CarrierPriceRange range = new sk.tany.rest.api.domain.carrier.CarrierPriceRange();
+        range.setWeightFrom(BigDecimal.ZERO);
+        range.setWeightTo(BigDecimal.TEN);
+        range.setPrice(BigDecimal.valueOf(10)); // Base shipping price
+        range.setFreeShippingThreshold(BigDecimal.valueOf(50)); // Threshold < 100
+        carrier.setRanges(List.of(range));
+
+        when(carrierRepository.findById(carrierId)).thenReturn(Optional.of(carrier));
+        when(cartRepository.save(any(Cart.class))).thenReturn(cart);
+
+        // When
+        CartDto result = service.addCarrier(cartId, carrierId);
+
+        // Then
+        assertNotNull(result.getPriceBreakDown());
+        // Check Carrier Price Item
+        Optional<sk.tany.rest.api.dto.PriceItem> carrierItem = result.getPriceBreakDown().getItems().stream()
+                .filter(i -> i.getType() == sk.tany.rest.api.dto.PriceItemType.CARRIER)
+                .findFirst();
+
+        assertTrue(carrierItem.isPresent());
+        assertEquals(0, BigDecimal.ZERO.compareTo(carrierItem.get().getPriceWithVat()), "Delivery price should be 0 because threshold is met");
+    }
+
+    @Test
+    void addCarrier_shouldNotApplyFreeShippingThreshold_whenTotalIsLow() {
+        // Given
+        String cartId = "cart1";
+        String carrierId = "carrier1";
+        String productId = "p1";
+
+        Cart cart = new Cart();
+        cart.setId(cartId);
+        when(cartRepository.findById(cartId)).thenReturn(Optional.of(cart));
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        cartDto.setItems(new ArrayList<>());
+        sk.tany.rest.api.dto.CartItem item = new sk.tany.rest.api.dto.CartItem(productId, 1);
+        item.setPrice(BigDecimal.valueOf(40)); // Total 40
+        cartDto.getItems().add(item);
+
+        when(cartMapper.toDto(any(Cart.class))).thenReturn(cartDto);
+
+        ProductClientDto product = new ProductClientDto();
+        product.setId(productId);
+        product.setTitle("Product");
+        product.setPrice(BigDecimal.valueOf(40));
+        product.setWeight(BigDecimal.ONE);
+        when(productService.findAllByIds(anyList())).thenReturn(List.of(product));
+
+        sk.tany.rest.api.domain.carrier.Carrier carrier = new sk.tany.rest.api.domain.carrier.Carrier();
+        carrier.setId(carrierId);
+        carrier.setName("Test Carrier");
+        sk.tany.rest.api.domain.carrier.CarrierPriceRange range = new sk.tany.rest.api.domain.carrier.CarrierPriceRange();
+        range.setWeightFrom(BigDecimal.ZERO);
+        range.setWeightTo(BigDecimal.TEN);
+        range.setPrice(BigDecimal.valueOf(10));
+        range.setPriceWithoutVat(BigDecimal.valueOf(8));
+        range.setVatValue(BigDecimal.valueOf(2));
+        range.setFreeShippingThreshold(BigDecimal.valueOf(50)); // Threshold > 40
+        carrier.setRanges(List.of(range));
+
+        when(carrierRepository.findById(carrierId)).thenReturn(Optional.of(carrier));
+        when(cartRepository.save(any(Cart.class))).thenReturn(cart);
+
+        // When
+        CartDto result = service.addCarrier(cartId, carrierId);
+
+        // Then
+        Optional<sk.tany.rest.api.dto.PriceItem> carrierItem = result.getPriceBreakDown().getItems().stream()
+                .filter(i -> i.getType() == sk.tany.rest.api.dto.PriceItemType.CARRIER)
+                .findFirst();
+
+        assertTrue(carrierItem.isPresent());
+        assertEquals(0, BigDecimal.valueOf(10).compareTo(carrierItem.get().getPriceWithVat()), "Delivery price should be standard because threshold is not met");
     }
 }
