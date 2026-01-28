@@ -1,27 +1,36 @@
 package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.mapper.OrderMapper;
+import sk.tany.rest.api.service.common.EmailService;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderAdminServiceImpl implements OrderAdminService {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
+    private final EmailService emailService;
+
+    private String emailTemplate;
 
     @Override
     public Page<OrderDto> findAll(Long orderIdentifier, OrderStatus status, BigDecimal priceFrom, BigDecimal priceTo, String carrierId, String paymentId, Instant createDateFrom, Instant createDateTo, Pageable pageable) {
@@ -70,6 +79,11 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         var savedOrder = orderRepository.save(order);
+
+        if (savedOrder.getStatus() == OrderStatus.SENT && oldStatus != OrderStatus.SENT) {
+            sendOrderSentEmail(savedOrder);
+        }
+
         return orderMapper.toDto(savedOrder);
     }
 
@@ -87,11 +101,50 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         var savedOrder = orderRepository.save(order);
+
+        if (savedOrder.getStatus() == OrderStatus.SENT && oldStatus != OrderStatus.SENT) {
+            sendOrderSentEmail(savedOrder);
+        }
+
         return orderMapper.toDto(savedOrder);
     }
 
     @Override
     public void deleteById(String id) {
         orderRepository.deleteById(id);
+    }
+
+    private void sendOrderSentEmail(Order order) {
+        if (order.getEmail() == null || order.getEmail().isEmpty()) {
+            log.warn("Cannot send 'Order Sent' email: Customer email is missing for order {}", order.getOrderIdentifier());
+            return;
+        }
+        try {
+            String template = getEmailTemplate();
+
+            String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
+            String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
+            String carrierLink = order.getCarrierOrderStateLink() != null ? order.getCarrierOrderStateLink() : "#";
+
+            String body = template
+                    .replace("{{firstname}}", firstname)
+                    .replace("{{orderIdentifier}}", orderIdentifier)
+                    .replace("{{carrierOrderStateLink}}", carrierLink);
+
+            emailService.sendEmail(order.getEmail(), "Order Shipped", body, true, null);
+            log.info("Sent 'Order Sent' email for order {}", order.getOrderIdentifier());
+
+        } catch (Exception e) {
+            log.error("Failed to send 'Order Sent' email for order {}", order.getOrderIdentifier(), e);
+        }
+    }
+
+    private String getEmailTemplate() throws java.io.IOException {
+        if (emailTemplate == null) {
+            ClassPathResource resource = new ClassPathResource("templates/email/order_sent.html");
+            byte[] data = FileCopyUtils.copyToByteArray(resource.getInputStream());
+            emailTemplate = new String(data, StandardCharsets.UTF_8);
+        }
+        return emailTemplate;
     }
 }
