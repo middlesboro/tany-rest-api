@@ -109,4 +109,64 @@ public class InvoiceServiceTest {
         // Basic check for PDF signature
         assertTrue(result[0] == '%' && result[1] == 'P' && result[2] == 'D' && result[3] == 'F', "Should start with %PDF");
     }
+
+    @Test
+    public void generateInvoice_shouldReturnPdfBytes_whenOrderCanceled() {
+        String orderId = "orderCanceled";
+        Order order = new Order();
+        order.setId(orderId);
+        order.setCreateDate(Instant.now());
+        order.setCancelDate(Instant.now());
+        order.setCreditNoteIdentifier(1001L);
+        order.setStatus(sk.tany.rest.api.domain.order.OrderStatus.CANCELED);
+        order.setCarrierId("c1");
+        order.setPaymentId("p1");
+        order.setCustomerId("cust1");
+        order.setDeliveryPrice(BigDecimal.TEN);
+
+        OrderItem item = new OrderItem();
+        item.setId("prod1");
+        item.setName("Test Product");
+        item.setQuantity(2);
+        item.setPrice(new BigDecimal("24.00")); // With VAT
+        order.setItems(Collections.singletonList(item));
+
+        PriceBreakDown pbd = new PriceBreakDown();
+        PriceItem pi = new PriceItem(PriceItemType.PRODUCT, "prod1", "Test Product", 2, new BigDecimal("48.00"), new BigDecimal("40.00"), new BigDecimal("8.00"));
+        pbd.setItems(List.of(pi));
+        pbd.setTotalPrice(new BigDecimal("48.00"));
+        pbd.setTotalPriceWithoutVat(new BigDecimal("40.00"));
+        pbd.setTotalPriceVatValue(new BigDecimal("8.00"));
+        order.setPriceBreakDown(pbd);
+
+        Address address = new Address("Street 1", "City", "12345", "Slovakia");
+        order.setInvoiceAddress(address);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        Carrier carrier = new Carrier();
+        carrier.setName("CarrierName");
+        when(carrierRepository.findById("c1")).thenReturn(Optional.of(carrier));
+
+        Payment payment = new Payment();
+        payment.setName("PaymentName");
+        when(paymentRepository.findById("p1")).thenReturn(Optional.of(payment));
+
+        Customer customer = new Customer();
+        customer.setFirstname("John");
+        customer.setLastname("Doe");
+        when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
+
+        Product product = new Product();
+        product.setId("prod1");
+        product.setProductCode("CODE123");
+        product.setEan("EAN123");
+        when(productRepository.findAllById(anyList())).thenReturn(List.of(product));
+
+        byte[] result = invoiceService.generateInvoice(orderId);
+
+        assertNotNull(result);
+        assertTrue(result.length > 0, "PDF content should not be empty");
+        assertTrue(result[0] == '%' && result[1] == 'P' && result[2] == 'D' && result[3] == 'F', "Should start with %PDF");
+    }
 }

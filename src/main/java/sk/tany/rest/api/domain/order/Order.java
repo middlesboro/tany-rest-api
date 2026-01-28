@@ -44,5 +44,7 @@ public class Order {
     private List<OrderStatusHistory> statusHistory = new java.util.ArrayList<>();
     private String carrierOrderStateLink;
     private boolean authenticatedUser;
+    private Instant cancelDate;
+    private Long creditNoteIdentifier;
 
 }

@@ -114,11 +114,17 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     private void addContent(Document document, Order order, Customer customer, String carrierName, String paymentName, Map<String, Product> productMap) throws DocumentException {
+        boolean isCreditNote = order.getStatus() == sk.tany.rest.api.domain.order.OrderStatus.CANCELED;
+        String title = isCreditNote ? "DOBROPIS" : "FAKTÚRA";
+        String docNumber = isCreditNote
+                ? "2026/" + order.getCreditNoteIdentifier()
+                : "2026/" + order.getOrderIdentifier();
+
         // --- Header Section ---
         PdfPTable headerTable = new PdfPTable(1);
         headerTable.setWidthPercentage(100);
 
-        PdfPCell titleCell = new PdfPCell(new Paragraph("FAKTÚRA", getSlovakFont(24, Font.BOLD, TEXT_WHITE)));
+        PdfPCell titleCell = new PdfPCell(new Paragraph(title, getSlovakFont(24, Font.BOLD, TEXT_WHITE)));
         titleCell.setBackgroundColor(BRAND_COLOR);
         titleCell.setBorder(Rectangle.NO_BORDER);
         titleCell.setPaddingTop(20);
@@ -126,7 +132,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         titleCell.setPaddingLeft(20);
         headerTable.addCell(titleCell);
 
-        PdfPCell numberCell = new PdfPCell(new Paragraph("Číslo dokladu: 2026/" + order.getOrderIdentifier(), getSlovakFont(12, Font.NORMAL, TEXT_WHITE)));
+        PdfPCell numberCell = new PdfPCell(new Paragraph("Číslo dokladu: " + docNumber, getSlovakFont(12, Font.NORMAL, TEXT_WHITE)));
         numberCell.setBackgroundColor(BRAND_COLOR);
         numberCell.setBorder(Rectangle.NO_BORDER);
         numberCell.setPaddingBottom(20);
@@ -190,9 +196,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         detailsTable.setSpacingBefore(20);
         detailsTable.setWidths(new float[]{1, 1, 1});
 
-        addDetailCell(detailsTable, "Dátum vystavenia", formatDate(order.getCreateDate()));
-        addDetailCell(detailsTable, "Dátum dodania", formatDate(order.getCreateDate()));
-        addDetailCell(detailsTable, "Dátum splatnosti", formatDate(order.getCreateDate())); // Logic for due date?
+        java.time.Instant dateToUse = isCreditNote && order.getCancelDate() != null ? order.getCancelDate() : order.getCreateDate();
+        addDetailCell(detailsTable, "Dátum vystavenia", formatDate(dateToUse));
+        addDetailCell(detailsTable, "Dátum dodania", formatDate(dateToUse));
+        addDetailCell(detailsTable, "Dátum splatnosti", formatDate(dateToUse)); // Logic for due date?
 
         document.add(detailsTable);
 
@@ -237,6 +244,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         if (order.getPriceBreakDown() != null && order.getPriceBreakDown().getItems() != null) {
             boolean alternate = false;
+            BigDecimal multiplier = isCreditNote ? new BigDecimal("-1") : BigDecimal.ONE;
+
             for (PriceItem item : order.getPriceBreakDown().getItems()) {
                 String name = item.getName();
                 String code = "";
@@ -248,9 +257,9 @@ public class InvoiceServiceImpl implements InvoiceService {
                     }
                 }
 
-                BigDecimal lineTotalWithVat = item.getPriceWithVat();
-                BigDecimal lineTotalBase = item.getPriceWithoutVat();
-                BigDecimal lineTotalVat = item.getVatValue();
+                BigDecimal lineTotalWithVat = item.getPriceWithVat().multiply(multiplier);
+                BigDecimal lineTotalBase = item.getPriceWithoutVat().multiply(multiplier);
+                BigDecimal lineTotalVat = item.getVatValue().multiply(multiplier);
 
                 BigDecimal qty = item.getQuantity() != null && item.getQuantity() > 0 ? new BigDecimal(item.getQuantity()) : BigDecimal.ONE;
                 BigDecimal unitPriceWithVat = lineTotalWithVat.divide(qty, 2, RoundingMode.HALF_UP);
@@ -294,9 +303,10 @@ public class InvoiceServiceImpl implements InvoiceService {
         footerTable.setSpacingBefore(20);
         footerTable.setWidths(new float[]{1.5f, 1});
 
-        BigDecimal totalBase = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPriceWithoutVat() : BigDecimal.ZERO;
-        BigDecimal totalVat = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPriceVatValue() : BigDecimal.ZERO;
-        BigDecimal totalWithVat = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPrice() : BigDecimal.ZERO;
+        BigDecimal multiplier = isCreditNote ? new BigDecimal("-1") : BigDecimal.ONE;
+        BigDecimal totalBase = (order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPriceWithoutVat() : BigDecimal.ZERO).multiply(multiplier);
+        BigDecimal totalVat = (order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPriceVatValue() : BigDecimal.ZERO).multiply(multiplier);
+        BigDecimal totalWithVat = (order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPrice() : BigDecimal.ZERO).multiply(multiplier);
 
         // Empty cell for left spacing (or notes)
         PdfPCell leftSpace = new PdfPCell(new Paragraph(""));
@@ -339,7 +349,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         footerNote.setSpacingBefore(30);
         document.add(footerNote);
 
-        if (order.getStatus() == sk.tany.rest.api.domain.order.OrderStatus.PAID) {
+        if (!isCreditNote && order.getStatus() == sk.tany.rest.api.domain.order.OrderStatus.PAID) {
             Paragraph paidNote = new Paragraph("FAKTÚRA JE UŽ UHRADENÁ", getSlovakFont(12, Font.BOLD, BRAND_COLOR));
             paidNote.setAlignment(Element.ALIGN_CENTER);
             paidNote.setSpacingBefore(10);

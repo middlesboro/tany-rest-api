@@ -36,4 +36,6 @@ public class OrderAdminGetResponse {
     private List<OrderStatusHistoryDto> statusHistory;
     private String carrierOrderStateLink;
     private boolean authenticatedUser;
+    private Instant cancelDate;
+    private Long creditNoteIdentifier;
 }
