@@ -69,6 +69,9 @@ public class HomepageClientServiceImpl implements HomepageClientService {
         // Filter active
         productStream = productStream.filter(Product::isActive);
 
+        // Filter quantity
+        productStream = productStream.filter(product -> product.getQuantity() != null && product.getQuantity() > 0);
+
         // Sort
         Comparator<Product> comparator = getComparator(grid.getSortField(), grid.getSortOrder());
         if (comparator != null) {
