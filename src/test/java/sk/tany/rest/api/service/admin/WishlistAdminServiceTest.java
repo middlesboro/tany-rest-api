@@ -1,6 +1,5 @@
 package sk.tany.rest.api.service.admin;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,9 +8,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import sk.tany.rest.api.domain.customer.Customer;
+import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.wishlist.Wishlist;
 import sk.tany.rest.api.domain.wishlist.WishlistRepository;
 import sk.tany.rest.api.dto.admin.wishlist.WishlistAdminDto;
+import sk.tany.rest.api.dto.admin.wishlist.WishlistAdminListResponse;
 import sk.tany.rest.api.dto.admin.wishlist.WishlistCreateRequest;
 import sk.tany.rest.api.exception.ProductException;
 import sk.tany.rest.api.mapper.WishlistMapper;
@@ -20,7 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -33,21 +38,41 @@ class WishlistAdminServiceTest {
     @Mock
     private WishlistMapper wishlistMapper;
 
+    @Mock
+    private CustomerRepository customerRepository;
+
+    @Mock
+    private ProductRepository productRepository;
+
     @InjectMocks
     private WishlistAdminServiceImpl wishlistAdminService;
 
     @Test
-    void findAll_ShouldReturnPageOfWishlistAdminDto() {
+    void findAll_ShouldReturnPageOfWishlistAdminListResponse() {
         Pageable pageable = PageRequest.of(0, 10);
         Wishlist wishlist = new Wishlist("1", "cust1", "prod1", null);
-        Page<Wishlist> wishlistPage = new org.springframework.data.domain.PageImpl<>(Collections.singletonList(wishlist));
-        when(wishlistRepository.findAll(pageable)).thenReturn(wishlistPage);
-        when(wishlistMapper.toAdminDto(wishlist)).thenReturn(new WishlistAdminDto());
 
-        Page<WishlistAdminDto> result = wishlistAdminService.findAll(pageable);
+        when(wishlistRepository.findAllItems()).thenReturn(Collections.singletonList(wishlist));
+
+        Customer customer = new Customer();
+        customer.setFirstname("John");
+        customer.setLastname("Doe");
+        when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
+
+        Product product = new Product();
+        product.setTitle("Product 1");
+        when(productRepository.findById("prod1")).thenReturn(Optional.of(product));
+
+        Page<WishlistAdminListResponse> result = wishlistAdminService.findAll(pageable);
 
         assertEquals(1, result.getContent().size());
-        verify(wishlistRepository).findAll(pageable);
+        WishlistAdminListResponse response = result.getContent().get(0);
+        assertEquals("cust1", response.getCustomerId());
+        assertEquals("John Doe", response.getCustomerName());
+        assertEquals(1, response.getProductNames().size());
+        assertEquals("Product 1", response.getProductNames().get(0));
+
+        verify(wishlistRepository).findAllItems();
     }
 
     @Test

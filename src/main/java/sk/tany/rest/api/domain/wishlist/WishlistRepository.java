@@ -27,4 +27,8 @@ public class WishlistRepository extends AbstractInMemoryRepository<Wishlist> {
                         && w.getProductId() != null && w.getProductId().equals(productId))
                 .findFirst();
     }
+
+    public java.util.List<Wishlist> findAllItems() {
+        return new java.util.ArrayList<>(memoryCache.values());
+    }
 }

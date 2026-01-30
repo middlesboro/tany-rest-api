@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.admin.wishlist.WishlistAdminDto;
+import sk.tany.rest.api.dto.admin.wishlist.WishlistAdminListResponse;
 import sk.tany.rest.api.dto.admin.wishlist.WishlistCreateRequest;
 import sk.tany.rest.api.service.admin.WishlistAdminService;
 
@@ -24,7 +25,7 @@ public class WishlistAdminController {
     private final WishlistAdminService wishlistAdminService;
 
     @GetMapping
-    public Page<WishlistAdminDto> getAll(Pageable pageable) {
+    public Page<WishlistAdminListResponse> getAll(Pageable pageable) {
         return wishlistAdminService.findAll(pageable);
     }
 
