@@ -19,6 +19,7 @@ import sk.tany.rest.api.service.mapper.ReviewMapper;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -89,5 +90,45 @@ class ReviewClientServiceImplTest {
         service.findAllByProductId("product1", pageable);
 
         verify(reviewRepository).findAllByProductId("product1", sort);
+    }
+
+    @Test
+    void findAllByBrandIds_shouldReturnReviewsForGivenBrands() {
+        // Setup products
+        Product productBrandA = new Product();
+        productBrandA.setId("prodA");
+        productBrandA.setBrandId("brandA");
+
+        Product productBrandB = new Product();
+        productBrandB.setId("prodB");
+        productBrandB.setBrandId("brandB");
+
+        Product productBrandC = new Product();
+        productBrandC.setId("prodC");
+        productBrandC.setBrandId("brandC");
+
+        when(productRepository.findAll()).thenReturn(List.of(productBrandA, productBrandB, productBrandC));
+
+        // Setup reviews
+        Review reviewA = new Review();
+        reviewA.setProductId("prodA");
+        reviewA.setRating(5);
+        reviewA.setActive(true);
+
+        Review reviewB = new Review();
+        reviewB.setProductId("prodB");
+        reviewB.setRating(4);
+        reviewB.setActive(true);
+
+        when(reviewRepository.findAllByProductIds(any(Set.class), any(Sort.class))).thenReturn(List.of(reviewA, reviewB));
+        when(reviewMapper.toClientListResponse(any())).thenReturn(new ReviewClientListResponse());
+
+        // Execute
+        ReviewClientProductResponse response = service.findAllByBrandIds(List.of("brandA", "brandB"), Pageable.unpaged());
+
+        // Verify
+        assertEquals(2, response.getReviewsCount());
+        // Average of 5 and 4 is 4.5
+        assertEquals(BigDecimal.valueOf(4.5), response.getAverageRating());
     }
 }

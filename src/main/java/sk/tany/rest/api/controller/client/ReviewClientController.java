@@ -9,6 +9,8 @@ import sk.tany.rest.api.dto.client.review.ReviewClientCreateRequest;
 import sk.tany.rest.api.dto.client.review.ReviewClientProductResponse;
 import sk.tany.rest.api.service.client.ReviewClientService;
 
+import java.util.Collection;
+
 @RestController
 @RequestMapping("/api/reviews")
 @RequiredArgsConstructor
@@ -21,6 +23,12 @@ public class ReviewClientController {
     @Operation(summary = "Get all reviews by product id")
     public ReviewClientProductResponse findAllByProductId(@PathVariable String productId, Pageable pageable) {
         return service.findAllByProductId(productId, pageable);
+    }
+
+    @GetMapping("/brand")
+    @Operation(summary = "Get all reviews by brand ids")
+    public ReviewClientProductResponse findAllByBrandIds(@RequestParam Collection<String> brandIds, Pageable pageable) {
+        return service.findAllByBrandIds(brandIds, pageable);
     }
 
     @PostMapping

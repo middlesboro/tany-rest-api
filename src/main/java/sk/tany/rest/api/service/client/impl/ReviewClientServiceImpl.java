@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,6 +24,7 @@ import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,6 +67,67 @@ public class ReviewClientServiceImpl implements ReviewClientService {
                 averageRating,
                 reviewsCount,
                 reviews
+            );
+        }
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), activeReviews.size());
+
+        if (start > activeReviews.size()) {
+            pageContent = List.of();
+        } else {
+            pageContent = activeReviews.subList(start, end).stream()
+                    .map(mapper::toClientListResponse)
+                    .collect(Collectors.toList());
+        }
+
+        Page<ReviewClientListResponse> reviews = new PageImpl<>(pageContent, pageable, activeReviews.size());
+
+        return new ReviewClientProductResponse(
+                averageRating,
+                reviewsCount,
+                reviews
+        );
+    }
+
+    @Override
+    public ReviewClientProductResponse findAllByBrandIds(Collection<String> brandIds, Pageable pageable) {
+        Set<String> productIds = productRepository.findAll().stream()
+                .filter(p -> p.getBrandId() != null && brandIds.contains(p.getBrandId()))
+                .map(Product::getId)
+                .collect(Collectors.toSet());
+
+        Sort sort = pageable.getSort();
+        if (sort.isUnsorted()) {
+            sort = Sort.by(Sort.Direction.DESC, "createDate");
+        }
+
+        List<Review> activeReviews = repository.findAllByProductIds(productIds, sort).stream()
+                .filter(Review::isActive)
+                .collect(Collectors.toList());
+
+        BigDecimal averageRating = BigDecimal.ZERO;
+        int reviewsCount = activeReviews.size();
+
+        if (reviewsCount > 0) {
+            double average = activeReviews.stream()
+                    .mapToInt(Review::getRating)
+                    .average()
+                    .orElse(0.0);
+            averageRating = BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP);
+        }
+
+        List<ReviewClientListResponse> pageContent;
+
+        if (pageable.isUnpaged()) {
+            pageContent = activeReviews.stream()
+                    .map(mapper::toClientListResponse)
+                    .collect(Collectors.toList());
+            Page<ReviewClientListResponse> reviews = new PageImpl<>(pageContent, pageable, activeReviews.size());
+            return new ReviewClientProductResponse(
+                    averageRating,
+                    reviewsCount,
+                    reviews
             );
         }
 
