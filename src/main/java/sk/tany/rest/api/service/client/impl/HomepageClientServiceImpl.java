@@ -1,7 +1,9 @@
 package sk.tany.rest.api.service.client.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import sk.tany.rest.api.component.ProductSearchEngine;
@@ -22,7 +24,12 @@ import sk.tany.rest.api.service.client.ReviewClientService;
 import sk.tany.rest.api.service.client.WishlistClientService;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,7 +46,7 @@ public class HomepageClientServiceImpl implements HomepageClientService {
 
     @Override
     public HomepageGridResponse getHomepageGrids() {
-        List<HomepageGrid> grids = homepageGridRepository.findAll();
+        Page<HomepageGrid> grids = homepageGridRepository.findAll(Pageable.unpaged(Sort.by(Sort.Order.desc("order"))));
         List<HomepageGridDto> gridDtos = grids.stream()
                 .map(this::processGrid)
                 .collect(Collectors.toList());
@@ -78,6 +85,7 @@ public class HomepageClientServiceImpl implements HomepageClientService {
 
         HomepageGridDto dto = new HomepageGridDto();
         dto.setId(grid.getId());
+        dto.setTitle(grid.getTitle());
         dto.setProducts(productDtos);
         return dto;
     }

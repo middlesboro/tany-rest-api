@@ -25,9 +25,10 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderAdminServiceImplTest {
@@ -48,9 +49,6 @@ class OrderAdminServiceImplTest {
     private PaymentRepository paymentRepository;
     @Mock
     private CartDiscountRepository cartDiscountRepository;
-    @Mock
-    private SequenceService sequenceService;
-
     @Mock
     private SequenceService sequenceService;
 

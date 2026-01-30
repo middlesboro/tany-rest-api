@@ -14,6 +14,7 @@ public class HomepageGridAdminDto {
     private String categoryId;
     private List<String> productIds;
     private Integer resultCount;
+    private Integer order;
     private SortField sortField;
     private SortOrder sortOrder;
 }
