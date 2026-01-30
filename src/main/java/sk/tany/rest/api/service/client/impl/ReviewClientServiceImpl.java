@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,7 +61,7 @@ public class ReviewClientServiceImpl implements ReviewClientService {
 
         if (pageable.isUnpaged()) {
             pageContent = activeReviews.stream()
-                    .map(mapper::toClientListResponse)
+                    .map(review -> mapReview(review, product))
                     .collect(Collectors.toList());
             Page<ReviewClientListResponse> reviews = new PageImpl<>(pageContent, pageable, activeReviews.size());
             return new ReviewClientProductResponse(
@@ -77,7 +78,7 @@ public class ReviewClientServiceImpl implements ReviewClientService {
             pageContent = List.of();
         } else {
             pageContent = activeReviews.subList(start, end).stream()
-                    .map(mapper::toClientListResponse)
+                    .map(review -> mapReview(review, product))
                     .collect(Collectors.toList());
         }
 
@@ -92,10 +93,11 @@ public class ReviewClientServiceImpl implements ReviewClientService {
 
     @Override
     public ReviewClientProductResponse findAllByBrandIds(Collection<String> brandIds, Pageable pageable) {
-        Set<String> productIds = productRepository.findAll().stream()
+        Map<String, Product> productsById = productRepository.findAll().stream()
                 .filter(p -> p.getBrandId() != null && brandIds.contains(p.getBrandId()))
-                .map(Product::getId)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        Set<String> productIds = productsById.keySet();
 
         Sort sort = pageable.getSort();
         if (sort.isUnsorted()) {
@@ -121,7 +123,7 @@ public class ReviewClientServiceImpl implements ReviewClientService {
 
         if (pageable.isUnpaged()) {
             pageContent = activeReviews.stream()
-                    .map(mapper::toClientListResponse)
+                    .map(review -> mapReview(review, productsById.get(review.getProductId())))
                     .collect(Collectors.toList());
             Page<ReviewClientListResponse> reviews = new PageImpl<>(pageContent, pageable, activeReviews.size());
             return new ReviewClientProductResponse(
@@ -138,7 +140,7 @@ public class ReviewClientServiceImpl implements ReviewClientService {
             pageContent = List.of();
         } else {
             pageContent = activeReviews.subList(start, end).stream()
-                    .map(mapper::toClientListResponse)
+                    .map(review -> mapReview(review, productsById.get(review.getProductId())))
                     .collect(Collectors.toList());
         }
 
@@ -235,6 +237,17 @@ public class ReviewClientServiceImpl implements ReviewClientService {
             product.setReviewsCount(reviewsCount);
             productRepository.save(product);
         }
+    }
+
+    private ReviewClientListResponse mapReview(Review review, Product product) {
+        ReviewClientListResponse response = mapper.toClientListResponse(review);
+        if (product != null) {
+            response.setProductSlug(product.getSlug());
+            if (product.getImages() != null && !product.getImages().isEmpty()) {
+                response.setProductImage(product.getImages().get(0));
+            }
+        }
+        return response;
     }
 
 }
