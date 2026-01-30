@@ -116,9 +116,14 @@ public class InvoiceServiceImpl implements InvoiceService {
     private void addContent(Document document, Order order, Customer customer, String carrierName, String paymentName, Map<String, Product> productMap) throws DocumentException {
         boolean isCreditNote = order.getStatus() == sk.tany.rest.api.domain.order.OrderStatus.CANCELED;
         String title = isCreditNote ? "DOBROPIS" : "FAKTÚRA";
-        String docNumber = isCreditNote
-                ? "2026/" + order.getCreditNoteIdentifier()
-                : "2026/" + order.getOrderIdentifier();
+
+        int year = 2026;
+        if (isCreditNote && order.getCancelDate() != null) {
+            year = java.time.LocalDateTime.ofInstant(order.getCancelDate(), ZoneId.systemDefault()).getYear();
+        } else if (order.getCreateDate() != null) {
+            year = java.time.LocalDateTime.ofInstant(order.getCreateDate(), ZoneId.systemDefault()).getYear();
+        }
+        String docNumber = String.format("%d%06d", year, isCreditNote ? order.getCreditNoteIdentifier() : order.getOrderIdentifier());
 
         // --- Header Section ---
         PdfPTable headerTable = new PdfPTable(1);
@@ -244,7 +249,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         if (order.getPriceBreakDown() != null && order.getPriceBreakDown().getItems() != null) {
             boolean alternate = false;
-            BigDecimal multiplier = isCreditNote ? new BigDecimal("-1") : BigDecimal.ONE;
+            BigDecimal globalMultiplier = isCreditNote ? new BigDecimal("-1") : BigDecimal.ONE;
 
             for (PriceItem item : order.getPriceBreakDown().getItems()) {
                 String name = item.getName();
@@ -257,9 +262,14 @@ public class InvoiceServiceImpl implements InvoiceService {
                     }
                 }
 
-                BigDecimal lineTotalWithVat = item.getPriceWithVat().multiply(multiplier);
-                BigDecimal lineTotalBase = item.getPriceWithoutVat().multiply(multiplier);
-                BigDecimal lineTotalVat = item.getVatValue().multiply(multiplier);
+                BigDecimal itemMultiplier = globalMultiplier;
+                if (isCreditNote && item.getType() == PriceItemType.DISCOUNT) {
+                    itemMultiplier = BigDecimal.ONE;
+                }
+
+                BigDecimal lineTotalWithVat = item.getPriceWithVat().multiply(itemMultiplier);
+                BigDecimal lineTotalBase = item.getPriceWithoutVat().multiply(itemMultiplier);
+                BigDecimal lineTotalVat = item.getVatValue().multiply(itemMultiplier);
 
                 BigDecimal qty = item.getQuantity() != null && item.getQuantity() > 0 ? new BigDecimal(item.getQuantity()) : BigDecimal.ONE;
                 BigDecimal unitPriceWithVat = lineTotalWithVat.divide(qty, 2, RoundingMode.HALF_UP);
