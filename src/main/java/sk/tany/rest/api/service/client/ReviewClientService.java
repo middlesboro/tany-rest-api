@@ -11,6 +11,8 @@ import java.util.Map;
 public interface ReviewClientService {
     ReviewClientProductResponse findAllByProductId(String productId, Pageable pageable);
 
+    ReviewClientProductResponse findAllByBrandIds(Collection<String> brandIds, Pageable pageable);
+
     void create(ReviewClientCreateRequest request);
 
     ProductRatingDto getProductRating(String productId);
