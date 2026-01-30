@@ -45,7 +45,7 @@ public class HomepageClientServiceImpl implements HomepageClientService {
 
     @Override
     public HomepageGridResponse getHomepageGrids() {
-        Page<HomepageGrid> grids = homepageGridRepository.findAll(Pageable.unpaged(Sort.by(Sort.Order.desc("order"))));
+        Page<HomepageGrid> grids = homepageGridRepository.findAll(Pageable.unpaged(Sort.by(Sort.Order.asc("order"))));
         List<HomepageGridDto> gridDtos = grids.stream()
                 .map(this::processGrid)
                 .toList();

@@ -367,7 +367,7 @@ public class OrderClientServiceImpl implements OrderClientService {
                 emailService.sendEmail(order.getEmail(), "Objednávka č. " + order.getOrderIdentifier(), template, true, pdfFile);
             } finally {
                 // Cleanup temp file
-                if (pdfFile != null && pdfFile.exists()) {
+                if (pdfFile.exists()) {
                     pdfFile.delete();
                 }
             }
