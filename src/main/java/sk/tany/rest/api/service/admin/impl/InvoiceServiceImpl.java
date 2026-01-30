@@ -320,7 +320,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         totalTable.addCell(createLabelCell("Suma bez DPH:"));
         totalTable.addCell(createRightAlignedCell(totalBase.toString() + " €", 10, false));
 
-        totalTable.addCell(createLabelCell("DPH (2š%):"));
+        totalTable.addCell(createLabelCell("DPH (23%):"));
         totalTable.addCell(createRightAlignedCell(totalVat.toString() + " €", 10, false));
 
         PdfPCell totalLabel = new PdfPCell(new Paragraph("Spolu", getSlovakFont(12, Font.BOLD, BRAND_COLOR)));
@@ -343,11 +343,13 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         document.add(footerTable);
 
-        // Footer Note
-        Paragraph footerNote = new Paragraph("\nĎakujeme za Vašu objednávku.", getSlovakFont(10, Font.ITALIC, Color.GRAY));
-        footerNote.setAlignment(Element.ALIGN_CENTER);
-        footerNote.setSpacingBefore(30);
-        document.add(footerNote);
+        if (!isCreditNote) {
+            // Footer Note
+            Paragraph footerNote = new Paragraph("\nĎakujeme za Vašu objednávku.", getSlovakFont(10, Font.ITALIC, Color.GRAY));
+            footerNote.setAlignment(Element.ALIGN_CENTER);
+            footerNote.setSpacingBefore(30);
+            document.add(footerNote);
+        }
 
         if (!isCreditNote && order.getStatus() == sk.tany.rest.api.domain.order.OrderStatus.PAID) {
             Paragraph paidNote = new Paragraph("FAKTÚRA JE UŽ UHRADENÁ", getSlovakFont(12, Font.BOLD, BRAND_COLOR));
