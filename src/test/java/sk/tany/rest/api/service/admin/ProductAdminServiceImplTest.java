@@ -152,4 +152,22 @@ class ProductAdminServiceImplTest {
         assertThat(result.get(0).getTitle()).isEqualTo("Test Product");
         verify(productRepository).findAllByProductFilterParametersFilterParameterValueId(filterParameterValueId);
     }
+
+    @Test
+    void updateAllProductsQuantity_shouldUpdateQuantityForAllProducts() {
+        int quantity = 10;
+        Product p1 = new Product();
+        p1.setId("1");
+        Product p2 = new Product();
+        p2.setId("2");
+        when(productRepository.findAll()).thenReturn(List.of(p1, p2));
+        when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+
+        productAdminService.updateAllProductsQuantity(quantity);
+
+        assertThat(p1.getQuantity()).isEqualTo(quantity);
+        assertThat(p2.getQuantity()).isEqualTo(quantity);
+        verify(productRepository, times(2)).save(any(Product.class));
+        verify(productSearchEngine, times(2)).updateProduct(any(Product.class));
+    }
 }

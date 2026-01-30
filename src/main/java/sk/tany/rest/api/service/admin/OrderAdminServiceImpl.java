@@ -375,8 +375,24 @@ public class OrderAdminServiceImpl implements OrderAdminService {
             order.setStatusHistory(new ArrayList<>());
         }
 
+        if (order.getCancelDate() == null) {
+            order.setCancelDate(existingOrder.getCancelDate());
+        }
+        if (order.getCreditNoteIdentifier() == null) {
+            order.setCreditNoteIdentifier(existingOrder.getCreditNoteIdentifier());
+        }
+
         if (order.getStatus() != oldStatus) {
             order.getStatusHistory().add(new OrderStatusHistory(order.getStatus(), Instant.now()));
+        }
+
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            if (order.getCancelDate() == null) {
+                order.setCancelDate(Instant.now());
+            }
+            if (order.getCreditNoteIdentifier() == null) {
+                order.setCreditNoteIdentifier(sequenceService.getNextSequence("credit_note_identifier"));
+            }
         }
 
         var savedOrder = orderRepository.save(order);
@@ -401,6 +417,15 @@ public class OrderAdminServiceImpl implements OrderAdminService {
                 order.setStatusHistory(new ArrayList<>());
             }
             order.getStatusHistory().add(new OrderStatusHistory(order.getStatus(), Instant.now()));
+        }
+
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            if (order.getCancelDate() == null) {
+                order.setCancelDate(Instant.now());
+            }
+            if (order.getCreditNoteIdentifier() == null) {
+                order.setCreditNoteIdentifier(sequenceService.getNextSequence("credit_note_identifier"));
+            }
         }
 
         var savedOrder = orderRepository.save(order);

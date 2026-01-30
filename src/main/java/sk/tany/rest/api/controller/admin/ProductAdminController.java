@@ -63,6 +63,12 @@ public class ProductAdminController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/quantity")
+    public ResponseEntity<Void> updateAllProductsQuantity(@RequestParam Integer value) {
+        productService.updateAllProductsQuantity(value);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping
     public Page<ProductListResponse> getProducts(@RequestParam(value = "query", required = false) String query, @RequestParam(value = "priceFrom", required = false) BigDecimal priceFrom,
                                                  @RequestParam(value = "priceTo", required = false) BigDecimal priceTo, @RequestParam(value = "brandId", required = false) String brandId,

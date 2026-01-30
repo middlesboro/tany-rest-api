@@ -21,4 +21,6 @@ public interface ProductAdminService {
     java.util.List<ProductAdminDto> findAllByFilterParameterValueId(String filterParameterValueId);
 
     void generateMissingSlugs();
+
+    void updateAllProductsQuantity(Integer quantity);
 }

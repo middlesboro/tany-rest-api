@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderAdminServiceImplTest {
@@ -47,6 +48,9 @@ class OrderAdminServiceImplTest {
     private PaymentRepository paymentRepository;
     @Mock
     private CartDiscountRepository cartDiscountRepository;
+    @Mock
+    private SequenceService sequenceService;
+
     @Mock
     private SequenceService sequenceService;
 
@@ -278,5 +282,32 @@ class OrderAdminServiceImplTest {
         orderAdminService.update(orderId, orderDto);
 
         verify(emailService, never()).sendEmail(anyString(), anyString(), anyString(), anyBoolean(), any());
+    }
+
+    @Test
+    void update_shouldSetCancelDateAndCreditNoteIdentifier_whenStatusChangesToCanceled() {
+        String orderId = "123";
+        OrderDto orderDto = new OrderDto();
+        orderDto.setStatus(OrderStatus.CANCELED);
+
+        Order existingOrder = new Order();
+        existingOrder.setId(orderId);
+        existingOrder.setStatus(OrderStatus.CREATED);
+
+        Order updatedOrder = new Order();
+        updatedOrder.setId(orderId);
+        updatedOrder.setStatus(OrderStatus.CANCELED);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(existingOrder));
+        when(orderMapper.toEntity(orderDto)).thenReturn(updatedOrder);
+        when(orderRepository.save(updatedOrder)).thenReturn(updatedOrder);
+        when(orderMapper.toDto(updatedOrder)).thenReturn(orderDto);
+        when(sequenceService.getNextSequence("credit_note_identifier")).thenReturn(555L);
+
+        orderAdminService.update(orderId, orderDto);
+
+        verify(sequenceService, times(1)).getNextSequence("credit_note_identifier");
+        assertNotNull(updatedOrder.getCancelDate());
+        assertEquals(555L, updatedOrder.getCreditNoteIdentifier());
     }
 }
