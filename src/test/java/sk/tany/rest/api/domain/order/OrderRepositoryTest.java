@@ -160,6 +160,40 @@ class OrderRepositoryTest {
         assertEquals("1", result.getContent().getFirst().getId());
     }
 
+    @Test
+    void findByInvoiceUploadedToOneDriveFalse_shouldReturnCorrectOrders() throws Exception {
+        Order o1 = createOrder("1", 101L, OrderStatus.CREATED, new BigDecimal("10.00"), Instant.now());
+        o1.setInvoiceUploadedToOneDrive(false);
+
+        Order o2 = createOrder("2", 102L, OrderStatus.PAID, new BigDecimal("20.00"), Instant.now());
+        o2.setInvoiceUploadedToOneDrive(true);
+
+        injectOrder(o1);
+        injectOrder(o2);
+
+        var result = repository.findByInvoiceUploadedToOneDriveFalse();
+
+        assertEquals(1, result.size());
+        assertEquals("1", result.getFirst().getId());
+    }
+
+    @Test
+    void findByCreditNoteUploadedToOneDriveFalse_shouldReturnCorrectOrders() throws Exception {
+        Order o1 = createOrder("1", 101L, OrderStatus.CREATED, new BigDecimal("10.00"), Instant.now());
+        o1.setCreditNoteUploadedToOneDrive(false);
+
+        Order o2 = createOrder("2", 102L, OrderStatus.PAID, new BigDecimal("20.00"), Instant.now());
+        o2.setCreditNoteUploadedToOneDrive(true);
+
+        injectOrder(o1);
+        injectOrder(o2);
+
+        var result = repository.findByCreditNoteUploadedToOneDriveFalse();
+
+        assertEquals(1, result.size());
+        assertEquals("1", result.getFirst().getId());
+    }
+
     private Order createOrder(String id, Long identifier, OrderStatus status, BigDecimal price, Instant createDate) {
         Order order = new Order();
         order.setId(id);
