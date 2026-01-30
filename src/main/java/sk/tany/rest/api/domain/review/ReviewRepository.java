@@ -37,6 +37,12 @@ public class ReviewRepository extends AbstractInMemoryRepository<Review> {
                 .collect(Collectors.toList());
     }
 
+    public List<Review> findAllByProductIds(Collection<String> productIds, Sort sort) {
+        List<Review> reviews = findAllByProductIds(productIds);
+        sort(reviews, sort);
+        return reviews;
+    }
+
     public boolean existsDuplicate(String customerId, String customerName, String title, String text) {
         return memoryCache.values().stream()
                 .anyMatch(r -> java.util.Objects.equals(customerId, r.getCustomerId()) &&
