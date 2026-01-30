@@ -63,15 +63,17 @@ class HomepageClientServiceImplTest {
         p1.setId("p1");
         p1.setBrandId("brand1");
         p1.setActive(true);
+        p1.setQuantity(10);
         p1.setCreateDate(Instant.now().minusSeconds(100));
 
         Product p2 = new Product();
         p2.setId("p2");
         p2.setBrandId("brand1");
         p2.setActive(true);
+        p2.setQuantity(10);
         p2.setCreateDate(Instant.now());
 
-        when(homepageGridRepository.findAll()).thenReturn(List.of(grid));
+        when(homepageGridRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(grid)));
         // Using any(ProductFilter.class) to match call
         when(productRepository.search(any(ProductFilter.class), eq(Pageable.unpaged())))
                 .thenReturn(new PageImpl<>(List.of(p1, p2)));
@@ -99,8 +101,9 @@ class HomepageClientServiceImplTest {
         p1.setId("p1");
         p1.setCategoryIds(List.of("cat1"));
         p1.setActive(true);
+        p1.setQuantity(10);
 
-        when(homepageGridRepository.findAll()).thenReturn(List.of(grid));
+        when(homepageGridRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(grid)));
         when(productRepository.findByCategoryIds(eq("cat1"), eq(Pageable.unpaged())))
                 .thenReturn(new PageImpl<>(List.of(p1)));
 
@@ -128,14 +131,16 @@ class HomepageClientServiceImplTest {
         Product p1 = new Product();
         p1.setId("p1");
         p1.setActive(true);
+        p1.setQuantity(10);
         p1.setUpdateDate(Instant.now().minusSeconds(50));
 
         Product p2 = new Product();
         p2.setId("p2");
         p2.setActive(true);
+        p2.setQuantity(10);
         p2.setUpdateDate(Instant.now());
 
-        when(homepageGridRepository.findAll()).thenReturn(List.of(grid));
+        when(homepageGridRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(grid)));
         when(productRepository.findAllById(List.of("p1", "p2"))).thenReturn(List.of(p1, p2));
 
         when(productMapper.toClientDto(any(Product.class))).thenReturn(new ProductClientDto());
@@ -148,5 +153,39 @@ class HomepageClientServiceImplTest {
         assertEquals(1, response.getHomepageGrids().size());
         assertEquals("grid3", response.getHomepageGrids().get(0).getId());
         assertEquals(2, response.getHomepageGrids().get(0).getProducts().size());
+    }
+
+    @Test
+    void getHomepageGrids_shouldFilterOutProductsWithZeroQuantity() {
+        HomepageGrid grid = new HomepageGrid();
+        grid.setId("grid4");
+        grid.setBrandId("brand1");
+        grid.setResultCount(5);
+
+        Product p1 = new Product();
+        p1.setId("p1");
+        p1.setBrandId("brand1");
+        p1.setActive(true);
+        p1.setQuantity(10); // Should be included
+
+        Product p2 = new Product();
+        p2.setId("p2");
+        p2.setBrandId("brand1");
+        p2.setActive(true);
+        p2.setQuantity(0); // Should be filtered out
+
+        when(homepageGridRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(grid)));
+        when(productRepository.search(any(ProductFilter.class), eq(Pageable.unpaged())))
+                .thenReturn(new PageImpl<>(List.of(p1, p2)));
+
+        when(productMapper.toClientDto(any(Product.class))).thenReturn(new ProductClientDto());
+        when(reviewClientService.getProductRatings(any())).thenReturn(Collections.emptyMap());
+        when(wishlistClientService.getWishlistProductIds()).thenReturn(Collections.emptyList());
+
+        HomepageGridResponse response = homepageClientService.getHomepageGrids();
+
+        assertNotNull(response);
+        assertEquals(1, response.getHomepageGrids().size());
+        assertEquals(1, response.getHomepageGrids().get(0).getProducts().size());
     }
 }
