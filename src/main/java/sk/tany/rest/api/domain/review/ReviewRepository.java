@@ -5,6 +5,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +38,7 @@ public class ReviewRepository extends AbstractInMemoryRepository<Review> {
     }
 
     public List<Review> findAllByProductIds(Collection<String> productIds, Sort sort) {
-        List<Review> reviews = findAllByProductIds(productIds);
+        List<Review> reviews = new ArrayList<>(findAllByProductIds(productIds));
         sort(reviews, sort);
         return reviews;
     }
