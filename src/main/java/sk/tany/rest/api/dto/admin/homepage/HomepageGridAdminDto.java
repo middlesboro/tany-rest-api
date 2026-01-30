@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 public class HomepageGridAdminDto {
     private String id;
+    private String title;
     private String brandId;
     private String categoryId;
     private List<String> productIds;
