@@ -55,7 +55,7 @@ class CartAdminControllerTest {
 
         // Assert
         assertEquals(1, result.getTotalElements());
-        CartAdminListResponse item = result.getContent().get(0);
+        CartAdminListResponse item = result.getContent().getFirst();
         assertEquals(cartId, item.getCartId());
         assertEquals(customerId, item.getCustomerId());
         assertEquals("John Doe", item.getCustomerName());

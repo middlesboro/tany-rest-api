@@ -6,6 +6,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.filter.FilterParameter;
@@ -25,13 +28,8 @@ import sk.tany.rest.api.dto.request.SortOption;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -197,7 +195,7 @@ class ProductSearchEngineTest {
         List<Product> result = productSearchEngine.searchAndSort("Nike");
 
         assertEquals(1, result.size());
-        assertEquals("Nike Red Shoe", result.get(0).getTitle());
+        assertEquals("Nike Red Shoe", result.getFirst().getTitle());
     }
 
     @Test
@@ -208,7 +206,7 @@ class ProductSearchEngineTest {
         List<Product> result = productSearchEngine.searchAndSort("Niek");
 
         assertEquals(1, result.size());
-        assertEquals("Nike Red Shoe", result.get(0).getTitle());
+        assertEquals("Nike Red Shoe", result.getFirst().getTitle());
     }
 
     @Test
@@ -256,7 +254,7 @@ class ProductSearchEngineTest {
         List<Product> result = productSearchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
-        assertEquals("Adidas Green Shoe", result.get(0).getTitle());
+        assertEquals("Adidas Green Shoe", result.getFirst().getTitle());
         assertEquals("Best Seller Shoe", result.get(1).getTitle());
         assertEquals("Nike Red Shoe", result.get(2).getTitle());
     }
@@ -271,7 +269,7 @@ class ProductSearchEngineTest {
         List<Product> result = productSearchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
-        assertEquals("Nike Red Shoe", result.get(0).getTitle());
+        assertEquals("Nike Red Shoe", result.getFirst().getTitle());
         assertEquals("Best Seller Shoe", result.get(1).getTitle());
         assertEquals("Adidas Green Shoe", result.get(2).getTitle());
     }
@@ -286,7 +284,7 @@ class ProductSearchEngineTest {
         List<Product> result = productSearchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
-        assertEquals("Best Seller Shoe", result.get(0).getTitle()); // 10.00
+        assertEquals("Best Seller Shoe", result.getFirst().getTitle()); // 10.00
         assertEquals("Adidas Green Shoe", result.get(1).getTitle()); // 50.00
         assertEquals("Nike Red Shoe", result.get(2).getTitle()); // 100.00
     }
@@ -301,7 +299,7 @@ class ProductSearchEngineTest {
         List<Product> result = productSearchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
-        assertEquals("Nike Red Shoe", result.get(0).getTitle()); // 100.00
+        assertEquals("Nike Red Shoe", result.getFirst().getTitle()); // 100.00
         assertEquals("Adidas Green Shoe", result.get(1).getTitle()); // 50.00
         assertEquals("Best Seller Shoe", result.get(2).getTitle()); // 10.00
     }
@@ -316,7 +314,7 @@ class ProductSearchEngineTest {
         List<Product> result = productSearchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
-        assertEquals("Best Seller Shoe", result.get(0).getTitle()); // 100 sales
+        assertEquals("Best Seller Shoe", result.getFirst().getTitle()); // 100 sales
         assertEquals("Adidas Green Shoe", result.get(1).getTitle()); // 20 sales
         assertEquals("Nike Red Shoe", result.get(2).getTitle()); // 10 sales
     }
@@ -331,7 +329,7 @@ class ProductSearchEngineTest {
         List<Product> result = productSearchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
-        assertEquals("Adidas Green Shoe", result.get(0).getTitle());
+        assertEquals("Adidas Green Shoe", result.getFirst().getTitle());
         assertEquals("Best Seller Shoe", result.get(1).getTitle());
         assertEquals("Nike Red Shoe", result.get(2).getTitle());
     }
@@ -397,7 +395,7 @@ class ProductSearchEngineTest {
         Page<Category> result = productSearchEngine.searchCategories("Elec", pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("Electronics", result.getContent().get(0).getTitle());
+        assertEquals("Electronics", result.getContent().getFirst().getTitle());
     }
 
     @Test

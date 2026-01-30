@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import sk.tany.rest.api.controller.admin.OrderAdminController;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PriceBreakDown;
@@ -18,7 +19,6 @@ import sk.tany.rest.api.dto.admin.order.list.OrderAdminListResponse;
 import sk.tany.rest.api.mapper.OrderAdminApiMapper;
 import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.admin.OrderAdminService;
-import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -63,7 +63,7 @@ class OrderAdminControllerTest {
         Page<OrderAdminListResponse> result = orderAdminController.getOrders(null, null, null, null, null, null, null, null, pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("123", result.getContent().get(0).getId());
+        assertEquals("123", result.getContent().getFirst().getId());
         verify(orderService, times(1)).findAll(null, null, null, null, null, null, null, null, pageable);
     }
 

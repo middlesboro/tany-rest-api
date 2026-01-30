@@ -8,7 +8,6 @@ import sk.tany.rest.api.mapper.BlogMapper;
 import sk.tany.rest.api.service.client.BlogClientService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +20,7 @@ public class BlogClientServiceImpl implements BlogClientService {
     public List<BlogDto> getAll() {
         return blogRepository.findAllByVisibleTrue().stream()
                 .map(blogMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Repository
 public class CartDiscountRepository extends AbstractInMemoryRepository<CartDiscount> {
@@ -38,13 +37,13 @@ public class CartDiscountRepository extends AbstractInMemoryRepository<CartDisco
     public List<CartDiscount> findAllByCodeIsNullAndActiveTrue() {
         return memoryCache.values().stream()
                 .filter(cd -> cd.getCode() == null && cd.isActive())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<CartDiscount> findAllByAutomaticTrueAndActiveTrue() {
         return memoryCache.values().stream()
                 .filter(cd -> cd.isAutomatic() && cd.isActive())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<CartDiscount> findApplicableAutomaticDiscounts(Set<String> productIds, Set<String> categoryIds, Set<String> brandIds) {
@@ -63,6 +62,6 @@ public class CartDiscountRepository extends AbstractInMemoryRepository<CartDisco
 
                     return false;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 }

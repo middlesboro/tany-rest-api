@@ -23,7 +23,6 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
-import sk.tany.rest.api.dto.OrderStatusHistoryDto;
 import sk.tany.rest.api.dto.PriceBreakDown;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
@@ -37,12 +36,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -111,7 +107,7 @@ public class OrderAdminServiceImpl implements OrderAdminService {
                 productMap.put(product.getId(), product);
 
                 item.setName(product.getTitle());
-                item.setImage(product.getImages() != null && !product.getImages().isEmpty() ? product.getImages().get(0) : null);
+                item.setImage(product.getImages() != null && !product.getImages().isEmpty() ? product.getImages().getFirst() : null);
                 item.setSlug(product.getSlug());
 
                 BigDecimal quantity = BigDecimal.valueOf(item.getQuantity());

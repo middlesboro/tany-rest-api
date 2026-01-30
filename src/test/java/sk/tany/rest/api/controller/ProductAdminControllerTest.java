@@ -62,7 +62,7 @@ class ProductAdminControllerTest {
         Page<ProductSearchResponse> result = productAdminController.search(categoryId, pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("Search Result Product", result.getContent().get(0).getTitle());
+        assertEquals("Search Result Product", result.getContent().getFirst().getTitle());
         verify(productService, times(1)).search(categoryId, pageable);
     }
 

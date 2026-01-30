@@ -31,7 +31,6 @@ import sk.tany.rest.api.dto.ProductLabelDto;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
 import sk.tany.rest.api.dto.request.FilterParameterRequest;
-import sk.tany.rest.api.dto.request.SortOption;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 import sk.tany.rest.api.mapper.ProductLabelMapper;
@@ -291,7 +290,7 @@ public class ProductSearchEngine {
                 Double score2 = calculateRelevance(p2.getTitle(), normalizedQuery);
                 return score2.compareTo(score1); // Od najvyššieho skóre
             })
-            .collect(Collectors.toList());
+            .toList();
     }
 
     private Double calculateRelevance(String productName, String normalizedQuery) {
@@ -496,7 +495,7 @@ public class ProductSearchEngine {
         CategoryFilterRequest newRequest = new CategoryFilterRequest();
         newRequest.setFilterParameters(original.getFilterParameters().stream()
                 .filter(param -> !param.getId().equals(facetIdToExclude))
-                .collect(Collectors.toList()));
+                .toList());
         return newRequest;
     }
 

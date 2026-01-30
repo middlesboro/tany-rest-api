@@ -86,8 +86,8 @@ class HomepageClientServiceImplTest {
 
         assertNotNull(response);
         assertEquals(1, response.getHomepageGrids().size());
-        assertEquals("grid1", response.getHomepageGrids().get(0).getId());
-        assertEquals(2, response.getHomepageGrids().get(0).getProducts().size());
+        assertEquals("grid1", response.getHomepageGrids().getFirst().getId());
+        assertEquals(2, response.getHomepageGrids().getFirst().getProducts().size());
     }
 
     @Test
@@ -115,8 +115,8 @@ class HomepageClientServiceImplTest {
 
         assertNotNull(response);
         assertEquals(1, response.getHomepageGrids().size());
-        assertEquals("grid2", response.getHomepageGrids().get(0).getId());
-        assertEquals(1, response.getHomepageGrids().get(0).getProducts().size());
+        assertEquals("grid2", response.getHomepageGrids().getFirst().getId());
+        assertEquals(1, response.getHomepageGrids().getFirst().getProducts().size());
     }
 
     @Test
@@ -151,8 +151,8 @@ class HomepageClientServiceImplTest {
 
         assertNotNull(response);
         assertEquals(1, response.getHomepageGrids().size());
-        assertEquals("grid3", response.getHomepageGrids().get(0).getId());
-        assertEquals(2, response.getHomepageGrids().get(0).getProducts().size());
+        assertEquals("grid3", response.getHomepageGrids().getFirst().getId());
+        assertEquals(2, response.getHomepageGrids().getFirst().getProducts().size());
     }
 
     @Test
@@ -186,6 +186,6 @@ class HomepageClientServiceImplTest {
 
         assertNotNull(response);
         assertEquals(1, response.getHomepageGrids().size());
-        assertEquals(1, response.getHomepageGrids().get(0).getProducts().size());
+        assertEquals(1, response.getHomepageGrids().getFirst().getProducts().size());
     }
 }

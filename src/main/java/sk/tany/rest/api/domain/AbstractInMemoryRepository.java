@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Slf4j
@@ -78,7 +77,7 @@ public abstract class AbstractInMemoryRepository<T> {
         return StreamSupport.stream(ids.spliterator(), false)
                 .map(memoryCache::get)
                 .filter(java.util.Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public boolean existsById(String id) {

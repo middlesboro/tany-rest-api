@@ -6,26 +6,30 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
-import sk.tany.rest.api.dto.*;
+import sk.tany.rest.api.dto.CarrierDto;
+import sk.tany.rest.api.dto.CarrierPriceRangeDto;
+import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.CartItem;
+import sk.tany.rest.api.dto.CustomerContextCartDto;
+import sk.tany.rest.api.dto.CustomerContextDto;
+import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.mapper.CustomerMapper;
-import sk.tany.rest.api.service.client.CustomerClientServiceImpl;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerClientServiceImplTest {
@@ -162,11 +166,11 @@ class CustomerClientServiceImplTest {
 
         // Assert
         // First carrier should be selected
-        assertTrue(contextCart.getCarriers().get(0).isSelected());
+        assertTrue(contextCart.getCarriers().getFirst().isSelected());
         assertFalse(contextCart.getCarriers().get(1).isSelected());
 
         // First payment should be selected
-        assertTrue(contextCart.getPayments().get(0).isSelected());
+        assertTrue(contextCart.getPayments().getFirst().isSelected());
         assertFalse(contextCart.getPayments().get(1).isSelected());
     }
 

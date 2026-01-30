@@ -15,12 +15,13 @@ import sk.tany.rest.api.mapper.OrderMapper;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class OrderStatusHistoryTest {
@@ -93,7 +94,7 @@ class OrderStatusHistoryTest {
         verify(orderRepository).save(any(Order.class));
         // Should only have existing history (1 record copied from old order)
         assertEquals(1, updatedOrder.getStatusHistory().size());
-        assertEquals(OrderStatus.CREATED, updatedOrder.getStatusHistory().get(0).getStatus());
+        assertEquals(OrderStatus.CREATED, updatedOrder.getStatusHistory().getFirst().getStatus());
     }
 
     @Test
@@ -109,6 +110,6 @@ class OrderStatusHistoryTest {
 
         assertNotNull(newOrder.getStatusHistory());
         assertEquals(1, newOrder.getStatusHistory().size());
-        assertEquals(OrderStatus.CREATED, newOrder.getStatusHistory().get(0).getStatus());
+        assertEquals(OrderStatus.CREATED, newOrder.getStatusHistory().getFirst().getStatus());
     }
 }

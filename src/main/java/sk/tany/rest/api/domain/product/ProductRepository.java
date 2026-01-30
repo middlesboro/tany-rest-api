@@ -104,7 +104,7 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
         return memoryCache.values().stream()
                 .filter(p -> p.getProductFilterParameters() != null && p.getProductFilterParameters().stream()
                         .anyMatch(param -> Objects.equals(param.getFilterParameterValueId(), filterParameterValueId)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // --- Search Logic migrated from ProductSearchEngine ---
@@ -136,7 +136,7 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
                     Double score2 = calculateRelevance(p2.getTitle(), normalizedQuery);
                     return score2.compareTo(score1);
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private Double calculateRelevance(String productName, String normalizedQuery) {
@@ -342,7 +342,7 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
         CategoryFilterRequest newRequest = new CategoryFilterRequest();
         newRequest.setFilterParameters(original.getFilterParameters().stream()
                 .filter(param -> !param.getId().equals(facetIdToExclude))
-                .collect(Collectors.toList()));
+                .toList());
         return newRequest;
     }
 

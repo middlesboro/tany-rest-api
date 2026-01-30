@@ -8,8 +8,8 @@ import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.domain.product.ProductStatus;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.CategoryDto;
-import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.SupplierDto;
+import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.shopsettings.get.ShopSettingsGetResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopCategoriesResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopCategory;
@@ -29,6 +29,7 @@ import sk.tany.rest.api.dto.prestashop.PrestaShopSupplierDetailResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopSupplierResponse;
 import sk.tany.rest.api.dto.prestashop.PrestaShopSupplierWrapper;
 import sk.tany.rest.api.dto.prestashop.PrestaShopSuppliersResponse;
+import sk.tany.rest.api.exception.ImportException;
 import sk.tany.rest.api.helper.StringHelper;
 import sk.tany.rest.api.service.admin.BrandAdminService;
 import sk.tany.rest.api.service.admin.CategoryAdminService;
@@ -36,7 +37,6 @@ import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 import sk.tany.rest.api.service.admin.ShopSettingsAdminService;
 import sk.tany.rest.api.service.admin.SupplierAdminService;
-import sk.tany.rest.api.exception.ImportException;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
 
@@ -271,7 +271,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         if (value instanceof List) {
             List<?> list = (List<?>) value;
             if (!list.isEmpty()) {
-                Object firstItem = list.get(0);
+                Object firstItem = list.getFirst();
                 if (firstItem instanceof Map) {
                     return (String) ((Map<?, ?>) firstItem).get("value");
                 }

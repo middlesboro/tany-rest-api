@@ -18,7 +18,6 @@ import sk.tany.rest.api.mapper.ProductMapper;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -64,14 +63,14 @@ public class WishlistClientServiceImpl implements WishlistClientService {
     public List<String> getWishlistProductIds() {
         return wishlistRepository.findByCustomerId(securityUtil.getLoggedInUserId()).stream()
                 .map(Wishlist::getProductId)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public Page<ProductClientDto> getWishlist(String customerId, Pageable pageable) {
         List<String> productIds = wishlistRepository.findByCustomerId(customerId).stream()
                 .map(Wishlist::getProductId)
-                .collect(Collectors.toList());
+                .toList();
 
         List<ProductClientDto> products = productRepository.findAllById(productIds).stream()
                 .map(product -> {
@@ -79,7 +78,7 @@ public class WishlistClientServiceImpl implements WishlistClientService {
                     dto.setInWishlist(true);
                     return dto;
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), products.size());

@@ -72,7 +72,7 @@ public class CartClientServiceImpl implements CartClientService {
 
         // Ensure discount codes list is initialized
         if (cartDto.getAppliedDiscounts() != null) {
-             List<String> codes = cartDto.getAppliedDiscounts().stream().map(CartDiscountClientDto::getCode).collect(Collectors.toList());
+             List<String> codes = cartDto.getAppliedDiscounts().stream().map(CartDiscountClientDto::getCode).toList();
              cart.setDiscountCodes(codes);
         }
 
@@ -119,7 +119,7 @@ public class CartClientServiceImpl implements CartClientService {
             manualCodes = cartDto.getAppliedDiscounts().stream()
                 .filter(d -> d.getCode() != null)
                 .map(CartDiscountClientDto::getCode)
-                .collect(Collectors.toList());
+                .toList();
         }
         cart.setDiscountCodes(manualCodes);
 
@@ -162,7 +162,7 @@ public class CartClientServiceImpl implements CartClientService {
                     CartDiscountClientDto d = new CartDiscountClientDto();
                     d.setCode(code);
                     return d;
-                }).collect(Collectors.toList());
+                }).toList();
                 dto.setAppliedDiscounts(dtos);
             }
 
@@ -195,7 +195,7 @@ public class CartClientServiceImpl implements CartClientService {
         }
 
         String image = (productDto.getImages() != null && !productDto.getImages().isEmpty())
-                ? productDto.getImages().get(0)
+                ? productDto.getImages().getFirst()
                 : null;
 
         Optional<CartItem> existingItem = cartDto.getItems().stream()
@@ -301,7 +301,7 @@ public class CartClientServiceImpl implements CartClientService {
         PriceBreakDown breakdown = new PriceBreakDown();
         cartDto.setPriceBreakDown(breakdown);
 
-        List<String> productIds = cartDto.getItems().stream().map(CartItem::getProductId).collect(Collectors.toList());
+        List<String> productIds = cartDto.getItems().stream().map(CartItem::getProductId).toList();
         List<ProductClientDto> products = productService.findAllByIds(productIds);
         var productMap = products.stream().collect(Collectors.toMap(ProductClientDto::getId, p -> p));
 
@@ -339,7 +339,7 @@ public class CartClientServiceImpl implements CartClientService {
                 }
 
                 item.setPrice(effectivePrice);
-                item.setImage((product.getImages() != null && !product.getImages().isEmpty()) ? product.getImages().get(0) : null);
+                item.setImage((product.getImages() != null && !product.getImages().isEmpty()) ? product.getImages().getFirst() : null);
                 item.setTitle(product.getTitle());
 
                 BigDecimal priceWithVat = effectivePrice.multiply(BigDecimal.valueOf(item.getQuantity())).setScale(2, RoundingMode.HALF_UP);
@@ -373,7 +373,7 @@ public class CartClientServiceImpl implements CartClientService {
             manualCodes = cartDto.getAppliedDiscounts().stream()
                     .map(CartDiscountClientDto::getCode)
                     .filter(code -> code != null)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         List<CartDiscount> manualDiscounts = new ArrayList<>();
@@ -390,7 +390,7 @@ public class CartClientServiceImpl implements CartClientService {
                 .filter(d -> (d.getDateFrom() == null || !now.isBefore(d.getDateFrom())) &&
                         (d.getDateTo() == null || !now.isAfter(d.getDateTo())))
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
 
         BigDecimal totalDiscount = BigDecimal.ZERO;
         boolean freeShipping = false;
@@ -480,7 +480,7 @@ public class CartClientServiceImpl implements CartClientService {
 
         List<CartDiscountClientDto> appliedDtos = actuallyAppliedDiscounts.stream()
                 .map(cartDiscountMapper::toClientDto)
-                .collect(Collectors.toList());
+                .toList();
         cartDto.setAppliedDiscounts(appliedDtos);
 
         BigDecimal finalPrice = productsTotal.subtract(totalDiscount);

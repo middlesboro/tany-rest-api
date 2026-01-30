@@ -9,19 +9,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.component.SecurityUtil;
+import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.mapper.CustomerMapper;
-import sk.tany.rest.api.domain.customer.CustomerRepository;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -80,7 +78,7 @@ class CustomerClientServiceImplPaymentSortTest {
         assertThat(result.getCartDto().getPayments()).hasSize(3);
 
         // Check order: p2 (1), p1 (2), p3 (3)
-        assertThat(result.getCartDto().getPayments().get(0).getId()).isEqualTo("2");
+        assertThat(result.getCartDto().getPayments().getFirst().getId()).isEqualTo("2");
         assertThat(result.getCartDto().getPayments().get(1).getId()).isEqualTo("1");
         assertThat(result.getCartDto().getPayments().get(2).getId()).isEqualTo("3");
     }
@@ -111,7 +109,7 @@ class CustomerClientServiceImplPaymentSortTest {
 
         // Assert
         // Check order: p2 (1), p1 (null)
-        assertThat(result.getCartDto().getPayments().get(0).getId()).isEqualTo("2");
+        assertThat(result.getCartDto().getPayments().getFirst().getId()).isEqualTo("2");
         assertThat(result.getCartDto().getPayments().get(1).getId()).isEqualTo("1");
     }
 }

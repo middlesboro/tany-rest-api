@@ -128,7 +128,7 @@ class ProductAdminServiceImplTest {
         List<ProductAdminDto> result = productAdminService.searchByQuery(query);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getTitle()).isEqualTo("Test Product");
+        assertThat(result.getFirst().getTitle()).isEqualTo("Test Product");
         verify(productSearchEngine).searchAndSort(query);
     }
 
@@ -149,7 +149,7 @@ class ProductAdminServiceImplTest {
         List<ProductAdminDto> result = productAdminService.findAllByFilterParameterValueId(filterParameterValueId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getTitle()).isEqualTo("Test Product");
+        assertThat(result.getFirst().getTitle()).isEqualTo("Test Product");
         verify(productRepository).findAllByProductFilterParametersFilterParameterValueId(filterParameterValueId);
     }
 

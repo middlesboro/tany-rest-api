@@ -40,7 +40,7 @@ class CategoryClientControllerTest {
         List<CategoryDto> result = categoryClientController.getCategories();
 
         assertEquals(1, result.size());
-        assertEquals("Test Category", result.get(0).getTitle());
+        assertEquals("Test Category", result.getFirst().getTitle());
         verify(categoryService, times(1)).findAllVisible();
     }
 
@@ -71,9 +71,9 @@ class CategoryClientControllerTest {
         List<CategoryDto> result = categoryClientController.getCategories();
 
         assertEquals(1, result.size());
-        assertEquals("Root", result.get(0).getTitle());
-        assertEquals(1, result.get(0).getChildren().size());
-        assertEquals("Child", result.get(0).getChildren().get(0).getTitle());
+        assertEquals("Root", result.getFirst().getTitle());
+        assertEquals(1, result.getFirst().getChildren().size());
+        assertEquals("Child", result.getFirst().getChildren().getFirst().getTitle());
 
         verify(categoryService, times(1)).findAllVisible();
     }

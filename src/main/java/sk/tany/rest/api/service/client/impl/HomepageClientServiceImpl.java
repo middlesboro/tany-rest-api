@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -49,7 +48,7 @@ public class HomepageClientServiceImpl implements HomepageClientService {
         Page<HomepageGrid> grids = homepageGridRepository.findAll(Pageable.unpaged(Sort.by(Sort.Order.desc("order"))));
         List<HomepageGridDto> gridDtos = grids.stream()
                 .map(this::processGrid)
-                .collect(Collectors.toList());
+                .toList();
 
         return new HomepageGridResponse(gridDtos);
     }
@@ -83,7 +82,7 @@ public class HomepageClientServiceImpl implements HomepageClientService {
             productStream = productStream.limit(grid.getResultCount());
         }
 
-        List<Product> products = productStream.collect(Collectors.toList());
+        List<Product> products = productStream.toList();
         List<ProductClientDto> productDtos = mapToEnhancedDtos(products);
 
         HomepageGridDto dto = new HomepageGridDto();
@@ -115,7 +114,7 @@ public class HomepageClientServiceImpl implements HomepageClientService {
     private List<ProductClientDto> mapToEnhancedDtos(List<Product> products) {
         if (products.isEmpty()) return Collections.emptyList();
 
-        List<String> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
+        List<String> productIds = products.stream().map(Product::getId).toList();
         Map<String, ProductRatingDto> ratings = reviewClientService.getProductRatings(productIds);
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
 
@@ -127,6 +126,6 @@ public class HomepageClientServiceImpl implements HomepageClientService {
             dto.setAverageRating(rating.getAverageRating());
             dto.setReviewsCount(rating.getReviewsCount());
             return dto;
-        }).collect(Collectors.toList());
+        }).toList();
     }
 }

@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import sk.tany.rest.api.service.common.enums.ImageKitType;
 import sk.tany.rest.api.exception.ImageException;
+import sk.tany.rest.api.service.common.enums.ImageKitType;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -69,7 +69,7 @@ public class ImageKitService implements ImageService {
             }
             // Assuming the first file is the one we want to delete
             // Since we use UUIDs for filenames, it should be unique
-            String fileId = resultList.getResults().get(0).getFileId();
+            String fileId = resultList.getResults().getFirst().getFileId();
             imageKit.deleteFile(fileId);
             log.info("Image {} deleted successfully", url);
         } catch (Exception e) {

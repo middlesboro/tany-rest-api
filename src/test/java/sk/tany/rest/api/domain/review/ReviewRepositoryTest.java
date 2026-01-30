@@ -47,7 +47,7 @@ class ReviewRepositoryTest {
 
         // Assert
         assertEquals(3, result.size());
-        assertEquals(5, result.get(0).getRating());
+        assertEquals(5, result.getFirst().getRating());
         assertEquals(3, result.get(1).getRating());
         assertEquals(1, result.get(2).getRating());
     }

@@ -53,7 +53,7 @@ class CustomerAdminControllerTest {
         Page<CustomerAdminListResponse> result = customerAdminController.getAllCustomers(pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("Test", result.getContent().get(0).getFirstname());
+        assertEquals("Test", result.getContent().getFirst().getFirstname());
         verify(customerService, times(1)).findAll(pageable);
     }
 }

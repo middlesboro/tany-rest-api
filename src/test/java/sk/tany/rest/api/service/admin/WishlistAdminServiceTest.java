@@ -21,7 +21,6 @@ import sk.tany.rest.api.exception.ProductException;
 import sk.tany.rest.api.mapper.WishlistMapper;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,11 +65,11 @@ class WishlistAdminServiceTest {
         Page<WishlistAdminListResponse> result = wishlistAdminService.findAll(pageable);
 
         assertEquals(1, result.getContent().size());
-        WishlistAdminListResponse response = result.getContent().get(0);
+        WishlistAdminListResponse response = result.getContent().getFirst();
         assertEquals("cust1", response.getCustomerId());
         assertEquals("John Doe", response.getCustomerName());
         assertEquals(1, response.getProductNames().size());
-        assertEquals("Product 1", response.getProductNames().get(0));
+        assertEquals("Product 1", response.getProductNames().getFirst());
 
         verify(wishlistRepository).findAllItems();
     }

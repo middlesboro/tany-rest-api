@@ -54,7 +54,7 @@ class PaymentClientControllerTest {
         Page<PaymentDto> result = paymentClientController.getPayments(pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("Test Payment", result.getContent().get(0).getName());
+        assertEquals("Test Payment", result.getContent().getFirst().getName());
         verify(paymentService, times(1)).findAll(pageable);
     }
 

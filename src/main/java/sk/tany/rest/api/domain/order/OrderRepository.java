@@ -32,7 +32,7 @@ public class OrderRepository extends AbstractInMemoryRepository<Order> {
     public List<Order> findAllByCustomerId(String customerId) {
         return memoryCache.values().stream()
                 .filter(o -> o.getCustomerId() != null && o.getCustomerId().equals(customerId))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Page<Order> findAllByCustomerId(String customerId, Pageable pageable) {

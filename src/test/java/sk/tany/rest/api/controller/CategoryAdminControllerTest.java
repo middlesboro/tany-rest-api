@@ -43,7 +43,7 @@ class CategoryAdminControllerTest {
         Page<CategoryDto> result = categoryAdminController.getCategories(null, pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("Test Category", result.getContent().get(0).getTitle());
+        assertEquals("Test Category", result.getContent().getFirst().getTitle());
         verify(categoryService, times(1)).findAll(pageable);
     }
 
@@ -60,7 +60,7 @@ class CategoryAdminControllerTest {
         Page<CategoryDto> result = categoryAdminController.getCategories(query, pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("Test Category", result.getContent().get(0).getTitle());
+        assertEquals("Test Category", result.getContent().getFirst().getTitle());
         verify(categoryService, times(1)).findAll(query, pageable);
     }
 }

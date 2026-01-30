@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,8 +68,8 @@ class CartAdminServiceImplTest {
         Page<CartAdminListResponse> result = cartAdminService.findAll(null, null, null, null, null, PageRequest.of(0, 10, Sort.unsorted()));
 
         Assertions.assertEquals(1, result.getTotalElements());
-        Assertions.assertEquals("John Doe", result.getContent().get(0).getCustomerName());
-        Assertions.assertEquals("cart1", result.getContent().get(0).getCartId());
+        Assertions.assertEquals("John Doe", result.getContent().getFirst().getCustomerName());
+        Assertions.assertEquals("cart1", result.getContent().getFirst().getCartId());
     }
 
     @Test
@@ -97,7 +96,7 @@ class CartAdminServiceImplTest {
         Page<CartAdminListResponse> result = cartAdminService.findAll(null, null, "Alice", null, null, PageRequest.of(0, 10, Sort.unsorted()));
 
         Assertions.assertEquals(1, result.getTotalElements());
-        Assertions.assertEquals("Alice Wonderland", result.getContent().get(0).getCustomerName());
+        Assertions.assertEquals("Alice Wonderland", result.getContent().getFirst().getCustomerName());
     }
 
     @Test
@@ -117,7 +116,7 @@ class CartAdminServiceImplTest {
         Page<CartAdminListResponse> result = cartAdminService.findAll(null, null, null, null, null, PageRequest.of(0, 10, Sort.unsorted()));
 
         Assertions.assertEquals(1, result.getTotalElements());
-        Assertions.assertEquals(12345L, result.getContent().get(0).getOrderIdentifier());
-        Assertions.assertEquals(BigDecimal.valueOf(100), result.getContent().get(0).getPrice());
+        Assertions.assertEquals(12345L, result.getContent().getFirst().getOrderIdentifier());
+        Assertions.assertEquals(BigDecimal.valueOf(100), result.getContent().getFirst().getPrice());
     }
 }

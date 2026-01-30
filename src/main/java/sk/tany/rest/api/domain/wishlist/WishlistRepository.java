@@ -6,7 +6,6 @@ import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class WishlistRepository extends AbstractInMemoryRepository<Wishlist> {
@@ -18,7 +17,7 @@ public class WishlistRepository extends AbstractInMemoryRepository<Wishlist> {
     public List<Wishlist> findByCustomerId(String customerId) {
         return memoryCache.values().stream()
                 .filter(w -> w.getCustomerId() != null && w.getCustomerId().equals(customerId))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Optional<Wishlist> findByCustomerIdAndProductId(String customerId, String productId) {

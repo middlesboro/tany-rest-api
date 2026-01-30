@@ -6,7 +6,6 @@ import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class FilterParameterRepository extends AbstractInMemoryRepository<FilterParameter> {
@@ -24,6 +23,6 @@ public class FilterParameterRepository extends AbstractInMemoryRepository<Filter
     public List<FilterParameter> findAllByFilterParameterValueIdsContaining(String valueId) {
         return memoryCache.values().stream()
                 .filter(fp -> fp.getFilterParameterValueIds() != null && fp.getFilterParameterValueIds().contains(valueId))
-                .collect(Collectors.toList());
+                .toList();
     }
 }

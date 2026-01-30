@@ -68,7 +68,7 @@ class ProductClientServiceImplTest {
         Page<ProductClientDto> result = service.findAll(Pageable.unpaged());
 
         assertEquals(1, result.getContent().size());
-        ProductClientDto dto = result.getContent().get(0);
+        ProductClientDto dto = result.getContent().getFirst();
         assertEquals(BigDecimal.valueOf(4.5), dto.getAverageRating());
         assertEquals(10, dto.getReviewsCount());
     }

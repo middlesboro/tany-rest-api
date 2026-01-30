@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
@@ -54,10 +53,10 @@ public class WishlistAdminServiceImpl implements WishlistAdminService {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .map(Product::getTitle)
-                    .collect(Collectors.toList());
+                    .toList();
 
             return new WishlistAdminListResponse(customerId, customerName, productNames);
-        }).collect(Collectors.toList());
+        }).toList();
 
         responses.sort(Comparator.comparing(WishlistAdminListResponse::getCustomerName));
 

@@ -27,7 +27,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -117,7 +118,7 @@ class WishlistClientServiceTest {
         List<String> result = wishlistClientService.getWishlistProductIds();
 
         assertEquals(1, result.size());
-        assertEquals("prod1", result.get(0));
+        assertEquals("prod1", result.getFirst());
     }
 
     @Test
@@ -149,6 +150,6 @@ class WishlistClientServiceTest {
         Page<ProductClientDto> result = wishlistClientService.getWishlist(customerId, pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("prod1", result.getContent().get(0).getId());
+        assertEquals("prod1", result.getContent().getFirst().getId());
     }
 }

@@ -8,14 +8,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,7 +41,7 @@ class OrderRepositoryTest {
         Page<Order> result = repository.findAll(101L, null, null, null, null, null, null, null, PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
-        assertEquals(101L, result.getContent().get(0).getOrderIdentifier());
+        assertEquals(101L, result.getContent().getFirst().getOrderIdentifier());
     }
 
     @Test
@@ -56,7 +54,7 @@ class OrderRepositoryTest {
         Page<Order> result = repository.findAll(null, OrderStatus.PAID, null, null, null, null, null, null, PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
-        assertEquals(OrderStatus.PAID, result.getContent().get(0).getStatus());
+        assertEquals(OrderStatus.PAID, result.getContent().getFirst().getStatus());
     }
 
     @Test
@@ -71,7 +69,7 @@ class OrderRepositoryTest {
         Page<Order> result = repository.findAll(null, null, new BigDecimal("15.00"), new BigDecimal("25.00"), null, null, null, null, PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
-        assertEquals(new BigDecimal("20.00"), result.getContent().get(0).getFinalPrice());
+        assertEquals(new BigDecimal("20.00"), result.getContent().getFirst().getFinalPrice());
     }
 
     @Test
@@ -86,7 +84,7 @@ class OrderRepositoryTest {
         Page<Order> result = repository.findAll(null, null, null, null, "c1", null, null, null, PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("c1", result.getContent().get(0).getCarrierId());
+        assertEquals("c1", result.getContent().getFirst().getCarrierId());
     }
 
     @Test
@@ -101,7 +99,7 @@ class OrderRepositoryTest {
         Page<Order> result = repository.findAll(null, null, null, null, null, "p1", null, null, PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("p1", result.getContent().get(0).getPaymentId());
+        assertEquals("p1", result.getContent().getFirst().getPaymentId());
     }
 
     @Test
@@ -117,7 +115,7 @@ class OrderRepositoryTest {
         Page<Order> result = repository.findAll(null, null, null, null, null, null, now.minusSeconds(1800), now.plusSeconds(1800), PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("2", result.getContent().get(0).getId());
+        assertEquals("2", result.getContent().getFirst().getId());
     }
 
     @Test
@@ -133,7 +131,7 @@ class OrderRepositoryTest {
         Page<Order> result = repository.findAll(null, null, null, null, null, null, null, null, PageRequest.of(0, 10, sort));
 
         assertEquals(3, result.getTotalElements());
-        assertEquals(new BigDecimal("10.00"), result.getContent().get(0).getFinalPrice());
+        assertEquals(new BigDecimal("10.00"), result.getContent().getFirst().getFinalPrice());
         assertEquals(new BigDecimal("20.00"), result.getContent().get(1).getFinalPrice());
         assertEquals(new BigDecimal("30.00"), result.getContent().get(2).getFinalPrice());
     }
@@ -159,7 +157,7 @@ class OrderRepositoryTest {
         Page<Order> result = repository.findAllByCustomerIdAndAuthenticatedUserTrue("c1", PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("1", result.getContent().get(0).getId());
+        assertEquals("1", result.getContent().getFirst().getId());
     }
 
     private Order createOrder(String id, Long identifier, OrderStatus status, BigDecimal price, Instant createDate) {

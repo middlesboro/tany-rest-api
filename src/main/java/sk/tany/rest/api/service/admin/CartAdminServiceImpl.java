@@ -98,7 +98,7 @@ public class CartAdminServiceImpl implements CartAdminService {
             stream = stream.filter(c -> c.getCreateDate() != null && !createLocalDateFromInstant(c.getCreateDate()).isAfter(createDateTo));
         }
 
-        List<Cart> filteredCarts = stream.collect(Collectors.toList());
+        List<Cart> filteredCarts = stream.toList();
 
         // Sort Carts
         if (pageable.getSort().isSorted()) {
@@ -139,7 +139,7 @@ public class CartAdminServiceImpl implements CartAdminService {
                     Order order = orderRepository.findByCartId(cart.getId()).orElse(null);
                     return mapToResponse(cart, order);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         return new PageImpl<>(content, pageable, filteredCarts.size());
     }
@@ -211,7 +211,7 @@ public class CartAdminServiceImpl implements CartAdminService {
             stream = stream.filter(r -> r.getCreateDate() != null && !createLocalDateFromInstant(r.getCreateDate()).isAfter(createDateTo));
         }
 
-        List<CartAdminListResponse> filtered = stream.collect(Collectors.toList());
+        List<CartAdminListResponse> filtered = stream.toList();
 
         // Sort
         if (pageable.getSort().isSorted()) {

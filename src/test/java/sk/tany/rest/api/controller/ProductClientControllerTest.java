@@ -56,7 +56,7 @@ class ProductClientControllerTest {
         Page<ProductClientListResponse> result = productClientController.getProducts(pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("Test Product", result.getContent().get(0).getTitle());
+        assertEquals("Test Product", result.getContent().getFirst().getTitle());
         verify(productService, times(1)).findAll(pageable);
     }
 
@@ -108,7 +108,7 @@ class ProductClientControllerTest {
         Page<ProductClientListResponse> result = productClientController.getProductsByCategory(categoryId, pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("Category Product", result.getContent().get(0).getTitle());
+        assertEquals("Category Product", result.getContent().getFirst().getTitle());
         verify(productService, times(1)).search(categoryId, pageable);
     }
 
@@ -127,7 +127,7 @@ class ProductClientControllerTest {
         java.util.List<ProductClientListResponse> result = productClientController.searchProducts(query);
 
         assertEquals(1, result.size());
-        assertEquals("Searched Product", result.get(0).getTitle());
+        assertEquals("Searched Product", result.getFirst().getTitle());
         verify(productService, times(1)).searchProducts(query);
     }
 }

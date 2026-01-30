@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ReviewAdminServiceImplTest {
@@ -52,7 +52,7 @@ public class ReviewAdminServiceImplTest {
         Page<ReviewAdminListResponse> result = service.findAll(pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals(response, result.getContent().get(0));
+        assertEquals(response, result.getContent().getFirst());
     }
 
     @Test

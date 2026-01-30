@@ -50,7 +50,7 @@ class CarrierAdminControllerTest {
         Page<CarrierDto> result = carrierAdminController.getCarriers(pageable);
 
         assertEquals(1, result.getTotalElements());
-        assertEquals("Test Carrier", result.getContent().get(0).getName());
+        assertEquals("Test Carrier", result.getContent().getFirst().getName());
         verify(carrierService, times(1)).findAll(pageable);
     }
 

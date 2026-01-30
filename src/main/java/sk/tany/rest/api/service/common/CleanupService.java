@@ -37,7 +37,7 @@ public class CleanupService {
         Instant threshold = Instant.now().minus(30, ChronoUnit.SECONDS);
         List<AuthorizationCode> toDelete = authorizationCodeRepository.findAll().stream()
                 .filter(code -> code.getCreatedDate() != null && code.getCreatedDate().isBefore(threshold))
-                .collect(Collectors.toList());
+                .toList();
 
         if (!toDelete.isEmpty()) {
             log.info("Cleaning up {} expired AuthorizationCodes", toDelete.size());
@@ -50,7 +50,7 @@ public class CleanupService {
         Instant threshold = Instant.now().minus(300, ChronoUnit.SECONDS);
         List<MagicLinkToken> toDelete = magicLinkTokenRepository.findAll().stream()
                 .filter(token -> token.getCreatedDate() != null && token.getCreatedDate().isBefore(threshold))
-                .collect(Collectors.toList());
+                .toList();
 
         if (!toDelete.isEmpty()) {
             log.info("Cleaning up {} expired MagicLinkTokens", toDelete.size());
@@ -63,7 +63,7 @@ public class CleanupService {
         Instant threshold = Instant.now().minus(604800, ChronoUnit.SECONDS); // 7 days
         List<BesteronPayment> toDelete = besteronPaymentRepository.findAll().stream()
                 .filter(payment -> payment.getCreatedDate() != null && payment.getCreatedDate().isBefore(threshold))
-                .collect(Collectors.toList());
+                .toList();
 
         if (!toDelete.isEmpty()) {
             log.info("Cleaning up {} expired BesteronPayments", toDelete.size());
@@ -83,7 +83,7 @@ public class CleanupService {
         List<Cart> toDelete = cartRepository.findAll().stream()
                 .filter(cart -> cart.getCreateDate() != null && cart.getCreateDate().isBefore(threshold))
                 .filter(cart -> !cartIdsWithOrders.contains(cart.getId()))
-                .collect(Collectors.toList());
+                .toList();
 
         if (!toDelete.isEmpty()) {
             log.info("Cleaning up {} expired Carts", toDelete.size());

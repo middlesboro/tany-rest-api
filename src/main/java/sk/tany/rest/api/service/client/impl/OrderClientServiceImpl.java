@@ -52,7 +52,6 @@ import java.nio.file.Files;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -162,7 +161,7 @@ public class OrderClientServiceImpl implements OrderClientService {
         if (cartDto.getAppliedDiscounts() != null) {
             List<String> codes = cartDto.getAppliedDiscounts().stream()
                     .map(sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto::getCode)
-                    .collect(Collectors.toList());
+                    .toList();
             order.setAppliedDiscountCodes(codes);
         }
 

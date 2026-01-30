@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-
 import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SlugGenerator;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.category.CategoryRepository;
@@ -30,7 +30,6 @@ import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
 import sk.tany.rest.api.exception.ImportException;
-import sk.tany.rest.api.component.SlugGenerator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -100,7 +99,7 @@ public class ProductImportService {
     private void processProduct(String idProductStr, List<ProductImportDataDto> rows) {
         if (rows.isEmpty()) return;
 
-        ProductImportDataDto baseData = rows.get(0);
+        ProductImportDataDto baseData = rows.getFirst();
         Long prestashopId = Long.parseLong(idProductStr);
 
         Product product = productRepository.findByPrestashopId(prestashopId).orElse(new Product());
@@ -171,7 +170,7 @@ public class ProductImportService {
                 .map(r -> new ImageInfo(r.getImageUrl(), "1".equals(r.getIsCover())))
                 .distinct() // Need equals/hashcode on ImageInfo
                 .sorted(Comparator.comparing(ImageInfo::isCover).reversed())
-                .collect(Collectors.toList());
+                .toList();
 
         // todo import image via imageservice to imakegit and get proper url and save it to product.
 //         Deduplicate by URL (keeping the one with isCover if multiple entries for same URL exist)

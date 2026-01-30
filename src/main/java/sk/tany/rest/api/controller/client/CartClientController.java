@@ -24,8 +24,6 @@ import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateResponse;
 import sk.tany.rest.api.mapper.CartClientApiMapper;
 import sk.tany.rest.api.service.client.CartClientService;
 
-import java.util.stream.Collectors;
-
 @RestController
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
@@ -47,7 +45,7 @@ public class CartClientController {
                 item.setImage(i.getImage());
                 item.setPrice(i.getPrice());
                 return item;
-            }).collect(Collectors.toList()));
+            }).toList());
         }
         if (request.getCustomerId() != null) cartDto.setCustomerId(request.getCustomerId());
         if (request.getSelectedCarrierId() != null) cartDto.setSelectedCarrierId(request.getSelectedCarrierId());
