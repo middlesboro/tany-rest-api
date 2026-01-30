@@ -134,4 +134,16 @@ public class OrderRepository extends AbstractInMemoryRepository<Order> {
         }
         return new PageImpl<>(all.subList(start, end), pageable, all.size());
     }
+
+    public List<Order> findByInvoiceUploadedToOneDriveFalse() {
+        return memoryCache.values().stream()
+                .filter(o -> !o.isInvoiceUploadedToOneDrive())
+                .collect(Collectors.toList());
+    }
+
+    public List<Order> findByCreditNoteUploadedToOneDriveFalse() {
+        return memoryCache.values().stream()
+                .filter(o -> !o.isCreditNoteUploadedToOneDrive())
+                .collect(Collectors.toList());
+    }
 }

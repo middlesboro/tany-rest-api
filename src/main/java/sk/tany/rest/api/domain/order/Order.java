@@ -46,5 +46,7 @@ public class Order {
     private boolean authenticatedUser;
     private Instant cancelDate;
     private Long creditNoteIdentifier;
+    private boolean invoiceUploadedToOneDrive;
+    private boolean creditNoteUploadedToOneDrive;
 
 }

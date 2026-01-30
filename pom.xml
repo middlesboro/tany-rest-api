@@ -159,6 +159,16 @@
             <artifactId>langchain4j</artifactId>
             <version>0.31.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.microsoft.graph</groupId>
+            <artifactId>microsoft-graph</artifactId>
+            <version>6.13.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+            <version>1.13.0</version>
+        </dependency>
     </dependencies>
 
     <build>
