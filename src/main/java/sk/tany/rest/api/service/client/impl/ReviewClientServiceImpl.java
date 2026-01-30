@@ -243,6 +243,7 @@ public class ReviewClientServiceImpl implements ReviewClientService {
         ReviewClientListResponse response = mapper.toClientListResponse(review);
         if (product != null) {
             response.setProductSlug(product.getSlug());
+            response.setProductTitle(product.getTitle());
             if (product.getImages() != null && !product.getImages().isEmpty()) {
                 response.setProductImage(product.getImages().get(0));
             }

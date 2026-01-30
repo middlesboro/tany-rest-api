@@ -14,5 +14,6 @@ public class ReviewClientListResponse {
     private String customerName;
     private Instant createDate;
     private String productSlug;
+    private String productTitle;
     private String productImage;
 }
