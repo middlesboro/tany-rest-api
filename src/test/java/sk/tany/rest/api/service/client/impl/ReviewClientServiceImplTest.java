@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -98,10 +99,13 @@ class ReviewClientServiceImplTest {
         Product productBrandA = new Product();
         productBrandA.setId("prodA");
         productBrandA.setBrandId("brandA");
+        productBrandA.setSlug("slug-a");
+        productBrandA.setImages(List.of("image-a.jpg"));
 
         Product productBrandB = new Product();
         productBrandB.setId("prodB");
         productBrandB.setBrandId("brandB");
+        productBrandB.setSlug("slug-b");
 
         Product productBrandC = new Product();
         productBrandC.setId("prodC");
@@ -121,14 +125,30 @@ class ReviewClientServiceImplTest {
         reviewB.setActive(true);
 
         when(reviewRepository.findAllByProductIds(any(Set.class), any(Sort.class))).thenReturn(List.of(reviewA, reviewB));
-        when(reviewMapper.toClientListResponse(any())).thenReturn(new ReviewClientListResponse());
+
+        when(reviewMapper.toClientListResponse(any())).thenAnswer(invocation -> {
+            Review r = invocation.getArgument(0);
+            ReviewClientListResponse response = new ReviewClientListResponse();
+            response.setId(r.getProductId()); // Hack to identify which review it is
+            return response;
+        });
 
         // Execute
         ReviewClientProductResponse response = service.findAllByBrandIds(List.of("brandA", "brandB"), Pageable.unpaged());
 
         // Verify
         assertEquals(2, response.getReviewsCount());
-        // Average of 5 and 4 is 4.5
         assertEquals(BigDecimal.valueOf(4.5), response.getAverageRating());
+
+        List<ReviewClientListResponse> reviews = response.getReviews().getContent();
+        assertEquals(2, reviews.size());
+
+        ReviewClientListResponse responseA = reviews.stream().filter(r -> "prodA".equals(r.getId())).findFirst().orElseThrow();
+        assertEquals("slug-a", responseA.getProductSlug());
+        assertEquals("image-a.jpg", responseA.getProductImage());
+
+        ReviewClientListResponse responseB = reviews.stream().filter(r -> "prodB".equals(r.getId())).findFirst().orElseThrow();
+        assertEquals("slug-b", responseB.getProductSlug());
+        assertNull(responseB.getProductImage());
     }
 }
