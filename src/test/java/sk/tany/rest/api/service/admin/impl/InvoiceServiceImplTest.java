@@ -55,18 +55,7 @@ class InvoiceServiceImplTest {
         order.getPriceBreakDown().setTotalPriceVatValue(BigDecimal.ZERO);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        // Strict stubbing might complain if these are called with null, but getCarrierId() is null.
-        // InvoiceServiceImpl handles nulls gracefully by checking findById(null) which usually returns empty or throws exception depending on repo impl.
-        // But here we are mocking the interface.
-        // Repository.findById(ID) where ID is null.
-        // Mockito default answer is null or empty depending on return type.
-        // findById returns Optional.
-        // So passing null to findById might be problematic if not configured.
-        // Let's set carrierId and paymentId to avoid nulls if possible, or just accept that Mockito handles it.
-        // Actually, InvoiceServiceImpl does: carrierRepository.findById(order.getCarrierId())
-        // If carrierId is null, it calls findById(null).
 
-        // Let's make it robust.
         order.setCarrierId("carrier-1");
         order.setPaymentId("payment-1");
         when(carrierRepository.findById("carrier-1")).thenReturn(Optional.empty());
@@ -82,9 +71,84 @@ class InvoiceServiceImplTest {
         PdfTextExtractor extractor = new PdfTextExtractor(reader);
         String text = extractor.getTextFromPage(1);
 
-        // Check if text contains the expected string.
-        // Note: PdfTextExtractor with CP1250 fonts might have issues with some characters (like Á being `), so we check for the main part.
         Assertions.assertTrue(text.contains("Faktúra je už uhradená") || text.contains("FAKTÚRA JE UŽ UHRADEN"),
             "PDF should contain text about invoice being paid. Found content: " + text);
+    }
+
+    @Test
+    void generateInvoice_shouldUseCorrectDocumentNumberFormat() throws IOException {
+        String orderId = "order-doc-1";
+        Order order = new Order();
+        order.setId(orderId);
+        order.setOrderIdentifier(3L);
+        // Create date in 2026
+        order.setCreateDate(Instant.parse("2026-05-10T10:00:00Z"));
+        order.setStatus(OrderStatus.CREATED);
+        order.setPriceBreakDown(new PriceBreakDown());
+        order.getPriceBreakDown().setTotalPrice(BigDecimal.TEN);
+        order.getPriceBreakDown().setTotalPriceWithoutVat(BigDecimal.TEN);
+        order.getPriceBreakDown().setTotalPriceVatValue(BigDecimal.ZERO);
+
+        order.setCarrierId("carrier-1");
+        order.setPaymentId("payment-1");
+        when(carrierRepository.findById("carrier-1")).thenReturn(Optional.empty());
+        when(paymentRepository.findById("payment-1")).thenReturn(Optional.empty());
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        byte[] pdfBytes = invoiceService.generateInvoice(orderId);
+        PdfReader reader = new PdfReader(pdfBytes);
+        PdfTextExtractor extractor = new PdfTextExtractor(reader);
+        String text = extractor.getTextFromPage(1);
+
+        // Expected format: 2026000003
+        Assertions.assertTrue(text.contains("2026000003"), "PDF should contain document number 2026000003. Found content: " + text);
+    }
+
+    @Test
+    void generateInvoice_shouldDisplayNegativeDiscountInCreditNote() throws IOException {
+        String orderId = "order-cn-1";
+        Order order = new Order();
+        order.setId(orderId);
+        order.setOrderIdentifier(50L);
+        order.setCreditNoteIdentifier(50L);
+        order.setCancelDate(Instant.parse("2026-06-01T10:00:00Z"));
+        order.setStatus(OrderStatus.CANCELED);
+        order.setCarrierId("carrier-1");
+        order.setPaymentId("payment-1");
+
+        PriceBreakDown pbd = new PriceBreakDown();
+        sk.tany.rest.api.dto.PriceItem discountItem = new sk.tany.rest.api.dto.PriceItem();
+        discountItem.setType(sk.tany.rest.api.dto.PriceItemType.DISCOUNT);
+        discountItem.setName("Special Discount");
+        discountItem.setQuantity(1);
+        // Assuming discount is stored as negative
+        discountItem.setPriceWithVat(new BigDecimal("-10.00"));
+        discountItem.setPriceWithoutVat(new BigDecimal("-8.33"));
+        discountItem.setVatValue(new BigDecimal("-1.67"));
+
+        pbd.setItems(java.util.List.of(discountItem));
+        pbd.setTotalPrice(new BigDecimal("-10.00")); // Only discount for simplicity
+        pbd.setTotalPriceWithoutVat(new BigDecimal("-8.33"));
+        pbd.setTotalPriceVatValue(new BigDecimal("-1.67"));
+
+        order.setPriceBreakDown(pbd);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(carrierRepository.findById("carrier-1")).thenReturn(Optional.empty());
+        when(paymentRepository.findById("payment-1")).thenReturn(Optional.empty());
+
+        byte[] pdfBytes = invoiceService.generateInvoice(orderId);
+        PdfReader reader = new PdfReader(pdfBytes);
+        PdfTextExtractor extractor = new PdfTextExtractor(reader);
+        String text = extractor.getTextFromPage(1);
+
+        // Document number check: 2026000050
+        Assertions.assertTrue(text.contains("2026000050"), "PDF should contain credit note number 2026000050. Found: " + text);
+
+        // Discount check: Should be "-10.00"
+        // Since we force multiplier 1 for discount in credit note, -10 * 1 = -10.
+        // It should appear as "-10.00 €"
+        Assertions.assertTrue(text.contains("-10.00 €"), "PDF should contain negative discount value. Found: " + text);
     }
 }

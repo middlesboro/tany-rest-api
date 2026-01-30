@@ -78,10 +78,16 @@ public class OrderAdminController {
         OrderDto order = orderService.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
         byte[] pdfBytes = invoiceService.generateInvoice(id);
 
-        String filename = "invoice_" + id + ".pdf";
-        if (order.getStatus() == OrderStatus.CANCELED) {
-            filename = "dobropis_" + id + ".pdf";
+        boolean isCreditNote = order.getStatus() == OrderStatus.CANCELED;
+        int year = 2026;
+        if (isCreditNote && order.getCancelDate() != null) {
+            year = java.time.LocalDateTime.ofInstant(order.getCancelDate(), java.time.ZoneId.systemDefault()).getYear();
+        } else if (order.getCreateDate() != null) {
+            year = java.time.LocalDateTime.ofInstant(order.getCreateDate(), java.time.ZoneId.systemDefault()).getYear();
         }
+
+        String docNumber = String.format("%d%06d", year, isCreditNote ? order.getCreditNoteIdentifier() : order.getOrderIdentifier());
+        String filename = (isCreditNote ? "dobropis-" : "faktura-") + docNumber + ".pdf";
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")
