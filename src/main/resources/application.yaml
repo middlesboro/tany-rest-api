@@ -79,3 +79,4 @@ onedrive:
   client-secret: ${ONEDRIVE_CLIENT_SECRET}
   tenant-id: ${ONEDRIVE_TENANT_ID}
   user-principal-name: ${ONEDRIVE_USER_PRINCIPAL_NAME}
+  refresh-token: ${ONEDRIVE_REFRESH_TOKEN}
