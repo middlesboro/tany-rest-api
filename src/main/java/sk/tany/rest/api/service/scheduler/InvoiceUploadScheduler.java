@@ -45,7 +45,7 @@ public class InvoiceUploadScheduler {
                 int year = date.getYear();
                 int month = date.getMonthValue();
                 String folderPath = String.format("/Tany/Faktury zakaznici/%d/%d", year, month);
-                String fileName = String.format("invoice_%d.pdf", order.getOrderIdentifier());
+                String fileName = String.format("invoice_%d%06d.pdf", year, order.getOrderIdentifier());
 
                 oneDriveService.uploadFile(folderPath, fileName, pdf);
 
@@ -72,7 +72,7 @@ public class InvoiceUploadScheduler {
                 int year = date.getYear();
                 int month = date.getMonthValue();
                 String folderPath = String.format("/Tany/Dobropisy/%d/%d", year, month);
-                String fileName = String.format("dobropis_%d.pdf", order.getCreditNoteIdentifier());
+                String fileName = String.format("dobropis_%d%06d.pdf", year, order.getCreditNoteIdentifier());
 
                 oneDriveService.uploadFile(folderPath, fileName, pdf);
 
