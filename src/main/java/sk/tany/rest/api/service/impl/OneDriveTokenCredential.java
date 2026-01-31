@@ -26,19 +26,21 @@ public class OneDriveTokenCredential implements TokenCredential {
     private final String clientSecret;
     private final String tenantId;
     private String refreshToken;
+    private final java.util.function.Consumer<String> onTokenUpdate;
     private AccessToken currentAccessToken;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    public OneDriveTokenCredential(String clientId, String clientSecret, String tenantId, String refreshToken) {
-        this(clientId, clientSecret, tenantId, refreshToken, HttpClient.newHttpClient());
+    public OneDriveTokenCredential(String clientId, String clientSecret, String tenantId, String refreshToken, java.util.function.Consumer<String> onTokenUpdate) {
+        this(clientId, clientSecret, tenantId, refreshToken, onTokenUpdate, HttpClient.newHttpClient());
     }
 
-    public OneDriveTokenCredential(String clientId, String clientSecret, String tenantId, String refreshToken, HttpClient httpClient) {
+    public OneDriveTokenCredential(String clientId, String clientSecret, String tenantId, String refreshToken, java.util.function.Consumer<String> onTokenUpdate, HttpClient httpClient) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.tenantId = tenantId != null ? tenantId : "consumers";
         this.refreshToken = refreshToken;
+        this.onTokenUpdate = onTokenUpdate;
         this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper();
     }
@@ -69,13 +71,8 @@ public class OneDriveTokenCredential implements TokenCredential {
                 parameters.put("client_secret", clientSecret);
             }
 
-            if (refreshToken != null && !refreshToken.isEmpty()) {
-                parameters.put("refresh_token", refreshToken);
-                parameters.put("grant_type", "refresh_token");
-            } else {
-                parameters.put("grant_type", "client_credentials");
-                parameters.put("scope", "https://graph.microsoft.com/.default");
-            }
+            parameters.put("refresh_token", refreshToken);
+            parameters.put("grant_type", "refresh_token");
 
             String form = parameters.entrySet().stream()
                     .map(entry -> URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8) + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
@@ -100,7 +97,11 @@ public class OneDriveTokenCredential implements TokenCredential {
 
             // Update refresh token if provided
             if (rootNode.has("refresh_token")) {
-                this.refreshToken = rootNode.get("refresh_token").asText();
+                String newRefreshToken = rootNode.get("refresh_token").asText();
+                this.refreshToken = newRefreshToken;
+                if (onTokenUpdate != null) {
+                    onTokenUpdate.accept(newRefreshToken);
+                }
             }
 
             // Expiration buffer of 5 minutes

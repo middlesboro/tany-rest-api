@@ -28,7 +28,8 @@ class OneDriveTokenCredentialTest {
         when(mockHttpClient.send(any(HttpRequest.class), ArgumentMatchers.<HttpResponse.BodyHandler<String>>any()))
                 .thenReturn(mockResponse);
 
-        OneDriveTokenCredential credential = new OneDriveTokenCredential("client", "secret", "consumers", "refresh", mockHttpClient);
+        java.util.concurrent.atomic.AtomicReference<String> updatedToken = new java.util.concurrent.atomic.AtomicReference<>();
+        OneDriveTokenCredential credential = new OneDriveTokenCredential("client", "secret", "consumers", "refresh", updatedToken::set, mockHttpClient);
 
         AccessToken token = credential.getToken(null).block();
 
@@ -37,28 +38,8 @@ class OneDriveTokenCredentialTest {
 
         // Verify expiration is set (roughly now + 3600 - 300)
         Assertions.assertNotNull(token.getExpiresAt());
-    }
 
-    @Test
-    void testGetTokenWithClientCredentials() throws IOException, InterruptedException {
-        HttpClient mockHttpClient = mock(HttpClient.class);
-        HttpResponse<String> mockResponse = mock(HttpResponse.class);
-
-        // Client Credentials flow usually returns access_token and expires_in, but no refresh_token
-        String jsonResponse = "{\"access_token\":\"client_credentials_token\",\"expires_in\":3600}";
-
-        when(mockResponse.statusCode()).thenReturn(200);
-        when(mockResponse.body()).thenReturn(jsonResponse);
-        when(mockHttpClient.send(any(HttpRequest.class), ArgumentMatchers.<HttpResponse.BodyHandler<String>>any()))
-                .thenReturn(mockResponse);
-
-        // Initialize with null refresh token
-        OneDriveTokenCredential credential = new OneDriveTokenCredential("client", "secret", "consumers", null, mockHttpClient);
-
-        AccessToken token = credential.getToken(null).block();
-
-        Assertions.assertNotNull(token);
-        Assertions.assertEquals("client_credentials_token", token.getToken());
-        Assertions.assertNotNull(token.getExpiresAt());
+        // Verify callback was called
+        Assertions.assertEquals("new_refresh_token", updatedToken.get());
     }
 }
