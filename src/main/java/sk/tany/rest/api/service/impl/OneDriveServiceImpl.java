@@ -7,9 +7,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.domain.onedrive.OneDriveToken;
+import sk.tany.rest.api.domain.onedrive.OneDriveTokenRepository;
 import sk.tany.rest.api.service.OneDriveService;
 
 import java.io.ByteArrayInputStream;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +31,9 @@ public class OneDriveServiceImpl implements OneDriveService {
     @Value("${onedrive.refresh-token:}")
     private String refreshToken;
 
+    private final OneDriveTokenRepository oneDriveTokenRepository;
     private GraphServiceClient graphClient;
-    private static final String TOKEN_FILE_PATH = "onedrive_token.dat";
+    private static final String TOKEN_ID = "onedrive_token";
 
     @PostConstruct
     public void init() {
@@ -57,23 +61,21 @@ public class OneDriveServiceImpl implements OneDriveService {
     }
 
     private String loadPersistedToken() {
-        try {
-            java.io.File file = new java.io.File(TOKEN_FILE_PATH);
-            if (file.exists()) {
-                return java.nio.file.Files.readString(file.toPath()).trim();
-            }
-        } catch (Exception e) {
-            log.warn("Failed to load persisted OneDrive token", e);
-        }
-        return null;
+        return oneDriveTokenRepository.findById(TOKEN_ID)
+                .map(OneDriveToken::getRefreshToken)
+                .orElse(null);
     }
 
     private void persistToken(String token) {
         try {
-            java.nio.file.Files.writeString(new java.io.File(TOKEN_FILE_PATH).toPath(), token);
-            log.info("OneDrive refresh token persisted securely.");
+            OneDriveToken entity = oneDriveTokenRepository.findById(TOKEN_ID).orElse(new OneDriveToken());
+            entity.setId(TOKEN_ID);
+            entity.setRefreshToken(token);
+            entity.setUpdateDate(Instant.now());
+            oneDriveTokenRepository.save(entity);
+            log.info("OneDrive refresh token persisted securely to database.");
         } catch (Exception e) {
-            log.error("Failed to persist OneDrive token", e);
+            log.error("Failed to persist OneDrive token to database", e);
         }
     }
 
