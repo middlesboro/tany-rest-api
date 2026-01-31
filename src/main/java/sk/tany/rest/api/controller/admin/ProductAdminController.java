@@ -33,6 +33,7 @@ import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
+import sk.tany.rest.api.service.scheduler.InvoiceUploadScheduler;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class ProductAdminController {
     private final ImageService imageService;
     private final ProductAdminApiMapper productAdminApiMapper;
     private final PrestaShopImportService prestaShopImportService;
+    private final InvoiceUploadScheduler invoiceUploadScheduler;
 
     @PostMapping
     public ResponseEntity<ProductCreateResponse> createProduct(@RequestBody ProductCreateRequest product) {
@@ -166,6 +168,12 @@ public class ProductAdminController {
     @PostMapping("/import/prestashop/{id}")
     public ResponseEntity<Void> importProduct(@PathVariable String id) {
         prestaShopImportService.importProduct(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/export/invoice/onedrive")
+    public ResponseEntity<Void> exportInvoiceToOnedrive() {
+        invoiceUploadScheduler.processUploads();
         return ResponseEntity.ok().build();
     }
 }

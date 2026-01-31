@@ -1,7 +1,5 @@
 package sk.tany.rest.api.service.impl;
 
-import com.azure.identity.ClientSecretCredential;
-import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.graph.models.Drive;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import jakarta.annotation.PostConstruct;
@@ -24,9 +22,6 @@ public class OneDriveServiceImpl implements OneDriveService {
     @Value("${onedrive.client-secret:}")
     private String clientSecret;
 
-    @Value("${onedrive.tenant-id:}")
-    private String tenantId;
-
     @Value("${onedrive.user-principal-name:}")
     private String userPrincipalName;
 
@@ -34,6 +29,7 @@ public class OneDriveServiceImpl implements OneDriveService {
     private String refreshToken;
 
     private GraphServiceClient graphClient;
+    private static final String TOKEN_FILE_PATH = "onedrive_token.dat";
 
     @PostConstruct
     public void init() {
@@ -42,24 +38,42 @@ public class OneDriveServiceImpl implements OneDriveService {
             return;
         }
         try {
-            if (refreshToken != null && !refreshToken.isEmpty()) {
-                // Personal account configuration
-                RefreshTokenCredential credential = new RefreshTokenCredential(clientId, clientSecret, tenantId, refreshToken);
-                graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
-                log.info("Initialized OneDrive service with Personal Account (RefreshToken flow)");
-            } else {
-                // Business account configuration
-                ClientSecretCredential credential = new ClientSecretCredentialBuilder()
-                        .clientId(clientId)
-                        .clientSecret(clientSecret)
-                        .tenantId(tenantId)
-                        .build();
-
-                graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
-                log.info("Initialized OneDrive service with Business Account (ClientCredentials flow)");
+            String resolvedToken = loadPersistedToken();
+            if (resolvedToken == null || resolvedToken.isEmpty()) {
+                resolvedToken = refreshToken;
             }
+
+            if (resolvedToken == null || resolvedToken.isEmpty()) {
+                log.warn("OneDrive refresh token is missing. OneDrive integration will be disabled.");
+                return;
+            }
+
+            OneDriveTokenCredential credential = new OneDriveTokenCredential(clientId, clientSecret, resolvedToken, this::persistToken);
+            graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
+            log.info("Initialized OneDrive service with Personal Account (RefreshToken flow)");
         } catch (Exception e) {
             log.error("Failed to initialize OneDrive client", e);
+        }
+    }
+
+    private String loadPersistedToken() {
+        try {
+            java.io.File file = new java.io.File(TOKEN_FILE_PATH);
+            if (file.exists()) {
+                return java.nio.file.Files.readString(file.toPath()).trim();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load persisted OneDrive token", e);
+        }
+        return null;
+    }
+
+    private void persistToken(String token) {
+        try {
+            java.nio.file.Files.writeString(new java.io.File(TOKEN_FILE_PATH).toPath(), token);
+            log.info("OneDrive refresh token persisted securely.");
+        } catch (Exception e) {
+            log.error("Failed to persist OneDrive token", e);
         }
     }
 
@@ -73,12 +87,7 @@ public class OneDriveServiceImpl implements OneDriveService {
         try {
             String fullPath = folderPath.endsWith("/") ? folderPath + fileName : folderPath + "/" + fileName;
 
-            Drive drive;
-            if (refreshToken != null && !refreshToken.isEmpty()) {
-                drive = graphClient.me().drive().get();
-            } else {
-                drive = graphClient.users().byUserId(userPrincipalName).drive().get();
-            }
+            Drive drive = graphClient.me().drive().get();
             String driveId = drive.getId();
 
             String relativePath = fullPath.startsWith("/") ? fullPath.substring(1) : fullPath;
