@@ -81,6 +81,7 @@ onedrive:
   user-principal-name: ${ONEDRIVE_USER_PRINCIPAL_NAME}
 
 isklad:
+  enabled: ${ISKLAD_ENABLED:false}
   url: ${ISKLAD_URL:https://api.isklad.com/rest/v1}
   auth-id: ${ISKLAD_AUTH_ID}
   auth-key: ${ISKLAD_AUTH_KEY}

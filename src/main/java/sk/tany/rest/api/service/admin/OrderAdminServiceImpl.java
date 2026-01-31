@@ -24,11 +24,14 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.PriceBreakDown;
+import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
+import sk.tany.rest.api.mapper.ISkladMapper;
 import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
+import sk.tany.rest.api.service.isklad.ISkladService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -53,6 +56,9 @@ public class OrderAdminServiceImpl implements OrderAdminService {
     private final PaymentRepository paymentRepository;
     private final CartDiscountRepository cartDiscountRepository;
     private final SequenceService sequenceService;
+    private final ISkladService iskladService;
+    private final ISkladProperties iskladProperties;
+    private final ISkladMapper iskladMapper;
 
     @org.springframework.beans.factory.annotation.Value("${eshop.frontend-url}")
     private String frontendUrl;
@@ -352,7 +358,17 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         Order savedOrder = orderRepository.save(order);
-        return orderMapper.toDto(savedOrder);
+        OrderDto savedDto = orderMapper.toDto(savedOrder);
+
+        if (iskladProperties.isEnabled()) {
+            try {
+                iskladService.createNewOrder(iskladMapper.toCreateNewOrderRequest(savedDto));
+            } catch (Exception e) {
+                log.error("Failed to create order in iSklad for orderIdentifier {}", savedOrder.getOrderIdentifier(), e);
+            }
+        }
+
+        return savedDto;
     }
 
     @Override

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "isklad")
 public class ISkladProperties {
+    private boolean enabled;
     private String url;
     private String authId;
     private String authKey;
