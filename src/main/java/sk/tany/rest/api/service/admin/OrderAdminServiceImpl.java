@@ -85,6 +85,7 @@ public class OrderAdminServiceImpl implements OrderAdminService {
             // Existing Logic
             var order = orderMapper.toEntity(orderDto);
             var savedOrder = orderRepository.save(order);
+            processIskladExport(savedOrder);
             return orderMapper.toDto(savedOrder);
         }
     }
@@ -358,17 +359,8 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         Order savedOrder = orderRepository.save(order);
-        OrderDto savedDto = orderMapper.toDto(savedOrder);
-
-        if (iskladProperties.isEnabled()) {
-            try {
-                iskladService.createNewOrder(iskladMapper.toCreateNewOrderRequest(savedDto));
-            } catch (Exception e) {
-                log.error("Failed to create order in iSklad for orderIdentifier {}", savedOrder.getOrderIdentifier(), e);
-            }
-        }
-
-        return savedDto;
+        processIskladExport(savedOrder);
+        return orderMapper.toDto(savedOrder);
     }
 
     @Override
@@ -393,6 +385,9 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         if (order.getCreditNoteIdentifier() == null) {
             order.setCreditNoteIdentifier(existingOrder.getCreditNoteIdentifier());
         }
+        if (order.getIskladImportDate() == null) {
+            order.setIskladImportDate(existingOrder.getIskladImportDate());
+        }
 
         if (order.getStatus() != oldStatus) {
             order.getStatusHistory().add(new OrderStatusHistory(order.getStatus(), Instant.now()));
@@ -408,6 +403,7 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         var savedOrder = orderRepository.save(order);
+        processIskladExport(savedOrder);
 
         if (savedOrder.getStatus() == OrderStatus.SENT && oldStatus != OrderStatus.SENT) {
             sendOrderSentEmail(savedOrder);
@@ -441,6 +437,7 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         var savedOrder = orderRepository.save(order);
+        processIskladExport(savedOrder);
 
         if (savedOrder.getStatus() == OrderStatus.SENT && oldStatus != OrderStatus.SENT) {
             sendOrderSentEmail(savedOrder);
@@ -454,6 +451,18 @@ public class OrderAdminServiceImpl implements OrderAdminService {
     @Override
     public void deleteById(String id) {
         orderRepository.deleteById(id);
+    }
+
+    private void processIskladExport(Order order) {
+        if (iskladProperties.isEnabled() && order.getIskladImportDate() == null) {
+            try {
+                iskladService.createNewOrder(iskladMapper.toCreateNewOrderRequest(orderMapper.toDto(order)));
+                order.setIskladImportDate(Instant.now());
+                orderRepository.save(order);
+            } catch (Exception e) {
+                log.error("Failed to create order in iSklad for orderIdentifier {}", order.getOrderIdentifier(), e);
+            }
+        }
     }
 
     private void sendOrderSentEmail(Order order) {

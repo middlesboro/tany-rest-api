@@ -46,4 +46,5 @@ public class OrderDto {
     private boolean authenticatedUser;
     private Instant cancelDate;
     private Long creditNoteIdentifier;
+    private Instant iskladImportDate;
 }

@@ -15,6 +15,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class SupplierAdminServiceImpl implements SupplierAdminService {
 
     private final SupplierRepository supplierRepository;
@@ -35,18 +36,16 @@ public class SupplierAdminServiceImpl implements SupplierAdminService {
 
     @Override
     public SupplierDto save(SupplierDto supplierDto) {
+        boolean isNew = supplierDto.getId() == null;
         var supplier = supplierMapper.toEntity(supplierDto);
         var savedSupplier = supplierRepository.save(supplier);
         SupplierDto savedDto = supplierMapper.toDto(savedSupplier);
 
-        if (iskladProperties.isEnabled()) {
+        if (isNew && iskladProperties.isEnabled()) {
             try {
                 iskladService.createSupplier(iskladMapper.toCreateSupplierRequest(savedDto));
             } catch (Exception e) {
-                // Log error but don't rollback local save, or decide policy. Assuming soft failure.
-                // In real world, maybe we want to propagate or queue.
-                // For now, simple logging is typical for this stage.
-                System.err.println("Failed to sync supplier to iSklad: " + e.getMessage());
+                log.error("Failed to sync supplier to iSklad: {}", e.getMessage(), e);
             }
         }
 

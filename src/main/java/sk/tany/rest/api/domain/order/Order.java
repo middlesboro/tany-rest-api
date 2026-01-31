@@ -48,5 +48,6 @@ public class Order {
     private Long creditNoteIdentifier;
     private boolean invoiceUploadedToOneDrive;
     private boolean creditNoteUploadedToOneDrive;
+    private Instant iskladImportDate;
 
 }

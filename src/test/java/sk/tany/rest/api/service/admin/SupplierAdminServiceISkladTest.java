@@ -37,8 +37,9 @@ class SupplierAdminServiceISkladTest {
     }
 
     @Test
-    void save_shouldCallISkladService_whenEnabled() {
+    void save_shouldCallISkladService_whenEnabled_and_IsNew() {
         SupplierDto dto = new SupplierDto();
+        dto.setId(null); // Explicitly null for new
         Supplier entity = new Supplier();
         Supplier savedEntity = new Supplier();
 
@@ -56,6 +57,7 @@ class SupplierAdminServiceISkladTest {
     @Test
     void save_shouldNotCallISkladService_whenDisabled() {
         SupplierDto dto = new SupplierDto();
+        dto.setId(null);
         Supplier entity = new Supplier();
         Supplier savedEntity = new Supplier();
 
@@ -63,6 +65,23 @@ class SupplierAdminServiceISkladTest {
         when(supplierRepository.save(entity)).thenReturn(savedEntity);
         when(supplierMapper.toDto(savedEntity)).thenReturn(dto);
         when(iskladProperties.isEnabled()).thenReturn(false);
+
+        supplierAdminService.save(dto);
+
+        verify(iskladService, never()).createSupplier(any());
+    }
+
+    @Test
+    void save_shouldNotCallISkladService_whenUpdate() {
+        SupplierDto dto = new SupplierDto();
+        dto.setId("existing-id"); // Existing ID
+        Supplier entity = new Supplier();
+        Supplier savedEntity = new Supplier();
+
+        when(supplierMapper.toEntity(dto)).thenReturn(entity);
+        when(supplierRepository.save(entity)).thenReturn(savedEntity);
+        when(supplierMapper.toDto(savedEntity)).thenReturn(dto);
+        when(iskladProperties.isEnabled()).thenReturn(true); // Enabled but is update
 
         supplierAdminService.save(dto);
 

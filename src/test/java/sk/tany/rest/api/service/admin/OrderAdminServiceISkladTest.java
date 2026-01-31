@@ -19,6 +19,7 @@ import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
 import sk.tany.rest.api.service.isklad.ISkladService;
 
+import java.time.Instant;
 import java.util.ArrayList;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -84,6 +85,8 @@ class OrderAdminServiceISkladTest {
 
         // Assert
         verify(iskladService, times(1)).createNewOrder(any());
+        // Verify second save (update with import date) happened
+        verify(orderRepository, times(2)).save(any(Order.class));
     }
 
     @Test
@@ -112,5 +115,58 @@ class OrderAdminServiceISkladTest {
 
         // Assert
         verify(iskladService, never()).createNewOrder(any());
+    }
+
+    @Test
+    void update_shouldCallISkladService_whenEnabled_and_ImportDateIsNull() {
+        // Arrange
+        String orderId = "1";
+        OrderDto dto = new OrderDto();
+        dto.setId(orderId);
+
+        Order existingOrder = new Order();
+        existingOrder.setId(orderId);
+        existingOrder.setIskladImportDate(null); // Not imported yet
+
+        when(orderRepository.findById(orderId)).thenReturn(java.util.Optional.of(existingOrder));
+        when(orderMapper.toEntity(dto)).thenReturn(existingOrder);
+        when(orderRepository.save(existingOrder)).thenReturn(existingOrder);
+        when(orderMapper.toDto(existingOrder)).thenReturn(dto);
+
+        when(iskladProperties.isEnabled()).thenReturn(true);
+        when(iskladMapper.toCreateNewOrderRequest(dto)).thenReturn(sk.tany.rest.api.dto.isklad.CreateNewOrderRequest.builder().build());
+
+        // Act
+        orderAdminService.update(orderId, dto);
+
+        // Assert
+        verify(iskladService, times(1)).createNewOrder(any());
+        verify(orderRepository, times(2)).save(any(Order.class));
+    }
+
+    @Test
+    void update_shouldNotCallISkladService_whenEnabled_and_ImportDateIsPresent() {
+        // Arrange
+        String orderId = "1";
+        OrderDto dto = new OrderDto();
+        dto.setId(orderId);
+
+        Order existingOrder = new Order();
+        existingOrder.setId(orderId);
+        existingOrder.setIskladImportDate(Instant.now()); // Already imported
+
+        when(orderRepository.findById(orderId)).thenReturn(java.util.Optional.of(existingOrder));
+        when(orderMapper.toEntity(dto)).thenReturn(existingOrder);
+        when(orderRepository.save(existingOrder)).thenReturn(existingOrder);
+        when(orderMapper.toDto(existingOrder)).thenReturn(dto);
+
+        when(iskladProperties.isEnabled()).thenReturn(true);
+
+        // Act
+        orderAdminService.update(orderId, dto);
+
+        // Assert
+        verify(iskladService, never()).createNewOrder(any());
+        verify(orderRepository, times(1)).save(any(Order.class));
     }
 }
