@@ -30,6 +30,9 @@ public class OneDriveServiceImpl implements OneDriveService {
     @Value("${onedrive.user-principal-name:}")
     private String userPrincipalName;
 
+    @Value("${onedrive.refresh-token:}")
+    private String refreshToken;
+
     private GraphServiceClient graphClient;
 
     @PostConstruct
@@ -39,13 +42,22 @@ public class OneDriveServiceImpl implements OneDriveService {
             return;
         }
         try {
-            ClientSecretCredential credential = new ClientSecretCredentialBuilder()
-                    .clientId(clientId)
-                    .clientSecret(clientSecret)
-                    .tenantId(tenantId)
-                    .build();
+            if (refreshToken != null && !refreshToken.isEmpty()) {
+                // Personal account configuration
+                RefreshTokenCredential credential = new RefreshTokenCredential(clientId, clientSecret, tenantId, refreshToken);
+                graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
+                log.info("Initialized OneDrive service with Personal Account (RefreshToken flow)");
+            } else {
+                // Business account configuration
+                ClientSecretCredential credential = new ClientSecretCredentialBuilder()
+                        .clientId(clientId)
+                        .clientSecret(clientSecret)
+                        .tenantId(tenantId)
+                        .build();
 
-            graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
+                graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
+                log.info("Initialized OneDrive service with Business Account (ClientCredentials flow)");
+            }
         } catch (Exception e) {
             log.error("Failed to initialize OneDrive client", e);
         }
@@ -61,7 +73,12 @@ public class OneDriveServiceImpl implements OneDriveService {
         try {
             String fullPath = folderPath.endsWith("/") ? folderPath + fileName : folderPath + "/" + fileName;
 
-            Drive drive = graphClient.users().byUserId(userPrincipalName).drive().get();
+            Drive drive;
+            if (refreshToken != null && !refreshToken.isEmpty()) {
+                drive = graphClient.me().drive().get();
+            } else {
+                drive = graphClient.users().byUserId(userPrincipalName).drive().get();
+            }
             String driveId = drive.getId();
 
             String relativePath = fullPath.startsWith("/") ? fullPath.substring(1) : fullPath;
