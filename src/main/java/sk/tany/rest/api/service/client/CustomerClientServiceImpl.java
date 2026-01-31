@@ -15,6 +15,7 @@ import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
+import sk.tany.rest.api.exception.CartException;
 import sk.tany.rest.api.exception.CustomerException;
 import sk.tany.rest.api.mapper.AddressMapper;
 import sk.tany.rest.api.mapper.CustomerMapper;
@@ -45,7 +46,16 @@ public class CustomerClientServiceImpl implements CustomerClientService {
             customerDto = findById(customerId).orElse(null);
         }
 
-        CartDto cartDto = cartService.getOrCreateCart(cartId, customerId);
+        CartDto cartDto;
+        if (cartId == null) {
+            cartDto = cartService.getOrCreateCart(null, customerId);
+        } else {
+            cartDto = cartService.findCart(cartId)
+                    .orElseThrow(() -> new CartException.NotFound("Cart not found"));
+            if (customerId != null && cartDto.getCustomerId() == null) {
+                cartDto.setCustomerId(customerId);
+            }
+        }
 
         if (customerDto != null) {
             if (cartDto.getFirstname() == null || cartDto.getFirstname().isEmpty()) {

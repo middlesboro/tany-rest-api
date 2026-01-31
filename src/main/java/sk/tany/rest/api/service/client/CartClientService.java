@@ -2,7 +2,10 @@ package sk.tany.rest.api.service.client;
 
 import sk.tany.rest.api.dto.CartDto;
 
+import java.util.Optional;
+
 public interface CartClientService {
+    Optional<CartDto> findCart(String cartId);
     CartDto getOrCreateCart(String cartId, String customerId);
     CartDto save(CartDto cartDto);
     String addProductToCart(String cartId, String productId, Integer quantity);
