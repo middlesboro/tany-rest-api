@@ -79,3 +79,10 @@ onedrive:
   client-secret: ${ONEDRIVE_CLIENT_SECRET}
   user-principal-name: ${ONEDRIVE_USER_PRINCIPAL_NAME}
   refresh-token: ${ONEDRIVE_REFRESH_TOKEN}
+
+isklad:
+  enabled: ${ISKLAD_ENABLED:false}
+  url: ${ISKLAD_URL:https://api.isklad.com/rest/v1}
+  auth-id: ${ISKLAD_AUTH_ID}
+  auth-key: ${ISKLAD_AUTH_KEY}
+  auth-token: ${ISKLAD_AUTH_TOKEN}
