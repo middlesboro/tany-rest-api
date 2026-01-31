@@ -1,7 +1,5 @@
 package sk.tany.rest.api.service.impl;
 
-import com.azure.identity.ClientSecretCredential;
-import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.graph.models.Drive;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import jakarta.annotation.PostConstruct;
@@ -30,9 +28,6 @@ public class OneDriveServiceImpl implements OneDriveService {
     @Value("${onedrive.user-principal-name:}")
     private String userPrincipalName;
 
-    @Value("${onedrive.refresh-token:}")
-    private String refreshToken;
-
     private GraphServiceClient graphClient;
 
     @PostConstruct
@@ -42,22 +37,9 @@ public class OneDriveServiceImpl implements OneDriveService {
             return;
         }
         try {
-            if (refreshToken != null && !refreshToken.isEmpty()) {
-                // Personal account configuration
-                RefreshTokenCredential credential = new RefreshTokenCredential(clientId, clientSecret, tenantId, refreshToken);
-                graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
-                log.info("Initialized OneDrive service with Personal Account (RefreshToken flow)");
-            } else {
-                // Business account configuration
-                ClientSecretCredential credential = new ClientSecretCredentialBuilder()
-                        .clientId(clientId)
-                        .clientSecret(clientSecret)
-                        .tenantId(tenantId)
-                        .build();
-
-                graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
-                log.info("Initialized OneDrive service with Business Account (ClientCredentials flow)");
-            }
+            OneDriveTokenCredential credential = new OneDriveTokenCredential(clientId, clientSecret, tenantId, null);
+            graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
+            log.info("Initialized OneDrive service with Custom Credential (ClientCredentials/RefreshToken flow)");
         } catch (Exception e) {
             log.error("Failed to initialize OneDrive client", e);
         }
@@ -73,12 +55,7 @@ public class OneDriveServiceImpl implements OneDriveService {
         try {
             String fullPath = folderPath.endsWith("/") ? folderPath + fileName : folderPath + "/" + fileName;
 
-            Drive drive;
-            if (refreshToken != null && !refreshToken.isEmpty()) {
-                drive = graphClient.me().drive().get();
-            } else {
-                drive = graphClient.users().byUserId(userPrincipalName).drive().get();
-            }
+            Drive drive = graphClient.users().byUserId(userPrincipalName).drive().get();
             String driveId = drive.getId();
 
             String relativePath = fullPath.startsWith("/") ? fullPath.substring(1) : fullPath;

@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class RefreshTokenCredential implements TokenCredential {
+public class OneDriveTokenCredential implements TokenCredential {
 
     private final String clientId;
     private final String clientSecret;
@@ -30,11 +30,11 @@ public class RefreshTokenCredential implements TokenCredential {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    public RefreshTokenCredential(String clientId, String clientSecret, String tenantId, String refreshToken) {
+    public OneDriveTokenCredential(String clientId, String clientSecret, String tenantId, String refreshToken) {
         this(clientId, clientSecret, tenantId, refreshToken, HttpClient.newHttpClient());
     }
 
-    public RefreshTokenCredential(String clientId, String clientSecret, String tenantId, String refreshToken, HttpClient httpClient) {
+    public OneDriveTokenCredential(String clientId, String clientSecret, String tenantId, String refreshToken, HttpClient httpClient) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.tenantId = tenantId != null ? tenantId : "consumers";
@@ -49,18 +49,18 @@ public class RefreshTokenCredential implements TokenCredential {
             if (currentAccessToken != null && !currentAccessToken.isExpired()) {
                 return currentAccessToken;
             }
-            return refreshAccessToken();
+            return acquireAccessToken();
         });
     }
 
-    private synchronized AccessToken refreshAccessToken() {
+    private synchronized AccessToken acquireAccessToken() {
         // Double check locking
         if (currentAccessToken != null && !currentAccessToken.isExpired()) {
             return currentAccessToken;
         }
 
         try {
-            log.debug("Refreshing OneDrive access token...");
+            log.debug("Acquiring OneDrive access token...");
             String tokenUrl = "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token";
 
             Map<String, String> parameters = new HashMap<>();
@@ -68,9 +68,14 @@ public class RefreshTokenCredential implements TokenCredential {
             if (clientSecret != null && !clientSecret.isEmpty()) {
                 parameters.put("client_secret", clientSecret);
             }
-            parameters.put("refresh_token", refreshToken);
-            parameters.put("grant_type", "refresh_token");
-            // No specific scope requested here, it should return tokens for previously granted scopes.
+
+            if (refreshToken != null && !refreshToken.isEmpty()) {
+                parameters.put("refresh_token", refreshToken);
+                parameters.put("grant_type", "refresh_token");
+            } else {
+                parameters.put("grant_type", "client_credentials");
+                parameters.put("scope", "https://graph.microsoft.com/.default");
+            }
 
             String form = parameters.entrySet().stream()
                     .map(entry -> URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8) + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
@@ -85,8 +90,8 @@ public class RefreshTokenCredential implements TokenCredential {
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                log.error("Failed to refresh token. Status: {}, Body: {}", response.statusCode(), response.body());
-                throw new RuntimeException("Failed to refresh token: " + response.body());
+                log.error("Failed to acquire token. Status: {}, Body: {}", response.statusCode(), response.body());
+                throw new RuntimeException("Failed to acquire token: " + response.body());
             }
 
             JsonNode rootNode = objectMapper.readTree(response.body());
@@ -102,12 +107,12 @@ public class RefreshTokenCredential implements TokenCredential {
             OffsetDateTime expiresAt = OffsetDateTime.now().plusSeconds(expiresIn - 300);
             this.currentAccessToken = new AccessToken(accessToken, expiresAt);
 
-            log.debug("OneDrive access token refreshed successfully.");
+            log.debug("OneDrive access token acquired successfully.");
             return currentAccessToken;
 
         } catch (Exception e) {
-            log.error("Error refreshing token", e);
-            throw new RuntimeException("Error refreshing token", e);
+            log.error("Error acquiring token", e);
+            throw new RuntimeException("Error acquiring token", e);
         }
     }
 }
