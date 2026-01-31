@@ -22,9 +22,6 @@ public class OneDriveServiceImpl implements OneDriveService {
     @Value("${onedrive.client-secret:}")
     private String clientSecret;
 
-    @Value("${onedrive.tenant-id:}")
-    private String tenantId;
-
     @Value("${onedrive.user-principal-name:}")
     private String userPrincipalName;
 
@@ -51,7 +48,7 @@ public class OneDriveServiceImpl implements OneDriveService {
                 return;
             }
 
-            OneDriveTokenCredential credential = new OneDriveTokenCredential(clientId, clientSecret, tenantId, resolvedToken, this::persistToken);
+            OneDriveTokenCredential credential = new OneDriveTokenCredential(clientId, clientSecret, resolvedToken, this::persistToken);
             graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
             log.info("Initialized OneDrive service with Personal Account (RefreshToken flow)");
         } catch (Exception e) {

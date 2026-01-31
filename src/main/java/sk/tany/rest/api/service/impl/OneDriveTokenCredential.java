@@ -24,21 +24,19 @@ public class OneDriveTokenCredential implements TokenCredential {
 
     private final String clientId;
     private final String clientSecret;
-    private final String tenantId;
     private String refreshToken;
     private final java.util.function.Consumer<String> onTokenUpdate;
     private AccessToken currentAccessToken;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    public OneDriveTokenCredential(String clientId, String clientSecret, String tenantId, String refreshToken, java.util.function.Consumer<String> onTokenUpdate) {
-        this(clientId, clientSecret, tenantId, refreshToken, onTokenUpdate, HttpClient.newHttpClient());
+    public OneDriveTokenCredential(String clientId, String clientSecret, String refreshToken, java.util.function.Consumer<String> onTokenUpdate) {
+        this(clientId, clientSecret, refreshToken, onTokenUpdate, HttpClient.newHttpClient());
     }
 
-    public OneDriveTokenCredential(String clientId, String clientSecret, String tenantId, String refreshToken, java.util.function.Consumer<String> onTokenUpdate, HttpClient httpClient) {
+    public OneDriveTokenCredential(String clientId, String clientSecret, String refreshToken, java.util.function.Consumer<String> onTokenUpdate, HttpClient httpClient) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
-        this.tenantId = tenantId != null ? tenantId : "consumers";
         this.refreshToken = refreshToken;
         this.onTokenUpdate = onTokenUpdate;
         this.httpClient = httpClient;
@@ -63,7 +61,7 @@ public class OneDriveTokenCredential implements TokenCredential {
 
         try {
             log.debug("Acquiring OneDrive access token...");
-            String tokenUrl = "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token";
+            String tokenUrl = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token";
 
             Map<String, String> parameters = new HashMap<>();
             parameters.put("client_id", clientId);
@@ -71,6 +69,7 @@ public class OneDriveTokenCredential implements TokenCredential {
                 parameters.put("client_secret", clientSecret);
             }
 
+            parameters.put("scope", "offline_access Files.ReadWrite");
             parameters.put("refresh_token", refreshToken);
             parameters.put("grant_type", "refresh_token");
 
