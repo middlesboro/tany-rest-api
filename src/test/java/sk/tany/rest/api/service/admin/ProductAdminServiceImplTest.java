@@ -13,6 +13,7 @@ import sk.tany.rest.api.domain.review.ReviewRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.service.common.SequenceService;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -37,9 +38,26 @@ class ProductAdminServiceImplTest {
     private ReviewRepository reviewRepository;
     @Mock
     private sk.tany.rest.api.component.SlugGenerator slugGenerator;
+    @Mock
+    private SequenceService sequenceService;
 
     @InjectMocks
     private ProductAdminServiceImpl productAdminService;
+
+    @Test
+    void save_shouldSetPrestashopId_whenMissing() {
+        ProductAdminDto dto = new ProductAdminDto();
+        Product product = new Product();
+        when(productMapper.toEntity(dto)).thenReturn(product);
+        when(sequenceService.getNextSequence("product_identifier")).thenReturn(100L);
+        when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+        when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
+
+        productAdminService.save(dto);
+
+        assertThat(product.getPrestashopId()).isEqualTo(100L);
+        verify(sequenceService).getNextSequence("product_identifier");
+    }
 
     @Test
     void recalculateReviewStatistics_shouldSetZero_whenNoReviews() {

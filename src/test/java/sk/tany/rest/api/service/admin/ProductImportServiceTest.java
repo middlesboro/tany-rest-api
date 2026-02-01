@@ -24,6 +24,7 @@ import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
+import sk.tany.rest.api.service.common.SequenceService;
 
 import java.io.InputStream;
 import java.util.Collections;
@@ -58,6 +59,8 @@ class ProductImportServiceTest {
     private ProductSearchEngine productSearchEngine;
     @Mock
     private sk.tany.rest.api.component.SlugGenerator slugGenerator;
+    @Mock
+    private SequenceService sequenceService;
 
     @InjectMocks
     private ProductImportService productImportService;
@@ -81,6 +84,8 @@ class ProductImportServiceTest {
         data.setFilterParameterValue("Red");
         data.setImageUrl("http://image.com/1.jpg");
         data.setIsCover("1");
+        data.setExternalStock("0");
+        data.setIsDefaultCategory("1");
 
         entry.setData(List.of(data));
         List<ProductImportEntryDto> entries = List.of(entry);

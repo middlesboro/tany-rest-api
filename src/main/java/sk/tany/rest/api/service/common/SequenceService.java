@@ -34,4 +34,8 @@ public class SequenceService {
         sequence.setSeq(value);
         sequenceRepository.save(sequence);
     }
+
+    public synchronized boolean exists(String seqName) {
+        return sequenceRepository.findById(seqName).isPresent();
+    }
 }
