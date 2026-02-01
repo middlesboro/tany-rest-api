@@ -146,4 +146,11 @@ public class OrderRepository extends AbstractInMemoryRepository<Order> {
                 .filter(o -> !o.isCreditNoteUploadedToOneDrive())
                 .collect(Collectors.toList());
     }
+
+    public List<Order> findAllByIskladImportDateIsNullAndStatusNot(OrderStatus status) {
+        return memoryCache.values().stream()
+                .filter(o -> o.getIskladImportDate() == null)
+                .filter(o -> o.getStatus() != status)
+                .collect(Collectors.toList());
+    }
 }

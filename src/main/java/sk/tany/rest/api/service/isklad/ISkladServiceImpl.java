@@ -21,42 +21,47 @@ public class ISkladServiceImpl implements ISkladService {
 
     @Override
     public ISkladResponse<Object> createNewOrder(CreateNewOrderRequest request) {
-        return sendRequest("CreateNewOrder", request);
+        return sendRequest("CreateNewOrder", request, new ParameterizedTypeReference<ISkladResponse<Object>>() {});
     }
 
     @Override
     public ISkladResponse<Object> createProducer(CreateProducerRequest request) {
-        return sendRequest("CreateProducer", request);
+        return sendRequest("CreateProducer", request, new ParameterizedTypeReference<ISkladResponse<Object>>() {});
     }
 
     @Override
     public ISkladResponse<Object> createSupplier(CreateSupplierRequest request) {
-        return sendRequest("CreateSupplier", request);
+        return sendRequest("CreateSupplier", request, new ParameterizedTypeReference<ISkladResponse<Object>>() {});
     }
 
-    private <T> ISkladResponse<Object> sendRequest(String method, T data) {
+    @Override
+    public ISkladResponse<InventoryDetailResult> getInventory(InventoryDetailRequest request) {
+        return sendRequest("InventoryDetail", request, new ParameterizedTypeReference<ISkladResponse<InventoryDetailResult>>() {});
+    }
+
+    private <Req, Res> ISkladResponse<Res> sendRequest(String method, Req data, ParameterizedTypeReference<ISkladResponse<Res>> responseType) {
         ISkladAuth auth = ISkladAuth.builder()
                 .authId(iskladProperties.getAuthId())
                 .authKey(iskladProperties.getAuthKey())
                 .authToken(iskladProperties.getAuthToken())
                 .build();
 
-        ISkladRequest.RequestData<T> reqData = ISkladRequest.RequestData.<T>builder()
+        ISkladRequest.RequestData<Req> reqData = ISkladRequest.RequestData.<Req>builder()
                 .reqMethod(method)
                 .reqData(data)
                 .build();
 
-        ISkladRequest<T> requestWrapper = ISkladRequest.<T>builder()
+        ISkladRequest<Req> requestWrapper = ISkladRequest.<Req>builder()
                 .auth(auth)
                 .request(reqData)
                 .build();
 
         try {
-            ResponseEntity<ISkladResponse<Object>> response = restTemplate.exchange(
+            ResponseEntity<ISkladResponse<Res>> response = restTemplate.exchange(
                     iskladProperties.getUrl(),
                     HttpMethod.POST,
                     new HttpEntity<>(requestWrapper),
-                    new ParameterizedTypeReference<ISkladResponse<Object>>() {}
+                    responseType
             );
             return response.getBody();
         } catch (Exception e) {
