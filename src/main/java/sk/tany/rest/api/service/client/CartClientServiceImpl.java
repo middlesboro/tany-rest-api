@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,10 +45,41 @@ public class CartClientServiceImpl implements CartClientService {
     private final CarrierRepository carrierRepository;
     private final PaymentRepository paymentRepository;
 
+    @Override
+    public Optional<CartDto> findCart(String cartId) {
+        return cartRepository.findById(cartId).map(cart -> {
+            CartDto dto = cartMapper.toDto(cart);
+            // We need to restore manually applied codes from entity to DTO to be used in calculation
+            // But DTO uses List<CartDiscountClientDto>.
+            // So we just load the codes, put them in a temporary place or just run calculation.
+
+            // Actually, calculateCartTotals needs to know which manual codes are applied.
+            // I should pass the manual codes from entity to the calculation method.
+
+            // I'll create a transient field or just pass it.
+            // But 'calculateCartTotals' takes 'cartDto'.
+            // I'll populate 'appliedDiscounts' in DTO with dummy objects containing just codes,
+            // and let the calculator validate and expand them.
+
+            List<String> codes = cart.getDiscountCodes();
+            if (codes != null) {
+                List<CartDiscountClientDto> dtos = codes.stream().map(code -> {
+                    CartDiscountClientDto d = new CartDiscountClientDto();
+                    d.setCode(code);
+                    return d;
+                }).toList();
+                dto.setAppliedDiscounts(new ArrayList<>(dtos));
+            }
+
+            calculateCartTotals(dto);
+            return dto;
+        });
+    }
+
     public CartDto getOrCreateCart(String cartId, String customerId) {
         CartDto cartDto = null;
         if (cartId != null) {
-            cartDto = findById(cartId).orElse(null);
+            cartDto = findCart(cartId).orElse(null);
         }
 
         if (cartDto == null) {
@@ -141,40 +173,10 @@ public class CartClientServiceImpl implements CartClientService {
         return resultDto;
     }
 
-    private Optional<CartDto> findById(String id) {
-        return cartRepository.findById(id).map(cart -> {
-            CartDto dto = cartMapper.toDto(cart);
-            // We need to restore manually applied codes from entity to DTO to be used in calculation
-            // But DTO uses List<CartDiscountClientDto>.
-            // So we just load the codes, put them in a temporary place or just run calculation.
-
-            // Actually, calculateCartTotals needs to know which manual codes are applied.
-            // I should pass the manual codes from entity to the calculation method.
-
-            // I'll create a transient field or just pass it.
-            // But 'calculateCartTotals' takes 'cartDto'.
-            // I'll populate 'appliedDiscounts' in DTO with dummy objects containing just codes,
-            // and let the calculator validate and expand them.
-
-            List<String> codes = cart.getDiscountCodes();
-            if (codes != null) {
-                List<CartDiscountClientDto> dtos = codes.stream().map(code -> {
-                    CartDiscountClientDto d = new CartDiscountClientDto();
-                    d.setCode(code);
-                    return d;
-                }).toList();
-                dto.setAppliedDiscounts(dtos);
-            }
-
-            calculateCartTotals(dto);
-            return dto;
-        });
-    }
-
     public String addProductToCart(String cartId, String productId, Integer quantity) {
         CartDto cartDto = null;
         if (cartId != null) {
-            cartDto = findById(cartId).orElse(null);
+            cartDto = findCart(cartId).orElse(null);
         }
 
         if (cartDto == null) {
@@ -221,7 +223,7 @@ public class CartClientServiceImpl implements CartClientService {
 
     @Override
     public String removeProductFromCart(String cartId, String productId) {
-        CartDto cartDto = findById(cartId)
+        CartDto cartDto = findCart(cartId)
                 .orElseThrow(() -> new CartException.NotFound("Cart not found"));
 
         if (cartDto.getItems() != null) {
@@ -233,7 +235,7 @@ public class CartClientServiceImpl implements CartClientService {
 
     @Override
     public CartDto addCarrier(String cartId, String carrierId) {
-        CartDto cartDto = findById(cartId)
+        CartDto cartDto = findCart(cartId)
                 .orElseThrow(() -> new CartException.NotFound("Cart not found"));
         cartDto.setSelectedCarrierId(carrierId);
         return save(cartDto);
@@ -241,7 +243,7 @@ public class CartClientServiceImpl implements CartClientService {
 
     @Override
     public CartDto addPayment(String cartId, String paymentId) {
-        CartDto cartDto = findById(cartId)
+        CartDto cartDto = findCart(cartId)
                 .orElseThrow(() -> new CartException.NotFound("Cart not found"));
         cartDto.setSelectedPaymentId(paymentId);
         return save(cartDto);
@@ -249,7 +251,7 @@ public class CartClientServiceImpl implements CartClientService {
 
     @Override
     public CartDto addDiscount(String cartId, String code) {
-        CartDto cartDto = findById(cartId)
+        CartDto cartDto = findCart(cartId)
                 .orElseThrow(() -> new CartException.NotFound("Cart not found"));
 
         // Check if code exists
@@ -267,6 +269,7 @@ public class CartClientServiceImpl implements CartClientService {
         if (!alreadyApplied) {
             CartDiscountClientDto d = new CartDiscountClientDto();
             d.setCode(code);
+            cartDto.setAppliedDiscounts(new ArrayList<>(cartDto.getAppliedDiscounts()));
             cartDto.getAppliedDiscounts().add(d);
         }
 
@@ -279,10 +282,11 @@ public class CartClientServiceImpl implements CartClientService {
 
     @Override
     public CartDto removeDiscount(String cartId, String code) {
-        CartDto cartDto = findById(cartId)
+        CartDto cartDto = findCart(cartId)
                 .orElseThrow(() -> new CartException.NotFound("Cart not found"));
 
         if (cartDto.getAppliedDiscounts() != null) {
+            cartDto.setAppliedDiscounts(new ArrayList<>(cartDto.getAppliedDiscounts()));
             cartDto.getAppliedDiscounts().removeIf(d -> code.equals(d.getCode()));
         }
 
@@ -372,7 +376,7 @@ public class CartClientServiceImpl implements CartClientService {
         if (cartDto.getAppliedDiscounts() != null) {
             manualCodes = cartDto.getAppliedDiscounts().stream()
                     .map(CartDiscountClientDto::getCode)
-                    .filter(code -> code != null)
+                    .filter(Objects::nonNull)
                     .toList();
         }
 

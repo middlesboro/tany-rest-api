@@ -21,10 +21,12 @@ import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.mapper.CustomerMapper;
+import sk.tany.rest.api.component.SecurityUtil;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,16 +54,11 @@ class CustomerClientServiceImplTest {
     @Mock
     private PaymentClientService paymentService;
 
+    @Mock
+    private SecurityUtil securityUtil;
+
     @InjectMocks
     private CustomerClientServiceImpl customerClientService;
-
-    @BeforeEach
-    void setUp() {
-        SecurityContext securityContext = mock(SecurityContext.class);
-        Authentication authentication = mock(Authentication.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-    }
 
     @Test
     void getCustomerContext_CalculatesTotalAndSelectsOptions() {
@@ -79,7 +76,7 @@ class CustomerClientServiceImplTest {
         CartItem cartItem = new CartItem("prod1", 2);
         cartDto.setItems(List.of(cartItem));
 
-        when(cartService.getOrCreateCart(cartId, null)).thenReturn(cartDto);
+        when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
 
         ProductClientDto productDto = new ProductClientDto();
         productDto.setId("prod1");
@@ -144,7 +141,7 @@ class CustomerClientServiceImplTest {
         cartDto.setCartId(cartId);
         // selectedCarrierId and selectedPaymentId are null
 
-        when(cartService.getOrCreateCart(cartId, null)).thenReturn(cartDto);
+        when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
 
         CarrierDto carrier1 = new CarrierDto();
         carrier1.setId("carrier1");
@@ -184,8 +181,9 @@ class CustomerClientServiceImplTest {
         sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto discount = new sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto();
         discount.setCode("zlava10");
         cartDto.setAppliedDiscounts(List.of(discount));
+        cartDto.setDiscountForNewsletter(true);
 
-        when(cartService.getOrCreateCart(cartId, null)).thenReturn(cartDto);
+        when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
         when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
         when(paymentService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
 
@@ -207,7 +205,7 @@ class CustomerClientServiceImplTest {
         discount.setCode("other");
         cartDto.setAppliedDiscounts(List.of(discount));
 
-        when(cartService.getOrCreateCart(cartId, null)).thenReturn(cartDto);
+        when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
         when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
         when(paymentService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
 
