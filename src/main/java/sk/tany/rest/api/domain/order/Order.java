@@ -2,6 +2,7 @@ package sk.tany.rest.api.domain.order;
 
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
+import sk.tany.rest.api.domain.BaseEntity;
 import sk.tany.rest.api.domain.customer.Address;
 import sk.tany.rest.api.dto.PriceBreakDown;
 
@@ -10,7 +11,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-public class Order {
+public class Order implements BaseEntity {
 
     @Id
     private String id;
@@ -50,4 +51,32 @@ public class Order {
     private boolean creditNoteUploadedToOneDrive;
     private Instant iskladImportDate;
 
+    @Override
+    public void setCreatedDate(Instant date) {
+        this.createDate = date;
+    }
+    @Override
+    public Instant getCreatedDate() {
+        return this.createDate;
+    }
+    @Override
+    public void setLastModifiedDate(Instant date) {
+        this.updateDate = date;
+    }
+    @Override
+    public Instant getLastModifiedDate() {
+        return this.updateDate;
+    }
+
+    @Override
+    public Object getSortValue(String field) {
+        switch (field) {
+            case "orderIdentifier": return orderIdentifier;
+            case "finalPrice": return finalPrice;
+            case "status": return status;
+            case "email": return email;
+            case "lastname": return lastname;
+            default: return BaseEntity.super.getSortValue(field);
+        }
+    }
 }

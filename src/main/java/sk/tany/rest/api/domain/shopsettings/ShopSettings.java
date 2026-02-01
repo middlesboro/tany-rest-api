@@ -2,12 +2,13 @@ package sk.tany.rest.api.domain.shopsettings;
 
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
+import sk.tany.rest.api.domain.BaseEntity;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class ShopSettings {
+public class ShopSettings implements BaseEntity {
 
     @Id
     private String id;
@@ -27,4 +28,13 @@ public class ShopSettings {
     private String defaultCountry;
     private Instant createdDate;
     private Instant updateDate;
+
+    @Override
+    public void setLastModifiedDate(Instant date) {
+        this.updateDate = date;
+    }
+    @Override
+    public Instant getLastModifiedDate() {
+        return this.updateDate;
+    }
 }

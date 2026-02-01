@@ -2,13 +2,14 @@ package sk.tany.rest.api.domain.customer;
 
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
+import sk.tany.rest.api.domain.BaseEntity;
 import sk.tany.rest.api.domain.order.Order;
 
 import java.time.Instant;
 import java.util.List;
 
 @Data
-public class Customer {
+public class Customer implements BaseEntity {
 
     @Id
     private String id;
@@ -25,4 +26,13 @@ public class Customer {
     private List<Order> orders;
     private Instant createdDate;
     private Instant updateDate;
+
+    @Override
+    public void setLastModifiedDate(Instant date) {
+        this.updateDate = date;
+    }
+    @Override
+    public Instant getLastModifiedDate() {
+        return this.updateDate;
+    }
 }

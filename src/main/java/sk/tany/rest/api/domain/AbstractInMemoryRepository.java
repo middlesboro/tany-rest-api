@@ -10,7 +10,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.StreamSupport;
 
 @Slf4j
-public abstract class AbstractInMemoryRepository<T> {
+public abstract class AbstractInMemoryRepository<T extends BaseEntity> {
 
     protected final Nitrite nitrite;
     protected final Class<T> type;
@@ -39,7 +38,7 @@ public abstract class AbstractInMemoryRepository<T> {
         this.repository = nitrite.getRepository(type);
         log.info("Loading {} into memory...", type.getSimpleName());
         for (T entity : repository.find()) {
-            String id = getId(entity);
+            String id = entity.getId();
             if (id != null) {
                 memoryCache.put(id, entity);
             }
@@ -85,14 +84,16 @@ public abstract class AbstractInMemoryRepository<T> {
     }
 
     public T save(T entity) {
-        String id = getId(entity);
+        String id = entity.getId();
 
         if (id == null) {
             id = UUID.randomUUID().toString();
-            setId(entity, id);
-            setCreatedDate(entity);
+            entity.setId(id);
+            if (entity.getCreatedDate() == null) {
+                entity.setCreatedDate(Instant.now());
+            }
         }
-        setLastModifiedDate(entity);
+        entity.setLastModifiedDate(Instant.now());
 
         memoryCache.put(id, entity);
 
@@ -120,7 +121,7 @@ public abstract class AbstractInMemoryRepository<T> {
     }
 
     public void delete(T entity) {
-        String id = getId(entity);
+        String id = entity.getId();
         if (id != null) {
             deleteById(id);
         }
@@ -128,82 +129,6 @@ public abstract class AbstractInMemoryRepository<T> {
 
     public long count() {
         return memoryCache.size();
-    }
-
-    // Helper methods using Reflection to access common fields without a base class
-
-    private String getId(T entity) {
-        try {
-            Field field = type.getDeclaredField("id");
-            field.setAccessible(true);
-            return (String) field.get(entity);
-        } catch (Exception e) {
-            // Try superclass if needed, or assume standard field exists
-             try {
-                Field field = type.getSuperclass().getDeclaredField("id");
-                field.setAccessible(true);
-                return (String) field.get(entity);
-            } catch (Exception ex) {
-                log.error("Could not get ID for {}", type.getSimpleName(), ex);
-                return null;
-            }
-        }
-    }
-
-    private void setId(T entity, String id) {
-        try {
-            Field field = type.getDeclaredField("id");
-            field.setAccessible(true);
-            field.set(entity, id);
-        } catch (Exception e) {
-            try {
-                Field field = type.getSuperclass().getDeclaredField("id");
-                field.setAccessible(true);
-                field.set(entity, id);
-            } catch (Exception ex) {
-                 log.error("Could not set ID for {}", type.getSimpleName(), ex);
-            }
-        }
-    }
-
-    private void setCreatedDate(T entity) {
-        try {
-            Field field = type.getDeclaredField("createdDate"); // Common naming convention
-            field.setAccessible(true);
-            if (field.get(entity) == null) {
-                field.set(entity, Instant.now());
-            }
-        } catch (NoSuchFieldException e) {
-             try {
-                Field field = type.getDeclaredField("createDate"); // Alternate naming
-                field.setAccessible(true);
-                if (field.get(entity) == null) {
-                    field.set(entity, Instant.now());
-                }
-            } catch (Exception ex) {
-                // Ignore if field doesn't exist
-            }
-        } catch (Exception e) {
-            // Ignore
-        }
-    }
-
-    private void setLastModifiedDate(T entity) {
-        try {
-            Field field = type.getDeclaredField("updateDate"); // Common naming
-            field.setAccessible(true);
-            field.set(entity, Instant.now());
-        } catch (NoSuchFieldException e) {
-             try {
-                Field field = type.getDeclaredField("lastModifiedDate"); // Alternate naming
-                field.setAccessible(true);
-                field.set(entity, Instant.now());
-            } catch (Exception ex) {
-                 // Ignore
-            }
-        } catch (Exception e) {
-             // Ignore
-        }
     }
 
     protected void sort(List<T> list, Sort sort) {
@@ -215,8 +140,8 @@ public abstract class AbstractInMemoryRepository<T> {
 
         for (Sort.Order order : sort) {
             Comparator<T> currentComparator = (o1, o2) -> {
-                Object v1 = getFieldValue(o1, order.getProperty());
-                Object v2 = getFieldValue(o2, order.getProperty());
+                Object v1 = o1.getSortValue(order.getProperty());
+                Object v2 = o2.getSortValue(order.getProperty());
 
                 if (v1 == null && v2 == null) {
                     return 0;
@@ -252,29 +177,6 @@ public abstract class AbstractInMemoryRepository<T> {
 
         if (comparator != null) {
             list.sort(comparator);
-        }
-    }
-
-    private Object getFieldValue(T entity, String fieldName) {
-        try {
-            Field field = getField(type, fieldName);
-            field.setAccessible(true);
-            return field.get(entity);
-        } catch (Exception e) {
-            log.warn("Could not get value for field {} on {}", fieldName, type.getSimpleName());
-            return null;
-        }
-    }
-
-    private Field getField(Class<?> clazz, String fieldName) {
-        try {
-            return clazz.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException e) {
-            Class<?> superclass = clazz.getSuperclass();
-            if (superclass != null) {
-                return getField(superclass, fieldName);
-            }
-            throw new RuntimeException(e);
         }
     }
 }

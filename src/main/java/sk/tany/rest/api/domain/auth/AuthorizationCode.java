@@ -4,13 +4,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.dizitart.no2.objects.Id;
+import sk.tany.rest.api.domain.BaseEntity;
+
 import java.time.Instant;
 import java.util.Date;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthorizationCode {
+public class AuthorizationCode implements BaseEntity {
 
     @Id
     private String id;
@@ -27,5 +29,14 @@ public class AuthorizationCode {
         if (expiration != null) {
             this.expiration = expiration.toInstant();
         }
+    }
+
+    @Override
+    public void setLastModifiedDate(Instant date) {
+        this.updateDate = date;
+    }
+    @Override
+    public Instant getLastModifiedDate() {
+        return this.updateDate;
     }
 }

@@ -2,12 +2,13 @@ package sk.tany.rest.api.domain.payment;
 
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
+import sk.tany.rest.api.domain.BaseEntity;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class Payment {
+public class Payment implements BaseEntity {
 
     @Id
     private String id;
@@ -23,4 +24,13 @@ public class Payment {
     private boolean active;
     private Instant createdDate;
     private Instant updateDate;
+
+    @Override
+    public void setLastModifiedDate(Instant date) {
+        this.updateDate = date;
+    }
+    @Override
+    public Instant getLastModifiedDate() {
+        return this.updateDate;
+    }
 }
