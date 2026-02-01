@@ -16,6 +16,7 @@ public class CategoryDto {
     private String metaDescription;
     private boolean active;
     private boolean visible;
+    private boolean defaultCategory;
     private String slug;
     private String parentId;
     private List<CategoryDto> children;

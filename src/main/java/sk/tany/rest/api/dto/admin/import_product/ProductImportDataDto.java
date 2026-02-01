@@ -58,4 +58,7 @@ public class ProductImportDataDto {
     private Integer soldQuantity;
     @JsonProperty("external_stock")
     private String externalStock;
+    @JsonProperty("is_default_category")
+    private String isDefaultCategory;
+
 }

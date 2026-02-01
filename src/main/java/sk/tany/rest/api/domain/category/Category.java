@@ -23,6 +23,7 @@ public class Category implements BaseEntity {
     private int position;
     private boolean active;
     private boolean visible;
+    private boolean defaultCategory;
     private Instant createdDate;
     private Instant updateDate;
 
