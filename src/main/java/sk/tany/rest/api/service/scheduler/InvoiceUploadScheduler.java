@@ -52,7 +52,7 @@ public class InvoiceUploadScheduler {
                         LocalDateTime.now();
                 int year = date.getYear();
                 int month = date.getMonthValue();
-                String folderPath = String.format("/Tany/Faktury zakaznici/%d/%d", year, month);
+                String folderPath = String.format("/Tany/Faktury zakaznici/%d/%02d", year, month);
                 String fileName = String.format("invoice_%d%06d.pdf", year, order.getOrderIdentifier());
 
                 oneDriveService.uploadFile(folderPath, fileName, pdf);

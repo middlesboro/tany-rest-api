@@ -77,10 +77,26 @@ class AbstractInMemoryRepositoryTest {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    static class TestEntity {
+    static class TestEntity implements BaseEntity {
         private String id;
         private String name;
         private Integer value;
+
+        @Override
+        public void setCreatedDate(java.time.Instant date) {}
+        @Override
+        public java.time.Instant getCreatedDate() { return null; }
+        @Override
+        public void setLastModifiedDate(java.time.Instant date) {}
+        @Override
+        public java.time.Instant getLastModifiedDate() { return null; }
+
+        @Override
+        public Object getSortValue(String field) {
+            if ("name".equals(field)) return name;
+            if ("value".equals(field)) return value;
+            return BaseEntity.super.getSortValue(field);
+        }
     }
 
     static class TestRepository extends AbstractInMemoryRepository<TestEntity> {

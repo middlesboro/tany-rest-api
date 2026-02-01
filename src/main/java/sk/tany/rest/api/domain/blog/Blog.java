@@ -2,11 +2,12 @@ package sk.tany.rest.api.domain.blog;
 
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
+import sk.tany.rest.api.domain.BaseEntity;
 
 import java.time.Instant;
 
 @Data
-public class Blog {
+public class Blog implements BaseEntity {
 
     @Id
     private String id;
@@ -21,4 +22,13 @@ public class Blog {
     private boolean visible;
     private Instant createdDate;
     private Instant updateDate;
+
+    @Override
+    public void setLastModifiedDate(Instant date) {
+        this.updateDate = date;
+    }
+    @Override
+    public Instant getLastModifiedDate() {
+        return this.updateDate;
+    }
 }

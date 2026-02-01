@@ -2,13 +2,14 @@ package sk.tany.rest.api.domain.product;
 
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
+import sk.tany.rest.api.domain.BaseEntity;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
 @Data
-public class Product {
+public class Product implements BaseEntity {
 
     @Id
     private String id;
@@ -43,4 +44,31 @@ public class Product {
     private BigDecimal discountPrice;
     private BigDecimal discountPriceWithoutVat;
 
+    @Override
+    public void setCreatedDate(Instant date) {
+        this.createDate = date;
+    }
+    @Override
+    public Instant getCreatedDate() {
+        return this.createDate;
+    }
+    @Override
+    public void setLastModifiedDate(Instant date) {
+        this.updateDate = date;
+    }
+    @Override
+    public Instant getLastModifiedDate() {
+        return this.updateDate;
+    }
+
+    @Override
+    public Object getSortValue(String field) {
+        switch (field) {
+            case "title": return title;
+            case "price": return price;
+            case "active": return active;
+            case "quantity": return quantity;
+            default: return BaseEntity.super.getSortValue(field);
+        }
+    }
 }

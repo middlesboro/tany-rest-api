@@ -2,10 +2,12 @@ package sk.tany.rest.api.domain.pagecontent;
 
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
+import sk.tany.rest.api.domain.BaseEntity;
+
 import java.time.Instant;
 
 @Data
-public class PageContent {
+public class PageContent implements BaseEntity {
 
     @Id
     private String id;
@@ -14,4 +16,13 @@ public class PageContent {
     private String content;
     private Instant createdDate;
     private Instant updateDate;
+
+    @Override
+    public void setLastModifiedDate(Instant date) {
+        this.updateDate = date;
+    }
+    @Override
+    public Instant getLastModifiedDate() {
+        return this.updateDate;
+    }
 }

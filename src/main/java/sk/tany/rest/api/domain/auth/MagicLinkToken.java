@@ -4,12 +4,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.dizitart.no2.objects.Id;
+import sk.tany.rest.api.domain.BaseEntity;
+
 import java.time.Instant;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MagicLinkToken {
+public class MagicLinkToken implements BaseEntity {
 
     @Id
     private String id;
@@ -20,4 +22,13 @@ public class MagicLinkToken {
     private Instant expiration;
     private Instant createdDate;
     private Instant updateDate;
+
+    @Override
+    public void setLastModifiedDate(Instant date) {
+        this.updateDate = date;
+    }
+    @Override
+    public Instant getLastModifiedDate() {
+        return this.updateDate;
+    }
 }
