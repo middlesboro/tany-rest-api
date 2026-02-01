@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,7 +68,7 @@ public class CartClientServiceImpl implements CartClientService {
                     d.setCode(code);
                     return d;
                 }).toList();
-                dto.setAppliedDiscounts(dtos);
+                dto.setAppliedDiscounts(new ArrayList<>(dtos));
             }
 
             calculateCartTotals(dto);
@@ -268,6 +269,7 @@ public class CartClientServiceImpl implements CartClientService {
         if (!alreadyApplied) {
             CartDiscountClientDto d = new CartDiscountClientDto();
             d.setCode(code);
+            cartDto.setAppliedDiscounts(new ArrayList<>(cartDto.getAppliedDiscounts()));
             cartDto.getAppliedDiscounts().add(d);
         }
 
@@ -284,6 +286,7 @@ public class CartClientServiceImpl implements CartClientService {
                 .orElseThrow(() -> new CartException.NotFound("Cart not found"));
 
         if (cartDto.getAppliedDiscounts() != null) {
+            cartDto.setAppliedDiscounts(new ArrayList<>(cartDto.getAppliedDiscounts()));
             cartDto.getAppliedDiscounts().removeIf(d -> code.equals(d.getCode()));
         }
 
@@ -373,7 +376,7 @@ public class CartClientServiceImpl implements CartClientService {
         if (cartDto.getAppliedDiscounts() != null) {
             manualCodes = cartDto.getAppliedDiscounts().stream()
                     .map(CartDiscountClientDto::getCode)
-                    .filter(code -> code != null)
+                    .filter(Objects::nonNull)
                     .toList();
         }
 
