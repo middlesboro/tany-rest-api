@@ -25,9 +25,6 @@ public class OneDriveServiceImpl implements OneDriveService {
     @Value("${onedrive.client-secret:}")
     private String clientSecret;
 
-    @Value("${onedrive.user-principal-name:}")
-    private String userPrincipalName;
-
     @Value("${onedrive.refresh-token:}")
     private String refreshToken;
 
