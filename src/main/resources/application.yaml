@@ -60,6 +60,7 @@ security:
     - /api/categories/**
     - /api/blogs/**
     - /api/pages/**
+    - /api/homepage-grids/**
     - /v3/api-docs/**
     - /swagger-ui/**
     - /auth/magic-link/**
@@ -79,6 +80,7 @@ onedrive:
   client-secret: ${ONEDRIVE_CLIENT_SECRET}
   user-principal-name: ${ONEDRIVE_USER_PRINCIPAL_NAME}
   refresh-token: ${ONEDRIVE_REFRESH_TOKEN}
+  send-documents: ${ONEDRIVE_SEND_DOCUMENTS:true}
 
 isklad:
   enabled: ${ISKLAD_ENABLED:false}

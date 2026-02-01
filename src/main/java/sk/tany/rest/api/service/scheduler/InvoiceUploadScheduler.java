@@ -2,6 +2,7 @@ package sk.tany.rest.api.service.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import sk.tany.rest.api.domain.order.Order;
@@ -19,12 +20,19 @@ import java.util.List;
 @Slf4j
 public class InvoiceUploadScheduler {
 
+    @Value("${onedrive.send-documents}")
+    private boolean sendDocumentsToOneDrive;
+
     private final OrderRepository orderRepository;
     private final InvoiceService invoiceService;
     private final OneDriveService oneDriveService;
 
     @Scheduled(cron = "0 0 * * * *") // Every hour
     public void processUploads() {
+        if (!sendDocumentsToOneDrive) {
+            log.info("Skipping upload of send documents");
+        }
+
         log.info("Starting scheduled invoice/credit note upload to OneDrive");
         uploadInvoices();
         uploadCreditNotes();

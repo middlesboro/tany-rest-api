@@ -9,7 +9,7 @@ import sk.tany.rest.api.dto.client.homepage.HomepageGridResponse;
 import sk.tany.rest.api.service.client.HomepageClientService;
 
 @RestController
-@RequestMapping("/api/client/homepage-grids")
+@RequestMapping("/api/homepage-grids")
 @RequiredArgsConstructor
 public class HomepageClientController {
 
