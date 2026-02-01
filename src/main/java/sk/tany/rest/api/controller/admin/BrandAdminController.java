@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.BrandDto;
+import sk.tany.rest.api.dto.admin.brand.BrandAdminGetResponse;
 import sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest;
 import sk.tany.rest.api.service.admin.BrandAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
@@ -42,8 +43,8 @@ public class BrandAdminController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BrandDto> getBrand(@PathVariable String id) {
-        return brandService.findById(id)
+    public ResponseEntity<BrandAdminGetResponse> getBrand(@PathVariable String id) {
+        return brandService.findDetailById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
