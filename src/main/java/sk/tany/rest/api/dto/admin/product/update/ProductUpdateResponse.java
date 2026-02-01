@@ -30,4 +30,5 @@ public class ProductUpdateResponse {
     private BigDecimal discountPrice;
     private BigDecimal discountPriceWithoutVat;
     private BigDecimal wholesalePrice;
+    private boolean externalStock;
 }

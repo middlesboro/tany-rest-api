@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Repository
 public class ReviewRepository extends AbstractInMemoryRepository<Review> {
@@ -21,7 +22,7 @@ public class ReviewRepository extends AbstractInMemoryRepository<Review> {
     public List<Review> findAllByProductId(String productId) {
         return memoryCache.values().stream()
                 .filter(r -> r.getProductId() != null && r.getProductId().equals(productId))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public List<Review> findAllByProductId(String productId, Sort sort) {

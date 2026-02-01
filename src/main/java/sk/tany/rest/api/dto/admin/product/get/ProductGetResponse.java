@@ -35,4 +35,5 @@ public class ProductGetResponse {
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
     private BigDecimal discountPriceWithoutVat;
+    private boolean externalStock;
 }

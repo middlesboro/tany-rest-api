@@ -109,6 +109,7 @@ public class ProductImportService {
         product.setEan(baseData.getEan());
         product.setDescription(baseData.getFullDescription());
         product.setShortDescription(baseData.getShortDescription());
+        product.setExternalStock(baseData.getExternalStock().equals("1"));
 
         if (StringUtils.isNotBlank(baseData.getWeight())) {
             product.setWeight(new BigDecimal(baseData.getWeight()));

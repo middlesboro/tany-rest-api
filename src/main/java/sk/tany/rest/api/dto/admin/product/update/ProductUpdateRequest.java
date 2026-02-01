@@ -30,4 +30,5 @@ public class ProductUpdateRequest {
     private BigDecimal discountValue;
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
+    private boolean externalStock;
 }

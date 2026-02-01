@@ -35,6 +35,7 @@ public class Product implements BaseEntity {
     private List<String> images;
     private ProductStatus status;
     private boolean active = true;
+    private boolean externalStock;
     private BigDecimal averageRating;
     private Integer reviewsCount;
     private List<ProductFilterParameter> productFilterParameters;

@@ -32,4 +32,5 @@ public class ProductClientGetResponse {
     private BigDecimal discountValue;
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
+    private boolean externalStock;
 }

@@ -56,4 +56,6 @@ public class ProductImportDataDto {
     private String imageUrl;
     @JsonProperty("sold_quantity")
     private Integer soldQuantity;
+    @JsonProperty("external_stock")
+    private String externalStock;
 }

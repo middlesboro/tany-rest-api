@@ -92,6 +92,7 @@ public class CustomerClientGetResponse {
         private List<String> categoryIds;
         private String supplierId;
         private String brandId;
+        private boolean externalStock;
         private List<String> images;
         private ProductStatus status;
     }
