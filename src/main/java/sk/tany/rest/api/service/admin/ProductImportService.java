@@ -30,6 +30,7 @@ import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
 import sk.tany.rest.api.exception.ImportException;
+import sk.tany.rest.api.service.common.SequenceService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +61,7 @@ public class ProductImportService {
     private final ObjectMapper objectMapper;
     private final ProductSearchEngine productSearchEngine;
     private final SlugGenerator slugGenerator;
+    private final SequenceService sequenceService;
 
 
     public void importProducts() {
@@ -85,6 +87,11 @@ public class ProductImportService {
 
                 for (Map.Entry<String, List<ProductImportDataDto>> entry : productsMap.entrySet()) {
                     processProduct(entry.getKey(), entry.getValue());
+                }
+
+                Long maxId = productRepository.findMaxPrestashopId();
+                if (!sequenceService.exists("product_identifier")) {
+                    sequenceService.setSequence("product_identifier", maxId);
                 }
             } else {
                 log.warn("Table p_label_p not found in products.json");
@@ -152,17 +159,25 @@ public class ProductImportService {
 
         // Process Categories
         Set<String> categoryIds = new HashSet<>();
-        rows.stream()
-                .map(ProductImportDataDto::getCategoryId)
-                .filter(StringUtils::isNotBlank)
-                .distinct()
-                .forEach(catIdStr -> {
-                    try {
-                        Long catPrestaId = Long.parseLong(catIdStr);
-                        categoryRepository.findByPrestashopId(catPrestaId)
-                                .ifPresent(cat -> categoryIds.add(cat.getId()));
-                    } catch (NumberFormatException ignored) {}
-                });
+        for (ProductImportDataDto row : rows) {
+            String catIdStr = row.getCategoryId();
+            if (StringUtils.isBlank(catIdStr)) {
+                continue;
+            }
+            try {
+                Long catPrestaId = Long.parseLong(catIdStr);
+                categoryRepository.findByPrestashopId(catPrestaId)
+                        .ifPresent(cat -> {
+                            categoryIds.add(cat.getId());
+                            if ("1".equals(row.getIsDefaultCategory())) {
+                                if (!cat.isDefaultCategory()) {
+                                    cat.setDefaultCategory(true);
+                                    categoryRepository.save(cat);
+                                }
+                            }
+                        });
+            } catch (NumberFormatException ignored) {}
+        }
         product.setCategoryIds(new ArrayList<>(categoryIds));
 
         // Process Images

@@ -100,6 +100,14 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
                 .findFirst();
     }
 
+    public Long findMaxPrestashopId() {
+        return memoryCache.values().stream()
+                .map(Product::getPrestashopId)
+                .filter(Objects::nonNull)
+                .max(Long::compareTo)
+                .orElse(0L);
+    }
+
     public List<Product> findAllByProductFilterParametersFilterParameterValueId(String filterParameterValueId) {
         return memoryCache.values().stream()
                 .filter(p -> p.getProductFilterParameters() != null && p.getProductFilterParameters().stream()

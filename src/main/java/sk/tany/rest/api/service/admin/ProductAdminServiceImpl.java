@@ -15,6 +15,7 @@ import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.service.common.SequenceService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -31,6 +32,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final ImageService imageService;
     private final ReviewRepository reviewRepository;
     private final SlugGenerator slugGenerator;
+    private final SequenceService sequenceService;
 
     @Override
     public Page<ProductAdminDto> findAll(Pageable pageable) {
@@ -50,6 +52,9 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     @Override
     public ProductAdminDto save(ProductAdminDto productDto) {
         var product = productMapper.toEntity(productDto);
+        if (product.getPrestashopId() == null) {
+            product.setPrestashopId(sequenceService.getNextSequence("product_identifier"));
+        }
         recalculateReviewStatistics(product);
         calculateProductPrices(product);
         if (StringUtils.isBlank(product.getSlug())) {
