@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import sk.tany.rest.api.domain.category.Category;
+import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
 import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
 import sk.tany.rest.api.dto.client.product.list.ProductClientListResponse;
 import sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
-import sk.tany.rest.api.domain.category.Category;
-import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.mapper.ProductClientApiMapper;
 import sk.tany.rest.api.service.client.ProductClientService;
 
@@ -53,7 +53,10 @@ public class ProductClientController {
                         categoryRepository.findAllById(response.getCategoryIds()).stream()
                                 .filter(Category::isDefaultCategory)
                                 .findFirst()
-                                .ifPresent(category -> response.setDefaultCategoryTitle(category.getTitle()));
+                                .ifPresent(category -> {
+                                    response.setDefaultCategoryTitle(category.getTitle());
+                                    response.setDefaultCategoryId(category.getId());
+                                });
                     }
                     return response;
                 })
