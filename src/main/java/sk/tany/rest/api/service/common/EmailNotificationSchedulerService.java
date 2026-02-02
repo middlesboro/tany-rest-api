@@ -90,8 +90,10 @@ public class EmailNotificationSchedulerService {
                         .append("</tr>");
             }
 
-            String body = template.replace("{{PRODUCTS_LIST}}", productsListHtml.toString());
-            emailService.sendEmail(to, "Products Back In Stock!", body, true, null);
+            String body = template
+                    .replace("{{PRODUCTS_LIST}}", productsListHtml.toString())
+                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
+            emailService.sendEmail(to, "Produkt je opäť na sklade!", body, true, null);
 
         } catch (Exception e) {
             log.error("Failed to send back-in-stock email to {}", to, e);

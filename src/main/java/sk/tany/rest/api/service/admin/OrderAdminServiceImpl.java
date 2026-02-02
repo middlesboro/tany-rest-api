@@ -480,9 +480,10 @@ public class OrderAdminServiceImpl implements OrderAdminService {
             String body = template
                     .replace("{{firstname}}", firstname)
                     .replace("{{orderIdentifier}}", orderIdentifier)
-                    .replace("{{carrierOrderStateLink}}", carrierLink);
+                    .replace("{{carrierOrderStateLink}}", carrierLink)
+                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
 
-            emailService.sendEmail(order.getEmail(), "Order Shipped", body, true, null);
+            emailService.sendEmail(order.getEmail(), "Objednávka odoslaná", body, true, null);
             log.info("Sent 'Order Sent' email for order {}", order.getOrderIdentifier());
 
         } catch (Exception e) {
@@ -514,9 +515,10 @@ public class OrderAdminServiceImpl implements OrderAdminService {
             String body = template
                     .replace("{{firstname}}", firstname)
                     .replace("{{orderIdentifier}}", orderIdentifier)
-                    .replace("{{orderConfirmationLink}}", orderConfirmationLink);
+                    .replace("{{orderConfirmationLink}}", orderConfirmationLink)
+                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
 
-            emailService.sendEmail(order.getEmail(), "Order Paid", body, true, null);
+            emailService.sendEmail(order.getEmail(), "Objednávka zaplatená", body, true, null);
             log.info("Sent 'Order Paid' email for order {}", order.getOrderIdentifier());
 
         } catch (Exception e) {
