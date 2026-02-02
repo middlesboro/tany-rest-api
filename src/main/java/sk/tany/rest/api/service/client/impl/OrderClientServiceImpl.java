@@ -302,6 +302,7 @@ public class OrderClientServiceImpl implements OrderClientService {
             String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
             template = template.replace("{{firstname}}", HtmlUtils.htmlEscape(firstname));
             template = template.replace("{{orderIdentifier}}", String.valueOf(order.getOrderIdentifier()));
+            template = template.replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
 
             // Products
             StringBuilder productsHtml = new StringBuilder();

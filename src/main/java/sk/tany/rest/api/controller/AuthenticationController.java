@@ -70,7 +70,9 @@ public class AuthenticationController {
             String baseUrl = customer.getRole() == Role.ADMIN ? frontendAdminUrl : frontendUrl;
             String link = baseUrl + "/magic-link?token=" + exchangeToken;
 
-            String body = loadTemplate().replace("{{link}}", link);
+            String body = loadTemplate()
+                    .replace("{{link}}", link)
+                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
             emailService.sendEmail(email, "Odkaz pre prihlásenie", body, true, null);
         }
 

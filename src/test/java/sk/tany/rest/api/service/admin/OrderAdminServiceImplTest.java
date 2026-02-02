@@ -20,6 +20,9 @@ import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
+import sk.tany.rest.api.config.ISkladProperties;
+import sk.tany.rest.api.service.isklad.ISkladService;
+import sk.tany.rest.api.mapper.ISkladMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -51,6 +54,12 @@ class OrderAdminServiceImplTest {
     private CartDiscountRepository cartDiscountRepository;
     @Mock
     private SequenceService sequenceService;
+    @Mock
+    private ISkladProperties iskladProperties;
+    @Mock
+    private ISkladService iskladService;
+    @Mock
+    private ISkladMapper iskladMapper;
 
     @InjectMocks
     private OrderAdminServiceImpl orderAdminService;
@@ -202,7 +211,7 @@ class OrderAdminServiceImplTest {
 
         orderAdminService.update(orderId, orderDto);
 
-        verify(emailService, times(1)).sendEmail(eq("test@example.com"), contains("Order Shipped"), anyString(), eq(true), any());
+        verify(emailService, times(1)).sendEmail(eq("test@example.com"), contains("Objednávka odoslaná"), anyString(), eq(true), any());
     }
 
     @Test
@@ -229,7 +238,7 @@ class OrderAdminServiceImplTest {
 
         orderAdminService.update(orderId, orderDto);
 
-        verify(emailService, times(1)).sendEmail(eq("test@example.com"), contains("Order Paid"), anyString(), eq(true), any());
+        verify(emailService, times(1)).sendEmail(eq("test@example.com"), contains("Objednávka zaplatená"), anyString(), eq(true), any());
     }
 
     @Test
