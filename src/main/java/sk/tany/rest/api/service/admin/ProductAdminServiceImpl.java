@@ -53,7 +53,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     public ProductAdminDto save(ProductAdminDto productDto) {
         var product = productMapper.toEntity(productDto);
         if (product.getProductIdentifier() == null) {
-            product.setProductIdentifier(sequenceService.getNextSequence("product_sequence"));
+            product.setProductIdentifier(sequenceService.getNextSequence("product_identifier"));
         }
         recalculateReviewStatistics(product);
         calculateProductPrices(product);

@@ -90,7 +90,7 @@ public class ProductImportService {
                 }
 
                 Long maxId = productRepository.findMaxProductIdentifier();
-                sequenceService.setSequence("product_sequence", maxId);
+                sequenceService.setSequence("product_identifier", maxId);
             } else {
                 log.warn("Table p_label_p not found in products.json");
             }
