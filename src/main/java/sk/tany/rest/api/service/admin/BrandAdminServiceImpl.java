@@ -6,9 +6,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.dto.BrandDto;
+import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
+import sk.tany.rest.api.exception.BrandException;
 import sk.tany.rest.api.mapper.BrandMapper;
 import sk.tany.rest.api.service.common.ImageService;
-import sk.tany.rest.api.exception.BrandException;
+import sk.tany.rest.api.service.isklad.ISkladService;
 
 import java.util.Optional;
 
@@ -19,6 +21,7 @@ public class BrandAdminServiceImpl implements BrandAdminService {
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
     private final ImageService imageService;
+    private final ISkladService iSkladService;
 
     @Override
     public Page<BrandDto> findAll(Pageable pageable) {
@@ -34,6 +37,12 @@ public class BrandAdminServiceImpl implements BrandAdminService {
     public BrandDto save(BrandDto brandDto) {
         var brand = brandMapper.toEntity(brandDto);
         var savedBrand = brandRepository.save(brand);
+
+        CreateBrandRequest createBrandRequest = new CreateBrandRequest();
+        createBrandRequest.setName(brandDto.getName());
+        createBrandRequest.setCountryCode("SK");
+        iSkladService.createBrand(createBrandRequest);
+
         return brandMapper.toDto(savedBrand);
     }
 

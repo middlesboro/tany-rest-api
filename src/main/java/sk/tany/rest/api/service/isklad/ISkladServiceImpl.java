@@ -9,7 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.config.ISkladProperties;
-import sk.tany.rest.api.dto.isklad.*;
+import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
+import sk.tany.rest.api.dto.isklad.CreateNewOrderRequest;
+import sk.tany.rest.api.dto.isklad.CreateSupplierRequest;
+import sk.tany.rest.api.dto.isklad.ISkladAuth;
+import sk.tany.rest.api.dto.isklad.ISkladRequest;
+import sk.tany.rest.api.dto.isklad.ISkladResponse;
+import sk.tany.rest.api.dto.isklad.InventoryDetailRequest;
+import sk.tany.rest.api.dto.isklad.InventoryDetailResult;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +32,7 @@ public class ISkladServiceImpl implements ISkladService {
     }
 
     @Override
-    public ISkladResponse<Object> createProducer(CreateProducerRequest request) {
+    public ISkladResponse<Object> createBrand(CreateBrandRequest request) {
         return sendRequest("CreateProducer", request, new ParameterizedTypeReference<ISkladResponse<Object>>() {});
     }
 

@@ -12,8 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.config.ISkladProperties;
+import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
 import sk.tany.rest.api.dto.isklad.CreateNewOrderRequest;
-import sk.tany.rest.api.dto.isklad.CreateProducerRequest;
 import sk.tany.rest.api.dto.isklad.CreateSupplierRequest;
 import sk.tany.rest.api.dto.isklad.ISkladResponse;
 
@@ -63,8 +63,8 @@ class ISkladServiceImplTest {
     }
 
     @Test
-    void createProducer() {
-        CreateProducerRequest request = CreateProducerRequest.builder().name("Producer").build();
+    void createBrand() {
+        CreateBrandRequest request = CreateBrandRequest.builder().name("Producer").build();
         ISkladResponse<Object> mockResponse = new ISkladResponse<>();
         mockResponse.setAuthStatus(200);
 
@@ -75,7 +75,7 @@ class ISkladServiceImplTest {
                 any(ParameterizedTypeReference.class)
         )).thenReturn(new ResponseEntity<>(mockResponse, HttpStatus.OK));
 
-        ISkladResponse<Object> response = iSkladService.createProducer(request);
+        ISkladResponse<Object> response = iSkladService.createBrand(request);
 
         assertNotNull(response);
         assertEquals(200, response.getAuthStatus());

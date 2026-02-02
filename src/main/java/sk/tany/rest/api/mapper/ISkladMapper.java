@@ -2,7 +2,6 @@ package sk.tany.rest.api.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.SupplierDto;
@@ -10,13 +9,11 @@ import sk.tany.rest.api.dto.isklad.CreateNewOrderRequest;
 import sk.tany.rest.api.dto.isklad.CreateSupplierRequest;
 import sk.tany.rest.api.dto.isklad.ISkladItem;
 
-import java.math.BigDecimal;
-
 @Mapper(componentModel = "spring")
 public interface ISkladMapper {
 
     @Mapping(target = "countryCode", constant = "SK") // Defaulting as not present in SupplierDto
-    @Mapping(target = "autoShipmentLoad", constant = "0")
+    @Mapping(target = "autoShipmentLoad", constant = "1")
     CreateSupplierRequest toCreateSupplierRequest(SupplierDto supplierDto);
 
     @Mapping(target = "originalOrderId", source = "orderIdentifier")

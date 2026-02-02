@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateProducerRequest {
+public class CreateBrandRequest {
     private String name;
 
     @JsonProperty("country_code")

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
+import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierPriceRange;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
@@ -24,7 +25,6 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.PriceBreakDown;
-import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
 import sk.tany.rest.api.mapper.ISkladMapper;
@@ -85,7 +85,6 @@ public class OrderAdminServiceImpl implements OrderAdminService {
             // Existing Logic
             var order = orderMapper.toEntity(orderDto);
             var savedOrder = orderRepository.save(order);
-            processIskladExport(savedOrder);
             return orderMapper.toDto(savedOrder);
         }
     }
@@ -359,7 +358,6 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         Order savedOrder = orderRepository.save(order);
-        processIskladExport(savedOrder);
         return orderMapper.toDto(savedOrder);
     }
 
@@ -403,8 +401,6 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         var savedOrder = orderRepository.save(order);
-        processIskladExport(savedOrder);
-
         if (savedOrder.getStatus() == OrderStatus.SENT && oldStatus != OrderStatus.SENT) {
             sendOrderSentEmail(savedOrder);
         } else if (savedOrder.getStatus() == OrderStatus.PAID && oldStatus != OrderStatus.PAID) {
@@ -437,8 +433,6 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         var savedOrder = orderRepository.save(order);
-        processIskladExport(savedOrder);
-
         if (savedOrder.getStatus() == OrderStatus.SENT && oldStatus != OrderStatus.SENT) {
             sendOrderSentEmail(savedOrder);
         } else if (savedOrder.getStatus() == OrderStatus.PAID && oldStatus != OrderStatus.PAID) {
