@@ -117,6 +117,9 @@ public class ProductImportService {
         product.setDescription(baseData.getFullDescription());
         product.setShortDescription(baseData.getShortDescription());
         product.setExternalStock(baseData.getExternalStock().equals("1"));
+        product.setMetaTitle(baseData.getMetaTitle());
+        product.setMetaDescription(baseData.getMetaDescription());
+        product.setSlug(baseData.getLinkRewrite());
 
         if (StringUtils.isNotBlank(baseData.getWeight())) {
             product.setWeight(new BigDecimal(baseData.getWeight()));

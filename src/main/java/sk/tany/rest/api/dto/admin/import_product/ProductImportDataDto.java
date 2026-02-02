@@ -60,5 +60,10 @@ public class ProductImportDataDto {
     private String externalStock;
     @JsonProperty("is_default_category")
     private String isDefaultCategory;
-
+    @JsonProperty("meta_title")
+    private String metaTitle;
+    @JsonProperty("meta_description")
+    private String metaDescription;
+    @JsonProperty("link_rewrite")
+    private String linkRewrite;
 }
