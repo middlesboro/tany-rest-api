@@ -454,7 +454,7 @@ public class OrderAdminServiceImpl implements OrderAdminService {
     }
 
     private void processIskladExport(Order order) {
-        if (iskladProperties.isEnabled() && order.getIskladImportDate() == null) {
+        if (order.getIskladImportDate() == null) {
             try {
                 iskladService.createNewOrder(iskladMapper.toCreateNewOrderRequest(orderMapper.toDto(order)));
                 order.setIskladImportDate(Instant.now());

@@ -36,4 +36,5 @@ public class ProductGetResponse {
     private BigDecimal discountPrice;
     private BigDecimal discountPriceWithoutVat;
     private boolean externalStock;
+    private String defaultCategoryId;
 }

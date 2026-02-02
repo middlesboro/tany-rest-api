@@ -32,7 +32,7 @@ public class ProductImportAdminController {
     @DeleteMapping("/delete-all-products")
     public void deleteProducts() {
         productRepository.deleteAll();
-        brandRepository.deleteAll();
+//        brandRepository.deleteAll();
         reviewRepository.deleteAll();
     }
 

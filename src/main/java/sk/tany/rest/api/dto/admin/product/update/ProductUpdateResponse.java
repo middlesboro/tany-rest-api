@@ -31,4 +31,5 @@ public class ProductUpdateResponse {
     private BigDecimal discountPriceWithoutVat;
     private BigDecimal wholesalePrice;
     private boolean externalStock;
+    private String defaultCategoryId;
 }

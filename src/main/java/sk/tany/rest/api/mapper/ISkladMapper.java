@@ -2,12 +2,15 @@ package sk.tany.rest.api.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.SupplierDto;
 import sk.tany.rest.api.dto.isklad.CreateNewOrderRequest;
 import sk.tany.rest.api.dto.isklad.CreateSupplierRequest;
 import sk.tany.rest.api.dto.isklad.ISkladItem;
+
+import java.math.BigDecimal;
 
 @Mapper(componentModel = "spring")
 public interface ISkladMapper {
@@ -28,17 +31,17 @@ public interface ISkladMapper {
     @Mapping(target = "name", source = "firstname")
     @Mapping(target = "surname", source = "lastname")
     @Mapping(target = "street", source = "deliveryAddress.street")
-    @Mapping(target = "streetNumber", constant = ".") // Mandatory but missing in source
+    @Mapping(target = "streetNumber", expression = "java(getStreetNumber(orderDto.getDeliveryAddress().getStreet()))")
     @Mapping(target = "city", source = "deliveryAddress.city")
     @Mapping(target = "postalCode", source = "deliveryAddress.zip")
-    @Mapping(target = "country", source = "deliveryAddress.country")
+    @Mapping(target = "country", constant = "SK")
     // Billing Address (fa_)
     @Mapping(target = "faCompany", ignore = true) // Not in OrderDto
     @Mapping(target = "faStreet", source = "invoiceAddress.street")
-    @Mapping(target = "faStreetNumber", constant = ".") // Mandatory but missing
+    @Mapping(target = "faStreetNumber", expression = "java(getStreetNumber(orderDto.getInvoiceAddress().getStreet()))")
     @Mapping(target = "faCity", source = "invoiceAddress.city")
     @Mapping(target = "faPostalCode", source = "invoiceAddress.zip")
-    @Mapping(target = "faCountry", source = "invoiceAddress.country")
+    @Mapping(target = "faCountry", constant = "SK")
     @Mapping(target = "faIco", ignore = true)
     @Mapping(target = "faDic", ignore = true)
     @Mapping(target = "faIcdph", ignore = true)
@@ -55,13 +58,12 @@ public interface ISkladMapper {
     @Mapping(target = "gpsLat", ignore = true)
     @Mapping(target = "gpsLong", ignore = true)
     @Mapping(target = "currency", constant = "EUR")
-    @Mapping(target = "destinationCountryCode", source = "deliveryAddress.country")
     @Mapping(target = "deliveryBranchId", ignore = true)
     @Mapping(target = "externalBranchId", ignore = true)
-    @Mapping(target = "defaultTax", constant = "20")
+    @Mapping(target = "defaultTax", constant = "23")
     @Mapping(target = "idPayment", constant = "1")
     @Mapping(target = "codPriceWithoutTax", ignore = true)
-    @Mapping(target = "codPrice", ignore = true)
+    @Mapping(target = "codPrice", expression = "java(getCodPrice(orderDto))")
     @Mapping(target = "declaredValue", ignore = true)
     @Mapping(target = "depositWithoutTax", ignore = true)
     @Mapping(target = "deposit", ignore = true)
@@ -89,10 +91,31 @@ public interface ISkladMapper {
     @Mapping(target = "priceWithTax", source = "price")
     @Mapping(target = "expiration", constant = "0")
     @Mapping(target = "expValue", ignore = true)
-    @Mapping(target = "tax", constant = "20")
+    @Mapping(target = "tax", constant = "23")
     ISkladItem toISkladItem(OrderItemDto item);
 
     default Integer isCod(OrderDto orderDto) {
-        return 0;
+        return orderDto.getPaymentType() == PaymentType.COD ? 1 : 0;
+    }
+
+    default BigDecimal getCodPrice(OrderDto orderDto) {
+        if (orderDto.getPaymentType() == PaymentType.COD) {
+            return orderDto.getFinalPrice();
+        }
+
+        return null;
+    }
+
+    default String getStreetNumber(String street) {
+        if (street == null || street.isEmpty()) {
+            return street;
+        }
+
+        int lastSpaceIndex = street.lastIndexOf(' ');
+        if (lastSpaceIndex == -1) {
+            return street;
+        }
+
+        return street.substring(lastSpaceIndex + 1);
     }
 }

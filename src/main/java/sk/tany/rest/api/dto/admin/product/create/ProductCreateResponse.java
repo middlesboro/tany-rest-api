@@ -29,4 +29,5 @@ public class ProductCreateResponse {
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
     private boolean externalStock;
+    private String defaultCategoryId;
 }

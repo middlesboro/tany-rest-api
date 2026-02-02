@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.dto.OrderDto;
@@ -43,6 +44,7 @@ public class OrderAdminController {
     private final OrderRepository orderRepository;
     private final InvoiceService invoiceService;
     private final OrderAdminApiMapper orderAdminApiMapper;
+    private final CartRepository cartRepository;
 
     @PostMapping
     public ResponseEntity<OrderAdminCreateResponse> createOrder(@RequestBody OrderAdminCreateRequest order) {
@@ -124,6 +126,7 @@ public class OrderAdminController {
     @DeleteMapping("/all")
     public ResponseEntity<Void> deleteOrder() {
         orderRepository.deleteAll();
+        cartRepository.deleteAll();
         return ResponseEntity.noContent().build();
     }
 }
