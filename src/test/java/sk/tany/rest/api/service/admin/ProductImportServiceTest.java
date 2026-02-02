@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -112,7 +113,11 @@ class ProductImportServiceTest {
             b.setId("b1");
             return b;
         });
-        when(categoryRepository.findByPrestashopId(10L)).thenReturn(Optional.of(new Category()));
+        when(categoryRepository.findByPrestashopId(10L)).thenAnswer(i -> {
+            Category c = new Category();
+            c.setId("cat10");
+            return Optional.of(c);
+        });
         when(productLabelRepository.findByTitle("NewLabel")).thenReturn(Optional.empty());
         when(productLabelRepository.save(any(ProductLabel.class))).thenAnswer(i -> {
             ProductLabel l = i.getArgument(0);
@@ -136,7 +141,7 @@ class ProductImportServiceTest {
         productImportService.importProducts();
 
         // Assert
-        verify(productRepository).save(any(Product.class));
+        verify(productRepository).save(argThat(p -> "cat10".equals(p.getDefaultCategoryId())));
         verify(supplierRepository).save(any(Supplier.class));
         verify(brandRepository).save(any(Brand.class));
         verify(productLabelRepository).save(any(ProductLabel.class));
