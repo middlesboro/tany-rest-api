@@ -1,13 +1,17 @@
 package sk.tany.rest.api.mapper;
 
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.springframework.beans.factory.annotation.Autowired;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.admin.order.create.OrderAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.order.create.OrderAdminCreateResponse;
 import sk.tany.rest.api.dto.admin.order.get.OrderAdminGetResponse;
@@ -24,6 +28,8 @@ public abstract class OrderAdminApiMapper {
     protected CarrierRepository carrierRepository;
     @Autowired
     protected PaymentRepository paymentRepository;
+    @Autowired
+    protected ProductRepository productRepository;
 
     @Mapping(target = "id", ignore = true)
     public abstract OrderDto toDto(OrderAdminCreateRequest request);
@@ -73,5 +79,18 @@ public abstract class OrderAdminApiMapper {
             name = (dto.getFirstname() != null ? dto.getFirstname() : "") + " " + (dto.getLastname() != null ? dto.getLastname() : "");
         }
         return name != null ? name.trim() : null;
+    }
+
+    @AfterMapping
+    protected void fillCurrentQuantity(@MappingTarget OrderAdminGetResponse response) {
+        if (response.getItems() != null) {
+            for (OrderItemDto item : response.getItems()) {
+                if (item.getId() != null) {
+                    productRepository.findById(item.getId()).ifPresent(p -> {
+                        item.setCurrentQuantity(p.getQuantity());
+                    });
+                }
+            }
+        }
     }
 }

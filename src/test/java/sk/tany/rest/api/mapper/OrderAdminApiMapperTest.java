@@ -7,7 +7,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.OrderDto;
+import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.admin.order.create.OrderAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.order.create.OrderAdminCreateResponse;
 import sk.tany.rest.api.dto.admin.order.get.OrderAdminGetResponse;
@@ -25,6 +28,8 @@ public class OrderAdminApiMapperTest {
 
     @Mock
     private CustomerRepository customerRepository;
+    @Mock
+    private ProductRepository productRepository;
 
     private OrderAdminApiMapper mapper;
 
@@ -42,6 +47,8 @@ public class OrderAdminApiMapperTest {
                 response.setCustomerName(resolveCustomerName(dto));
                 response.setEmail(dto.getEmail());
                 response.setPhone(dto.getPhone());
+                response.setItems(dto.getItems()); // Simulate mapping items
+                fillCurrentQuantity(response); // Simulate AfterMapping
                 return response;
             }
             @Override
@@ -52,6 +59,7 @@ public class OrderAdminApiMapperTest {
             public OrderAdminUpdateResponse toUpdateResponse(OrderDto dto) { return null; }
         };
         mapper.customerRepository = customerRepository;
+        mapper.productRepository = productRepository;
     }
 
     @Test
@@ -104,5 +112,25 @@ public class OrderAdminApiMapperTest {
         OrderAdminGetResponse response = mapper.toGetResponse(dto);
         assertEquals("test@example.com", response.getEmail());
         assertEquals("123456789", response.getPhone());
+    }
+
+    @Test
+    public void testFillCurrentQuantity() {
+        OrderDto dto = new OrderDto();
+        java.util.List<OrderItemDto> items = new java.util.ArrayList<>();
+        OrderItemDto item1 = new OrderItemDto();
+        item1.setId("p1");
+        items.add(item1);
+        dto.setItems(items);
+
+        Product product = new Product();
+        product.setId("p1");
+        product.setQuantity(100);
+
+        when(productRepository.findById("p1")).thenReturn(Optional.of(product));
+
+        OrderAdminGetResponse response = mapper.toGetResponse(dto);
+        assertEquals(1, response.getItems().size());
+        assertEquals(100, response.getItems().get(0).getCurrentQuantity());
     }
 }
