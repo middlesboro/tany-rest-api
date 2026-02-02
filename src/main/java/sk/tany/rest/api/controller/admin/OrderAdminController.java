@@ -114,6 +114,12 @@ public class OrderAdminController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/export-isklad")
+    public ResponseEntity<Void> exportOrderToIsklad(@PathVariable String id) {
+        orderService.exportToIsklad(id);
+        return ResponseEntity.ok().build();
+    }
+
     // todo remove before prod
     @DeleteMapping("/all")
     public ResponseEntity<Void> deleteOrder() {

@@ -59,7 +59,7 @@ class OrderAdminServiceISkladTest {
     }
 
     @Test
-    void save_shouldCallISkladService_whenEnabled_and_OrderIsNew() {
+    void save_shouldNotCallISkladService_evenIfEnabled() {
         // Arrange
         OrderDto dto = new OrderDto();
         dto.setId(null); // New Order
@@ -78,15 +78,12 @@ class OrderAdminServiceISkladTest {
         when(orderMapper.toDto(savedEntity)).thenReturn(dto);
 
         when(iskladProperties.isEnabled()).thenReturn(true);
-        when(iskladMapper.toCreateNewOrderRequest(dto)).thenReturn(sk.tany.rest.api.dto.isklad.CreateNewOrderRequest.builder().build());
 
         // Act
         orderAdminService.save(dto);
 
         // Assert
-        verify(iskladService, times(1)).createNewOrder(any());
-        // Verify second save (update with import date) happened
-        verify(orderRepository, times(2)).save(any(Order.class));
+        verify(iskladService, never()).createNewOrder(any());
     }
 
     @Test
@@ -118,7 +115,7 @@ class OrderAdminServiceISkladTest {
     }
 
     @Test
-    void update_shouldCallISkladService_whenEnabled_and_ImportDateIsNull() {
+    void update_shouldNotCallISkladService_evenIfEnabled() {
         // Arrange
         String orderId = "1";
         OrderDto dto = new OrderDto();
@@ -134,14 +131,12 @@ class OrderAdminServiceISkladTest {
         when(orderMapper.toDto(existingOrder)).thenReturn(dto);
 
         when(iskladProperties.isEnabled()).thenReturn(true);
-        when(iskladMapper.toCreateNewOrderRequest(dto)).thenReturn(sk.tany.rest.api.dto.isklad.CreateNewOrderRequest.builder().build());
 
         // Act
         orderAdminService.update(orderId, dto);
 
         // Assert
-        verify(iskladService, times(1)).createNewOrder(any());
-        verify(orderRepository, times(2)).save(any(Order.class));
+        verify(iskladService, never()).createNewOrder(any());
     }
 
     @Test
@@ -168,5 +163,28 @@ class OrderAdminServiceISkladTest {
         // Assert
         verify(iskladService, never()).createNewOrder(any());
         verify(orderRepository, times(1)).save(any(Order.class));
+    }
+
+    @Test
+    void exportToIsklad_shouldCallISkladService_whenEnabled_and_ImportDateIsNull() {
+        // Arrange
+        String orderId = "1";
+        Order order = new Order();
+        order.setId(orderId);
+        order.setIskladImportDate(null);
+
+        OrderDto dto = new OrderDto();
+
+        when(orderRepository.findById(orderId)).thenReturn(java.util.Optional.of(order));
+        when(iskladProperties.isEnabled()).thenReturn(true);
+        when(orderMapper.toDto(order)).thenReturn(dto);
+        when(iskladMapper.toCreateNewOrderRequest(dto)).thenReturn(sk.tany.rest.api.dto.isklad.CreateNewOrderRequest.builder().build());
+
+        // Act
+        orderAdminService.exportToIsklad(orderId);
+
+        // Assert
+        verify(iskladService, times(1)).createNewOrder(any());
+        verify(orderRepository, times(1)).save(order);
     }
 }

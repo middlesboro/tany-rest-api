@@ -18,4 +18,5 @@ public class OrderAdminListResponse {
     private OrderStatus status;
     private Instant createDate;
     private String carrierOrderStateLink;
+    private Instant iskladImportDate;
 }
