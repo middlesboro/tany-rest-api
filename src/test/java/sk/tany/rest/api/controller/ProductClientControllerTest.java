@@ -105,9 +105,11 @@ class ProductClientControllerTest {
 
         ProductClientDto dto = new ProductClientDto();
         dto.setCategoryIds(Collections.singletonList(categoryId));
+        dto.setDefaultCategoryId(categoryId);
 
         ProductClientGetResponse responseDto = new ProductClientGetResponse();
         responseDto.setCategoryIds(Collections.singletonList(categoryId));
+        responseDto.setDefaultCategoryId(categoryId);
 
         Category category = new Category();
         category.setId(categoryId);
@@ -116,7 +118,7 @@ class ProductClientControllerTest {
 
         when(productService.findBySlug(slug)).thenReturn(Optional.of(dto));
         when(productClientApiMapper.toGetResponse(dto)).thenReturn(responseDto);
-        when(categoryRepository.findAllById(Collections.singletonList(categoryId))).thenReturn(Collections.singletonList(category));
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
 
         ResponseEntity<ProductClientGetResponse> response = productClientController.getProductBySlug(slug);
 
@@ -135,14 +137,8 @@ class ProductClientControllerTest {
         ProductClientGetResponse responseDto = new ProductClientGetResponse();
         responseDto.setCategoryIds(Collections.singletonList(categoryId));
 
-        Category category = new Category();
-        category.setId(categoryId);
-        category.setTitle("Some Category");
-        category.setDefaultCategory(false);
-
         when(productService.findBySlug(slug)).thenReturn(Optional.of(dto));
         when(productClientApiMapper.toGetResponse(dto)).thenReturn(responseDto);
-        when(categoryRepository.findAllById(Collections.singletonList(categoryId))).thenReturn(Collections.singletonList(category));
 
         ResponseEntity<ProductClientGetResponse> response = productClientController.getProductBySlug(slug);
 

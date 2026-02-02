@@ -49,13 +49,10 @@ public class ProductClientController {
         return productService.findBySlug(slug)
                 .map(productClientApiMapper::toGetResponse)
                 .map(response -> {
-                    if (response.getCategoryIds() != null && !response.getCategoryIds().isEmpty()) {
-                        categoryRepository.findAllById(response.getCategoryIds()).stream()
-                                .filter(Category::isDefaultCategory)
-                                .findFirst()
+                    if (response.getDefaultCategoryId() != null) {
+                        categoryRepository.findById(response.getDefaultCategoryId())
                                 .ifPresent(category -> {
                                     response.setDefaultCategoryTitle(category.getTitle());
-                                    response.setDefaultCategoryId(category.getId());
                                 });
                     }
                     return response;

@@ -173,10 +173,7 @@ public class ProductImportService {
                         .ifPresent(cat -> {
                             categoryIds.add(cat.getId());
                             if ("1".equals(row.getIsDefaultCategory())) {
-                                if (!cat.isDefaultCategory()) {
-                                    cat.setDefaultCategory(true);
-                                    categoryRepository.save(cat);
-                                }
+                                product.setDefaultCategoryId(cat.getId());
                             }
                         });
             } catch (NumberFormatException ignored) {}
