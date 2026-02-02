@@ -20,6 +20,14 @@ public class Brand implements BaseEntity {
     private Instant updateDate;
 
     @Override
+    public Object getSortValue(String field) {
+        switch (field) {
+            case "name": return name;
+            default: return BaseEntity.super.getSortValue(field);
+        }
+    }
+
+    @Override
     public void setLastModifiedDate(Instant date) {
         this.updateDate = date;
     }
