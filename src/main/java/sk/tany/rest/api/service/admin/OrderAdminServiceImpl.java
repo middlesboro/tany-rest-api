@@ -447,6 +447,12 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         orderRepository.deleteById(id);
     }
 
+    @Override
+    public void exportToIsklad(String orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+        processIskladExport(order);
+    }
+
     private void processIskladExport(Order order) {
         if (iskladProperties.isEnabled() && order.getIskladImportDate() == null) {
             try {

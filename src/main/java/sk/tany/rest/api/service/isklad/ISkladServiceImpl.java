@@ -47,6 +47,10 @@ public class ISkladServiceImpl implements ISkladService {
     }
 
     private <Req, Res> ISkladResponse<Res> sendRequest(String method, Req data, ParameterizedTypeReference<ISkladResponse<Res>> responseType) {
+        if (!iskladProperties.isEnabled()) {
+            return null;
+        }
+
         ISkladAuth auth = ISkladAuth.builder()
                 .authId(iskladProperties.getAuthId())
                 .authKey(iskladProperties.getAuthKey())
