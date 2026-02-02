@@ -89,10 +89,8 @@ public class ProductImportService {
                     processProduct(entry.getKey(), entry.getValue());
                 }
 
-                Long maxId = productRepository.findMaxPrestashopId();
-                if (!sequenceService.exists("product_identifier")) {
-                    sequenceService.setSequence("product_identifier", maxId);
-                }
+                Long maxId = productRepository.findMaxProductIdentifier();
+                sequenceService.setSequence("product_sequence", maxId);
             } else {
                 log.warn("Table p_label_p not found in products.json");
             }
@@ -107,10 +105,10 @@ public class ProductImportService {
         if (rows.isEmpty()) return;
 
         ProductImportDataDto baseData = rows.getFirst();
-        Long prestashopId = Long.parseLong(idProductStr);
+        Long productIdentifier = Long.parseLong(idProductStr);
 
-        Product product = productRepository.findByPrestashopId(prestashopId).orElse(new Product());
-        product.setPrestashopId(prestashopId);
+        Product product = productRepository.findByProductIdentifier(productIdentifier).orElse(new Product());
+        product.setProductIdentifier(productIdentifier);
         product.setTitle(baseData.getProductName());
         product.setProductCode(baseData.getProductCode());
         product.setEan(baseData.getEan());

@@ -52,8 +52,8 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     @Override
     public ProductAdminDto save(ProductAdminDto productDto) {
         var product = productMapper.toEntity(productDto);
-        if (product.getPrestashopId() == null) {
-            product.setPrestashopId(sequenceService.getNextSequence("product_identifier"));
+        if (product.getProductIdentifier() == null) {
+            product.setProductIdentifier(sequenceService.getNextSequence("product_sequence"));
         }
         recalculateReviewStatistics(product);
         calculateProductPrices(product);

@@ -102,7 +102,7 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
                         Long prestashopProductId = Long.valueOf(item.get("id_product").asText());
                         review.setPrestashopProductId(prestashopProductId);
 
-                        Optional<Product> productOptional = productRepository.findByPrestashopId(prestashopProductId);
+                        Optional<Product> productOptional = productRepository.findByProductIdentifier(prestashopProductId);
                         if (productOptional.isPresent()) {
                             Product product = productOptional.get();
                             review.setProductId(product.getId());

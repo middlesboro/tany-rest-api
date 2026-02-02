@@ -9,6 +9,7 @@ import java.time.Instant;
 @Data
 public class PaymentDto {
     private String id;
+    private Integer iskladId;
     private String name;
     private String description;
     private String image;

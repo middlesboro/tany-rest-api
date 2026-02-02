@@ -49,14 +49,14 @@ class ProductAdminServiceImplTest {
         ProductAdminDto dto = new ProductAdminDto();
         Product product = new Product();
         when(productMapper.toEntity(dto)).thenReturn(product);
-        when(sequenceService.getNextSequence("product_identifier")).thenReturn(100L);
+        when(sequenceService.getNextSequence("product_sequence")).thenReturn(100L);
         when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
         when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
 
         productAdminService.save(dto);
 
-        assertThat(product.getPrestashopId()).isEqualTo(100L);
-        verify(sequenceService).getNextSequence("product_identifier");
+        assertThat(product.getProductIdentifier()).isEqualTo(100L);
+        verify(sequenceService).getNextSequence("product_sequence");
     }
 
     @Test

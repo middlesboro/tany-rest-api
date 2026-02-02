@@ -94,15 +94,15 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
         }
     }
 
-    public Optional<Product> findByPrestashopId(Long prestashopId) {
+    public Optional<Product> findByProductIdentifier(Long productIdentifier) {
         return memoryCache.values().stream()
-                .filter(p -> p.getPrestashopId() != null && p.getPrestashopId().equals(prestashopId))
+                .filter(p -> p.getProductIdentifier() != null && p.getProductIdentifier().equals(productIdentifier))
                 .findFirst();
     }
 
-    public Long findMaxPrestashopId() {
+    public Long findMaxProductIdentifier() {
         return memoryCache.values().stream()
-                .map(Product::getPrestashopId)
+                .map(Product::getProductIdentifier)
                 .filter(Objects::nonNull)
                 .max(Long::compareTo)
                 .orElse(0L);
