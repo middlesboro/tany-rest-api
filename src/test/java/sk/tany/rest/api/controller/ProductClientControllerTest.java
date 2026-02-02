@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import sk.tany.rest.api.controller.client.ProductClientController;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
+import sk.tany.rest.api.domain.category.Category;
+import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
 import sk.tany.rest.api.dto.client.product.list.ProductClientListResponse;
 import sk.tany.rest.api.mapper.ProductClientApiMapper;
@@ -22,6 +24,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 
 class ProductClientControllerTest {
@@ -31,6 +34,9 @@ class ProductClientControllerTest {
 
     @Mock
     private ProductClientApiMapper productClientApiMapper;
+
+    @Mock
+    private CategoryRepository categoryRepository;
 
     @InjectMocks
     private ProductClientController productClientController;
@@ -89,6 +95,69 @@ class ProductClientControllerTest {
 
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
         verify(productService, times(1)).findById(productId);
+    }
+
+    @Test
+    void getProductBySlug_WhenFound_AndDefaultCategoryExists() {
+        String slug = "some-product";
+        String categoryId = "cat1";
+        String defaultCategoryTitle = "Default Category";
+
+        ProductClientDto dto = new ProductClientDto();
+        dto.setCategoryIds(Collections.singletonList(categoryId));
+
+        ProductClientGetResponse responseDto = new ProductClientGetResponse();
+        responseDto.setCategoryIds(Collections.singletonList(categoryId));
+
+        Category category = new Category();
+        category.setId(categoryId);
+        category.setTitle(defaultCategoryTitle);
+        category.setDefaultCategory(true);
+
+        when(productService.findBySlug(slug)).thenReturn(Optional.of(dto));
+        when(productClientApiMapper.toGetResponse(dto)).thenReturn(responseDto);
+        when(categoryRepository.findAllById(Collections.singletonList(categoryId))).thenReturn(Collections.singletonList(category));
+
+        ResponseEntity<ProductClientGetResponse> response = productClientController.getProductBySlug(slug);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(defaultCategoryTitle, response.getBody().getDefaultCategoryTitle());
+    }
+
+    @Test
+    void getProductBySlug_WhenFound_AndNoDefaultCategory() {
+        String slug = "some-product";
+        String categoryId = "cat1";
+
+        ProductClientDto dto = new ProductClientDto();
+        dto.setCategoryIds(Collections.singletonList(categoryId));
+
+        ProductClientGetResponse responseDto = new ProductClientGetResponse();
+        responseDto.setCategoryIds(Collections.singletonList(categoryId));
+
+        Category category = new Category();
+        category.setId(categoryId);
+        category.setTitle("Some Category");
+        category.setDefaultCategory(false);
+
+        when(productService.findBySlug(slug)).thenReturn(Optional.of(dto));
+        when(productClientApiMapper.toGetResponse(dto)).thenReturn(responseDto);
+        when(categoryRepository.findAllById(Collections.singletonList(categoryId))).thenReturn(Collections.singletonList(category));
+
+        ResponseEntity<ProductClientGetResponse> response = productClientController.getProductBySlug(slug);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNull(response.getBody().getDefaultCategoryTitle());
+    }
+
+    @Test
+    void getProductBySlug_WhenNotFound() {
+        String slug = "unknown";
+        when(productService.findBySlug(slug)).thenReturn(Optional.empty());
+
+        ResponseEntity<ProductClientGetResponse> response = productClientController.getProductBySlug(slug);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test

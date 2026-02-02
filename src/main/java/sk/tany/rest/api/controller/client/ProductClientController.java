@@ -16,6 +16,8 @@ import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
 import sk.tany.rest.api.dto.client.product.list.ProductClientListResponse;
 import sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
+import sk.tany.rest.api.domain.category.Category;
+import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.mapper.ProductClientApiMapper;
 import sk.tany.rest.api.service.client.ProductClientService;
 
@@ -26,6 +28,7 @@ public class ProductClientController {
 
     private final ProductClientService productService;
     private final ProductClientApiMapper productClientApiMapper;
+    private final CategoryRepository categoryRepository;
 
     @GetMapping
     public Page<ProductClientListResponse> getProducts(Pageable pageable) {
@@ -45,6 +48,15 @@ public class ProductClientController {
     public ResponseEntity<ProductClientGetResponse> getProductBySlug(@PathVariable String slug) {
         return productService.findBySlug(slug)
                 .map(productClientApiMapper::toGetResponse)
+                .map(response -> {
+                    if (response.getCategoryIds() != null && !response.getCategoryIds().isEmpty()) {
+                        categoryRepository.findAllById(response.getCategoryIds()).stream()
+                                .filter(Category::isDefaultCategory)
+                                .findFirst()
+                                .ifPresent(category -> response.setDefaultCategoryTitle(category.getTitle()));
+                    }
+                    return response;
+                })
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
