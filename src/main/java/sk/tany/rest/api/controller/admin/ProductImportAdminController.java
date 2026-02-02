@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.review.ReviewRepository;
 import sk.tany.rest.api.service.admin.ProductImportService;
 
 @RestController
@@ -16,6 +18,8 @@ public class ProductImportAdminController {
 
     private final ProductImportService productImportService;
     private final ProductRepository productRepository;
+    private final BrandRepository brandRepository;
+    private final ReviewRepository reviewRepository;
 
     @Operation(summary = "Import products from JSON")
     @PostMapping("/products")
@@ -28,6 +32,8 @@ public class ProductImportAdminController {
     @DeleteMapping("/delete-all-products")
     public void deleteProducts() {
         productRepository.deleteAll();
+        brandRepository.deleteAll();
+        reviewRepository.deleteAll();
     }
 
 }
