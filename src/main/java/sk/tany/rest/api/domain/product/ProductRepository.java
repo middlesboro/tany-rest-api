@@ -108,6 +108,12 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
                 .orElse(0L);
     }
 
+    public List<Product> findAllByBrandId(String brandId) {
+        return memoryCache.values().stream()
+                .filter(p -> Objects.equals(p.getBrandId(), brandId))
+                .toList();
+    }
+
     public List<Product> findAllByProductFilterParametersFilterParameterValueId(String filterParameterValueId) {
         return memoryCache.values().stream()
                 .filter(p -> p.getProductFilterParameters() != null && p.getProductFilterParameters().stream()

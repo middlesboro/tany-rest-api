@@ -5,9 +5,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.brand.BrandRepository;
+import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
 import sk.tany.rest.api.exception.BrandException;
+import sk.tany.rest.api.dto.admin.brand.BrandAdminGetResponse;
 import sk.tany.rest.api.mapper.BrandMapper;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.isklad.ISkladService;
@@ -19,6 +22,7 @@ import java.util.Optional;
 public class BrandAdminServiceImpl implements BrandAdminService {
 
     private final BrandRepository brandRepository;
+    private final ProductRepository productRepository;
     private final BrandMapper brandMapper;
     private final ImageService imageService;
     private final ISkladService iSkladService;
@@ -31,6 +35,16 @@ public class BrandAdminServiceImpl implements BrandAdminService {
     @Override
     public Optional<BrandDto> findById(String id) {
         return brandRepository.findById(id).map(brandMapper::toDto);
+    }
+
+    @Override
+    public Optional<BrandAdminGetResponse> findDetailById(String id) {
+        return brandRepository.findById(id).map(brand -> {
+            var productIds = productRepository.findAllByBrandId(id).stream()
+                    .map(Product::getId)
+                    .toList();
+            return brandMapper.toAdminDetailDto(brand, productIds);
+        });
     }
 
     @Override
