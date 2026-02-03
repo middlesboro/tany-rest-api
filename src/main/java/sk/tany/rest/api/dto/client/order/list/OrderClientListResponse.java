@@ -17,7 +17,6 @@ public class OrderClientListResponse {
     private Instant createDate;
     private Long orderIdentifier;
     private BigDecimal finalPrice;
-    private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;
     private List<OrderItemDto> items;
     private String carrierId;

@@ -22,7 +22,6 @@ public class Order implements BaseEntity {
     private BigDecimal finalPrice;
     private BigDecimal carrierPrice;
     private BigDecimal paymentPrice;
-    private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;
     private BigDecimal discountPrice;
     private List<String> appliedDiscountCodes;

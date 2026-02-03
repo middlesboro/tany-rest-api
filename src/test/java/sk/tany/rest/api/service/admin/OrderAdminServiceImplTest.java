@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscountRepository;
@@ -17,12 +18,11 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
+import sk.tany.rest.api.mapper.ISkladMapper;
 import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
-import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.service.isklad.ISkladService;
-import sk.tany.rest.api.mapper.ISkladMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -116,7 +116,6 @@ class OrderAdminServiceImplTest {
         org.junit.jupiter.api.Assertions.assertNotNull(result);
         org.junit.jupiter.api.Assertions.assertEquals("newId", result.getId());
         org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("20.00"), inputDto.getProductsPrice()); // 2 * 10
-        org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("0"), inputDto.getDeliveryPrice()); // 0 (no ranges)
         org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("25.00"), inputDto.getFinalPrice()); // 20 + 5 + 0
 
         org.junit.jupiter.api.Assertions.assertNotNull(inputDto.getPriceBreakDown());
@@ -182,7 +181,6 @@ class OrderAdminServiceImplTest {
         orderAdminService.save(inputDto);
 
         // Then
-        org.junit.jupiter.api.Assertions.assertEquals(BigDecimal.ZERO, inputDto.getDeliveryPrice());
         org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal("100.00"), inputDto.getFinalPrice());
     }
 

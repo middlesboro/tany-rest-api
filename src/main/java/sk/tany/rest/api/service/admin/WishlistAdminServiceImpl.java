@@ -56,7 +56,7 @@ public class WishlistAdminServiceImpl implements WishlistAdminService {
                     .toList();
 
             return new WishlistAdminListResponse(customerId, customerName, productNames);
-        }).toList();
+        }).collect(Collectors.toList());
 
         responses.sort(Comparator.comparing(WishlistAdminListResponse::getCustomerName));
 

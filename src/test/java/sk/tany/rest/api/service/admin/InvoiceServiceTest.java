@@ -30,7 +30,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
@@ -60,7 +59,6 @@ public class InvoiceServiceTest {
         order.setCarrierId("c1");
         order.setPaymentId("p1");
         order.setCustomerId("cust1");
-        order.setDeliveryPrice(BigDecimal.TEN);
 
         OrderItem item = new OrderItem();
         item.setId("prod1");
@@ -122,7 +120,6 @@ public class InvoiceServiceTest {
         order.setCarrierId("c1");
         order.setPaymentId("p1");
         order.setCustomerId("cust1");
-        order.setDeliveryPrice(BigDecimal.TEN);
 
         OrderItem item = new OrderItem();
         item.setId("prod1");

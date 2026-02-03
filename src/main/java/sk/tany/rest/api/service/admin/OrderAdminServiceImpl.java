@@ -20,6 +20,7 @@ import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.OrderDto;
@@ -298,7 +299,6 @@ public class OrderAdminServiceImpl implements OrderAdminService {
                 breakdown.getItems().add(pi);
             }
         }
-        orderDto.setDeliveryPrice(carrierPrice);
 
         // 4. Process Payment
         BigDecimal paymentPrice = BigDecimal.ZERO;
@@ -306,6 +306,10 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         if (orderDto.getPaymentId() != null) {
              payment = paymentRepository.findById(orderDto.getPaymentId()).orElse(null);
             if (payment != null) {
+                if (PaymentType.COD == payment.getType()) {
+                    orderDto.setStatus(OrderStatus.COD);
+                }
+
                 paymentPrice = payment.getPrice() != null ? payment.getPrice() : BigDecimal.ZERO;
                 BigDecimal paymentPriceWithoutVat = payment.getPriceWithoutVat() != null ? payment.getPriceWithoutVat() : BigDecimal.ZERO;
                 BigDecimal paymentVatValue = payment.getVatValue() != null ? payment.getVatValue() : BigDecimal.ZERO;
@@ -454,6 +458,8 @@ public class OrderAdminServiceImpl implements OrderAdminService {
     }
 
     private void processIskladExport(Order order) {
+        order.setIskladImportDate(null); // todo remove
+
         if (order.getIskladImportDate() == null) {
             try {
                 Carrier carrier = carrierRepository.findById(order.getCarrierId()).orElse(null);

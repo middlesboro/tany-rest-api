@@ -26,6 +26,7 @@ import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.AddressDto;
@@ -202,6 +203,9 @@ public class OrderClientServiceImpl implements OrderClientService {
         Payment payment = null;
         if (order.getPaymentId() != null) {
             payment = paymentRepository.findById(order.getPaymentId()).orElse(null);
+            if (payment != null && PaymentType.COD == payment.getType()) {
+                order.setStatus(OrderStatus.COD);
+            }
         }
 
         order.setOrderIdentifier(sequenceService.getNextSequence("order_identifier"));

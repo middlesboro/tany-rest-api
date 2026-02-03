@@ -12,7 +12,6 @@ public class OrderAdminUpdateResponse {
     private String id;
     private String cartId;
     private BigDecimal finalPrice;
-    private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;
     private List<OrderItemDto> items;
     private String carrierId;

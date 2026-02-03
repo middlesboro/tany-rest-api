@@ -2,6 +2,7 @@ package sk.tany.rest.api.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.springframework.beans.factory.annotation.Autowired;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.payment.Payment;
@@ -10,6 +11,7 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.PriceItem;
+import sk.tany.rest.api.dto.PriceItemType;
 import sk.tany.rest.api.dto.SupplierDto;
 import sk.tany.rest.api.dto.isklad.CreateNewOrderRequest;
 import sk.tany.rest.api.dto.isklad.CreateSupplierRequest;
@@ -40,15 +42,15 @@ public abstract class ISkladMapper {
     // Delivery Address
     @Mapping(target = "name", source = "orderDto.firstname")
     @Mapping(target = "surname", source = "orderDto.lastname")
-    @Mapping(target = "street", source = "orderDto.deliveryAddress.street")
-    @Mapping(target = "streetNumber", expression = "java(getStreetNumber(orderDto.getDeliveryAddress().getStreet()))")
+    @Mapping(target = "street", source = "orderDto.deliveryAddress.street", qualifiedByName = "extractStreet")
+    @Mapping(target = "streetNumber", source = "orderDto.deliveryAddress.street", qualifiedByName = "extractStreetNumber")
     @Mapping(target = "city", source = "orderDto.deliveryAddress.city")
     @Mapping(target = "postalCode", source = "orderDto.deliveryAddress.zip")
     @Mapping(target = "country", constant = "SK")
     // Billing Address (fa_)
     @Mapping(target = "faCompany", ignore = true) // Not in OrderDto
-    @Mapping(target = "faStreet", source = "orderDto.invoiceAddress.street")
-    @Mapping(target = "faStreetNumber", expression = "java(getStreetNumber(orderDto.getInvoiceAddress().getStreet()))")
+    @Mapping(target = "faStreet", source = "orderDto.invoiceAddress.street", qualifiedByName = "extractStreet")
+    @Mapping(target = "faStreetNumber", source = "orderDto.invoiceAddress.street", qualifiedByName = "extractStreetNumber")
     @Mapping(target = "faCity", source = "orderDto.invoiceAddress.city")
     @Mapping(target = "faPostalCode", source = "orderDto.invoiceAddress.zip")
     @Mapping(target = "faCountry", constant = "SK")
@@ -69,7 +71,7 @@ public abstract class ISkladMapper {
     @Mapping(target = "gpsLong", ignore = true)
     @Mapping(target = "currency", constant = "EUR")
     @Mapping(target = "deliveryBranchId", ignore = true)
-    @Mapping(target = "externalBranchId", ignore = true)
+    @Mapping(target = "externalBranchId", source = "orderDto.selectedPickupPointId")
     @Mapping(target = "defaultTax", constant = "23")
     @Mapping(target = "idPayment", source = "payment.iskladId")
     @Mapping(target = "codPriceWithoutTax", ignore = true)
@@ -77,9 +79,12 @@ public abstract class ISkladMapper {
     @Mapping(target = "declaredValue", ignore = true)
     @Mapping(target = "depositWithoutTax", ignore = true)
     @Mapping(target = "deposit", ignore = true)
-    @Mapping(target = "deliveryPriceWithoutTax", ignore = true)
-    @Mapping(target = "paymentPriceWithoutTax", ignore = true)
-    @Mapping(target = "discountPriceWithoutTax", ignore = true)
+    @Mapping(target = "deliveryPrice", source = "orderDto", qualifiedByName = "extractDeliveryPrice")
+    @Mapping(target = "deliveryPriceWithoutTax", source = "orderDto", qualifiedByName = "extractDeliveryPriceWithoutTax")
+    @Mapping(target = "paymentPrice", source = "orderDto", qualifiedByName = "extractPaymentPrice")
+    @Mapping(target = "paymentPriceWithoutTax", source = "orderDto", qualifiedByName = "extractPaymentPriceWithoutTax")
+    @Mapping(target = "discountPrice", source = "orderDto", qualifiedByName = "extractDiscountPrice")
+    @Mapping(target = "discountPriceWithoutTax", source = "orderDto", qualifiedByName = "extractDiscountPriceWithoutTax")
     @Mapping(target = "minDeliveryDate", ignore = true)
     @Mapping(target = "forcedCompletion", ignore = true)
     @Mapping(target = "invoice", ignore = true)
@@ -102,7 +107,6 @@ public abstract class ISkladMapper {
         for (OrderItemDto item : orderDto.getItems()) {
             ISkladItem iskladItem = new ISkladItem();
             iskladItem.setCount(item.getQuantity());
-            iskladItem.setCatalogId(item.getSlug());
             iskladItem.setExpiration(0);
             iskladItem.setTax(new BigDecimal("23"));
 
@@ -125,25 +129,13 @@ public abstract class ISkladMapper {
                         .filter(pi -> item.getId().equals(pi.getId())) // assuming PriceItem id matches product id
                         .findFirst()
                         .ifPresent(pi -> {
-                             // iSklad expects unit prices or total?
-                             // Usually unit price. OrderItemDto has unit price. PriceItem has total.
-                             // Wait, PriceItem in breakdown usually stores totals for the quantity.
-                             // "fill also price, price_with_tax and tax = 23"
-                             // Let's assume unit prices.
-                             // The prompt says "price with vat and without vat can be taken from price break down".
-                             // But breakdown has totals.
-                             // I should divide by quantity or use the unit price if available.
-                             // OrderItemDto has 'price' (usually with tax?).
-                             // Product has priceWithoutVat.
-                             // PriceItem has priceWithVat and priceWithoutVat (Totals).
-
                              BigDecimal qty = BigDecimal.valueOf(item.getQuantity());
                              if (qty.compareTo(BigDecimal.ZERO) != 0) {
                                  if (pi.getPriceWithoutVat() != null) {
-                                     iskladItem.setPrice(pi.getPriceWithoutVat().divide(qty, 4, java.math.RoundingMode.HALF_UP));
+                                     iskladItem.setPrice(pi.getPriceWithoutVat().divide(qty, 2, java.math.RoundingMode.HALF_UP));
                                  }
                                  if (pi.getPriceWithVat() != null) {
-                                     iskladItem.setPriceWithTax(pi.getPriceWithVat().divide(qty, 4, java.math.RoundingMode.HALF_UP));
+                                     iskladItem.setPriceWithTax(pi.getPriceWithVat().divide(qty, 2, java.math.RoundingMode.HALF_UP));
                                  }
                              }
                         });
@@ -151,7 +143,7 @@ public abstract class ISkladMapper {
 
             // Fallback if price is missing
             if (iskladItem.getPrice() == null) {
-                 iskladItem.setPrice(item.getPrice()); // assume this is base price? or with tax?
+                 iskladItem.setPrice(item.getPrice());
             }
             if (iskladItem.getPriceWithTax() == null) {
                  iskladItem.setPriceWithTax(item.getPrice());
@@ -174,6 +166,7 @@ public abstract class ISkladMapper {
         return null;
     }
 
+    @Named("extractStreetNumber")
     protected String getStreetNumber(String street) {
         if (street == null || street.isEmpty()) {
             return street;
@@ -186,4 +179,89 @@ public abstract class ISkladMapper {
 
         return street.substring(lastSpaceIndex + 1);
     }
+
+    @Named("extractStreet")
+    protected String getStreet(String street) {
+        if (street == null || street.isEmpty()) {
+            return street;
+        }
+
+        int lastSpaceIndex = street.lastIndexOf(' ');
+        if (lastSpaceIndex == -1) {
+            return street;
+        }
+
+        return street.substring(0, lastSpaceIndex);
+    }
+
+    @Named("extractDeliveryPrice")
+    protected BigDecimal getDeliveryPrice(OrderDto order) {
+        for (PriceItem item : order.getPriceBreakDown().getItems()) {
+            if (item.getType() == PriceItemType.CARRIER) {
+                return item.getPriceWithVat();
+            }
+        }
+
+        return null;
+    }
+
+    @Named("extractDeliveryPriceWithoutTax")
+    protected BigDecimal getDeliveryPriceWithoutTax(OrderDto order) {
+        for (PriceItem item : order.getPriceBreakDown().getItems()) {
+            if (item.getType() == PriceItemType.CARRIER) {
+                return item.getPriceWithoutVat();
+            }
+        }
+
+        return null;
+    }
+
+    @Named("extractPaymentPrice")
+    protected BigDecimal getPaymentPrice(OrderDto order) {
+        for (PriceItem item : order.getPriceBreakDown().getItems()) {
+            if (item.getType() == PriceItemType.PAYMENT) {
+                return item.getPriceWithVat();
+            }
+        }
+
+        return null;
+    }
+
+    @Named("extractPaymentPriceWithoutTax")
+    protected BigDecimal getPaymentPriceWithoutTax(OrderDto order) {
+        for (PriceItem item : order.getPriceBreakDown().getItems()) {
+            if (item.getType() == PriceItemType.PAYMENT) {
+                return item.getPriceWithoutVat();
+            }
+        }
+
+        return null;
+    }
+
+    @Named("extractDiscountPrice")
+    protected BigDecimal getDiscountPrice(OrderDto order) {
+        BigDecimal finalDiscount = BigDecimal.ZERO;
+
+        for (PriceItem item : order.getPriceBreakDown().getItems()) {
+            if (item.getType() == PriceItemType.DISCOUNT) {
+                finalDiscount = finalDiscount.add(item.getPriceWithVat());
+            }
+        }
+
+        return finalDiscount;
+    }
+
+    @Named("extractDiscountPriceWithoutTax")
+    protected BigDecimal getDiscountPriceWithoutTax(OrderDto order) {
+        BigDecimal finalDiscount = BigDecimal.ZERO;
+
+        for (PriceItem item : order.getPriceBreakDown().getItems()) {
+            if (item.getType() == PriceItemType.DISCOUNT) {
+                finalDiscount = finalDiscount.add(item.getPriceWithoutVat());
+            }
+        }
+
+        return finalDiscount;
+    }
+
 }

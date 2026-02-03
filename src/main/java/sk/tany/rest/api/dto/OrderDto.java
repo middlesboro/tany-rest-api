@@ -16,7 +16,6 @@ public class OrderDto {
     private Instant createDate;
     private String cartId;
     private BigDecimal finalPrice;
-    private BigDecimal deliveryPrice;
     private BigDecimal productsPrice;
     private BigDecimal discountPrice;
     private List<String> appliedDiscountCodes;
