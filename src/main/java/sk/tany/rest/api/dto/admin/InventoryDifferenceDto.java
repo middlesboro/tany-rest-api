@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InventoryDifferenceDto {
+    private String productId;
     private String productName;
     private Integer dbQuantity;
     private Integer iskladQuantity;

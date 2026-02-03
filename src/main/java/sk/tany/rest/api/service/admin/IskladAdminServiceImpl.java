@@ -9,9 +9,9 @@ import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.admin.InventoryDifferenceDto;
+import sk.tany.rest.api.dto.isklad.ISkladResponse;
 import sk.tany.rest.api.dto.isklad.InventoryDetailRequest;
 import sk.tany.rest.api.dto.isklad.InventoryDetailResult;
-import sk.tany.rest.api.dto.isklad.ISkladResponse;
 import sk.tany.rest.api.service.isklad.ISkladService;
 
 import java.util.ArrayList;
@@ -23,6 +23,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class IskladAdminServiceImpl implements IskladAdminService {
+
+    private static final List<String> SKIPPED_NAMES = List.of(
+            "darčeková poukážka"
+    );
 
     private final ISkladService iskladService;
     private final ProductRepository productRepository;
@@ -73,6 +77,12 @@ public class IskladAdminServiceImpl implements IskladAdminService {
         List<InventoryDifferenceDto> differences = new ArrayList<>();
 
         for (Product product : activeProducts) {
+            boolean containsSkippedName = SKIPPED_NAMES.stream().anyMatch(skipped -> product.getTitle().toLowerCase().contains(skipped.toLowerCase()));
+
+            if (containsSkippedName || product.isExternalStock()) {
+                continue;
+            }
+
             Integer dbQuantity = product.getQuantity() != null ? product.getQuantity() : 0;
             Integer pendingQty = pendingQtyByProductId.getOrDefault(product.getId(), 0);
 
@@ -103,6 +113,7 @@ public class IskladAdminServiceImpl implements IskladAdminService {
 
             if (!dbQuantity.equals(iskladEffective)) {
                 differences.add(InventoryDifferenceDto.builder()
+                        .productId(product.getId())
                         .productName(product.getTitle())
                         .dbQuantity(dbQuantity)
                         .iskladQuantity(iskladEffective)
