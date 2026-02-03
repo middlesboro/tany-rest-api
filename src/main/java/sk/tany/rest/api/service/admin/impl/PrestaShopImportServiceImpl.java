@@ -209,7 +209,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         BigDecimal vat = shopSettings.getVat();
 
         ProductAdminDto dto = new ProductAdminDto();
-        dto.setPrestashopId(psProduct.getId());
+        dto.setProductIdentifier(psProduct.getId());
         dto.setTitle(parseLanguageValue(psProduct.getName()));
         dto.setDescription(parseLanguageValue(psProduct.getDescription()));
         dto.setShortDescription(parseLanguageValue(psProduct.getDescriptionShort()));

@@ -84,7 +84,7 @@ public class IskladAdminController {
             Integer pendingQty = pendingQtyByProductId.getOrDefault(product.getId(), 0);
 
             // If prestashopId is null, iskladRaw is 0 (as if not in iSklad)
-            Integer iskladRaw = iskladQtyByPrestashopId.getOrDefault(product.getPrestashopId(), 0);
+            Integer iskladRaw = iskladQtyByPrestashopId.getOrDefault(product.getProductIdentifier(), 0);
 
             // Deduct pending quantity from iSklad raw quantity because iSklad considers them available (free to order)
             // while we know they are pending export.

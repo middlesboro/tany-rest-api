@@ -13,7 +13,7 @@ public class Product implements BaseEntity {
 
     @Id
     private String id;
-    private Long prestashopId;
+    private Long productIdentifier;
     private Instant createDate;
     private Instant updateDate;
     private String title;

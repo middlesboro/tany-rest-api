@@ -94,7 +94,7 @@ class ProductImportServiceTest {
         when(objectMapper.readValue(any(InputStream.class), any(TypeReference.class)))
                 .thenReturn(entries);
 
-        when(productRepository.findByPrestashopId(123L)).thenReturn(Optional.empty());
+        when(productRepository.findByProductIdentifier(123L)).thenReturn(Optional.empty());
         when(productRepository.save(any(Product.class))).thenAnswer(i -> {
             Product p = i.getArgument(0);
             p.setId("p1");

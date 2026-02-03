@@ -55,7 +55,7 @@ class ProductAdminServiceImplTest {
 
         productAdminService.save(dto);
 
-        assertThat(product.getPrestashopId()).isEqualTo(100L);
+        assertThat(product.getProductIdentifier()).isEqualTo(100L);
         verify(sequenceService).getNextSequence("product_identifier");
     }
 

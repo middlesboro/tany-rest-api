@@ -178,7 +178,7 @@ class OrderAdminServiceISkladTest {
         when(orderRepository.findById(orderId)).thenReturn(java.util.Optional.of(order));
         when(iskladProperties.isEnabled()).thenReturn(true);
         when(orderMapper.toDto(order)).thenReturn(dto);
-        when(iskladMapper.toCreateNewOrderRequest(dto)).thenReturn(sk.tany.rest.api.dto.isklad.CreateNewOrderRequest.builder().build());
+        when(iskladMapper.toCreateNewOrderRequest(eq(dto), any(), any())).thenReturn(sk.tany.rest.api.dto.isklad.CreateNewOrderRequest.builder().build());
 
         // Act
         orderAdminService.exportToIsklad(orderId);

@@ -456,7 +456,9 @@ public class OrderAdminServiceImpl implements OrderAdminService {
     private void processIskladExport(Order order) {
         if (order.getIskladImportDate() == null) {
             try {
-                iskladService.createNewOrder(iskladMapper.toCreateNewOrderRequest(orderMapper.toDto(order)));
+                Carrier carrier = carrierRepository.findById(order.getCarrierId()).orElse(null);
+                Payment payment = paymentRepository.findById(order.getPaymentId()).orElse(null);
+                iskladService.createNewOrder(iskladMapper.toCreateNewOrderRequest(orderMapper.toDto(order), carrier, payment));
                 order.setIskladImportDate(Instant.now());
                 orderRepository.save(order);
             } catch (Exception e) {

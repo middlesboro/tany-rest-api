@@ -11,6 +11,7 @@ import java.util.List;
 @Data
 public class CarrierDto {
     private String id;
+    private Integer iskladId;
     private String name;
     private String description;
     private String image;

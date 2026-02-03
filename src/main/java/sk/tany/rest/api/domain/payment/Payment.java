@@ -13,6 +13,7 @@ public class Payment implements BaseEntity {
     @Id
     private String id;
     private Long prestashopId;
+    private Integer iskladId;
     private String name;
     private PaymentType type;
     private BigDecimal price;
