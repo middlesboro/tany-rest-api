@@ -40,6 +40,8 @@ class ProductAdminServiceImplTest {
     private sk.tany.rest.api.component.SlugGenerator slugGenerator;
     @Mock
     private SequenceService sequenceService;
+    @Mock
+    private sk.tany.rest.api.service.isklad.ISkladService iskladService;
 
     @InjectMocks
     private ProductAdminServiceImpl productAdminService;
