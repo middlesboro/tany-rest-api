@@ -87,3 +87,4 @@ isklad:
   auth-id: ${ISKLAD_AUTH_ID}
   auth-key: ${ISKLAD_AUTH_KEY}
   auth-token: ${ISKLAD_AUTH_TOKEN}
+  shop-setting-id: ${ISKLAD_SHOP_SETTING_ID}

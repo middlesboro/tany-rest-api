@@ -17,6 +17,7 @@ import sk.tany.rest.api.dto.isklad.ISkladRequest;
 import sk.tany.rest.api.dto.isklad.ISkladResponse;
 import sk.tany.rest.api.dto.isklad.InventoryDetailRequest;
 import sk.tany.rest.api.dto.isklad.InventoryDetailResult;
+import sk.tany.rest.api.dto.isklad.UpdateInventoryCardRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +45,14 @@ public class ISkladServiceImpl implements ISkladService {
     @Override
     public ISkladResponse<InventoryDetailResult> getInventory(InventoryDetailRequest request) {
         return sendRequest("InventoryDetail", request, new ParameterizedTypeReference<ISkladResponse<InventoryDetailResult>>() {});
+    }
+
+    @Override
+    public ISkladResponse<Object> createOrUpdateProduct(UpdateInventoryCardRequest request) {
+        if (request.getShopSettingId() == null) {
+            request.setShopSettingId(iskladProperties.getShopSettingId());
+        }
+        return sendRequest("UpdateInventoryCard", request, new ParameterizedTypeReference<ISkladResponse<Object>>() {});
     }
 
     private <Req, Res> ISkladResponse<Res> sendRequest(String method, Req data, ParameterizedTypeReference<ISkladResponse<Res>> responseType) {

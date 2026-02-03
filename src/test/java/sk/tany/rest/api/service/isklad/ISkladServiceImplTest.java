@@ -16,6 +16,7 @@ import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
 import sk.tany.rest.api.dto.isklad.CreateNewOrderRequest;
 import sk.tany.rest.api.dto.isklad.CreateSupplierRequest;
 import sk.tany.rest.api.dto.isklad.ISkladResponse;
+import sk.tany.rest.api.dto.isklad.UpdateInventoryCardRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,6 +42,7 @@ class ISkladServiceImplTest {
         when(iskladProperties.getAuthId()).thenReturn("testId");
         when(iskladProperties.getAuthKey()).thenReturn("testKey");
         when(iskladProperties.getAuthToken()).thenReturn("testToken");
+        when(iskladProperties.isEnabled()).thenReturn(true);
     }
 
     @Test
@@ -98,5 +100,26 @@ class ISkladServiceImplTest {
 
         assertNotNull(response);
         assertEquals(200, response.getAuthStatus());
+    }
+
+    @Test
+    void createOrUpdateProduct() {
+        UpdateInventoryCardRequest request = UpdateInventoryCardRequest.builder().itemId(123L).name("Product").build();
+        ISkladResponse<Object> mockResponse = new ISkladResponse<>();
+        mockResponse.setAuthStatus(200);
+
+        when(iskladProperties.getShopSettingId()).thenReturn(1);
+        when(restTemplate.exchange(
+                eq("http://api.isklad.com"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                any(ParameterizedTypeReference.class)
+        )).thenReturn(new ResponseEntity<>(mockResponse, HttpStatus.OK));
+
+        ISkladResponse<Object> response = iSkladService.createOrUpdateProduct(request);
+
+        assertNotNull(response);
+        assertEquals(200, response.getAuthStatus());
+        assertEquals(1, request.getShopSettingId());
     }
 }

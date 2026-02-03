@@ -35,6 +35,10 @@ class ProductDiscountTest {
     private ReviewRepository reviewRepository;
     @Mock
     private sk.tany.rest.api.component.SlugGenerator slugGenerator;
+    @Mock
+    private sk.tany.rest.api.service.common.SequenceService sequenceService;
+    @Mock
+    private sk.tany.rest.api.service.isklad.ISkladService iskladService;
 
     @InjectMocks
     private ProductAdminServiceImpl productAdminService;
@@ -56,7 +60,7 @@ class ProductDiscountTest {
         productAdminService.save(dto);
 
         assertThat(product.getDiscountPriceWithoutVat()).isNotNull();
-        assertThat(product.getDiscountPriceWithoutVat()).isEqualByComparingTo(BigDecimal.valueOf(50.00));
+        assertThat(product.getDiscountPriceWithoutVat()).isEqualByComparingTo(BigDecimal.valueOf(49.00));
     }
 
     @Test

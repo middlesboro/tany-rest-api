@@ -13,4 +13,5 @@ public class ISkladProperties {
     private String authId;
     private String authKey;
     private String authToken;
+    private Integer shopSettingId;
 }

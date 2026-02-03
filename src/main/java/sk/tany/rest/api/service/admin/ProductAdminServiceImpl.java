@@ -1,6 +1,7 @@
 package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,9 +14,11 @@ import sk.tany.rest.api.domain.review.Review;
 import sk.tany.rest.api.domain.review.ReviewRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
+import sk.tany.rest.api.dto.isklad.UpdateInventoryCardRequest;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
+import sk.tany.rest.api.service.isklad.ISkladService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -24,6 +27,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductAdminServiceImpl implements ProductAdminService {
 
     private final ProductRepository productRepository;
@@ -33,6 +37,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final ReviewRepository reviewRepository;
     private final SlugGenerator slugGenerator;
     private final SequenceService sequenceService;
+    private final ISkladService iskladService;
 
     @Override
     public Page<ProductAdminDto> findAll(Pageable pageable) {
@@ -62,6 +67,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         }
         var savedProduct = productRepository.save(product);
         productSearchEngine.addProduct(savedProduct);
+        sendToIsklad(savedProduct);
         return productMapper.toAdminDto(savedProduct);
     }
 
@@ -76,6 +82,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         }
         var savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
+        sendToIsklad(savedProduct);
         return productMapper.toAdminDto(savedProduct);
     }
 
@@ -226,5 +233,19 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
         product.setAverageRating(BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP));
         product.setReviewsCount(count);
+    }
+
+    private void sendToIsklad(Product product) {
+        try {
+            var request = UpdateInventoryCardRequest.builder()
+                    .itemId(product.getProductIdentifier())
+                    .name(product.getTitle())
+                    .ean(product.getEan())
+                    .priceWithoutTax(product.getPriceWithoutVat())
+                    .build();
+            iskladService.createOrUpdateProduct(request);
+        } catch (Exception e) {
+            log.error("Failed to send product to iSklad: {}", product.getId(), e);
+        }
     }
 }
