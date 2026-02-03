@@ -60,7 +60,7 @@ public class BlogAdminServiceImpl implements BlogAdminService {
         Blog blog = blogRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Blog not found"));
 
-        if (blog.getImage() != null) {
+        if (StringUtils.isNotBlank(blog.getImage())) {
             imageService.delete(blog.getImage());
         }
 
