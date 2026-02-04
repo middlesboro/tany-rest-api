@@ -23,6 +23,12 @@ public class OrderRepository extends AbstractInMemoryRepository<Order> {
         super(nitrite, Order.class);
     }
 
+    public java.util.Optional<Order> findByOrderIdentifier(Long orderIdentifier) {
+        return memoryCache.values().stream()
+                .filter(o -> o.getOrderIdentifier() != null && o.getOrderIdentifier().equals(orderIdentifier))
+                .findFirst();
+    }
+
     public java.util.Optional<Order> findByCartId(String cartId) {
         return memoryCache.values().stream()
                 .filter(o -> o.getCartId() != null && o.getCartId().equals(cartId))
