@@ -8,10 +8,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.component.SlugGenerator;
+import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
 import sk.tany.rest.api.domain.review.ReviewRepository;
+import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.isklad.UpdateInventoryCardRequest;
@@ -22,6 +24,7 @@ import sk.tany.rest.api.service.isklad.ISkladService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +41,8 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final SlugGenerator slugGenerator;
     private final SequenceService sequenceService;
     private final ISkladService iskladService;
+    private final BrandRepository brandRepository;
+    private final SupplierRepository supplierRepository;
 
     @Override
     public Page<ProductAdminDto> findAll(Pageable pageable) {
@@ -237,11 +242,35 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
     private void sendToIsklad(Product product) {
         try {
+            String brandName = null;
+            if (StringUtils.isNotBlank(product.getBrandId())) {
+                brandName = brandRepository.findById(product.getBrandId())
+                        .map(sk.tany.rest.api.domain.brand.Brand::getName)
+                        .orElse(null);
+            }
+
+            String supplierName = null;
+            if (StringUtils.isNotBlank(product.getSupplierId())) {
+                supplierName = supplierRepository.findById(product.getSupplierId())
+                        .map(sk.tany.rest.api.domain.supplier.Supplier::getName)
+                        .orElse(null);
+            }
+
+            List<String> images = null;
+            if (product.getImages() != null && !product.getImages().isEmpty()) {
+                images = Collections.singletonList(product.getImages().get(0));
+            }
+
             var request = UpdateInventoryCardRequest.builder()
                     .itemId(product.getProductIdentifier())
                     .name(product.getTitle())
                     .ean(product.getEan())
                     .priceWithoutTax(product.getPriceWithoutVat())
+                    .mj("ks")
+                    .enabled(product.isActive())
+                    .producer(brandName)
+                    .supplier(supplierName)
+                    .images(images)
                     .build();
             iskladService.createOrUpdateProduct(request);
         } catch (Exception e) {

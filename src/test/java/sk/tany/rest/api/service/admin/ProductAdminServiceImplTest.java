@@ -2,15 +2,21 @@ package sk.tany.rest.api.service.admin;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.domain.brand.Brand;
+import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
 import sk.tany.rest.api.domain.review.ReviewRepository;
+import sk.tany.rest.api.domain.supplier.Supplier;
+import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
+import sk.tany.rest.api.dto.isklad.UpdateInventoryCardRequest;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
@@ -18,6 +24,7 @@ import sk.tany.rest.api.service.common.SequenceService;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,6 +49,10 @@ class ProductAdminServiceImplTest {
     private SequenceService sequenceService;
     @Mock
     private sk.tany.rest.api.service.isklad.ISkladService iskladService;
+    @Mock
+    private BrandRepository brandRepository;
+    @Mock
+    private SupplierRepository supplierRepository;
 
     @InjectMocks
     private ProductAdminServiceImpl productAdminService;
@@ -189,5 +200,46 @@ class ProductAdminServiceImplTest {
         assertThat(p2.getQuantity()).isEqualTo(quantity);
         verify(productRepository, times(2)).save(any(Product.class));
         verify(productSearchEngine, times(2)).updateProduct(any(Product.class));
+    }
+
+    @Test
+    void save_shouldSendCompleteProductDataToIsklad() {
+        ProductAdminDto dto = new ProductAdminDto();
+        Product product = new Product();
+        product.setProductIdentifier(123L);
+        product.setTitle("Test Product");
+        product.setEan("123456789");
+        product.setPriceWithoutVat(BigDecimal.TEN);
+        product.setActive(true);
+        product.setBrandId("brand1");
+        product.setSupplierId("supplier1");
+        product.setImages(List.of("img1.jpg", "img2.jpg"));
+
+        Brand brand = new Brand();
+        brand.setName("Test Brand");
+        Supplier supplier = new Supplier();
+        supplier.setName("Test Supplier");
+
+        when(productMapper.toEntity(dto)).thenReturn(product);
+        when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+        when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
+        when(brandRepository.findById("brand1")).thenReturn(Optional.of(brand));
+        when(supplierRepository.findById("supplier1")).thenReturn(Optional.of(supplier));
+
+        productAdminService.save(dto);
+
+        ArgumentCaptor<UpdateInventoryCardRequest> requestCaptor = ArgumentCaptor.forClass(UpdateInventoryCardRequest.class);
+        verify(iskladService).createOrUpdateProduct(requestCaptor.capture());
+
+        UpdateInventoryCardRequest request = requestCaptor.getValue();
+        assertThat(request.getItemId()).isEqualTo(123L);
+        assertThat(request.getName()).isEqualTo("Test Product");
+        assertThat(request.getEan()).isEqualTo("123456789");
+        assertThat(request.getPriceWithoutTax()).isEqualTo(BigDecimal.TEN);
+        assertThat(request.getMj()).isEqualTo("ks");
+        assertThat(request.getEnabled()).isTrue();
+        assertThat(request.getProducer()).isEqualTo("Test Brand");
+        assertThat(request.getSupplier()).isEqualTo("Test Supplier");
+        assertThat(request.getImages()).containsExactly("img1.jpg");
     }
 }
