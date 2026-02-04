@@ -12,6 +12,8 @@ import sk.tany.rest.api.dto.admin.category.patch.CategoryPatchRequest;
 import sk.tany.rest.api.service.admin.CategoryAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 
+import java.util.List;
+
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
 @RequestMapping("/api/admin/categories")
@@ -29,6 +31,11 @@ public class CategoryAdminController {
     @PostMapping("/import/prestashop/{id}")
     public void importCategory(@PathVariable String id) {
         prestaShopImportService.importCategory(id);
+    }
+
+    @PostMapping("/{id}/filter-parameters")
+    public ResponseEntity<CategoryDto> addFilterParameters(@PathVariable String id, @RequestBody List<String> filterParameterIds) {
+        return ResponseEntity.ok(categoryService.addFilterParameters(id, filterParameterIds));
     }
 
     @PostMapping
