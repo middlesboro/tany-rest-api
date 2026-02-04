@@ -1,6 +1,9 @@
 package sk.tany.rest.api.dto.admin.category.patch;
 
 import lombok.Data;
+import sk.tany.rest.api.dto.FilterParameterDto;
+
+import java.util.List;
 
 @Data
 public class CategoryPatchRequest {
@@ -12,4 +15,5 @@ public class CategoryPatchRequest {
     private Boolean visible;
     private String slug;
     private String parentId;
+    private List<FilterParameterDto> filterParameters;
 }

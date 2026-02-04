@@ -3,8 +3,10 @@ package sk.tany.rest.api.domain.category;
 import lombok.Data;
 import org.dizitart.no2.objects.Id;
 import sk.tany.rest.api.domain.BaseEntity;
+import sk.tany.rest.api.dto.FilterParameterDto;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 public class Category implements BaseEntity {
@@ -24,6 +26,7 @@ public class Category implements BaseEntity {
     private boolean active;
     private boolean visible;
     private boolean defaultCategory;
+    private List<FilterParameterDto> filterParameters;
     private Instant createdDate;
     private Instant updateDate;
 
