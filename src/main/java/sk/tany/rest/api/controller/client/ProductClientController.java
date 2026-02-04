@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
 import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
@@ -69,6 +68,7 @@ public class ProductClientController {
                 .toList();
     }
 
+    // TODO can be removed
     @GetMapping("/category/{categoryId}")
     public Page<ProductClientListResponse> getProductsByCategory(@PathVariable String categoryId, Pageable pageable) {
         return productService.search(categoryId, pageable)

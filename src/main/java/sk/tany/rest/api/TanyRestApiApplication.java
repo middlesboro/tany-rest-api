@@ -8,7 +8,7 @@ import sk.tany.rest.api.config.NitriteReflectionHints;
 
 @EnableScheduling
 @SpringBootApplication
-@ImportRuntimeHints(NitriteReflectionHints.class)
+@ImportRuntimeHints(NitriteReflectionHints.class) // TODO can be removed
 public class TanyRestApiApplication {
 
     public static void main(String[] args) {

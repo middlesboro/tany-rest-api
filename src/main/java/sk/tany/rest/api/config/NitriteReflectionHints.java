@@ -54,6 +54,7 @@ import sk.tany.rest.api.dto.PriceBreakDown;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
 
+// TODO can be removed
 public class NitriteReflectionHints implements RuntimeHintsRegistrar {
 
     @Override
