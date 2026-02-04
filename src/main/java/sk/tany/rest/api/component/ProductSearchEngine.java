@@ -551,6 +551,19 @@ public class ProductSearchEngine {
             }
         }
 
+        Category category = cachedCategories.get(categoryId);
+        if (category != null && category.getFilterParameters() != null && !category.getFilterParameters().isEmpty()) {
+            Set<String> allowedFilterIds = category.getFilterParameters().stream()
+                    .map(FilterParameterDto::getId)
+                    .collect(Collectors.toSet());
+            allowedFilterIds.add("BRAND");
+            allowedFilterIds.add("AVAILABILITY");
+
+            return allFacets.stream()
+                    .filter(facet -> allowedFilterIds.contains(facet.getId()))
+                    .toList();
+        }
+
         return allFacets;
     }
 
