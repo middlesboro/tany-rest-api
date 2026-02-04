@@ -11,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import sk.tany.rest.api.domain.brand.Brand;
+import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.filter.FilterParameter;
@@ -60,6 +62,7 @@ public class ProductSearchEngine {
     private final FilterParameterValueRepository filterParameterValueRepository;
     private final ProductSalesRepository productSalesRepository;
     private final CategoryRepository categoryRepository;
+    private final BrandRepository brandRepository;
     private final ProductLabelRepository productLabelRepository;
     private final FilterParameterMapper filterParameterMapper;
     private final FilterParameterValueMapper filterParameterValueMapper;
@@ -74,6 +77,7 @@ public class ProductSearchEngine {
     private final Map<String, Category> cachedCategories = new ConcurrentHashMap<>();
     private final Map<String, List<String>> cachedCategoryChildren = new ConcurrentHashMap<>();
     private final Map<String, ProductLabel> cachedProductLabels = new ConcurrentHashMap<>();
+    private final Map<String, Brand> cachedBrands = new ConcurrentHashMap<>();
 
     private static final int MAX_EDIT_DISTANCE = 2;
 
@@ -119,6 +123,12 @@ public class ProductSearchEngine {
         cachedProductLabels.putAll(productLabelRepository.findAll().stream()
                 .collect(Collectors.toMap(ProductLabel::getId, Function.identity())));
         log.info("Loaded {} product labels into search engine.", cachedProductLabels.size());
+
+        log.info("Loading brands into search engine...");
+        cachedBrands.clear();
+        cachedBrands.putAll(brandRepository.findAll().stream()
+                .collect(Collectors.toMap(Brand::getId, Function.identity())));
+        log.info("Loaded {} brands into search engine.", cachedBrands.size());
     }
 
     public List<ProductLabelDto> getProductLabels(List<String> ids) {
@@ -446,22 +456,97 @@ public class ProductSearchEngine {
 
         List<FilterParameterDto> allFacets = getFilterParametersForProducts(productsInCategory, selectedValueIds);
 
+        // Add BRAND filter
+        FilterParameterDto brandFacet = new FilterParameterDto();
+        brandFacet.setId("BRAND");
+        brandFacet.setName("Brand");
+        brandFacet.setType(sk.tany.rest.api.domain.filter.FilterParameterType.BRAND);
+        brandFacet.setValues(new ArrayList<>());
+
+        Set<String> presentBrandNames = productsInCategory.stream()
+                .map(Product::getBrandId)
+                .filter(Objects::nonNull)
+                .map(cachedBrands::get)
+                .filter(Objects::nonNull)
+                .map(Brand::getName)
+                .collect(Collectors.toSet());
+
+        for (String brandName : presentBrandNames) {
+            FilterParameterValueDto valueDto = new FilterParameterValueDto();
+            valueDto.setId(brandName);
+            valueDto.setName(brandName);
+            valueDto.setSelected(selectedValueIds.contains(brandName));
+            brandFacet.getValues().add(valueDto);
+        }
+        if (!brandFacet.getValues().isEmpty()) {
+            brandFacet.getValues().sort(Comparator.comparing(FilterParameterValueDto::getName, Comparator.nullsLast(Comparator.naturalOrder())));
+            allFacets.add(brandFacet);
+        }
+
+        // Add AVAILABILITY filter
+        FilterParameterDto availabilityFacet = new FilterParameterDto();
+        availabilityFacet.setId("AVAILABILITY");
+        availabilityFacet.setName("Availability");
+        availabilityFacet.setType(sk.tany.rest.api.domain.filter.FilterParameterType.AVAILABILITY);
+        availabilityFacet.setValues(new ArrayList<>());
+
+        FilterParameterValueDto onStock = new FilterParameterValueDto();
+        onStock.setId("ON_STOCK");
+        onStock.setName("ON_STOCK");
+        onStock.setSelected(selectedValueIds.contains("ON_STOCK"));
+        availabilityFacet.getValues().add(onStock);
+
+        FilterParameterValueDto soldOut = new FilterParameterValueDto();
+        soldOut.setId("SOLD_OUT");
+        soldOut.setName("SOLD_OUT");
+        soldOut.setSelected(selectedValueIds.contains("SOLD_OUT"));
+        availabilityFacet.getValues().add(soldOut);
+
+        allFacets.add(availabilityFacet);
+
         // Calculate availability
         for (FilterParameterDto facet : allFacets) {
             CategoryFilterRequest otherFiltersRequest = createRequestExcludingFacet(filterRequest, facet.getId());
 
-            // Filter products using all OTHER facets
-            Set<String> availableValuesForFacet = productsInCategory.stream()
+            List<Product> productsMatchingOthers = productsInCategory.stream()
                     .filter(p -> matchesFilter(p, otherFiltersRequest))
-                    .flatMap(p -> p.getProductFilterParameters() != null ? p.getProductFilterParameters().stream() : null)
-                    .filter(Objects::nonNull)
-                    .filter(pfp -> facet.getId().equals(pfp.getFilterParameterId()))
-                    .map(ProductFilterParameter::getFilterParameterValueId)
-                    .collect(Collectors.toSet());
+                    .toList();
 
-            if (facet.getValues() != null) {
+            if ("BRAND".equals(facet.getId())) {
+                Set<String> availableBrandNames = productsMatchingOthers.stream()
+                        .map(Product::getBrandId)
+                        .filter(Objects::nonNull)
+                        .map(cachedBrands::get)
+                        .filter(Objects::nonNull)
+                        .map(Brand::getName)
+                        .collect(Collectors.toSet());
+
                 for (FilterParameterValueDto valueDto : facet.getValues()) {
-                    valueDto.setAvailable(availableValuesForFacet.contains(valueDto.getId()));
+                    valueDto.setAvailable(availableBrandNames.contains(valueDto.getId()));
+                }
+            } else if ("AVAILABILITY".equals(facet.getId())) {
+                boolean hasOnStock = productsMatchingOthers.stream().anyMatch(p -> p.getQuantity() != null && p.getQuantity() > 0);
+                boolean hasSoldOut = productsMatchingOthers.stream().anyMatch(p -> p.getQuantity() == null || p.getQuantity() <= 0);
+
+                for (FilterParameterValueDto valueDto : facet.getValues()) {
+                    if ("ON_STOCK".equals(valueDto.getId())) {
+                        valueDto.setAvailable(hasOnStock);
+                    } else if ("SOLD_OUT".equals(valueDto.getId())) {
+                        valueDto.setAvailable(hasSoldOut);
+                    }
+                }
+            } else {
+                Set<String> availableValuesForFacet = productsMatchingOthers.stream()
+                        .flatMap(p -> p.getProductFilterParameters() != null ? p.getProductFilterParameters().stream() : null)
+                        .filter(Objects::nonNull)
+                        .filter(pfp -> facet.getId().equals(pfp.getFilterParameterId()))
+                        .map(ProductFilterParameter::getFilterParameterValueId)
+                        .collect(Collectors.toSet());
+
+                if (facet.getValues() != null) {
+                    for (FilterParameterValueDto valueDto : facet.getValues()) {
+                        valueDto.setAvailable(availableValuesForFacet.contains(valueDto.getId()));
+                    }
                 }
             }
         }
@@ -504,22 +589,50 @@ public class ProductSearchEngine {
             return true;
         }
 
-        if (product.getProductFilterParameters() == null) {
-            return false;
-        }
-
         for (FilterParameterRequest paramReq : filterRequest.getFilterParameters()) {
             if (paramReq.getFilterParameterValueIds() == null || paramReq.getFilterParameterValueIds().isEmpty()) {
                 continue;
             }
 
-            boolean matchFound = product.getProductFilterParameters().stream()
-                    .anyMatch(pfp -> pfp.getFilterParameterId() != null &&
-                            pfp.getFilterParameterId().equals(paramReq.getId()) &&
-                            paramReq.getFilterParameterValueIds().contains(pfp.getFilterParameterValueId()));
+            if ("BRAND".equals(paramReq.getId())) {
+                String brandId = product.getBrandId();
+                if (brandId == null) {
+                    return false;
+                }
+                Brand brand = cachedBrands.get(brandId);
+                if (brand == null || !paramReq.getFilterParameterValueIds().contains(brand.getName())) {
+                    return false;
+                }
+            } else if ("AVAILABILITY".equals(paramReq.getId())) {
+                boolean onStockSelected = paramReq.getFilterParameterValueIds().contains("ON_STOCK");
+                boolean soldOutSelected = paramReq.getFilterParameterValueIds().contains("SOLD_OUT");
 
-            if (!matchFound) {
-                return false;
+                boolean match = false;
+                if (onStockSelected) {
+                    if (product.getQuantity() != null && product.getQuantity() > 0) {
+                        match = true;
+                    }
+                }
+                if (soldOutSelected) {
+                    if (product.getQuantity() == null || product.getQuantity() <= 0) {
+                        match = true;
+                    }
+                }
+                if (!match) {
+                    return false;
+                }
+            } else {
+                if (product.getProductFilterParameters() == null) {
+                    return false;
+                }
+                boolean matchFound = product.getProductFilterParameters().stream()
+                        .anyMatch(pfp -> pfp.getFilterParameterId() != null &&
+                                pfp.getFilterParameterId().equals(paramReq.getId()) &&
+                                paramReq.getFilterParameterValueIds().contains(pfp.getFilterParameterValueId()));
+
+                if (!matchFound) {
+                    return false;
+                }
             }
         }
         return true;
