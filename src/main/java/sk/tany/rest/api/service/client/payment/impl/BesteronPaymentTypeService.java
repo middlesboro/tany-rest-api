@@ -3,6 +3,7 @@ package sk.tany.rest.api.service.client.payment.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,15 +29,13 @@ import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.domain.payment.enums.PaymentStatus;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTransactionResponse;
+import sk.tany.rest.api.event.OrderStatusChangedEvent;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 import sk.tany.rest.api.exception.PaymentException;
 import sk.tany.rest.api.exception.CustomerException;
 import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.domain.order.Order;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.FileCopyUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -55,11 +54,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     private final BesteronPaymentRepository besteronPaymentRepository;
     private final OrderRepository orderRepository;
     private final EmailService emailService;
-
-    @Value("${eshop.frontend-url}")
-    private String frontendUrl;
-
-    private String emailPaidTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     // TODO add to config class
     @Value("${besteron.client-id}")
@@ -130,7 +125,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
                             }
                             order.getStatusHistory().add(new OrderStatusHistory(OrderStatus.PAID, Instant.now()));
                             Order savedOrder = orderRepository.save(order);
-                            sendOrderPaidEmail(savedOrder);
+                            eventPublisher.publishEvent(new OrderStatusChangedEvent(savedOrder));
                         }
                     });
                 }
@@ -251,40 +246,5 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     public Optional<String> getOrderIdByTransactionId(String transactionId) {
         return besteronPaymentRepository.findByTransactionId(transactionId)
                 .map(BesteronPayment::getOrderId);
-    }
-
-    private void sendOrderPaidEmail(Order order) {
-        if (order.getEmail() == null || order.getEmail().isEmpty()) {
-            log.warn("Cannot send 'Order Paid' email: Customer email is missing for order {}", order.getOrderIdentifier());
-            return;
-        }
-        try {
-            String template = getEmailPaidTemplate();
-
-            String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
-            String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
-            String orderConfirmationLink = frontendUrl + "/order/confirmation/" + order.getId();
-
-            String body = template
-                    .replace("{{firstname}}", firstname)
-                    .replace("{{orderIdentifier}}", orderIdentifier)
-                    .replace("{{orderConfirmationLink}}", orderConfirmationLink)
-                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
-
-            emailService.sendEmail(order.getEmail(), "Objednávka zaplatená", body, true, null);
-            log.info("Sent 'Order Paid' email for order {}", order.getOrderIdentifier());
-
-        } catch (Exception e) {
-            log.error("Failed to send 'Order Paid' email for order {}", order.getOrderIdentifier(), e);
-        }
-    }
-
-    private String getEmailPaidTemplate() throws java.io.IOException {
-        if (emailPaidTemplate == null) {
-            ClassPathResource resource = new ClassPathResource("templates/email/order_paid.html");
-            byte[] data = FileCopyUtils.copyToByteArray(resource.getInputStream());
-            emailPaidTemplate = new String(data, StandardCharsets.UTF_8);
-        }
-        return emailPaidTemplate;
     }
 }
