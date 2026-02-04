@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.component.SlugGenerator;
 import sk.tany.rest.api.domain.brand.Brand;
@@ -30,7 +31,9 @@ import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
 import sk.tany.rest.api.exception.ImportException;
+import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
+import sk.tany.rest.api.service.common.enums.ImageKitType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,6 +65,8 @@ public class ProductImportService {
     private final ProductSearchEngine productSearchEngine;
     private final SlugGenerator slugGenerator;
     private final SequenceService sequenceService;
+    private final ImageService imageService;
+    private final RestTemplate restTemplate;
 
 
     public void importProducts() {
@@ -188,14 +193,43 @@ public class ProductImportService {
 
         // todo import image via imageservice to imakegit and get proper url and save it to product.
 //         Deduplicate by URL (keeping the one with isCover if multiple entries for same URL exist)
-        List<String> finalImages = new ArrayList<>();
-        Set<String> processedUrls = new HashSet<>();
-        for (ImageInfo img : images) {
-             if (processedUrls.add(img.url)) {
-                 finalImages.add(img.url);
-             }
+//        List<String> finalImages = new ArrayList<>();
+//        Set<String> processedUrls = new HashSet<>();
+//        for (ImageInfo img : images) {
+//             if (processedUrls.add(img.url)) {
+//                 finalImages.add(img.url);
+//             }
+//        }
+//        product.setImages(finalImages);
+
+        List<String> uploadedImages = new ArrayList<>();
+        boolean multipleImages = images.size() > 1;
+
+        for (int i = 0; i < images.size(); i++) {
+            ImageInfo img = images.get(i);
+            try {
+                byte[] imageBytes = restTemplate.getForObject(img.url, byte[].class);
+                if (imageBytes != null && imageBytes.length > 0) {
+                    String extension = org.springframework.util.StringUtils.getFilenameExtension(img.url);
+                    if (StringUtils.isBlank(extension)) {
+                        extension = "jpg";
+                    }
+
+                    String filename;
+                    if (multipleImages) {
+                        filename = product.getSlug() + "-" + (i + 1) + "." + extension;
+                    } else {
+                        filename = product.getSlug() + "." + extension;
+                    }
+
+                    String uploadedUrl = imageService.upload(imageBytes, filename, ImageKitType.PRODUCT);
+                    uploadedImages.add(uploadedUrl);
+                }
+            } catch (Exception e) {
+                log.error("Failed to download/upload image: {}", img.url, e);
+            }
         }
-        product.setImages(finalImages);
+        product.setImages(uploadedImages);
 
 
         // Process Labels

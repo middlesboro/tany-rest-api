@@ -24,7 +24,9 @@ import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
+import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.InputStream;
 import java.util.Collections;
@@ -62,6 +64,10 @@ class ProductImportServiceTest {
     private sk.tany.rest.api.component.SlugGenerator slugGenerator;
     @Mock
     private SequenceService sequenceService;
+    @Mock
+    private ImageService imageService;
+    @Mock
+    private RestTemplate restTemplate;
 
     @InjectMocks
     private ProductImportService productImportService;
