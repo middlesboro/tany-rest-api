@@ -8,9 +8,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 import sk.tany.rest.api.domain.order.Order;
+import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
-import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.event.OrderStatusChangedEvent;
 import sk.tany.rest.api.service.common.EmailService;
 
@@ -26,9 +26,6 @@ public class OrderEventHandler {
 
     @Value("${eshop.frontend-url}")
     private String frontendUrl;
-
-    private String emailTemplate;
-    private String emailPaidTemplate;
 
     @EventListener
     public void handleOrderStatusChanged(OrderStatusChangedEvent event) {
@@ -72,7 +69,7 @@ public class OrderEventHandler {
             return;
         }
         try {
-            String template = getEmailTemplate();
+            String template = getEmailTemplate("templates/email/order_sent.html");
 
             String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
             String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
@@ -92,22 +89,13 @@ public class OrderEventHandler {
         }
     }
 
-    private String getEmailTemplate() throws java.io.IOException {
-        if (emailTemplate == null) {
-            ClassPathResource resource = new ClassPathResource("templates/email/order_sent.html");
-            byte[] data = FileCopyUtils.copyToByteArray(resource.getInputStream());
-            emailTemplate = new String(data, StandardCharsets.UTF_8);
-        }
-        return emailTemplate;
-    }
-
     private void sendOrderPaidEmail(Order order) {
         if (order.getEmail() == null || order.getEmail().isEmpty()) {
             log.warn("Cannot send 'Order Paid' email: Customer email is missing for order {}", order.getOrderIdentifier());
             return;
         }
         try {
-            String template = getEmailPaidTemplate();
+            String template = getEmailTemplate("templates/email/order_paid.html");
 
             String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
             String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
@@ -127,12 +115,9 @@ public class OrderEventHandler {
         }
     }
 
-    private String getEmailPaidTemplate() throws java.io.IOException {
-        if (emailPaidTemplate == null) {
-            ClassPathResource resource = new ClassPathResource("templates/email/order_paid.html");
-            byte[] data = FileCopyUtils.copyToByteArray(resource.getInputStream());
-            emailPaidTemplate = new String(data, StandardCharsets.UTF_8);
-        }
-        return emailPaidTemplate;
+    private String getEmailTemplate(String template) throws java.io.IOException {
+        ClassPathResource resource = new ClassPathResource(template);
+        byte[] data = FileCopyUtils.copyToByteArray(resource.getInputStream());
+        return new String(data, StandardCharsets.UTF_8);
     }
 }
