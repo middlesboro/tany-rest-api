@@ -29,6 +29,7 @@
         .header h1 {
             margin: 0;
             font-size: 24px;
+            color: #ffffff !important; /* Fix pre Gmail/Outlook */
         }
         .content {
             padding: 20px;
@@ -55,6 +56,13 @@
             background-color: #f9f9f9;
             font-weight: 600;
         }
+
+        /* GLOBÁLNY FIX PRE ODKAZY V TABUĽKE A OBSAHU */
+        a, a:visited, a:link {
+            color: #3a8a64 !important;
+            text-decoration: underline;
+        }
+
         .totals {
             text-align: right;
             margin-top: 20px;
@@ -89,54 +97,54 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Potvrdenie objednávky</h1>
+<div class="container">
+    <div class="header">
+        <h1 style="color: #ffffff !important;">Potvrdenie objednávky</h1>
+    </div>
+    <div class="content">
+        <p>Dobrý deň <strong>{{firstname}}</strong>,</p>
+        <p>Ďakujeme za Vašu objednávku! Práve ju spracovávame a budeme Vás informovať, akonáhle ju odošleme.</p>
+
+        <div class="order-info">
+            <p><strong>Číslo objednávky:</strong> #{{orderIdentifier}}</p>
         </div>
-        <div class="content">
-            <p>Ahoj <strong>{{firstname}}</strong>,</p>
-            <p>Ďakujeme za tvoju objednávku! Práve ju spracovávame a budeme ťa informovať, keď ju odošleme.</p>
 
-            <div class="order-info">
-                <p><strong>Číslo objednávky:</strong> #{{orderIdentifier}}</p>
-            </div>
+        <div class="section-title">Objednané položky</div>
+        <table>
+            <thead>
+            <tr>
+                <th>Produkt</th>
+                <th>Mn.</th>
+                <th>Cena</th>
+                <th>Spolu</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{products}}
+            </tbody>
+        </table>
 
-            <div class="section-title">Objednané položky</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Produkt</th>
-                        <th>Mn.</th>
-                        <th>Cena</th>
-                        <th>Spolu</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{products}}
-                </tbody>
-            </table>
-
-            <div class="section-title">Doprava a platba</div>
-            <div class="address-box">
-                <p><strong>Dopravca:</strong> {{carrierName}} ({{carrierPrice}})</p>
-                <p><strong>Platba:</strong> {{paymentName}} ({{paymentPrice}})</p>
-            </div>
-
-            <div class="section-title">Dodacia adresa</div>
-            <div class="address-box">
-                {{deliveryAddress}}
-            </div>
-
-            <div class="totals">
-                <p>Doprava: {{carrierPrice}}</p>
-                <p>Platba: {{paymentPrice}}</p>
-                <p class="final-price">Spolu: {{finalPrice}}</p>
-            </div>
+        <div class="section-title">Doprava a platba</div>
+        <div class="address-box">
+            <p><strong>Dopravca:</strong> {{carrierName}} ({{carrierPrice}})</p>
+            <p><strong>Platba:</strong> {{paymentName}} ({{paymentPrice}})</p>
         </div>
-        <div class="footer">
-            <p>&copy; {{currentYear}} Tany.sk. Všetky práva vyhradené.</p>
-            <p>info@tany.sk<br>+421 944 432 457</p>
+
+        <div class="section-title">Dodacia adresa</div>
+        <div class="address-box">
+            {{deliveryAddress}}
+        </div>
+
+        <div class="totals">
+            <p>Doprava: {{carrierPrice}}</p>
+            <p>Platba: {{paymentPrice}}</p>
+            <p class="final-price">Spolu: {{finalPrice}}</p>
         </div>
     </div>
+    <div class="footer">
+        <p>&copy; {{currentYear}} Tany.sk. Všetky práva vyhradené.</p>
+        <p>info@tany.sk<br>+421 944 432 457</p>
+    </div>
+</div>
 </body>
 </html>

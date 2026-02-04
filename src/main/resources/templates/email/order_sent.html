@@ -29,24 +29,39 @@
         .header h1 {
             margin: 0;
             font-size: 24px;
+            color: #ffffff !important;
         }
         .content {
             padding: 20px;
             text-align: center;
         }
+
+        /* Tlačidlo - fix pre stavy :visited a :link */
         .btn {
             display: inline-block;
             background-color: #3a8a64;
-            color: #ffffff;
             padding: 12px 24px;
             text-decoration: none;
             border-radius: 4px;
             font-weight: bold;
             margin-top: 20px;
         }
+
+        .btn, .btn:link, .btn:visited, .btn:active {
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }
+
         .btn:hover {
             background-color: #2d6b4d;
         }
+
+        /* Fix pre textový odkaz pod tlačidlom */
+        .track-link, .track-link:link, .track-link:visited {
+            color: #3a8a64 !important;
+            text-decoration: underline;
+        }
+
         .order-info {
             margin-bottom: 20px;
             padding-bottom: 20px;
@@ -61,26 +76,32 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Objednávka odoslaná</h1>
-        </div>
-        <div class="content">
-            <p>Ahoj <strong>{{firstname}}</strong>,</p>
-            <p>Dobrá správa! Tvoja objednávka <strong>#{{orderIdentifier}}</strong> bola odoslaná.</p>
-
-            <div class="order-info">
-                <p>Svoj balík môžeš sledovať na odkaze nižšie:</p>
-                <a href="{{carrierOrderStateLink}}" class="btn">Sledovať zásielku</a>
-            </div>
-
-            <p>Ak tlačidlo vyššie nefunguje, skopíruj a vlož tento odkaz do prehliadača:</p>
-            <p><a href="{{carrierOrderStateLink}}">{{carrierOrderStateLink}}</a></p>
-        </div>
-        <div class="footer">
-            <p>&copy; {{currentYear}} Tany.sk. Všetky práva vyhradené.</p>
-            <p>info@tany.sk<br>+421 944 432 457</p>
-        </div>
+<div class="container">
+    <div class="header">
+        <h1 style="color: #ffffff !important;">Objednávka odoslaná</h1>
     </div>
+    <div class="content">
+        <p>Dobrý deň <strong>{{firstname}}</strong>,</p>
+        <p>Dobrá správa! Vaša objednávka <strong>#{{orderIdentifier}}</strong> bola odoslaná.</p>
+
+        <div class="order-info">
+            <p>Svoj balík môžete sledovať na odkaze nižšie:</p>
+            <a href="{{carrierOrderStateLink}}" class="btn" style="color: #ffffff !important; text-decoration: none; background-color: #3a8a64; display: inline-block;">
+                <span style="color: #ffffff;">Sledovať zásielku</span>
+            </a>
+        </div>
+
+        <p style="margin-top: 30px;">Ak tlačidlo vyššie nefunguje, skopírujte a vložte tento odkaz do prehliadača:</p>
+        <p>
+            <a href="{{carrierOrderStateLink}}" class="track-link" style="color: #3a8a64 !important;">
+                {{carrierOrderStateLink}}
+            </a>
+        </p>
+    </div>
+    <div class="footer">
+        <p>&copy; {{currentYear}} Tany.sk. Všetky práva vyhradené.</p>
+        <p>info@tany.sk<br>+421 944 432 457</p>
+    </div>
+</div>
 </body>
 </html>

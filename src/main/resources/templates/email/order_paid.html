@@ -29,24 +29,39 @@
         .header h1 {
             margin: 0;
             font-size: 24px;
+            color: #ffffff !important;
         }
         .content {
             padding: 20px;
             text-align: center;
         }
+
+        /* Tlačidlo - fix pre Gmail a Outlook */
         .btn {
             display: inline-block;
             background-color: #3a8a64;
-            color: #ffffff;
             padding: 12px 24px;
             text-decoration: none;
             border-radius: 4px;
             font-weight: bold;
             margin-top: 20px;
         }
+
+        .btn, .btn:link, .btn:visited, .btn:active {
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }
+
         .btn:hover {
             background-color: #2d6b4d;
         }
+
+        /* Odkazy v texte - aby ostali zelené aj po kliknutí */
+        .link-text, .link-text:link, .link-text:visited {
+            color: #3a8a64 !important;
+            text-decoration: underline;
+        }
+
         .order-info {
             margin-bottom: 20px;
             padding-bottom: 20px;
@@ -61,26 +76,32 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Objednávka zaplatená</h1>
-        </div>
-        <div class="content">
-            <p>Ahoj <strong>{{firstname}}</strong>,</p>
-            <p>Úspešne sme prijali platbu za tvoju objednávku <strong>#{{orderIdentifier}}</strong>.</p>
-
-            <div class="order-info">
-                <p>Potvrdenie objednávky si môžeš pozrieť na odkaze nižšie:</p>
-                <a href="{{orderConfirmationLink}}" class="btn">Zobraziť objednávku</a>
-            </div>
-
-            <p>Ak tlačidlo vyššie nefunguje, skopíruj a vlož tento odkaz do prehliadača:</p>
-            <p><a href="{{orderConfirmationLink}}">{{orderConfirmationLink}}</a></p>
-        </div>
-        <div class="footer">
-            <p>&copy; {{currentYear}} Tany.sk. Všetky práva vyhradené.</p>
-            <p>info@tany.sk<br>+421 944 432 457</p>
-        </div>
+<div class="container">
+    <div class="header">
+        <h1 style="color: #ffffff !important;">Objednávka zaplatená</h1>
     </div>
+    <div class="content">
+        <p>Dobrý deň <strong>{{firstname}}</strong>,</p>
+        <p>Úspešne sme prijali platbu za Vašu objednávku <strong>#{{orderIdentifier}}</strong>.</p>
+
+        <div class="order-info">
+            <p>Potvrdenie objednávky si môžete pozrieť na odkaze nižšie:</p>
+            <a href="{{orderConfirmationLink}}" class="btn" style="color: #ffffff !important; text-decoration: none; background-color: #3a8a64;">
+                <span style="color: #ffffff;">Zobraziť objednávku</span>
+            </a>
+        </div>
+
+        <p style="margin-top: 30px;">Ak tlačidlo vyššie nefunguje, skopírujte a vložte tento odkaz do prehliadača:</p>
+        <p>
+            <a href="{{orderConfirmationLink}}" class="link-text" style="color: #3a8a64 !important;">
+                {{orderConfirmationLink}}
+            </a>
+        </p>
+    </div>
+    <div class="footer">
+        <p>&copy; {{currentYear}} Tany.sk. Všetky práva vyhradené.</p>
+        <p>info@tany.sk<br>+421 944 432 457</p>
+    </div>
+</div>
 </body>
 </html>
