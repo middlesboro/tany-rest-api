@@ -3,6 +3,7 @@ package sk.tany.rest.api.config;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.aot.hint.TypeReference;
 import sk.tany.rest.api.domain.auth.AuthorizationCode;
 import sk.tany.rest.api.domain.auth.MagicLinkToken;
 import sk.tany.rest.api.domain.auth.MagicLinkTokenState;
@@ -58,6 +59,25 @@ public class NitriteReflectionHints implements RuntimeHintsRegistrar {
 
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+        // Caffeine cache classes - tieto SSA, SSA, atď. sú generované dynamicky
+        String[] caffeineClasses = {
+                "com.github.benmanes.caffeine.cache.SSMS",
+                "com.github.benmanes.caffeine.cache.PSMS",
+                "com.github.benmanes.caffeine.cache.SSA",
+                "com.github.benmanes.caffeine.cache.PSA"
+        };
+
+        for (String className : caffeineClasses) {
+            try {
+                hints.reflection().registerType(TypeReference.of(className),
+                        MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+                        MemberCategory.INVOKE_PUBLIC_METHODS,
+                        MemberCategory.DECLARED_FIELDS);
+            } catch (Exception e) {
+                // Ak niektorá trieda neexistuje v tvojej verzii, ignoruj ju
+            }
+        }
+
         registerEntities(hints,
             // Entities
             Supplier.class,

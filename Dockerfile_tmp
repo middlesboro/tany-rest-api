@@ -1,0 +1,62 @@
+# --- STAGE 1: Build ---
+FROM ghcr.io/graalvm/native-image-community:21 AS build
+
+# 1. Oprava repozitárov a inštalácia potrebných C++ nástrojov pre Native Image
+RUN sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/oracle-linux-ol9.repo && \
+    microdnf install -y \
+    findutils \
+    maven \
+    gcc \
+    glibc-devel \
+    zlib-devel \
+    glibc-static \
+    libstdc++-static \
+    zlib-static && \
+    microdnf clean all
+
+WORKDIR /app
+
+# 2. Cache závislostí (aby sa pri zmene kódu nemuseli sťahovať znova)
+COPY pom.xml ./
+RUN mvn dependency:go-offline -B
+
+# 3. Kopírovanie zdrojového kódu
+COPY src ./src
+
+# 4. Samotná natívna kompilácia
+# Pridávame inicializáciu Logbacku pri builde, aby sme sa vyhli Erroru 95.84
+RUN mvn -Pnative native:compile -DskipTests \
+    -DexecutableName=tany \
+    -Dnative.build.args="--initialize-at-build-time=ch.qos.logback,org.slf4j"
+
+# 5. Diagnostika (vypíše obsah targetu do logu, ak by COPY zlyhalo)
+RUN ls -lh target/
+
+# --- STAGE 2: Run ---
+# Použijeme bezpečný a malý Debian
+FROM debian:bookworm-slim
+
+# Inštalácia certifikátov (potrebné pre HTTPS volania)
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/lists/*
+
+# Vytvorenie neprivilegovaného používateľa
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+WORKDIR /app
+
+# 6. Kopírovanie binárky z Stage 1
+# Používame hviezdičku pre flexibilitu, ak by sa súbor volal tany.exe alebo tany-bin
+COPY --from=build /app/target/tany* ./tany
+
+# Nastavenie práv pre spustenie a pre Nitrite DB priečinok
+RUN chmod +x /app/tany && \
+    mkdir /app/data && \
+    chown -R appuser:appuser /app/data
+
+USER appuser
+
+# Exponujeme port (štandard Spring Boot)
+EXPOSE 8080
+
+# 7. Spustenie aplikácie
+ENTRYPOINT ["./tany"]

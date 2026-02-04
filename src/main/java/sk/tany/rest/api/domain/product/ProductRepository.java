@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.dizitart.no2.Nitrite;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -63,10 +62,10 @@ public class ProductRepository extends AbstractInMemoryRepository<Product> {
     // We use @Lazy to avoid circular dependencies if any exist, though ideally repo-to-repo deps should be minimal.
     // However, ProductRepository needs other repos for the complex search logic.
     public ProductRepository(Nitrite nitrite,
-                             @Lazy FilterParameterRepository filterParameterRepository,
-                             @Lazy FilterParameterValueRepository filterParameterValueRepository,
-                             @Lazy ProductSalesRepository productSalesRepository,
-                             @Lazy CategoryRepository categoryRepository,
+                              FilterParameterRepository filterParameterRepository,
+                              FilterParameterValueRepository filterParameterValueRepository,
+                              ProductSalesRepository productSalesRepository,
+                              CategoryRepository categoryRepository,
                              FilterParameterMapper filterParameterMapper,
                              FilterParameterValueMapper filterParameterValueMapper) {
         super(nitrite, Product.class);

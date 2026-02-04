@@ -74,6 +74,7 @@ admin:
   database:
     password: ${DATABASE_PASSWORD}
     username: ${DATABASE_USERNAME}
+    path: ${DATABASE_PATH}
 
 onedrive:
   client-id: ${ONEDRIVE_CLIENT_ID}
