@@ -14,4 +14,5 @@ public class ISkladProperties {
     private String authKey;
     private String authToken;
     private Integer shopSettingId;
+    private String incomingApiKey;
 }
