@@ -5,6 +5,7 @@ public enum OrderStatus {
     PAID,
     COD,
     PACKING,
+    PACKED,
     SENT,
     READY_FOR_PICKUP,
     DELIVERED,
