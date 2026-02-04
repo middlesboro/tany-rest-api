@@ -12,4 +12,10 @@ import java.time.Instant;
 public class OrderStatusHistory {
     private OrderStatus status;
     private Instant createdAt;
+    private Boolean emailSent;
+
+    public OrderStatusHistory(OrderStatus status, Instant createdAt) {
+        this.status = status;
+        this.createdAt = createdAt;
+    }
 }

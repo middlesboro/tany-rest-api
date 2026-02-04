@@ -2,11 +2,10 @@ package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.FileCopyUtils;
 import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierPriceRange;
@@ -28,6 +27,7 @@ import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.PriceBreakDown;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
+import sk.tany.rest.api.event.OrderStatusChangedEvent;
 import sk.tany.rest.api.mapper.ISkladMapper;
 import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.common.EmailService;
@@ -36,7 +36,6 @@ import sk.tany.rest.api.service.isklad.ISkladService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,12 +59,7 @@ public class OrderAdminServiceImpl implements OrderAdminService {
     private final ISkladService iskladService;
     private final ISkladProperties iskladProperties;
     private final ISkladMapper iskladMapper;
-
-    @org.springframework.beans.factory.annotation.Value("${eshop.frontend-url}")
-    private String frontendUrl;
-
-    private String emailTemplate;
-    private String emailPaidTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Page<OrderDto> findAll(Long orderIdentifier, OrderStatus status, BigDecimal priceFrom, BigDecimal priceTo, String carrierId, String paymentId, Instant createDateFrom, Instant createDateTo, Pageable pageable) {
@@ -405,10 +399,8 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         var savedOrder = orderRepository.save(order);
-        if (savedOrder.getStatus() == OrderStatus.SENT && oldStatus != OrderStatus.SENT) {
-            sendOrderSentEmail(savedOrder);
-        } else if (savedOrder.getStatus() == OrderStatus.PAID && oldStatus != OrderStatus.PAID) {
-            sendOrderPaidEmail(savedOrder);
+        if (savedOrder.getStatus() != oldStatus) {
+            eventPublisher.publishEvent(new OrderStatusChangedEvent(savedOrder));
         }
 
         return orderMapper.toDto(savedOrder);
@@ -437,10 +429,8 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         }
 
         var savedOrder = orderRepository.save(order);
-        if (savedOrder.getStatus() == OrderStatus.SENT && oldStatus != OrderStatus.SENT) {
-            sendOrderSentEmail(savedOrder);
-        } else if (savedOrder.getStatus() == OrderStatus.PAID && oldStatus != OrderStatus.PAID) {
-            sendOrderPaidEmail(savedOrder);
+        if (savedOrder.getStatus() != oldStatus) {
+            eventPublisher.publishEvent(new OrderStatusChangedEvent(savedOrder));
         }
 
         return orderMapper.toDto(savedOrder);
@@ -471,75 +461,5 @@ public class OrderAdminServiceImpl implements OrderAdminService {
                 log.error("Failed to create order in iSklad for orderIdentifier {}", order.getOrderIdentifier(), e);
             }
         }
-    }
-
-    private void sendOrderSentEmail(Order order) {
-        if (order.getEmail() == null || order.getEmail().isEmpty()) {
-            log.warn("Cannot send 'Order Sent' email: Customer email is missing for order {}", order.getOrderIdentifier());
-            return;
-        }
-        try {
-            String template = getEmailTemplate();
-
-            String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
-            String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
-            String carrierLink = order.getCarrierOrderStateLink() != null ? order.getCarrierOrderStateLink() : "#";
-
-            String body = template
-                    .replace("{{firstname}}", firstname)
-                    .replace("{{orderIdentifier}}", orderIdentifier)
-                    .replace("{{carrierOrderStateLink}}", carrierLink)
-                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
-
-            emailService.sendEmail(order.getEmail(), "Objednávka odoslaná", body, true, null);
-            log.info("Sent 'Order Sent' email for order {}", order.getOrderIdentifier());
-
-        } catch (Exception e) {
-            log.error("Failed to send 'Order Sent' email for order {}", order.getOrderIdentifier(), e);
-        }
-    }
-
-    private String getEmailTemplate() throws java.io.IOException {
-        if (emailTemplate == null) {
-            ClassPathResource resource = new ClassPathResource("templates/email/order_sent.html");
-            byte[] data = FileCopyUtils.copyToByteArray(resource.getInputStream());
-            emailTemplate = new String(data, StandardCharsets.UTF_8);
-        }
-        return emailTemplate;
-    }
-
-    private void sendOrderPaidEmail(Order order) {
-        if (order.getEmail() == null || order.getEmail().isEmpty()) {
-            log.warn("Cannot send 'Order Paid' email: Customer email is missing for order {}", order.getOrderIdentifier());
-            return;
-        }
-        try {
-            String template = getEmailPaidTemplate();
-
-            String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
-            String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
-            String orderConfirmationLink = frontendUrl + "/order/confirmation/" + order.getId();
-
-            String body = template
-                    .replace("{{firstname}}", firstname)
-                    .replace("{{orderIdentifier}}", orderIdentifier)
-                    .replace("{{orderConfirmationLink}}", orderConfirmationLink)
-                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
-
-            emailService.sendEmail(order.getEmail(), "Objednávka zaplatená", body, true, null);
-            log.info("Sent 'Order Paid' email for order {}", order.getOrderIdentifier());
-
-        } catch (Exception e) {
-            log.error("Failed to send 'Order Paid' email for order {}", order.getOrderIdentifier(), e);
-        }
-    }
-
-    private String getEmailPaidTemplate() throws java.io.IOException {
-        if (emailPaidTemplate == null) {
-            ClassPathResource resource = new ClassPathResource("templates/email/order_paid.html");
-            byte[] data = FileCopyUtils.copyToByteArray(resource.getInputStream());
-            emailPaidTemplate = new String(data, StandardCharsets.UTF_8);
-        }
-        return emailPaidTemplate;
     }
 }
