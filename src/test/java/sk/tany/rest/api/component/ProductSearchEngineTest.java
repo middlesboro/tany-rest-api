@@ -54,6 +54,8 @@ class ProductSearchEngineTest {
     @Mock
     private CategoryRepository categoryRepository;
     @Mock
+    private sk.tany.rest.api.domain.brand.BrandRepository brandRepository;
+    @Mock
     private sk.tany.rest.api.domain.productlabel.ProductLabelRepository productLabelRepository;
 
     @InjectMocks
@@ -232,7 +234,7 @@ class ProductSearchEngineTest {
 
         List<FilterParameterDto> result = productSearchEngine.getFilterParametersForCategoryWithFilter("cat1", request);
 
-        assertEquals(2, result.size());
+        assertEquals(3, result.size());
 
         FilterParameterDto brandDto = result.stream().filter(f -> f.getId().equals("brand")).findFirst().orElseThrow();
         assertEquals(2, brandDto.getValues().size()); // Should have both
