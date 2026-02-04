@@ -12,6 +12,11 @@ import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.lowagie.text.Image;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.ColumnText;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfPageEventHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.carrier.Carrier;
@@ -101,7 +106,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4, 36, 36, 36, 36); // Margins
-            PdfWriter.getInstance(document, baos);
+            PdfWriter writer = PdfWriter.getInstance(document, baos);
+            writer.setPageEvent(new InvoiceFooter());
             document.open();
 
             addContent(document, order, customer, carrierName, paymentName, productMap);
@@ -366,6 +372,31 @@ public class InvoiceServiceImpl implements InvoiceService {
             paidNote.setAlignment(Element.ALIGN_CENTER);
             paidNote.setSpacingBefore(10);
             document.add(paidNote);
+        }
+
+        // Add Signature
+        try {
+            Image signature = Image.getInstance(getClass().getResource("/podpis_fa.png"));
+            signature.scaleToFit(120, 60);
+            signature.setAlignment(Element.ALIGN_RIGHT);
+            signature.setSpacingBefore(20);
+            document.add(signature);
+        } catch (Exception e) {
+            // Log or ignore if signature is missing
+            System.err.println("Failed to load signature: " + e.getMessage());
+        }
+    }
+
+    private class InvoiceFooter extends PdfPageEventHelper {
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+            PdfContentByte cb = writer.getDirectContent();
+            String footerText = "Tany.sk | Email: info@tany.sk | Tel: +421 944 432 457";
+            Phrase footer = new Phrase(footerText, getSlovakFont(9, Font.NORMAL, Color.GRAY));
+            ColumnText.showTextAligned(cb, Element.ALIGN_CENTER,
+                    footer,
+                    (document.right() - document.left()) / 2 + document.leftMargin(),
+                    document.bottom() - 10, 0);
         }
     }
 
