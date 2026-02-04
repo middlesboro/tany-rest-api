@@ -82,6 +82,12 @@ public class ProductClientController {
         ProductClientSearchResponse response = new ProductClientSearchResponse();
         response.setProducts(result.getProducts().map(productClientApiMapper::toListResponse));
         response.setFilterParameters(result.getFilterParameters());
+
+        categoryRepository.findById(categoryId).ifPresent(category -> {
+            response.setMetaTitle(category.getMetaTitle());
+            response.setMetaDescription(category.getMetaDescription());
+        });
+
         return response;
     }
 
