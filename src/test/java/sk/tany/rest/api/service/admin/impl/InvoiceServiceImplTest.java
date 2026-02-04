@@ -151,4 +151,37 @@ class InvoiceServiceImplTest {
         // It should appear as "-10.00 €"
         Assertions.assertTrue(text.contains("-10.00 €"), "PDF should contain negative discount value. Found: " + text);
     }
+
+    @Test
+    void generateInvoice_shouldContainFooter() throws IOException {
+        String orderId = "order-footer-1";
+        Order order = new Order();
+        order.setId(orderId);
+        order.setOrderIdentifier(999L);
+        order.setCreateDate(Instant.now());
+        order.setStatus(OrderStatus.CREATED);
+        order.setPriceBreakDown(new PriceBreakDown());
+        order.getPriceBreakDown().setTotalPrice(BigDecimal.ZERO);
+        order.getPriceBreakDown().setTotalPriceWithoutVat(BigDecimal.ZERO);
+        order.getPriceBreakDown().setTotalPriceVatValue(BigDecimal.ZERO);
+
+        order.setCarrierId("carrier-1");
+        order.setPaymentId("payment-1");
+        when(carrierRepository.findById("carrier-1")).thenReturn(Optional.empty());
+        when(paymentRepository.findById("payment-1")).thenReturn(Optional.empty());
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        byte[] pdfBytes = invoiceService.generateInvoice(orderId);
+        PdfReader reader = new PdfReader(pdfBytes);
+        PdfTextExtractor extractor = new PdfTextExtractor(reader);
+        String text = extractor.getTextFromPage(1);
+
+        // Check for footer content
+        // Note: PdfTextExtractor might merge lines, so we check for substrings
+        Assertions.assertTrue(text.contains("info@tany.sk"), "PDF should contain footer email. Found: " + text);
+        // Clean up text for check because extraction might have artifacts
+        Assertions.assertTrue(text.replace(" ", "").contains("421944432457"), "PDF should contain footer phone. Found: " + text);
+        Assertions.assertTrue(text.contains("Tany.sk"), "PDF should contain footer eshop name. Found: " + text);
+    }
 }
