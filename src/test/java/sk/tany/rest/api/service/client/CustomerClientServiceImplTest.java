@@ -24,6 +24,7 @@ import sk.tany.rest.api.mapper.CustomerMapper;
 import sk.tany.rest.api.component.SecurityUtil;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -74,13 +75,14 @@ class CustomerClientServiceImplTest {
         cartDto.setSelectedCarrierId(selectedCarrierId);
         cartDto.setSelectedPaymentId(selectedPaymentId);
         CartItem cartItem = new CartItem("prod1", 2);
-        cartDto.setItems(List.of(cartItem));
+        cartDto.setItems(new ArrayList<>(List.of(cartItem)));
 
         when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
 
         ProductClientDto productDto = new ProductClientDto();
         productDto.setId("prod1");
         productDto.setPrice(BigDecimal.valueOf(10.0));
+        productDto.setQuantity(10);
         productDto.setWeight(BigDecimal.valueOf(2.5)); // Total weight = 2 * 2.5 = 5.0
         when(productService.findAllByIds(List.of("prod1"))).thenReturn(List.of(productDto));
 
@@ -214,5 +216,80 @@ class CustomerClientServiceImplTest {
 
         // Assert
         assertFalse(result.isDiscountForNewsletter());
+    }
+
+    @Test
+    void getCustomerContext_AdjustsQuantity_WhenStockIsInsufficient() {
+        // Arrange
+        String cartId = "cart1";
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        CartItem cartItem = new CartItem("prod1", 5);
+        cartItem.setTitle("Product 1");
+        cartDto.setItems(new ArrayList<>(List.of(cartItem)));
+
+        when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
+        when(cartService.save(any(CartDto.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ProductClientDto productDto = new ProductClientDto();
+        productDto.setId("prod1");
+        productDto.setTitle("Product 1");
+        productDto.setPrice(BigDecimal.valueOf(10.0));
+        productDto.setQuantity(3);
+        when(productService.findAllByIds(List.of("prod1"))).thenReturn(List.of(productDto));
+
+        when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+        when(paymentService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // Act
+        CustomerContextDto result = customerClientService.getCustomerContext(cartId);
+        CustomerContextCartDto contextCart = result.getCartDto();
+
+        // Assert
+        assertNotNull(contextCart.getQuantityChanges());
+        assertEquals(1, contextCart.getQuantityChanges().size());
+        sk.tany.rest.api.dto.CartQuantityChangeDto change = contextCart.getQuantityChanges().get(0);
+        assertEquals("prod1", change.getProductId());
+        assertEquals(5, change.getRequestedQuantity());
+        assertEquals(3, change.getCurrentQuantity());
+
+        assertEquals(1, contextCart.getProducts().size());
+        assertEquals(3, contextCart.getProducts().get(0).getQuantity());
+        assertEquals(3, cartDto.getItems().get(0).getQuantity());
+    }
+
+    @Test
+    void getCustomerContext_RemovesProduct_WhenStockIsZero() {
+        // Arrange
+        String cartId = "cart1";
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cartId);
+        CartItem cartItem = new CartItem("prod1", 5);
+        cartDto.setItems(new ArrayList<>(List.of(cartItem)));
+
+        when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
+        when(cartService.save(any(CartDto.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ProductClientDto productDto = new ProductClientDto();
+        productDto.setId("prod1");
+        productDto.setTitle("Product 1");
+        productDto.setPrice(BigDecimal.valueOf(10.0));
+        productDto.setQuantity(0);
+        when(productService.findAllByIds(List.of("prod1"))).thenReturn(List.of(productDto));
+
+        when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+        when(paymentService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // Act
+        CustomerContextDto result = customerClientService.getCustomerContext(cartId);
+        CustomerContextCartDto contextCart = result.getCartDto();
+
+        // Assert
+        assertEquals(1, contextCart.getQuantityChanges().size());
+        sk.tany.rest.api.dto.CartQuantityChangeDto change = contextCart.getQuantityChanges().get(0);
+        assertEquals(0, change.getCurrentQuantity());
+
+        assertTrue(cartDto.getItems().isEmpty());
+        assertTrue(contextCart.getProducts().isEmpty());
     }
 }
