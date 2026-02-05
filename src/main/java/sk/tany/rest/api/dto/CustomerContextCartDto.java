@@ -28,5 +28,7 @@ public class CustomerContextCartDto {
     private java.math.BigDecimal totalDiscount;
     private java.math.BigDecimal finalPrice; // Total - Discount + Carrier + Payment
 
+    private java.util.List<CartQuantityChangeDto> quantityChanges;
+
     private PriceBreakDown priceBreakDown;
 }
