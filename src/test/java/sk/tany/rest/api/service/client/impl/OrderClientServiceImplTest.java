@@ -100,6 +100,10 @@ class OrderClientServiceImplTest {
         Resource pdfResource = new ByteArrayResource("dummy pdf".getBytes());
         lenient().when(resourceLoader.getResource("classpath:templates/email/order_created.html")).thenReturn(templateResource);
         lenient().when(resourceLoader.getResource("classpath:empty.pdf")).thenReturn(pdfResource);
+        lenient().when(resourceLoader.getResource("classpath:formular-na-odstupenie-od-zmluvy-tany.sk.pdf")).thenReturn(pdfResource);
+        lenient().when(resourceLoader.getResource("classpath:obchodne-podmienky.pdf")).thenReturn(pdfResource);
+
+        lenient().when(invoiceService.generateInvoice(anyString())).thenReturn(new byte[0]);
 
         orderClientService.init();
     }
