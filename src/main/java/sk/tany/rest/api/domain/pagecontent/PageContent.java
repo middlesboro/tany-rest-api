@@ -12,8 +12,12 @@ public class PageContent implements BaseEntity {
     @Id
     private String id;
     private String title;
+    private String description;
+    private String metaTitle;
+    private String metaDescription;
     private String slug;
     private String content;
+    private boolean visible;
     private Instant createdDate;
     private Instant updateDate;
 
