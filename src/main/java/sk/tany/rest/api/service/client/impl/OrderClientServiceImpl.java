@@ -50,6 +50,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -340,12 +341,12 @@ public class OrderClientServiceImpl implements OrderClientService {
             template = template.replace("{{products}}", productsHtml.toString());
 
             // Carrier and Payment
-            String carrierName = carrier != null ? carrier.getName() : "Unknown Carrier";
+            String carrierName = carrier != null && carrier.getName() != null ? carrier.getName() : "Unknown Carrier";
             String carrierPrice = String.format("%.2f €", carrierPriceVal);
             template = template.replace("{{carrierName}}", HtmlUtils.htmlEscape(carrierName));
             template = template.replace("{{carrierPrice}}", carrierPrice);
 
-            String paymentName = payment != null ? payment.getName() : "Unknown Payment";
+            String paymentName = payment != null && payment.getName() != null ? payment.getName() : "Unknown Payment";
             String paymentPrice = String.format("%.2f €", paymentPriceVal);
             template = template.replace("{{paymentName}}", HtmlUtils.htmlEscape(paymentName));
             template = template.replace("{{paymentPrice}}", paymentPrice);
@@ -366,14 +367,23 @@ public class OrderClientServiceImpl implements OrderClientService {
             template = template.replace("{{finalPrice}}", String.format("%.2f €", finalPrice));
 
             byte[] invoiceBytes = invoiceService.generateInvoice(order.getId());
-            File pdfFile = File.createTempFile("faktura_" + order.getOrderIdentifier(), ".pdf");
+            File invoiceFile = File.createTempFile("faktura_" + order.getOrderIdentifier(), ".pdf");
+            File odstupenieFile = createTempFileFromResource("classpath:formular-na-odstupenie-od-zmluvy-tany.sk.pdf", "odstupenie", ".pdf");
+            File podmienkyFile = createTempFileFromResource("classpath:obchodne-podmienky.pdf", "podmienky", ".pdf");
+
             try {
-                Files.write(pdfFile.toPath(), invoiceBytes);
-                emailService.sendEmail(order.getEmail(), "Objednávka č. " + order.getOrderIdentifier(), template, true, pdfFile);
+                Files.write(invoiceFile.toPath(), invoiceBytes);
+                emailService.sendEmail(order.getEmail(), "Objednávka č. " + order.getOrderIdentifier(), template, true, invoiceFile, odstupenieFile, podmienkyFile);
             } finally {
-                // Cleanup temp file
-                if (pdfFile.exists()) {
-                    pdfFile.delete();
+                // Cleanup temp files
+                if (invoiceFile.exists()) {
+                    invoiceFile.delete();
+                }
+                if (odstupenieFile != null && odstupenieFile.exists()) {
+                    odstupenieFile.delete();
+                }
+                if (podmienkyFile != null && podmienkyFile.exists()) {
+                    podmienkyFile.delete();
                 }
             }
 
@@ -382,6 +392,24 @@ public class OrderClientServiceImpl implements OrderClientService {
             log.error("Failed to send order confirmation email: {}", e.getMessage(), e);
         } catch (Exception e) {
             log.error("Unexpected error sending email: {}", e.getMessage(), e);
+        }
+    }
+
+    private File createTempFileFromResource(String resourcePath, String prefix, String suffix) {
+        try {
+            Resource resource = resourceLoader.getResource(resourcePath);
+            if (!resource.exists()) {
+                log.warn("Resource not found: {}", resourcePath);
+                return null;
+            }
+            File tempFile = File.createTempFile(prefix, suffix);
+            try (InputStream in = resource.getInputStream()) {
+                Files.copy(in, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+            return tempFile;
+        } catch (IOException e) {
+            log.error("Failed to create temp file for resource: {}", resourcePath, e);
+            return null;
         }
     }
 

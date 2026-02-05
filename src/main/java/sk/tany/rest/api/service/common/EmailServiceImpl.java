@@ -23,7 +23,7 @@ public class EmailServiceImpl implements EmailService {
     private String fromName;
 
     @Override
-    public void sendEmail(String to, String subject, String body, boolean isHtml, File attachment) {
+    public void sendEmail(String to, String subject, String body, boolean isHtml, File... attachments) {
         Email email = new Email();
 
         email.setFrom(fromName, fromEmail);
@@ -40,11 +40,15 @@ public class EmailServiceImpl implements EmailService {
             email.setPlain(body);
         }
 
-        if (attachment != null) {
-            try {
-                email.attachFile(attachment);
-            } catch (java.io.IOException e) {
-                throw new EmailException("Failed to attach file", e);
+        if (attachments != null) {
+            for (File attachment : attachments) {
+                if (attachment != null) {
+                    try {
+                        email.attachFile(attachment);
+                    } catch (java.io.IOException e) {
+                        throw new EmailException("Failed to attach file", e);
+                    }
+                }
             }
         }
 
