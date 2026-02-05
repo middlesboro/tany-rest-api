@@ -18,4 +18,10 @@ public class CustomerRepository extends AbstractInMemoryRepository<Customer> {
                 .filter(c -> c.getEmail() != null && c.getEmail().equals(email))
                 .findFirst();
     }
+
+    public java.util.List<Customer> findAllByRole(Role role) {
+        return memoryCache.values().stream()
+                .filter(c -> c.getRole() == role)
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

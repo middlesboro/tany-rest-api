@@ -159,4 +159,10 @@ public class OrderRepository extends AbstractInMemoryRepository<Order> {
                 .filter(o -> o.getStatus() != status)
                 .collect(Collectors.toList());
     }
+
+    public List<Order> findAllByAdminNotificationDateIsNull() {
+        return memoryCache.values().stream()
+                .filter(o -> o.getAdminNotificationDate() == null)
+                .collect(Collectors.toList());
+    }
 }
