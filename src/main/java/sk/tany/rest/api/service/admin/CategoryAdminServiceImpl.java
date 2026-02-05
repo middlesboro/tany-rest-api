@@ -6,9 +6,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.category.CategoryRepository;
+import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.dto.CategoryDto;
 import sk.tany.rest.api.mapper.CategoryMapper;
+import sk.tany.rest.api.mapper.FilterParameterMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -18,6 +24,8 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
     private final ProductSearchEngine productSearchEngine;
+    private final FilterParameterRepository filterParameterRepository;
+    private final FilterParameterMapper filterParameterMapper;
 
     @Override
     public Page<CategoryDto> findAll(Pageable pageable) {
@@ -69,5 +77,27 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     @Override
     public Optional<CategoryDto> findByPrestashopId(Long prestashopId) {
         return categoryRepository.findByPrestashopId(prestashopId).map(categoryMapper::toDto);
+    }
+
+    @Override
+    public CategoryDto addFilterParameters(String id, List<String> filterParameterIds) {
+        var category = categoryRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
+        var filterParameters = filterParameterRepository.findAllById(filterParameterIds);
+
+        var existingFilterParameters = category.getFilterParameters();
+        if (existingFilterParameters == null) {
+            existingFilterParameters = new ArrayList<>();
+            category.setFilterParameters(existingFilterParameters);
+        }
+
+        for (var filterParameter : filterParameters) {
+            if (existingFilterParameters.stream().noneMatch(fp -> fp.getId().equals(filterParameter.getId()))) {
+                existingFilterParameters.add(filterParameterMapper.toDto(filterParameter));
+            }
+        }
+
+        var savedCategory = categoryRepository.save(category);
+        productSearchEngine.updateCategory(savedCategory);
+        return categoryMapper.toDto(savedCategory);
     }
 }
