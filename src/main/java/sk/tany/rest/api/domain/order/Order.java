@@ -49,6 +49,7 @@ public class Order implements BaseEntity {
     private boolean invoiceUploadedToOneDrive;
     private boolean creditNoteUploadedToOneDrive;
     private Instant iskladImportDate;
+    private Instant adminNotificationDate;
 
     @Override
     public void setCreatedDate(Instant date) {
