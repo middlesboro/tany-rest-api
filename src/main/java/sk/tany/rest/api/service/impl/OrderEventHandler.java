@@ -123,8 +123,8 @@ public class OrderEventHandler {
                     BigDecimal qty = item.getQuantity() != null && item.getQuantity() > 0 ? new BigDecimal(item.getQuantity()) : BigDecimal.ONE;
                     BigDecimal unitPrice = item.getPriceWithVat().divide(qty, 2, RoundingMode.HALF_UP);
 
-                    productsHtml.append("<td>").append(String.format("%.2f €", unitPrice)).append("</td>");
-                    productsHtml.append("<td>").append(String.format("%.2f €", item.getPriceWithVat())).append("</td>");
+                    productsHtml.append("<td>").append(String.format("%.2f&nbsp;€", unitPrice)).append("</td>");
+                    productsHtml.append("<td>").append(String.format("%.2f&nbsp;€", item.getPriceWithVat())).append("</td>");
                     productsHtml.append("</tr>");
                 }
             }
@@ -141,12 +141,12 @@ public class OrderEventHandler {
             }
 
             String carrierName = carrier != null && carrier.getName() != null ? carrier.getName() : "Unknown Carrier";
-            String carrierPrice = String.format("%.2f €", carrierPriceVal);
+            String carrierPrice = String.format("%.2f&nbsp;€", carrierPriceVal);
             template = template.replace("{{carrierName}}", HtmlUtils.htmlEscape(carrierName));
             template = template.replace("{{carrierPrice}}", carrierPrice);
 
             String paymentName = payment != null && payment.getName() != null ? payment.getName() : "Unknown Payment";
-            String paymentPrice = String.format("%.2f €", paymentPriceVal);
+            String paymentPrice = String.format("%.2f&nbsp;€", paymentPriceVal);
             template = template.replace("{{paymentName}}", HtmlUtils.htmlEscape(paymentName));
             template = template.replace("{{paymentPrice}}", paymentPrice);
 
@@ -163,7 +163,7 @@ public class OrderEventHandler {
 
             // Final Price
             BigDecimal finalPrice = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPrice() : BigDecimal.ZERO;
-            template = template.replace("{{finalPrice}}", String.format("%.2f €", finalPrice));
+            template = template.replace("{{finalPrice}}", String.format("%.2f&nbsp;€", finalPrice));
 
             byte[] invoiceBytes = invoiceService.generateInvoice(order.getId());
             File invoiceFile = File.createTempFile("faktura_" + order.getOrderIdentifier(), ".pdf");
