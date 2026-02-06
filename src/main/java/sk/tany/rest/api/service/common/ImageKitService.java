@@ -44,6 +44,7 @@ public class ImageKitService implements ImageService {
                     case BRAND -> fileCreateRequest.setFolder("brands");
                     case CARRIER -> fileCreateRequest.setFolder("carriers");
                     case PAYMENT_METHOD -> fileCreateRequest.setFolder("payment_methods");
+                    case BLOG -> fileCreateRequest.setFolder("blogs");
                 }
             }
             Result result = imageKit.upload(fileCreateRequest);
