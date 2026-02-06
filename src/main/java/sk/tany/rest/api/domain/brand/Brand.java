@@ -14,6 +14,7 @@ public class Brand implements BaseEntity {
     private String name;
     private String image;
     private String metaTitle;
+    private String slug;
     private boolean active;
     private String metaDescription;
     private Instant createdDate;

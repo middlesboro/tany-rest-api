@@ -12,4 +12,6 @@ public class PrestaShopManufacturerDetailResponse {
     private Object metaTitle;
     @JsonProperty("meta_description")
     private Object metaDescription;
+    @JsonProperty("link_rewrite")
+    private Object linkRewrite;
 }

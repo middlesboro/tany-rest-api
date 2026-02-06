@@ -197,6 +197,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         dto.setPrestashopId(psManufacturer.getId());
         dto.setMetaTitle(parseLanguageValue(psManufacturer.getMetaTitle()));
         dto.setMetaDescription(parseLanguageValue(psManufacturer.getMetaDescription()));
+        dto.setSlug(parseLanguageValue(psManufacturer.getLinkRewrite()));
         dto.setActive("1".equals(psManufacturer.getActive()));
         String imageUrl = downloadAndUploadImage("manufacturers", psManufacturer.getId(), null, psManufacturer.getName(), ImageKitType.BRAND);
         dto.setImage(imageUrl);

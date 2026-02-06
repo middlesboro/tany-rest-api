@@ -1,6 +1,7 @@
 package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,7 @@ public class BrandAdminServiceImpl implements BrandAdminService {
 
     @Override
     public BrandDto save(BrandDto brandDto) {
+        brandDto.setName(StringUtils.trim(brandDto.getName()));
         var brand = brandMapper.toEntity(brandDto);
         var savedBrand = brandRepository.save(brand);
 
@@ -64,6 +66,7 @@ public class BrandAdminServiceImpl implements BrandAdminService {
     public BrandDto update(String id, BrandDto brandDto) {
         var brand = brandRepository.findById(id).orElseThrow(() -> new BrandException.NotFound("Brand not found"));
         brandDto.setId(id);
+        brandDto.setName(StringUtils.trim(brandDto.getName()));
         brandMapper.updateEntityFromDto(brandDto, brand);
         var savedBrand = brandRepository.save(brand);
         return brandMapper.toDto(savedBrand);
