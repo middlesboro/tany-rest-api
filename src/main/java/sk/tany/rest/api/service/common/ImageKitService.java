@@ -37,6 +37,7 @@ public class ImageKitService implements ImageService {
     public String upload(byte[] file, String fileName, ImageKitType type) {
         try {
             FileCreateRequest fileCreateRequest = new FileCreateRequest(file, fileName);
+            fileCreateRequest.setUseUniqueFileName(false);
             if (type != null) {
                 switch (type) {
                     case PRODUCT -> fileCreateRequest.setFolder("products");
