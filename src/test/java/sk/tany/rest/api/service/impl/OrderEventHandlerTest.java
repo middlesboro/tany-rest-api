@@ -9,13 +9,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import sk.tany.rest.api.domain.carrier.Carrier;
+import org.springframework.test.util.ReflectionTestUtils;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
-import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.event.OrderStatusChangedEvent;
 import sk.tany.rest.api.service.admin.InvoiceService;
@@ -26,6 +25,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -138,5 +138,34 @@ class OrderEventHandlerTest {
         orderEventHandler.handleOrderStatusChanged(event);
 
         verify(emailService, never()).sendEmail(anyString(), anyString(), anyString(), any(Boolean.class), any(File.class));
+    }
+
+    @Test
+    void handleOrderStatusChanged_shouldIncludeConfirmationLink_whenCreated() {
+        ReflectionTestUtils.setField(orderEventHandler, "frontendUrl", "http://localhost:3000");
+
+        Order order = new Order();
+        order.setId("order1");
+        order.setOrderIdentifier(123L);
+        order.setFirstname("John");
+        order.setEmail("user@example.com");
+        order.setStatus(OrderStatus.CREATED);
+        order.setCarrierId("carrier1");
+        order.setPaymentId("payment1");
+        order.setStatusHistory(new ArrayList<>());
+        order.getStatusHistory().add(new OrderStatusHistory(OrderStatus.CREATED, Instant.now()));
+
+        when(carrierRepository.findById("carrier1")).thenReturn(Optional.empty());
+        when(paymentRepository.findById("payment1")).thenReturn(Optional.empty());
+
+        OrderStatusChangedEvent event = new OrderStatusChangedEvent(order);
+        orderEventHandler.handleOrderStatusChanged(event);
+
+        org.mockito.ArgumentCaptor<String> bodyCaptor = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(emailService, times(1)).sendEmail(eq("user@example.com"), anyString(), bodyCaptor.capture(), eq(true), any(File.class), any(File.class), any(File.class));
+
+        String emailBody = bodyCaptor.getValue();
+        // This assertion expects the link to be present
+        assertTrue(emailBody.contains("http://localhost:3000/order/confirmation/order1"), "Email body should contain confirmation link");
     }
 }
