@@ -35,6 +35,12 @@ public class CategoryRepository extends AbstractInMemoryRepository<Category> {
                 .findFirst();
     }
 
+    public Optional<Category> findBySlug(String slug) {
+        return memoryCache.values().stream()
+                .filter(c -> c.getSlug() != null && c.getSlug().equals(slug))
+                .findFirst();
+    }
+
     public Page<Category> searchCategories(String query, Pageable pageable) {
         String normalizedQuery = null;
         String[] queryWords = null;
