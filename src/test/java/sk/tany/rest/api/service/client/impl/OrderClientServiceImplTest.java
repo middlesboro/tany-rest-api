@@ -6,9 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,29 +26,22 @@ import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.OrderDto;
-import sk.tany.rest.api.dto.OrderItemDto;
+import sk.tany.rest.api.event.OrderStatusChangedEvent;
 import sk.tany.rest.api.mapper.OrderMapper;
-import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.client.CartClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
-import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class OrderClientServiceImplTest {
@@ -70,10 +61,6 @@ class OrderClientServiceImplTest {
     @Mock
     private ProductClientService productClientService;
     @Mock
-    private EmailService emailService;
-    @Mock
-    private ResourceLoader resourceLoader;
-    @Mock
     private ProductSalesRepository productSalesRepository;
     @Mock
     private ProductSearchEngine productSearchEngine;
@@ -82,7 +69,7 @@ class OrderClientServiceImplTest {
     @Mock
     private CartClientService cartService;
     @Mock
-    private InvoiceService invoiceService;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private OrderClientServiceImpl orderClientService;
@@ -94,18 +81,6 @@ class OrderClientServiceImplTest {
         lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
         lenient().when(authentication.getName()).thenReturn("user@example.com");
         SecurityContextHolder.setContext(securityContext);
-
-        // Mock ResourceLoader
-        Resource templateResource = new ByteArrayResource("<html>{{firstname}} {{orderIdentifier}} {{products}} {{carrierName}} {{paymentName}} {{deliveryAddress}} {{finalPrice}}</html>".getBytes());
-        Resource pdfResource = new ByteArrayResource("dummy pdf".getBytes());
-        lenient().when(resourceLoader.getResource("classpath:templates/email/order_created.html")).thenReturn(templateResource);
-        lenient().when(resourceLoader.getResource("classpath:empty.pdf")).thenReturn(pdfResource);
-        lenient().when(resourceLoader.getResource("classpath:formular-na-odstupenie-od-zmluvy-tany.sk.pdf")).thenReturn(pdfResource);
-        lenient().when(resourceLoader.getResource("classpath:obchodne-podmienky.pdf")).thenReturn(pdfResource);
-
-        lenient().when(invoiceService.generateInvoice(anyString())).thenReturn(new byte[0]);
-
-        orderClientService.init();
     }
 
     @Test
@@ -174,13 +149,13 @@ class OrderClientServiceImplTest {
 
         orderClientService.createOrder(orderDto);
 
-        // verify(emailService, times(1)).sendEmail(eq("user@example.com"), anyString(), anyString(), eq(true), any(File.class));
+        verify(eventPublisher, times(1)).publishEvent(any(OrderStatusChangedEvent.class));
         verify(productSalesRepository, times(1)).save(any(ProductSales.class));
         verify(productSearchEngine, times(1)).updateSalesCount(any(), any(Integer.class));
     }
 
     @Test
-    void createOrder_shouldNotFailWhenEmailFails() throws Exception {
+    void createOrder_shouldPublishEvent() {
         OrderDto orderDto = new OrderDto();
         orderDto.setCartId("cart1");
 
@@ -225,13 +200,10 @@ class OrderClientServiceImplTest {
         productSales.setSalesCount(0);
         when(productSalesRepository.findByProductId(any())).thenReturn(Optional.of(productSales));
 
-        // doThrow(new RuntimeException("Email failed")).when(emailService).sendEmail(anyString(), anyString(), anyString(), eq(true), any(File.class));
-
         orderClientService.createOrder(orderDto);
 
-        // verify(emailService, times(1)).sendEmail(eq("user@example.com"), anyString(), anyString(), eq(true), any(File.class));
+        verify(eventPublisher, times(1)).publishEvent(any(OrderStatusChangedEvent.class));
         verify(orderRepository, times(1)).save(any(Order.class));
-        verify(productSalesRepository, times(1)).save(any(ProductSales.class));
     }
 
     @Test

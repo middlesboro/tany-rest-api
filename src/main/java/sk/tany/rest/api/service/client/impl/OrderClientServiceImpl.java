@@ -1,17 +1,14 @@
 package sk.tany.rest.api.service.client.impl;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.HtmlUtils;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
@@ -33,24 +30,14 @@ import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.OrderDto;
-import sk.tany.rest.api.dto.PriceItem;
-import sk.tany.rest.api.dto.PriceItemType;
+import sk.tany.rest.api.event.OrderStatusChangedEvent;
 import sk.tany.rest.api.exception.OrderException;
 import sk.tany.rest.api.mapper.OrderMapper;
-import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
-import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,27 +55,11 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final CarrierRepository carrierRepository;
     private final PaymentRepository paymentRepository;
     private final ProductClientService productClientService;
-    private final EmailService emailService;
-    private final ResourceLoader resourceLoader;
     private final ProductSalesRepository productSalesRepository;
     private final ProductSearchEngine productSearchEngine;
     private final CartRepository cartRepository;
     private final sk.tany.rest.api.service.client.CartClientService cartService;
-    private final InvoiceService invoiceService;
-
-    private String cachedTemplate;
-
-    @PostConstruct
-    public void init() {
-        try {
-            Resource templateResource = resourceLoader.getResource("classpath:templates/email/order_created.html");
-            try (InputStream inputStream = templateResource.getInputStream()) {
-                cachedTemplate = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-            }
-        } catch (IOException e) {
-            log.error("Failed to load email template", e);
-        }
-    }
+    private final ApplicationEventPublisher eventPublisher;
 
     private String getCurrentCustomerId() {
         try {
@@ -206,6 +177,7 @@ public class OrderClientServiceImpl implements OrderClientService {
             payment = paymentRepository.findById(order.getPaymentId()).orElse(null);
             if (payment != null && PaymentType.COD == payment.getType()) {
                 order.setStatus(OrderStatus.COD);
+                order.getStatusHistory().add(new OrderStatusHistory(OrderStatus.COD, Instant.now()));
             }
         }
 
@@ -229,7 +201,7 @@ public class OrderClientServiceImpl implements OrderClientService {
             productSearchEngine.updateSalesCount(productSales.getProductId(), productSales.getSalesCount());
         });
 
-        sendOrderCreatedEmail(savedOrder, carrier, payment);
+        eventPublisher.publishEvent(new OrderStatusChangedEvent(savedOrder));
 
         updateCustomerFromOrder(savedOrder);
 
@@ -293,124 +265,6 @@ public class OrderClientServiceImpl implements OrderClientService {
         }
 
         return changed;
-    }
-
-    private void sendOrderCreatedEmail(Order order, Carrier carrier, Payment payment) {
-        if (cachedTemplate == null) {
-            log.warn("Email template not loaded, skipping email sending.");
-            return;
-        }
-
-        try {
-            String template = cachedTemplate;
-
-            String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
-            template = template.replace("{{firstname}}", HtmlUtils.htmlEscape(firstname));
-            template = template.replace("{{orderIdentifier}}", String.valueOf(order.getOrderIdentifier()));
-            template = template.replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
-
-            // Products
-            StringBuilder productsHtml = new StringBuilder();
-            BigDecimal carrierPriceVal = BigDecimal.ZERO;
-            BigDecimal paymentPriceVal = BigDecimal.ZERO;
-
-            if (order.getPriceBreakDown() != null && order.getPriceBreakDown().getItems() != null) {
-                for (PriceItem item : order.getPriceBreakDown().getItems()) {
-                    if (item.getType() == PriceItemType.CARRIER) {
-                        carrierPriceVal = item.getPriceWithVat();
-                        continue;
-                    }
-                    if (item.getType() == PriceItemType.PAYMENT) {
-                        paymentPriceVal = item.getPriceWithVat();
-                        continue;
-                    }
-
-                    // Show Products and Discounts in the table
-                    productsHtml.append("<tr>");
-                    productsHtml.append("<td>").append(HtmlUtils.htmlEscape(item.getName())).append("</td>");
-                    productsHtml.append("<td>").append(item.getQuantity()).append("</td>");
-
-                    BigDecimal qty = item.getQuantity() != null && item.getQuantity() > 0 ? new BigDecimal(item.getQuantity()) : BigDecimal.ONE;
-                    BigDecimal unitPrice = item.getPriceWithVat().divide(qty, 2, RoundingMode.HALF_UP);
-
-                    productsHtml.append("<td>").append(String.format("%.2f €", unitPrice)).append("</td>");
-                    productsHtml.append("<td>").append(String.format("%.2f €", item.getPriceWithVat())).append("</td>");
-                    productsHtml.append("</tr>");
-                }
-            }
-            template = template.replace("{{products}}", productsHtml.toString());
-
-            // Carrier and Payment
-            String carrierName = carrier != null && carrier.getName() != null ? carrier.getName() : "Unknown Carrier";
-            String carrierPrice = String.format("%.2f €", carrierPriceVal);
-            template = template.replace("{{carrierName}}", HtmlUtils.htmlEscape(carrierName));
-            template = template.replace("{{carrierPrice}}", carrierPrice);
-
-            String paymentName = payment != null && payment.getName() != null ? payment.getName() : "Unknown Payment";
-            String paymentPrice = String.format("%.2f €", paymentPriceVal);
-            template = template.replace("{{paymentName}}", HtmlUtils.htmlEscape(paymentName));
-            template = template.replace("{{paymentPrice}}", paymentPrice);
-
-            // Address
-            StringBuilder addressHtml = new StringBuilder();
-            if (order.getDeliveryAddress() != null) {
-                addressHtml.append("<p>").append(HtmlUtils.htmlEscape(order.getDeliveryAddress().getStreet())).append("</p>");
-                addressHtml.append("<p>").append(HtmlUtils.htmlEscape(order.getDeliveryAddress().getZip())).append(" ")
-                           .append(HtmlUtils.htmlEscape(order.getDeliveryAddress().getCity())).append("</p>");
-            } else {
-                addressHtml.append("<p>No delivery address provided</p>");
-            }
-            template = template.replace("{{deliveryAddress}}", addressHtml.toString());
-
-            // Final Price
-            BigDecimal finalPrice = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPrice() : BigDecimal.ZERO;
-            template = template.replace("{{finalPrice}}", String.format("%.2f €", finalPrice));
-
-            byte[] invoiceBytes = invoiceService.generateInvoice(order.getId());
-            File invoiceFile = File.createTempFile("faktura_" + order.getOrderIdentifier(), ".pdf");
-            File odstupenieFile = createTempFileFromResource("classpath:formular-na-odstupenie-od-zmluvy-tany.sk.pdf", "odstupenie", ".pdf");
-            File podmienkyFile = createTempFileFromResource("classpath:obchodne-podmienky.pdf", "podmienky", ".pdf");
-
-            try {
-                Files.write(invoiceFile.toPath(), invoiceBytes);
-                emailService.sendEmail(order.getEmail(), "Objednávka č. " + order.getOrderIdentifier(), template, true, invoiceFile, odstupenieFile, podmienkyFile);
-            } finally {
-                // Cleanup temp files
-                if (invoiceFile.exists()) {
-                    invoiceFile.delete();
-                }
-                if (odstupenieFile != null && odstupenieFile.exists()) {
-                    odstupenieFile.delete();
-                }
-                if (podmienkyFile != null && podmienkyFile.exists()) {
-                    podmienkyFile.delete();
-                }
-            }
-
-        } catch (IOException e) {
-            // Log error but do not fail the order creation
-            log.error("Failed to send order confirmation email: {}", e.getMessage(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error sending email: {}", e.getMessage(), e);
-        }
-    }
-
-    private File createTempFileFromResource(String resourcePath, String prefix, String suffix) {
-        try {
-            Resource resource = resourceLoader.getResource(resourcePath);
-            if (!resource.exists()) {
-                log.warn("Resource not found: {}", resourcePath);
-                return null;
-            }
-            File tempFile = File.createTempFile(prefix, suffix);
-            try (InputStream in = resource.getInputStream()) {
-                Files.copy(in, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
-            return tempFile;
-        } catch (IOException e) {
-            log.error("Failed to create temp file for resource: {}", resourcePath, e);
-            return null;
-        }
     }
 
     @Override
