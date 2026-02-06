@@ -96,6 +96,9 @@ public class OrderEventHandler {
             template = template.replace("{{orderIdentifier}}", String.valueOf(order.getOrderIdentifier()));
             template = template.replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
 
+            String orderConfirmationLink = frontendUrl + "/order/confirmation/" + order.getId();
+            template = template.replace("{{orderConfirmationLink}}", orderConfirmationLink);
+
             // Products
             StringBuilder productsHtml = new StringBuilder();
             BigDecimal carrierPriceVal = BigDecimal.ZERO;
