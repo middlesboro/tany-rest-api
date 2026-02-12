@@ -12,7 +12,7 @@ COPY src src
 RUN ./mvnw clean package -DskipTests
 
 # Phase 2
-FROM bellsoft/liberica-openjdk-alpine-musl:21-jre
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 RUN addgroup -S spring && adduser -S spring -G spring \
