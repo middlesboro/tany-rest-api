@@ -13,7 +13,7 @@ import java.io.File;
 @Configuration
 public class NitriteConfig {
 
-    private static final String DB_FILE = "tany_encrypted.db";
+    public static final String DB_FILE = "tany_encrypted.db";
 
     @Value("${admin.database.password}")
     private String databasePassword;
