@@ -75,6 +75,15 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     public byte[] generateInvoice(String orderId) {
+        return generateDocument(orderId, false);
+    }
+
+    @Override
+    public byte[] generateCreditNote(String orderId) {
+        return generateDocument(orderId, true);
+    }
+
+    private byte[] generateDocument(String orderId, boolean isCreditNote) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderException.NotFound("Order not found: " + orderId));
 
@@ -110,7 +119,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             writer.setPageEvent(new InvoiceFooter());
             document.open();
 
-            addContent(document, order, customer, carrierName, paymentName, productMap);
+            addContent(document, order, customer, carrierName, paymentName, productMap, isCreditNote);
 
             document.close();
             return baos.toByteArray();
@@ -119,8 +128,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
     }
 
-    private void addContent(Document document, Order order, Customer customer, String carrierName, String paymentName, Map<String, Product> productMap) throws DocumentException {
-        boolean isCreditNote = order.getStatus() == sk.tany.rest.api.domain.order.OrderStatus.CANCELED;
+    private void addContent(Document document, Order order, Customer customer, String carrierName, String paymentName, Map<String, Product> productMap, boolean isCreditNote) throws DocumentException {
         String title = isCreditNote ? "DOBROPIS" : "FAKTÚRA";
 
         int year = 2026;
