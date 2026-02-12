@@ -33,4 +33,12 @@ public class BlogClientController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<BlogClientGetResponse> getBlogBySlug(@PathVariable String slug) {
+        return blogService.getBlogBySlug(slug)
+                .map(blogClientApiMapper::toGetResponse)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

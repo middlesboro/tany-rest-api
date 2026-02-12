@@ -7,4 +7,6 @@ public interface BlogClientService {
     List<BlogDto> getAll();
 
     java.util.Optional<BlogDto> getBlog(String id);
+
+    java.util.Optional<BlogDto> getBlogBySlug(String slug);
 }

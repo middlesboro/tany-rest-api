@@ -28,4 +28,10 @@ public class BlogClientServiceImpl implements BlogClientService {
         return blogRepository.findById(id)
                 .map(blogMapper::toDto);
     }
+
+    @Override
+    public java.util.Optional<BlogDto> getBlogBySlug(String slug) {
+        return blogRepository.findBySlug(slug)
+                .map(blogMapper::toDto);
+    }
 }
