@@ -1,4 +1,4 @@
-# Phase 1
+# 1. Fáza: Build (JDK)
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
@@ -7,24 +7,23 @@ COPY .mvn .mvn
 COPY pom.xml .
 
 RUN chmod +x mvnw
-
 RUN ./mvnw dependency:go-offline
 
 COPY src src
 RUN ./mvnw clean package -DskipTests
 
-# Phase 2
+# 2. Fáza: Runtime (JRE)
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 RUN addgroup -S spring && adduser -S spring -G spring \
-    && mkdir /data && chown spring:spring /data
+    && mkdir -p /data \
+    && chown -R spring:spring /data \
+    && chmod 700 /data
 
 USER spring:spring
 
 COPY --from=build /app/target/*.jar app.jar
-
-ENV DB_PATH=/data/tany_encrypted.db
 
 EXPOSE 8080
 
