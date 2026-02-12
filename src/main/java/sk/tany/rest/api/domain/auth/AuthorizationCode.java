@@ -3,7 +3,7 @@ package sk.tany.rest.api.domain.auth;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.dizitart.no2.objects.Id;
+import org.dizitart.no2.repository.annotations.Id;
 import sk.tany.rest.api.domain.BaseEntity;
 
 import java.time.Instant;

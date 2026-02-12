@@ -211,7 +211,7 @@ public class CartAdminServiceImpl implements CartAdminService {
             stream = stream.filter(r -> r.getCreateDate() != null && !createLocalDateFromInstant(r.getCreateDate()).isAfter(createDateTo));
         }
 
-        List<CartAdminListResponse> filtered = stream.toList();
+        List<CartAdminListResponse> filtered = stream.collect(Collectors.toList());
 
         // Sort
         if (pageable.getSort().isSorted()) {

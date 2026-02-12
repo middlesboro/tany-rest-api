@@ -1,7 +1,7 @@
 package sk.tany.rest.api.domain.emailnotification;
 
 import org.dizitart.no2.Nitrite;
-import org.dizitart.no2.objects.filters.ObjectFilters;
+import org.dizitart.no2.filters.FluentFilter;
 import org.springframework.stereotype.Repository;
 import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 

@@ -17,7 +17,7 @@
         <java.version>21</java.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <lombok.version>1.18.30</lombok.version>
-        <nitrite.version>3.4.4</nitrite.version>
+        <nitrite.version>4.2.0</nitrite.version>
         <okio.version>3.6.0</okio.version> <!-- Force recent Okio version -->
     </properties>
 
@@ -46,10 +46,20 @@
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
         </dependency>
-        <!-- Switching to Nitrite 3.4.4 for simplicity and compatibility -->
+        <!-- Switching to Nitrite 4.2.0 -->
         <dependency>
             <groupId>org.dizitart</groupId>
             <artifactId>nitrite</artifactId>
+            <version>${nitrite.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dizitart</groupId>
+            <artifactId>nitrite-mvstore-adapter</artifactId>
+            <version>${nitrite.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dizitart</groupId>
+            <artifactId>nitrite-jackson-mapper</artifactId>
             <version>${nitrite.version}</version>
         </dependency>
         <!-- Force Okio version to resolve conflict between ImageKit (1.14.0) and Nitrite/OkHttp (needs 2.x+) -->
@@ -57,6 +67,12 @@
             <groupId>com.squareup.okio</groupId>
             <artifactId>okio</artifactId>
             <version>${okio.version}</version>
+        </dependency>
+        <!-- Force OkHttp version to resolve conflict (Microsoft Graph needs 4.x, older libs might pull 3.x) -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

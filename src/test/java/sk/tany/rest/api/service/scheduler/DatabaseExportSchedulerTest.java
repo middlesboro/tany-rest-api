@@ -35,7 +35,7 @@ class DatabaseExportSchedulerTest {
 
     @Test
     void exportDatabase_ExportFails_DoesNothing() throws IOException {
-        when(databaseAdminService.exportEncryptedDatabase()).thenReturn(null);
+        when(databaseAdminService.exportDatabaseToJson()).thenReturn(null);
 
         scheduler.exportDatabase();
 
@@ -44,11 +44,11 @@ class DatabaseExportSchedulerTest {
 
     @Test
     void exportDatabase_Success_UploadsAndRotates() throws IOException {
-        File tempFile = File.createTempFile("test_export", ".db");
+        File tempFile = File.createTempFile("test_export", ".zip");
         // Write something to file so readAllBytes doesn't fail or return empty
         // Actually readAllBytes works on empty file too.
 
-        when(databaseAdminService.exportEncryptedDatabase()).thenReturn(tempFile);
+        when(databaseAdminService.exportDatabaseToJson()).thenReturn(tempFile);
 
         // Setup rotation mock
         List<OneDriveFileDto> files = new ArrayList<>();

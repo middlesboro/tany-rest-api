@@ -1,8 +1,8 @@
 package sk.tany.rest.api.domain.blog;
 
 import org.dizitart.no2.Nitrite;
-import org.dizitart.no2.objects.Cursor;
-import org.dizitart.no2.objects.ObjectRepository;
+import org.dizitart.no2.repository.Cursor;
+import org.dizitart.no2.repository.ObjectRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
