@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.service.admin.DatabaseAdminService;
 
 import java.io.File;
@@ -60,6 +61,13 @@ public class DatabaseAdminController {
             return ResponseEntity.badRequest().build();
         }
         service.importDatabaseFromJson(folder);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(value = "/import-db", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Import database from nitrite db file")
+    public ResponseEntity<Void> importDatabase(@RequestParam("file") MultipartFile file) {
+        service.importDatabase(file);
         return ResponseEntity.ok().build();
     }
 }

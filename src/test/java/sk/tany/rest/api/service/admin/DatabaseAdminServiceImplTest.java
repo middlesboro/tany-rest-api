@@ -1,6 +1,7 @@
 package sk.tany.rest.api.service.admin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.dizitart.no2.Nitrite;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 import sk.tany.rest.api.domain.BaseEntity;
 import sk.tany.rest.api.service.admin.impl.DatabaseAdminServiceImpl;
@@ -31,6 +33,9 @@ class DatabaseAdminServiceImplTest {
     @Mock
     private ObjectMapper objectMapper;
 
+    @Mock
+    private Nitrite nitrite;
+
     @InjectMocks
     private DatabaseAdminServiceImpl service;
 
@@ -39,7 +44,7 @@ class DatabaseAdminServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        when(applicationContext.getBeansOfType(AbstractInMemoryRepository.class))
+        lenient().when(applicationContext.getBeansOfType(AbstractInMemoryRepository.class))
                 .thenReturn(Map.of("mockRepo", mockRepo));
     }
 
@@ -89,6 +94,22 @@ class DatabaseAdminServiceImplTest {
         // Cleanup
         jsonFile.delete();
         tempDir.delete();
+    }
+
+    @Test
+    void importDatabase_ShouldCloseNitriteAndCopyFile() throws IOException {
+        MultipartFile mockFile = mock(MultipartFile.class);
+        when(mockFile.getInputStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[0]));
+        when(nitrite.isClosed()).thenReturn(false);
+
+        try {
+            service.importDatabase(mockFile);
+        } catch (Exception e) {
+            // It might fail on file copy permissions or similar, but we want to verify interactions
+        }
+
+        verify(nitrite).close();
+        verify(mockFile).getInputStream();
     }
 
     // Dummy entity

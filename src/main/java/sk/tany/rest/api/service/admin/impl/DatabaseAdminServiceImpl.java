@@ -3,8 +3,11 @@ package sk.tany.rest.api.service.admin.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.dizitart.no2.Nitrite;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import sk.tany.rest.api.config.NitriteConfig;
 import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 import sk.tany.rest.api.service.admin.DatabaseAdminService;
 
@@ -24,6 +27,22 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
 
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
+    private final Nitrite nitrite;
+
+    @Override
+    public void importDatabase(MultipartFile file) {
+        if (!nitrite.isClosed()) {
+            nitrite.close();
+        }
+        File dbFile = new File(NitriteConfig.DB_FILE);
+        try {
+            Files.copy(file.getInputStream(), dbFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            log.info("Database imported successfully. Application restart required.");
+        } catch (IOException e) {
+            log.error("Failed to import database", e);
+            throw new RuntimeException("Failed to import database", e);
+        }
+    }
 
     @Override
     public File exportDatabaseToJson() {
