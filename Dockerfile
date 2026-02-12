@@ -15,10 +15,14 @@ RUN ./mvnw clean package -DskipTests
 FROM bellsoft/liberica-openjdk-alpine-musl:21-jre
 WORKDIR /app
 
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN addgroup -S spring && adduser -S spring -G spring \
+    && mkdir /data && chown spring:spring /data
+
 USER spring:spring
 
 COPY --from=build /app/target/*.jar app.jar
+
+ENV DB_PATH=/data/tany_encrypted.db
 
 EXPOSE 8080
 
