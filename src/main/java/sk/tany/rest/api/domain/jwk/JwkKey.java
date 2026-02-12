@@ -1,7 +1,7 @@
 package sk.tany.rest.api.domain.jwk;
 
 import lombok.Data;
-import org.dizitart.no2.objects.Id;
+import org.dizitart.no2.repository.annotations.Id;
 import sk.tany.rest.api.domain.BaseEntity;
 
 import java.io.Serializable;

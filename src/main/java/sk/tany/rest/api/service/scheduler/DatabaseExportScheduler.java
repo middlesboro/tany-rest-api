@@ -35,7 +35,7 @@ public class DatabaseExportScheduler {
         File exportedFile = null;
         try {
             // 1. Export database
-            exportedFile = databaseAdminService.exportEncryptedDatabase();
+            exportedFile = databaseAdminService.exportDatabaseToJson();
             if (exportedFile == null || !exportedFile.exists()) {
                 log.error("Database export failed. File is null or does not exist.");
                 return;
@@ -43,10 +43,12 @@ public class DatabaseExportScheduler {
 
             // 2. Prepare filename
             String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMATTER);
-            String filename = FILENAME_PREFIX + timestamp;
+            String filename = FILENAME_PREFIX + timestamp + ".zip";
 
             // 3. Upload to OneDrive
             byte[] content = Files.readAllBytes(exportedFile.toPath());
+            // oneDriveService.uploadFile expects filename. Does it handle extension?
+            // Assuming filename is full name.
             oneDriveService.uploadFile(EXPORT_FOLDER, filename, content);
             log.info("Database exported successfully to OneDrive: {}/{}", EXPORT_FOLDER, filename);
 

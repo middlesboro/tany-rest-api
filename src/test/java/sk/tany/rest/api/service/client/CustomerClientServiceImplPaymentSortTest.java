@@ -48,7 +48,7 @@ class CustomerClientServiceImplPaymentSortTest {
         // Arrange
         CartDto cartDto = new CartDto();
         cartDto.setCartId("cart1");
-        when(cartService.getOrCreateCart(any(), any())).thenReturn(cartDto);
+        when(cartService.findCart("cart1")).thenReturn(java.util.Optional.of(cartDto));
 
         // Mock Carrier Service to return empty page
         when(carrierService.findAll(any(Pageable.class))).thenReturn(Page.empty());
@@ -88,7 +88,7 @@ class CustomerClientServiceImplPaymentSortTest {
         // Arrange
         CartDto cartDto = new CartDto();
         cartDto.setCartId("cart1");
-        when(cartService.getOrCreateCart(any(), any())).thenReturn(cartDto);
+        when(cartService.findCart("cart1")).thenReturn(java.util.Optional.of(cartDto));
 
         // Mock Carrier Service to return empty page
         when(carrierService.findAll(any(Pageable.class))).thenReturn(Page.empty());

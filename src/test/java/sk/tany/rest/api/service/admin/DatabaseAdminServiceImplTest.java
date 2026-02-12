@@ -1,68 +1,103 @@
 package sk.tany.rest.api.service.admin;
 
-import org.dizitart.no2.Nitrite;
-import org.junit.jupiter.api.AfterEach;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
+import sk.tany.rest.api.domain.AbstractInMemoryRepository;
+import sk.tany.rest.api.domain.BaseEntity;
 import sk.tany.rest.api.service.admin.impl.DatabaseAdminServiceImpl;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class DatabaseAdminServiceImplTest {
 
+    @Mock
+    private ApplicationContext applicationContext;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
     private DatabaseAdminServiceImpl service;
-    private Nitrite sourceDb;
-    private File sourceFile;
+
+    @Mock
+    private AbstractInMemoryRepository mockRepo;
 
     @BeforeEach
-    void setUp() throws IOException {
-        sourceFile = File.createTempFile("test_source", ".db");
-        sourceDb = Nitrite.builder().filePath(sourceFile).openOrCreate();
-        sourceDb.getRepository(String.class).insert("Test Data");
-
-        service = new DatabaseAdminServiceImpl(sourceDb);
-        ReflectionTestUtils.setField(service, "databasePassword", "secret123");
-    }
-
-    @AfterEach
-    void tearDown() {
-        if (sourceDb != null && !sourceDb.isClosed()) {
-            sourceDb.close();
-        }
-        if (sourceFile != null) {
-            sourceFile.delete();
-        }
+    void setUp() {
+        when(applicationContext.getBeansOfType(AbstractInMemoryRepository.class))
+                .thenReturn(Map.of("mockRepo", mockRepo));
     }
 
     @Test
-    void exportEncryptedDatabase() {
-        File exportedFile = service.exportEncryptedDatabase();
+    void exportDatabaseToJson_ShouldCreateZip() throws IOException {
+        // Setup repo
+        when(mockRepo.findAll()).thenReturn(List.of(new TestEntity()));
+        doReturn(TestEntity.class).when(mockRepo).getEntityType();
 
-        assertNotNull(exportedFile);
-        assertTrue(exportedFile.exists());
-        assertTrue(exportedFile.length() > 0);
+        // Act
+        File result = service.exportDatabaseToJson();
 
-        // Verify we cannot open it without password (or with wrong password)
-        // Note: Nitrite 3.x with password might throw SecurityException or just fail to open properly
-        // Actually, checking if we CAN open it with correct password is a better test of success.
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.exists());
+        assertTrue(result.getName().endsWith(".zip"));
 
-        Nitrite encryptedDb = Nitrite.builder()
-                .filePath(exportedFile)
-                .compressed()
-                .openOrCreate("admin", "secret123");
+        // Verify interaction
+        verify(mockRepo).findAll();
+        verify(objectMapper).writeValue(any(File.class), any(List.class));
 
-        long count = encryptedDb.getRepository(String.class).find().size();
-        assertTrue(count > 0);
+        result.delete();
+    }
 
-        encryptedDb.close();
+    @Test
+    void importDatabaseFromJson_ShouldImport() throws IOException {
+        // Prepare a dummy JSON file
+        File tempDir = java.nio.file.Files.createTempDirectory("temp_import").toFile();
 
-        // Cleanup exported file
-        exportedFile.delete();
+        File jsonFile = new File(tempDir, "TestEntity.json");
+        jsonFile.createNewFile();
+
+        doReturn(TestEntity.class).when(mockRepo).getEntityType();
+
+        when(objectMapper.getTypeFactory()).thenReturn(com.fasterxml.jackson.databind.type.TypeFactory.defaultInstance());
+        // Mock readValue
+        when(objectMapper.readValue(eq(jsonFile), any(com.fasterxml.jackson.databind.JavaType.class)))
+                .thenReturn(List.of(new TestEntity()));
+
+        // Act
+        service.importDatabaseFromJson(tempDir);
+
+        // Assert
+        verify(mockRepo).deleteAll();
+        verify(mockRepo).saveAll(any());
+
+        // Cleanup
+        jsonFile.delete();
+        tempDir.delete();
+    }
+
+    // Dummy entity
+    static class TestEntity implements BaseEntity {
+        @Override public String getId() { return "1"; }
+        @Override public void setId(String id) {}
+        @Override public void setCreatedDate(java.time.Instant date) {}
+        @Override public java.time.Instant getCreatedDate() { return null; }
+        @Override public void setLastModifiedDate(java.time.Instant date) {}
+        @Override public java.time.Instant getLastModifiedDate() { return null; }
     }
 }

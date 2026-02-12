@@ -1,6 +1,8 @@
 package sk.tany.rest.api.config;
 
 import org.dizitart.no2.Nitrite;
+import org.dizitart.no2.mvstore.MVStoreModule;
+import org.dizitart.no2.common.mapper.JacksonMapperModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,9 +21,14 @@ public class NitriteConfig {
 
     @Bean(destroyMethod = "close")
     public Nitrite nitrite() {
-        return Nitrite.builder()
-                .compressed()
+        MVStoreModule storeModule = MVStoreModule.withConfig()
                 .filePath(new File(DB_FILE))
+                .compress(true)
+                .build();
+
+        return Nitrite.builder()
+                .loadModule(storeModule)
+                .loadModule(new JacksonMapperModule())
                 .openOrCreate(databaseUsername, databasePassword);
     }
 }

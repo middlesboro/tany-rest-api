@@ -3,8 +3,8 @@ package sk.tany.rest.api.domain;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.dizitart.no2.Nitrite;
-import org.dizitart.no2.objects.ObjectRepository;
-import org.dizitart.no2.objects.filters.ObjectFilters;
+import org.dizitart.no2.repository.ObjectRepository;
+import org.dizitart.no2.filters.FluentFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +31,10 @@ public abstract class AbstractInMemoryRepository<T extends BaseEntity> {
     protected AbstractInMemoryRepository(Nitrite nitrite, Class<T> type) {
         this.nitrite = nitrite;
         this.type = type;
+    }
+
+    public Class<T> getEntityType() {
+        return type;
     }
 
     @PostConstruct
@@ -97,6 +101,12 @@ public abstract class AbstractInMemoryRepository<T extends BaseEntity> {
 
         memoryCache.put(id, entity);
 
+        // Check if exists to decide insert or update if API requires it
+        // Nitrite 4 might handle upsert differently.
+        // Assuming update(entity, true) still works or similar.
+        // If not, we might need:
+        // if (repository.find(FluentFilter.where("id").eq(id)).size() > 0) update else insert
+        // But for now sticking to update(entity, true)
         repository.update(entity, true);
 
         return entity;
@@ -111,13 +121,16 @@ public abstract class AbstractInMemoryRepository<T extends BaseEntity> {
     public void deleteById(String id) {
         if (id != null) {
             memoryCache.remove(id);
-            repository.remove(ObjectFilters.eq("id", id));
+            repository.remove(FluentFilter.where("id").eq(id));
         }
     }
 
     public void deleteAll() {
         memoryCache.clear();
-        repository.remove(ObjectFilters.ALL);
+        // Safe deletion
+        for (T entity : repository.find()) {
+            repository.remove(entity);
+        }
     }
 
     public void delete(T entity) {

@@ -10,9 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.service.admin.DatabaseAdminService;
 
 import java.io.File;
@@ -29,10 +27,10 @@ public class DatabaseAdminController {
 
     private final DatabaseAdminService service;
 
-    @GetMapping("/export")
-    @Operation(summary = "Export encrypted database")
-    public ResponseEntity<Resource> exportEncryptedDatabase() throws IOException {
-        File file = service.exportEncryptedDatabase();
+    @GetMapping("/export-json")
+    @Operation(summary = "Export database to JSON zip")
+    public ResponseEntity<Resource> exportDatabaseToJson() throws IOException {
+        File file = service.exportDatabaseToJson();
         long contentLength = file.length();
 
         FileInputStream fis = new FileInputStream(file) {
@@ -48,9 +46,20 @@ public class DatabaseAdminController {
         InputStreamResource resource = new InputStreamResource(fis);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"tany_encrypted.db\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"database_export.zip\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .contentLength(contentLength)
                 .body(resource);
+    }
+
+    @PostMapping("/import-json")
+    @Operation(summary = "Import database from JSON folder (server-side path)")
+    public ResponseEntity<Void> importDatabaseFromJson(@RequestParam(defaultValue = "migration_data") String folderPath) {
+        File folder = new File(folderPath);
+        if (!folder.exists() || !folder.isDirectory()) {
+            return ResponseEntity.badRequest().build();
+        }
+        service.importDatabaseFromJson(folder);
+        return ResponseEntity.ok().build();
     }
 }
