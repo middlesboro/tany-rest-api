@@ -1,6 +1,7 @@
 package sk.tany.rest.api.controller.client;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,7 +49,7 @@ public class CustomerClientController {
 
     @PreAuthorize("hasAnyRole('CUSTOMER')")
     @PutMapping
-    public ResponseEntity<CustomerClientUpdateResponse> updateCustomer(@RequestBody CustomerClientUpdateRequest request) {
+    public ResponseEntity<CustomerClientUpdateResponse> updateCustomer(@RequestBody @Valid CustomerClientUpdateRequest request) {
         CustomerDto customerDto = customerClientApiMapper.toDto(request);
         customerDto.setId(securityUtil.getLoggedInUserId());
 
