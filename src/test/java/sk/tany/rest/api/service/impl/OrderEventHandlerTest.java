@@ -16,13 +16,16 @@ import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.order.OrderItem;
 import sk.tany.rest.api.event.OrderStatusChangedEvent;
 import sk.tany.rest.api.service.admin.InvoiceService;
+import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.EmailService;
 
 import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -50,6 +53,8 @@ class OrderEventHandlerTest {
     private InvoiceService invoiceService;
     @Mock
     private ResourceLoader resourceLoader;
+    @Mock
+    private ProductClientService productClientService;
 
     @InjectMocks
     private OrderEventHandler orderEventHandler;
@@ -167,5 +172,53 @@ class OrderEventHandlerTest {
         String emailBody = bodyCaptor.getValue();
         // This assertion expects the link to be present
         assertTrue(emailBody.contains("http://localhost:3000/order/confirmation/order1"), "Email body should contain confirmation link");
+    }
+
+    @Test
+    void handleOrderStatusChanged_shouldRestoreStock_whenCanceled() {
+        Order order = new Order();
+        order.setId("order1");
+        order.setOrderIdentifier(123L);
+        order.setStatus(OrderStatus.CANCELED);
+        order.setStatusHistory(new ArrayList<>());
+        order.getStatusHistory().add(new OrderStatusHistory(OrderStatus.CREATED, Instant.now()));
+        order.getStatusHistory().add(new OrderStatusHistory(OrderStatus.CANCELED, Instant.now()));
+
+        OrderItem item1 = new OrderItem();
+        item1.setId("p1");
+        item1.setQuantity(2);
+        OrderItem item2 = new OrderItem();
+        item2.setId("p2");
+        item2.setQuantity(1);
+        order.setItems(List.of(item1, item2));
+
+        OrderStatusChangedEvent event = new OrderStatusChangedEvent(order);
+        orderEventHandler.handleOrderStatusChanged(event);
+
+        verify(productClientService, times(1)).updateProductStock("p1", -2);
+        verify(productClientService, times(1)).updateProductStock("p2", -1);
+        verify(orderRepository, times(1)).save(order);
+    }
+
+    @Test
+    void handleOrderStatusChanged_shouldNotRestoreStock_whenAlreadyRestored() {
+        Order order = new Order();
+        order.setId("order1");
+        order.setStatus(OrderStatus.CANCELED);
+        order.setStatusHistory(new ArrayList<>());
+        OrderStatusHistory history = new OrderStatusHistory(OrderStatus.CANCELED, Instant.now());
+        history.setStockRestored(true);
+        order.getStatusHistory().add(history);
+
+        OrderItem item1 = new OrderItem();
+        item1.setId("p1");
+        item1.setQuantity(2);
+        order.setItems(List.of(item1));
+
+        OrderStatusChangedEvent event = new OrderStatusChangedEvent(order);
+        orderEventHandler.handleOrderStatusChanged(event);
+
+        verify(productClientService, never()).updateProductStock(anyString(), any(Integer.class));
+        verify(orderRepository, never()).save(order);
     }
 }

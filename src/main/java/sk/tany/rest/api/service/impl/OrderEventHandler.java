@@ -14,6 +14,7 @@ import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
+import sk.tany.rest.api.domain.order.OrderItem;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.Payment;
@@ -22,6 +23,7 @@ import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
 import sk.tany.rest.api.event.OrderStatusChangedEvent;
 import sk.tany.rest.api.service.admin.InvoiceService;
+import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.EmailService;
 
 import java.io.File;
@@ -44,6 +46,7 @@ public class OrderEventHandler {
     private final PaymentRepository paymentRepository;
     private final InvoiceService invoiceService;
     private final ResourceLoader resourceLoader;
+    private final ProductClientService productClientService;
 
     @Value("${eshop.frontend-url}")
     private String frontendUrl;
@@ -65,24 +68,47 @@ public class OrderEventHandler {
 
         if (historyEntry == null) return;
 
-        if (Boolean.TRUE.equals(historyEntry.getEmailSent())) {
-            return;
+        boolean orderChanged = false;
+
+        // Stock Restoration Logic
+        if (status == OrderStatus.CANCELED && !Boolean.TRUE.equals(historyEntry.getStockRestored())) {
+            if (order.getItems() != null) {
+                for (OrderItem item : order.getItems()) {
+                    if (item.getId() != null && item.getQuantity() != null) {
+                        try {
+                            // Negative quantity to increase stock (subtracted in updateProductStock)
+                            productClientService.updateProductStock(item.getId(), -item.getQuantity());
+                        } catch (Exception e) {
+                            log.error("Failed to restore stock for product {} in order {}", item.getId(), order.getOrderIdentifier(), e);
+                        }
+                    }
+                }
+            }
+            historyEntry.setStockRestored(true);
+            orderChanged = true;
         }
 
-        boolean emailSent = false;
-        if (status == OrderStatus.CREATED || status == OrderStatus.COD) {
-            sendOrderCreatedEmail(order);
-            emailSent = true;
-        } else if (status == OrderStatus.SENT) {
-            sendOrderSentEmail(order);
-            emailSent = true;
-        } else if (status == OrderStatus.PAID) {
-            sendOrderPaidEmail(order);
-            emailSent = true;
+        // Email Sending Logic
+        if (!Boolean.TRUE.equals(historyEntry.getEmailSent())) {
+            boolean emailSent = false;
+            if (status == OrderStatus.CREATED || status == OrderStatus.COD) {
+                sendOrderCreatedEmail(order);
+                emailSent = true;
+            } else if (status == OrderStatus.SENT) {
+                sendOrderSentEmail(order);
+                emailSent = true;
+            } else if (status == OrderStatus.PAID) {
+                sendOrderPaidEmail(order);
+                emailSent = true;
+            }
+
+            if (emailSent) {
+                historyEntry.setEmailSent(true);
+                orderChanged = true;
+            }
         }
 
-        if (emailSent) {
-            historyEntry.setEmailSent(true);
+        if (orderChanged) {
             orderRepository.save(order);
         }
     }

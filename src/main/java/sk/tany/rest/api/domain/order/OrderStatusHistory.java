@@ -13,6 +13,7 @@ public class OrderStatusHistory {
     private OrderStatus status;
     private Instant createdAt;
     private Boolean emailSent;
+    private Boolean stockRestored;
 
     public OrderStatusHistory(OrderStatus status, Instant createdAt) {
         this.status = status;
