@@ -106,7 +106,7 @@ class InvoiceServiceImplTest {
     }
 
     @Test
-    void generateInvoice_shouldDisplayNegativeDiscountInCreditNote() throws IOException {
+    void generateCreditNote_shouldDisplayNegativeDiscountInCreditNote() throws IOException {
         String orderId = "order-cn-1";
         Order order = new Order();
         order.setId(orderId);
@@ -138,7 +138,7 @@ class InvoiceServiceImplTest {
         when(carrierRepository.findById("carrier-1")).thenReturn(Optional.empty());
         when(paymentRepository.findById("payment-1")).thenReturn(Optional.empty());
 
-        byte[] pdfBytes = invoiceService.generateInvoice(orderId);
+        byte[] pdfBytes = invoiceService.generateCreditNote(orderId);
         PdfReader reader = new PdfReader(pdfBytes);
         PdfTextExtractor extractor = new PdfTextExtractor(reader);
         String text = extractor.getTextFromPage(1);
@@ -150,6 +150,42 @@ class InvoiceServiceImplTest {
         // Since we force multiplier 1 for discount in credit note, -10 * 1 = -10.
         // It should appear as "-10.00 €"
         Assertions.assertTrue(text.contains("-10.00 €"), "PDF should contain negative discount value. Found: " + text);
+    }
+
+    @Test
+    void generateInvoice_WhenOrderIsCanceled_ShouldStillGenerateInvoice() throws IOException {
+        String orderId = "order-canceled-invoice";
+        Order order = new Order();
+        order.setId(orderId);
+        order.setOrderIdentifier(100L);
+        order.setCreateDate(Instant.parse("2026-01-01T10:00:00Z"));
+        order.setStatus(OrderStatus.CANCELED);
+        order.setCancelDate(Instant.parse("2026-02-01T10:00:00Z"));
+        order.setPriceBreakDown(new PriceBreakDown());
+        order.getPriceBreakDown().setTotalPrice(BigDecimal.TEN);
+        order.getPriceBreakDown().setTotalPriceWithoutVat(BigDecimal.TEN);
+        order.getPriceBreakDown().setTotalPriceVatValue(BigDecimal.ZERO);
+
+        order.setCarrierId("carrier-1");
+        order.setPaymentId("payment-1");
+        when(carrierRepository.findById("carrier-1")).thenReturn(Optional.empty());
+        when(paymentRepository.findById("payment-1")).thenReturn(Optional.empty());
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        byte[] pdfBytes = invoiceService.generateInvoice(orderId);
+
+        PdfReader reader = new PdfReader(pdfBytes);
+        PdfTextExtractor extractor = new PdfTextExtractor(reader);
+        String text = extractor.getTextFromPage(1);
+
+        // Should be FAKTÚRA, not DOBROPIS
+        Assertions.assertTrue(text.contains("FAKTÚRA") || text.contains("Faktúra"), "Should contain Invoice title");
+        Assertions.assertFalse(text.contains("DOBROPIS"), "Should NOT contain Credit Note title");
+
+        // Should use OrderIdentifier (100) not CreditNoteIdentifier (null/0)
+        // 2026000100
+        Assertions.assertTrue(text.contains("2026000100"), "Should contain order identifier in doc number");
     }
 
     @Test
