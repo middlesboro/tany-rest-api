@@ -123,7 +123,7 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
                             String customerId = item.has("id_customer") ? item.get("id_customer").asText() : null;
                             review.setCustomerId(customerId);
 
-                            if (repository.existsDuplicate(customerId, customerName, title, text)) {
+                            if (repository.existsByCustomerIdAndCustomerNameAndTitleAndText(customerId, customerName, title, text)) {
                                 continue;
                             }
 

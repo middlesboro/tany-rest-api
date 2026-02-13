@@ -1,7 +1,7 @@
 package sk.tany.rest.api.domain.productsales;
 
 import lombok.Data;
-import org.dizitart.no2.repository.annotations.Id;
+import org.springframework.data.annotation.Id;
 import sk.tany.rest.api.domain.BaseEntity;
 
 import java.time.Instant;

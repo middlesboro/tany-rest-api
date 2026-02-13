@@ -1,13 +1,7 @@
 package sk.tany.rest.api.domain.carrier;
 
-import org.dizitart.no2.Nitrite;
 import org.springframework.stereotype.Repository;
-import sk.tany.rest.api.domain.AbstractInMemoryRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 @Repository
-public class CarrierRepository extends AbstractInMemoryRepository<Carrier> {
-
-    public CarrierRepository(Nitrite nitrite) {
-        super(nitrite, Carrier.class);
-    }
-}
+public interface CarrierRepository extends MongoRepository<Carrier, String> {}

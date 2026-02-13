@@ -70,7 +70,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public Page<ProductClientDto> search(String categoryId, Pageable pageable) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        Page<Product> products = productRepository.findByCategoryIds(categoryId, pageable);
+        Page<Product> products = productSearchEngine.findByCategoryIds(categoryId, pageable);
         return mapToEnhancedDtos(products, wishlistProductIds);
     }
 

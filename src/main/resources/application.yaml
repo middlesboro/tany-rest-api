@@ -1,4 +1,8 @@
 spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/tany}
+      database: ${MONGODB_DATABASE:tany}
   servlet:
     multipart:
       max-file-size: 3MB
@@ -69,11 +73,6 @@ logging:
   level:
     org.springframework.security: TRACE
     sk.tany: ${TANY_LEVEL_LOG:INFO}
-
-admin:
-  database:
-    password: ${DATABASE_PASSWORD}
-    username: ${DATABASE_USERNAME}
 
 onedrive:
   client-id: ${ONEDRIVE_CLIENT_ID}

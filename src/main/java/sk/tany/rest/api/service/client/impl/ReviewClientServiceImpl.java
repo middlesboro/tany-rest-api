@@ -104,7 +104,7 @@ public class ReviewClientServiceImpl implements ReviewClientService {
             sort = Sort.by(Sort.Direction.DESC, "createDate");
         }
 
-        List<Review> activeReviews = repository.findAllByProductIds(productIds, sort).stream()
+        List<Review> activeReviews = repository.findAllByProductIdIn(productIds, sort).stream()
                 .filter(Review::isActive)
                 .toList();
 
@@ -187,7 +187,7 @@ public class ReviewClientServiceImpl implements ReviewClientService {
 
     @Override
     public Map<String, ProductRatingDto> getProductRatings(Collection<String> productIds) {
-        List<Review> reviews = repository.findAllByProductIds(productIds);
+        List<Review> reviews = repository.findAllByProductIdIn(productIds);
 
         Map<String, List<Review>> reviewsByProduct = reviews.stream()
                 .filter(Review::isActive)

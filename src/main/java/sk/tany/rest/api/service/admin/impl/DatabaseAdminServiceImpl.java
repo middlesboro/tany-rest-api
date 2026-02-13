@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.repository.support.Repositories;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.domain.AbstractInMemoryRepository;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.service.admin.DatabaseAdminService;
 
 import java.io.File;
@@ -13,7 +15,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -24,19 +25,24 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
 
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
+    private final ProductSearchEngine productSearchEngine;
 
     @Override
     public File exportDatabaseToJson() {
         try {
             Path tempDir = Files.createTempDirectory("tany_export_");
-            Map<String, AbstractInMemoryRepository> repositories = applicationContext.getBeansOfType(AbstractInMemoryRepository.class);
+            Repositories repositories = new Repositories(applicationContext);
 
-            for (AbstractInMemoryRepository repository : repositories.values()) {
-                List<?> all = repository.findAll();
-                if (!all.isEmpty()) {
-                    String className = repository.getEntityType().getSimpleName();
-                    File file = tempDir.resolve(className + ".json").toFile();
-                    objectMapper.writeValue(file, all);
+            for (Class<?> domainType : repositories) {
+                Object repo = repositories.getRepositoryFor(domainType).orElse(null);
+                if (repo instanceof MongoRepository) {
+                    MongoRepository mongoRepo = (MongoRepository) repo;
+                    List<?> all = mongoRepo.findAll();
+                    if (!all.isEmpty()) {
+                        String className = domainType.getSimpleName();
+                        File file = tempDir.resolve(className + ".json").toFile();
+                        objectMapper.writeValue(file, all);
+                    }
                 }
             }
 
@@ -69,22 +75,31 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
         File[] files = directory.listFiles((dir, name) -> name.endsWith(".json"));
         if (files == null) return;
 
-        Map<String, AbstractInMemoryRepository> repositories = applicationContext.getBeansOfType(AbstractInMemoryRepository.class);
+        Repositories repositories = new Repositories(applicationContext);
 
         for (File jsonFile : files) {
             String entityName = jsonFile.getName().replace(".json", "");
-            AbstractInMemoryRepository repository = findRepositoryForEntity(repositories, entityName);
 
-            if (repository != null) {
+            Object repository = null;
+            Class<?> entityType = null;
+
+            for (Class<?> domainType : repositories) {
+                if (domainType.getSimpleName().equals(entityName)) {
+                    repository = repositories.getRepositoryFor(domainType).orElse(null);
+                    entityType = domainType;
+                    break;
+                }
+            }
+
+            if (repository instanceof MongoRepository && entityType != null) {
                 try {
-                    Class<?> type = repository.getEntityType();
-                    log.info("Importing {} from {}", type.getSimpleName(), jsonFile.getName());
-                    List<?> entities = objectMapper.readValue(jsonFile, objectMapper.getTypeFactory().constructCollectionType(List.class, type));
+                    MongoRepository mongoRepo = (MongoRepository) repository;
+                    log.info("Importing {} from {}", entityType.getSimpleName(), jsonFile.getName());
+                    List<?> entities = objectMapper.readValue(jsonFile, objectMapper.getTypeFactory().constructCollectionType(List.class, entityType));
 
                     if (!entities.isEmpty()) {
-                        repository.deleteAll();
-                        // Unchecked cast is safe here because we deserialized to type T
-                        repository.saveAll((Iterable) entities);
+                        mongoRepo.deleteAll();
+                        mongoRepo.saveAll(entities);
                         log.info("Imported {} entities.", entities.size());
                     }
                 } catch (IOException e) {
@@ -94,13 +109,7 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
                 log.warn("No repository found for entity type: {}", entityName);
             }
         }
-    }
-
-    private AbstractInMemoryRepository findRepositoryForEntity(Map<String, AbstractInMemoryRepository> repositories, String entityName) {
-        return repositories.values().stream()
-                .filter(repo -> repo.getEntityType().getSimpleName().equals(entityName))
-                .findFirst()
-                .orElse(null);
+        productSearchEngine.loadProducts();
     }
 
     private void zipDirectory(Path sourceDir, Path zipFile) throws IOException {
