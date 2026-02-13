@@ -126,7 +126,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
     @Override
     public Page<ProductAdminDto> search(String categoryId, Pageable pageable) {
-        return productRepository.findByCategoryIds(categoryId, pageable).map(productMapper::toAdminDto);
+        return productSearchEngine.findByCategoryIds(categoryId, pageable).map(productMapper::toAdminDto);
     }
 
     @Override

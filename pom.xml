@@ -46,27 +46,9 @@
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
         </dependency>
-        <!-- Switching to Nitrite 4.2.0 -->
         <dependency>
-            <groupId>org.dizitart</groupId>
-            <artifactId>nitrite</artifactId>
-            <version>${nitrite.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.dizitart</groupId>
-            <artifactId>nitrite-mvstore-adapter</artifactId>
-            <version>${nitrite.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.dizitart</groupId>
-            <artifactId>nitrite-jackson-mapper</artifactId>
-            <version>${nitrite.version}</version>
-        </dependency>
-        <!-- Force Okio version to resolve conflict between ImageKit (1.14.0) and Nitrite/OkHttp (needs 2.x+) -->
-        <dependency>
-            <groupId>com.squareup.okio</groupId>
-            <artifactId>okio</artifactId>
-            <version>${okio.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
         <!-- Force OkHttp version to resolve conflict (Microsoft Graph needs 4.x, older libs might pull 3.x) -->
         <dependency>

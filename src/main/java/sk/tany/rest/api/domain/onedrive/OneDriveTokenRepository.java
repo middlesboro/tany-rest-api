@@ -1,13 +1,7 @@
 package sk.tany.rest.api.domain.onedrive;
 
-import org.dizitart.no2.Nitrite;
 import org.springframework.stereotype.Repository;
-import sk.tany.rest.api.domain.AbstractInMemoryRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 @Repository
-public class OneDriveTokenRepository extends AbstractInMemoryRepository<OneDriveToken> {
-
-    public OneDriveTokenRepository(Nitrite nitrite) {
-        super(nitrite, OneDriveToken.class);
-    }
-}
+public interface OneDriveTokenRepository extends MongoRepository<OneDriveToken, String> {}

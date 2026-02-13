@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -59,6 +60,14 @@ public class ExceptionHandlerControllerAdvice {
     public ResponseEntity<ErrorResponse> handleNotFoundException(Exception ex) {
         log.error(ex.getMessage(), ex);
         return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler({
+            AuthorizationDeniedException.class,
+    })
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception ex) {
+        log.error(ex.getMessage(), ex);
+        return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler({

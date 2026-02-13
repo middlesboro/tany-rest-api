@@ -124,7 +124,7 @@ class ReviewClientServiceImplTest {
         reviewB.setRating(4);
         reviewB.setActive(true);
 
-        when(reviewRepository.findAllByProductIds(any(Set.class), any(Sort.class))).thenReturn(List.of(reviewA, reviewB));
+        when(reviewRepository.findAllByProductIdIn(any(Set.class), any(Sort.class))).thenReturn(List.of(reviewA, reviewB));
 
         when(reviewMapper.toClientListResponse(any())).thenAnswer(invocation -> {
             Review r = invocation.getArgument(0);

@@ -10,6 +10,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
@@ -151,6 +152,16 @@ public class ProductSearchEngine {
 
     public Integer getSalesCount(String productId) {
         return cachedProductSales.getOrDefault(productId, 0);
+    }
+
+    public List<Product> findAllById(java.util.Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        Set<String> idSet = new HashSet<>(ids);
+        return cachedProducts.stream()
+                .filter(p -> idSet.contains(p.getId()))
+                .toList();
     }
 
     public void addProduct(Product product) {
@@ -414,15 +425,17 @@ public class ProductSearchEngine {
 
                     return true;
                 })
-                .sorted((p1, p2) -> {
-                    if (finalNormalizedQuery != null) {
-                        Double score1 = calculateRelevance(p1.getTitle(), finalNormalizedQuery);
-                        Double score2 = calculateRelevance(p2.getTitle(), finalNormalizedQuery);
-                        return score2.compareTo(score1);
-                    }
-                    return 0; // Or default sort
-                })
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (pageable.getSort().isSorted()) {
+            sort(filteredProducts, pageable.getSort());
+        } else if (finalNormalizedQuery != null) {
+            filteredProducts.sort((p1, p2) -> {
+                Double score1 = calculateRelevance(p1.getTitle(), finalNormalizedQuery);
+                Double score2 = calculateRelevance(p2.getTitle(), finalNormalizedQuery);
+                return score2.compareTo(score1);
+            });
+        }
 
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredProducts.size());
@@ -433,6 +446,82 @@ public class ProductSearchEngine {
 
         List<Product> pageContent = filteredProducts.subList(start, end);
         return new PageImpl<>(pageContent, pageable, filteredProducts.size());
+    }
+
+    public Page<Product> findByCategoryIds(String categoryId, Pageable pageable) {
+        if (categoryId == null) {
+            return new PageImpl<>(List.of(), pageable, 0);
+        }
+
+        Set<String> categoryIds = getAllCategoryIdsIncludingSubcategories(categoryId);
+        List<Product> filtered = cachedProducts.stream()
+                .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (pageable.getSort().isSorted()) {
+            sort(filtered, pageable.getSort());
+        } else {
+             filtered.sort(Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+        }
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filtered.size());
+
+        if (start > filtered.size()) {
+             return new PageImpl<>(List.of(), pageable, filtered.size());
+        }
+
+        List<Product> pageContent = filtered.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, filtered.size());
+    }
+
+    private void sort(List<Product> list, Sort sort) {
+        if (sort.isUnsorted()) {
+            return;
+        }
+
+        Comparator<Product> comparator = null;
+
+        for (Sort.Order order : sort) {
+            Comparator<Product> currentComparator = (o1, o2) -> {
+                Object v1 = o1.getSortValue(order.getProperty());
+                Object v2 = o2.getSortValue(order.getProperty());
+
+                if (v1 == null && v2 == null) {
+                    return 0;
+                } else if (v1 == null) {
+                    return order.getNullHandling() == Sort.NullHandling.NULLS_FIRST ? -1 : 1;
+                } else if (v2 == null) {
+                    return order.getNullHandling() == Sort.NullHandling.NULLS_FIRST ? 1 : -1;
+                }
+
+                if (v1 instanceof Comparable && v2 instanceof Comparable) {
+                    int result;
+                    if (order.isIgnoreCase() && v1 instanceof String && v2 instanceof String) {
+                        result = ((String) v1).compareToIgnoreCase((String) v2);
+                    } else {
+                        // Unchecked cast is safe because of check above
+                        result = ((Comparable) v1).compareTo(v2);
+                    }
+                    return result;
+                }
+                return 0;
+            };
+
+            if (order.isDescending()) {
+                currentComparator = currentComparator.reversed();
+            }
+
+            if (comparator == null) {
+                comparator = currentComparator;
+            } else {
+                comparator = comparator.thenComparing(currentComparator);
+            }
+        }
+
+        if (comparator != null) {
+            list.sort(comparator);
+        }
     }
 
     public List<FilterParameterDto> getFilterParametersForCategoryWithFilter(String categoryId, CategoryFilterRequest filterRequest) {
