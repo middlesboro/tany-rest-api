@@ -58,11 +58,11 @@ public class HomepageClientServiceImpl implements HomepageClientService {
 
         if (StringUtils.hasText(grid.getBrandId())) {
             ProductFilter filter = new ProductFilter(null, null, null, grid.getBrandId(), null, null, null, null);
-            productStream = productRepository.search(filter, Pageable.unpaged()).getContent().stream();
+            productStream = productSearchEngine.search(filter, Pageable.unpaged()).getContent().stream();
         } else if (StringUtils.hasText(grid.getCategoryId())) {
-            productStream = productRepository.findByCategoryIds(grid.getCategoryId(), Pageable.unpaged()).getContent().stream();
+            productStream = productSearchEngine.search(grid.getCategoryId(), null).stream();
         } else if (grid.getProductIds() != null && !grid.getProductIds().isEmpty()) {
-            productStream = productRepository.findAllById(grid.getProductIds()).stream();
+            productStream = productSearchEngine.findAllById(grid.getProductIds()).stream();
         }
 
         // Filter active

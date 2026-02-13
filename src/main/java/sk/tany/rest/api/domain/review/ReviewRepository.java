@@ -1,54 +1,22 @@
 package sk.tany.rest.api.domain.review;
 
-import org.dizitart.no2.Nitrite;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
-import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Repository
-public class ReviewRepository extends AbstractInMemoryRepository<Review> {
+public interface ReviewRepository extends MongoRepository<Review, String> {
 
-    public ReviewRepository(Nitrite nitrite) {
-        super(nitrite, Review.class);
-    }
+    List<Review> findAllByProductId(String productId);
 
-    public List<Review> findAllByProductId(String productId) {
-        return memoryCache.values().stream()
-                .filter(r -> r.getProductId() != null && r.getProductId().equals(productId))
-                .collect(Collectors.toList());
-    }
+    List<Review> findAllByProductId(String productId, Sort sort);
 
-    public List<Review> findAllByProductId(String productId, Sort sort) {
-        List<Review> reviews = findAllByProductId(productId);
-        sort(reviews, sort);
-        return reviews;
-    }
+    List<Review> findAllByProductIdIn(Collection<String> productIds);
 
-    public List<Review> findAllByProductIds(Collection<String> productIds) {
-        Set<String> idsSet = new HashSet<>(productIds);
-        return memoryCache.values().stream()
-                .filter(r -> r.getProductId() != null && idsSet.contains(r.getProductId()))
-                .toList();
-    }
+    List<Review> findAllByProductIdIn(Collection<String> productIds, Sort sort);
 
-    public List<Review> findAllByProductIds(Collection<String> productIds, Sort sort) {
-        List<Review> reviews = new ArrayList<>(findAllByProductIds(productIds));
-        sort(reviews, sort);
-        return reviews;
-    }
-
-    public boolean existsDuplicate(String customerId, String customerName, String title, String text) {
-        return memoryCache.values().stream()
-                .anyMatch(r -> java.util.Objects.equals(customerId, r.getCustomerId()) &&
-                        java.util.Objects.equals(customerName, r.getCustomerName()) &&
-                        java.util.Objects.equals(title, r.getTitle()) &&
-                        java.util.Objects.equals(text, r.getText()));
-    }
+    boolean existsByCustomerIdAndCustomerNameAndTitleAndText(String customerId, String customerName, String title, String text);
 }

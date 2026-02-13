@@ -1,33 +1,14 @@
 package sk.tany.rest.api.domain.wishlist;
 
-import org.dizitart.no2.Nitrite;
 import org.springframework.stereotype.Repository;
-import sk.tany.rest.api.domain.AbstractInMemoryRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class WishlistRepository extends AbstractInMemoryRepository<Wishlist> {
+public interface WishlistRepository extends MongoRepository<Wishlist, String> {
+    List<Wishlist> findByCustomerId(String customerId);
 
-    public WishlistRepository(Nitrite nitrite) {
-        super(nitrite, Wishlist.class);
-    }
-
-    public List<Wishlist> findByCustomerId(String customerId) {
-        return memoryCache.values().stream()
-                .filter(w -> w.getCustomerId() != null && w.getCustomerId().equals(customerId))
-                .toList();
-    }
-
-    public Optional<Wishlist> findByCustomerIdAndProductId(String customerId, String productId) {
-        return memoryCache.values().stream()
-                .filter(w -> w.getCustomerId() != null && w.getCustomerId().equals(customerId)
-                        && w.getProductId() != null && w.getProductId().equals(productId))
-                .findFirst();
-    }
-
-    public java.util.List<Wishlist> findAllItems() {
-        return new java.util.ArrayList<>(memoryCache.values());
-    }
+    Optional<Wishlist> findByCustomerIdAndProductId(String customerId, String productId);
 }

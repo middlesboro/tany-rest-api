@@ -18,7 +18,7 @@ public class BlogClientServiceImpl implements BlogClientService {
 
     @Override
     public List<BlogDto> getAll() {
-        return blogRepository.findAllByVisibleTrue().stream()
+        return blogRepository.findAllByVisibleTrueOrderByOrderAsc().stream()
                 .map(blogMapper::toDto)
                 .toList();
     }
