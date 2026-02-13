@@ -92,7 +92,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     }
 
     public String checkStatus(String orderId) {
-        Optional<BesteronPayment> paymentOpt = besteronPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId);
+        Optional<BesteronPayment> paymentOpt = besteronPaymentRepository.findTopByOrderIdOrderByCreatedDateDesc(orderId);
         if (paymentOpt.isEmpty()) {
             return null;
         }
