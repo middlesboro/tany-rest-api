@@ -64,6 +64,7 @@ security:
     - /api/categories/**
     - /api/blogs/**
     - /api/pages/**
+    - /api/brands/**
     - /api/homepage-grids/**
     - /v3/api-docs/**
     - /swagger-ui/**
