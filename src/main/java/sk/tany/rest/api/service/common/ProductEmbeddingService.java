@@ -7,6 +7,8 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.bgesmallenv15q.BgeSmallEnV15QuantizedEmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.mongodb.MongoDbEmbeddingStore;
 import jakarta.annotation.PostConstruct;
@@ -145,7 +147,12 @@ public class ProductEmbeddingService {
                     Response<dev.langchain4j.data.embedding.Embedding> embeddingResponse = embeddingModel.embed(text);
 
                     // Find 6 relevant to include self (potentially) and get 5 others
-                    List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(embeddingResponse.content(), 6);
+                    EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
+                            .queryEmbedding(embeddingResponse.content())
+                            .maxResults(6)
+                            .build();
+                    EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(searchRequest);
+                    List<EmbeddingMatch<TextSegment>> relevant = searchResult.matches();
 
                     List<String> resultIds = new ArrayList<>();
                     for (EmbeddingMatch<TextSegment> match : relevant) {
