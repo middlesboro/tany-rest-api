@@ -45,11 +45,6 @@ public class ProductEmbeddingService {
 
     @PostConstruct
     public void initStore() {
-        if (!loadRelatedProducts) {
-            log.info("ProductEmbeddingService disabled by configuration.");
-            return;
-        }
-
         try {
             log.info("Initializing ProductEmbeddingService connection to MongoDB Atlas...");
             this.embeddingStore = MongoDbEmbeddingStore.builder()
