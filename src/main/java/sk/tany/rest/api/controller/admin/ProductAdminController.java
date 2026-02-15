@@ -32,6 +32,7 @@ import sk.tany.rest.api.mapper.ProductAdminApiMapper;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.service.common.ProductEmbeddingService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
 import sk.tany.rest.api.service.scheduler.InvoiceUploadScheduler;
 
@@ -51,6 +52,7 @@ public class ProductAdminController {
     private final ProductAdminApiMapper productAdminApiMapper;
     private final PrestaShopImportService prestaShopImportService;
     private final InvoiceUploadScheduler invoiceUploadScheduler;
+    private final ProductEmbeddingService productEmbeddingService;
 
     @PostMapping
     public ResponseEntity<ProductCreateResponse> createProduct(@RequestBody ProductCreateRequest product) {
@@ -174,6 +176,12 @@ public class ProductAdminController {
     @PostMapping("/export/invoice/onedrive")
     public ResponseEntity<Void> exportInvoiceToOnedrive() {
         invoiceUploadScheduler.processUploads();
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/embeddings/init")
+    public ResponseEntity<Void> initEmbeddings() {
+        productEmbeddingService.reEmbedAllProducts();
         return ResponseEntity.ok().build();
     }
 }

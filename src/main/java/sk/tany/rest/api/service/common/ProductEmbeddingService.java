@@ -9,11 +9,10 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.mongodb.MongoDbEmbeddingStore;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.product.Product;
@@ -42,18 +41,15 @@ public class ProductEmbeddingService {
     private volatile EmbeddingStore<TextSegment> embeddingStore;
     private volatile EmbeddingModel embeddingModel;
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void startBackgroundInitialization() {
+    @PostConstruct
+    public void initStore() {
         if (!loadRelatedProducts) {
-            log.info("ProductEmbeddingService initialization skipped by configuration.");
+            log.info("ProductEmbeddingService disabled by configuration.");
             return;
         }
-        new Thread(this::init).start();
-    }
 
-    private void init() {
-        log.info("Initializing ProductEmbeddingService in background using MongoDB Atlas...");
         try {
+            log.info("Initializing ProductEmbeddingService connection to MongoDB Atlas...");
             this.embeddingStore = MongoDbEmbeddingStore.builder()
                     .fromClient(mongoClient)
                     .databaseName(databaseName)
@@ -63,12 +59,33 @@ public class ProductEmbeddingService {
                     .build();
 
             this.embeddingModel = new BgeSmallEnV15QuantizedEmbeddingModel();
-
-            // We do not re-embed all products on startup anymore as we use persistent storage.
-            log.info("ProductEmbeddingService initialized with MongoDB Atlas.");
+            log.info("ProductEmbeddingService initialized (connection only).");
 
         } catch (Exception e) {
-            log.error("Failed to initialize ProductEmbeddingService", e);
+            log.error("Failed to initialize ProductEmbeddingService connection", e);
+        }
+    }
+
+    @Async
+    public void reEmbedAllProducts() {
+        if (!isInitialized()) {
+            log.warn("ProductEmbeddingService not initialized. Cannot re-embed products.");
+            return;
+        }
+
+        log.info("Starting batch re-embedding of all products...");
+        try {
+            List<Product> products = productRepository.findAll();
+            int count = 0;
+            for (Product product : products) {
+                if (product.isActive() && product.getTitle() != null) {
+                    addInternal(product);
+                    count++;
+                }
+            }
+            log.info("Finished re-embedding {} active products.", count);
+        } catch (Exception e) {
+            log.error("Error during batch re-embedding of products", e);
         }
     }
 
@@ -82,7 +99,7 @@ public class ProductEmbeddingService {
         try {
              if (product.isActive() && product.getTitle() != null) {
                 addInternal(product);
-                log.info("Updated embedding for product: {}", product.getId());
+                log.debug("Updated embedding for product: {}", product.getId());
              }
         } catch (Exception e) {
             log.error("Failed to update embedding for product: " + product.getId(), e);
@@ -109,7 +126,8 @@ public class ProductEmbeddingService {
 
     public List<String> findRelatedProducts(String productId) {
         if (embeddingStore == null || embeddingModel == null) {
-            log.warn("Embedding store not initialized yet.");
+            // Only warn periodically or just debug to avoid log spam if service is disabled
+            log.debug("Embedding store not initialized.");
             return List.of();
         }
 
