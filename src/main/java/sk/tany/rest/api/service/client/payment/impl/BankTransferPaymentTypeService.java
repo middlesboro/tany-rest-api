@@ -4,28 +4,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import scala.Option;
-import scala.math.BigDecimal;
-import sk.softwave.paybysquare.PayBySquare$;
-import sk.softwave.paybysquare.SimplePay;
 import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
+import sk.tany.rest.api.service.payment.PayBySquareService;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.Base64;
 import java.util.Locale;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class BankTransferPaymentTypeService implements PaymentTypeService {
+
+    private final PayBySquareService payBySquareService;
 
     @Value("${eshop.bank-account.iban}")
     private String iban;
@@ -90,34 +85,17 @@ public class BankTransferPaymentTypeService implements PaymentTypeService {
         }
     }
 
-    private String generateQrCode(OrderDto order) throws IOException {
-        BigDecimal amount = new BigDecimal(order.getFinalPrice());
-        String vsValue = getVariableSymbol(order);
-        Option<String> vs = Option.apply(vsValue);
-        Option<String> none = Option.apply(null);
-        Option<String> bicOpt = Option.apply(bic);
-
-        SimplePay pay = new SimplePay(
-                amount,
+    private String generateQrCode(OrderDto order) {
+        return payBySquareService.generateQrCode(
+                order.getFinalPrice(),
                 "EUR",
-                vs,
-                none,
-                none,
-                none,
-                none,
+                getVariableSymbol(order),
+                null,
+                null,
+                null,
+                null,
                 iban,
-                bicOpt
+                bic
         );
-
-        File tempFile = Files.createTempFile("qr", ".png").toFile();
-        try {
-            PayBySquare$.MODULE$.encodePlainQR(pay, tempFile.getAbsolutePath(), 300, 4);
-            byte[] fileContent = Files.readAllBytes(tempFile.toPath());
-            return Base64.getEncoder().encodeToString(fileContent);
-        } finally {
-            if (tempFile.exists()) {
-                tempFile.delete();
-            }
-        }
     }
 }
