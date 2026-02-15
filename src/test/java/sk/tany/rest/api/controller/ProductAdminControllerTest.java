@@ -11,18 +11,23 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.controller.admin.ProductAdminController;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
+import sk.tany.rest.api.dto.admin.product.create.ProductCreateRequest;
+import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
 import sk.tany.rest.api.dto.admin.product.search.ProductSearchResponse;
 import sk.tany.rest.api.dto.admin.product.upload.ProductUploadImageResponse;
 import sk.tany.rest.api.mapper.ProductAdminApiMapper;
+import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
+import sk.tany.rest.api.service.scheduler.InvoiceUploadScheduler;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -36,6 +41,12 @@ class ProductAdminControllerTest {
 
     @Mock
     private ProductAdminApiMapper productAdminApiMapper;
+
+    @Mock
+    private PrestaShopImportService prestaShopImportService;
+
+    @Mock
+    private InvoiceUploadScheduler invoiceUploadScheduler;
 
     @InjectMocks
     private ProductAdminController productAdminController;
@@ -64,6 +75,41 @@ class ProductAdminControllerTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("Search Result Product", result.getContent().getFirst().getTitle());
         verify(productService, times(1)).search(categoryId, pageable);
+    }
+
+    @Test
+    void createProduct_shouldPassProductIdentifier() {
+        ProductCreateRequest request = new ProductCreateRequest();
+        request.setTitle("New Product");
+        request.setProductIdentifier(999L);
+
+        ProductAdminDto dto = new ProductAdminDto();
+        dto.setTitle("New Product");
+        dto.setProductIdentifier(999L);
+
+        ProductAdminDto savedDto = new ProductAdminDto();
+        savedDto.setId("1");
+        savedDto.setTitle("New Product");
+        savedDto.setProductIdentifier(999L);
+
+        ProductCreateResponse response = new ProductCreateResponse();
+        response.setId("1");
+        response.setTitle("New Product");
+        response.setProductIdentifier(999L);
+
+        when(productAdminApiMapper.toDto(request)).thenReturn(dto);
+        when(productService.save(dto)).thenReturn(savedDto);
+        when(productAdminApiMapper.toCreateResponse(savedDto)).thenReturn(response);
+
+        org.springframework.http.ResponseEntity<ProductCreateResponse> result = productAdminController.createProduct(request);
+
+        assertThat(result.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.CREATED);
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getProductIdentifier()).isEqualTo(999L);
+
+        verify(productService).save(dto);
+        verify(productAdminApiMapper).toDto(request);
+        verify(productAdminApiMapper).toCreateResponse(savedDto);
     }
 
     @Test

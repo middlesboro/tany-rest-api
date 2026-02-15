@@ -9,6 +9,7 @@ import java.util.List;
 
 @Data
 public class ProductCreateRequest {
+    private Long productIdentifier;
     private String title;
     private String shortDescription;
     private String description;
