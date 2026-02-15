@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -147,13 +146,17 @@ public class HeurekaFeedServiceImpl implements HeurekaFeedService {
 
             productStream.forEach(product -> {
                 try {
+                    int quantity = product.getQuantity() != null ? product.getQuantity() : 0;
+                    if (quantity <= 0) {
+                        return;
+                    }
+
                     String itemId = product.getProductIdentifier() != null ? product.getProductIdentifier().toString() : product.getId();
                     writer.write("  <item id=\"" + StringEscapeUtils.escapeXml11(itemId) + "\">\n");
 
-                    int quantity = product.getQuantity() != null ? product.getQuantity() : 0;
                     writer.write("    <stock_quantity>" + quantity + "</stock_quantity>\n");
 
-                    int deliveryTime = (quantity > 0) ? 0 : 7;
+                    int deliveryTime = 1;
                     writer.write("    <delivery_time>" + deliveryTime + "</delivery_time>\n");
 
                     writer.write("  </item>\n");
