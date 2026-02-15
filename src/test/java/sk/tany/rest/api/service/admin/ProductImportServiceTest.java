@@ -159,4 +159,48 @@ class ProductImportServiceTest {
         verify(productSearchEngine, org.mockito.Mockito.atLeastOnce()).addFilterParameter(any(FilterParameter.class));
         verify(productSearchEngine).addFilterParameterValue(any(FilterParameterValue.class));
     }
+
+    @Test
+    void importProducts_shouldOnlyUpdateQuantityIfProductExists() throws Exception {
+        // Arrange
+        ProductImportEntryDto entry = new ProductImportEntryDto();
+        entry.setType("table");
+        entry.setName("p_sale");
+
+        ProductImportDataDto data = new ProductImportDataDto();
+        data.setIdProduct("123");
+        data.setProductName("Updated Name"); // Should NOT update name
+        data.setStockQty("50");
+        data.setExternalStock("0");
+
+        entry.setData(List.of(data));
+        List<ProductImportEntryDto> entries = List.of(entry);
+
+        when(objectMapper.readValue(any(InputStream.class), any(TypeReference.class)))
+                .thenReturn(entries);
+
+        Product existingProduct = new Product();
+        existingProduct.setId("p1");
+        existingProduct.setProductIdentifier(123L);
+        existingProduct.setTitle("Original Name");
+        existingProduct.setQuantity(10);
+
+        when(productRepository.findByProductIdentifier(123L)).thenReturn(Optional.of(existingProduct));
+        when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        productImportService.importProducts();
+
+        // Assert
+        verify(productRepository).save(argThat(p ->
+                p.getQuantity() == 50 &&
+                        "Original Name".equals(p.getTitle()) // Name should NOT change
+        ));
+        verify(productSearchEngine).updateProduct(any(Product.class));
+
+        // Ensure other repository interactions that happen during full import are NOT called
+        verify(supplierRepository, org.mockito.Mockito.never()).save(any(Supplier.class));
+        verify(brandRepository, org.mockito.Mockito.never()).save(any(Brand.class));
+        verify(categoryRepository, org.mockito.Mockito.never()).findByPrestashopId(any(Long.class));
+    }
 }

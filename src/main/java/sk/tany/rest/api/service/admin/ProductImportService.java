@@ -111,7 +111,18 @@ public class ProductImportService {
         ProductImportDataDto baseData = rows.getFirst();
         Long productIdentifier = Long.parseLong(idProductStr);
 
-        Product product = productRepository.findByProductIdentifier(productIdentifier).orElse(new Product());
+        Optional<Product> existingProductOpt = productRepository.findByProductIdentifier(productIdentifier);
+        if (existingProductOpt.isPresent()) {
+            Product existingProduct = existingProductOpt.get();
+            if (StringUtils.isNotBlank(baseData.getStockQty())) {
+                existingProduct.setQuantity(Integer.parseInt(baseData.getStockQty()));
+                Product savedProduct = productRepository.save(existingProduct);
+                productSearchEngine.updateProduct(savedProduct);
+            }
+            return;
+        }
+
+        Product product = new Product();
         product.setProductIdentifier(productIdentifier);
         product.setTitle(baseData.getProductName());
         product.setProductCode(baseData.getProductCode());
