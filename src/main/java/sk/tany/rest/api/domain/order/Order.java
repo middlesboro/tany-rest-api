@@ -2,6 +2,7 @@ package sk.tany.rest.api.domain.order;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import sk.tany.rest.api.domain.BaseEntity;
 import sk.tany.rest.api.domain.customer.Address;
 import sk.tany.rest.api.dto.PriceBreakDown;
@@ -17,6 +18,7 @@ public class Order implements BaseEntity {
     private String id;
     private Instant createDate;
     private Instant updateDate;
+    @Indexed(unique = true)
     private Long orderIdentifier;
     private String cartId;
     private BigDecimal finalPrice;

@@ -2,6 +2,7 @@ package sk.tany.rest.api.domain.product;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import sk.tany.rest.api.domain.BaseEntity;
 
 import java.math.BigDecimal;
@@ -13,6 +14,7 @@ public class Product implements BaseEntity {
 
     @Id
     private String id;
+    @Indexed(unique = true)
     private Long productIdentifier;
     private Instant createDate;
     private Instant updateDate;
