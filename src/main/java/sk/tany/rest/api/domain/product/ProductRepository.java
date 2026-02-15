@@ -22,6 +22,8 @@ public interface ProductRepository extends MongoRepository<Product, String> {
 
     boolean existsBySlugAndIdNot(String slug, String id);
 
+    java.util.stream.Stream<Product> streamAllByActiveTrue();
+
     @Query(value = "{}", sort = "{ 'productIdentifier' : -1 }")
     List<Product> findTopByOrderByProductIdentifierDesc(Pageable pageable);
 

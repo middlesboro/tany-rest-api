@@ -59,6 +59,7 @@ security:
     - /api/reviews/**
     - /api/orders/**
     - /api/products/**
+    - /api/feeds/**
     - /api/carriers/**
     - /api/payments/**
     - /api/categories/**
