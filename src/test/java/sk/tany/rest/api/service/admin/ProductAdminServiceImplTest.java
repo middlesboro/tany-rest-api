@@ -73,6 +73,22 @@ class ProductAdminServiceImplTest {
     }
 
     @Test
+    void save_shouldEnsureSequenceAtLeast_whenIdentifierProvided() {
+        ProductAdminDto dto = new ProductAdminDto();
+        dto.setProductIdentifier(500L);
+        Product product = new Product();
+        product.setProductIdentifier(500L);
+        when(productMapper.toEntity(dto)).thenReturn(product);
+        when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+        when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
+
+        productAdminService.save(dto);
+
+        verify(sequenceService).ensureSequenceAtLeast("product_identifier", 500L);
+        verify(sequenceService, never()).getNextSequence(anyString());
+    }
+
+    @Test
     void recalculateReviewStatistics_shouldSetZero_whenNoReviews() {
         String productId = "p1";
         ProductAdminDto dto = new ProductAdminDto();
@@ -153,14 +169,14 @@ class ProductAdminServiceImplTest {
         dto.setId("1");
         dto.setTitle("Test Product");
 
-        when(productSearchEngine.searchAndSort(query)).thenReturn(List.of(product));
+        when(productSearchEngine.searchAndSort(query, false)).thenReturn(List.of(product));
         when(productMapper.toAdminDto(product)).thenReturn(dto);
 
         List<ProductAdminDto> result = productAdminService.searchByQuery(query);
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getTitle()).isEqualTo("Test Product");
-        verify(productSearchEngine).searchAndSort(query);
+        verify(productSearchEngine).searchAndSort(query, false);
     }
 
     @Test
