@@ -1,18 +1,21 @@
 package sk.tany.rest.api.service.common;
 
+import com.mongodb.client.MongoClient;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.embedding.bge.small.en.v15.BgeSmallEnV15QuantizedEmbeddingModel;
+import dev.langchain4j.model.embedding.onnx.bgesmallenv15q.BgeSmallEnV15QuantizedEmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+import dev.langchain4j.store.embedding.mongodb.MongoDbEmbeddingStore;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
@@ -26,34 +29,50 @@ import java.util.List;
 public class ProductEmbeddingService {
 
     private final ProductRepository productRepository;
+    private final MongoClient mongoClient;
 
     @Value("${eshop.load-related-products:true}")
     private boolean loadRelatedProducts;
 
+    @Value("${spring.data.mongodb.database:tany}")
+    private String databaseName;
+
+    private static final String COLLECTION_NAME = "product_embeddings";
+    private static final String INDEX_NAME = "vector_index";
+
     private volatile EmbeddingStore<TextSegment> embeddingStore;
     private volatile EmbeddingModel embeddingModel;
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void startBackgroundInitialization() {
-        if (!loadRelatedProducts) {
-            log.info("ProductEmbeddingService initialization skipped by configuration.");
-            return;
+    @PostConstruct
+    public void initStore() {
+        try {
+            log.info("Initializing ProductEmbeddingService connection to MongoDB Atlas...");
+            this.embeddingStore = MongoDbEmbeddingStore.builder()
+                    .fromClient(mongoClient)
+                    .databaseName(databaseName)
+                    .collectionName(COLLECTION_NAME)
+                    .indexName(INDEX_NAME)
+                    .createIndex(false) // Assuming index is created in Atlas
+                    .build();
+
+            this.embeddingModel = new BgeSmallEnV15QuantizedEmbeddingModel();
+            log.info("ProductEmbeddingService initialized (connection only).");
+
+        } catch (Exception e) {
+            log.error("Failed to initialize ProductEmbeddingService connection", e);
         }
-        new Thread(this::init).start();
     }
 
-    private void init() {
-        log.info("Initializing ProductEmbeddingService in background...");
+    @Async
+    public void reEmbedAllProducts() {
+        if (!isInitialized()) {
+            log.warn("ProductEmbeddingService not initialized. Cannot re-embed products.");
+            return;
+        }
+
+        log.info("Starting batch re-embedding of all products...");
         try {
-            // Use temporary variables to ensure atomic visibility if we were checking "isInitialized" by null checks on fields,
-            // but we are assigning them one by one. Since we use them together, it's safer to check both or have a separate flag.
-            // But since findRelatedProducts checks both for null, it is safe enough.
-            this.embeddingStore = new InMemoryEmbeddingStore<>();
-            this.embeddingModel = new BgeSmallEnV15QuantizedEmbeddingModel();
-
             List<Product> products = productRepository.findAll();
-            log.info("Found {} products to embed.", products.size());
-
             int count = 0;
             for (Product product : products) {
                 if (product.isActive() && product.getTitle() != null) {
@@ -61,10 +80,26 @@ public class ProductEmbeddingService {
                     count++;
                 }
             }
-            log.info("Embedded {} active products into the store. Initialization complete.", count);
-
+            log.info("Finished re-embedding {} active products.", count);
         } catch (Exception e) {
-            log.error("Failed to initialize ProductEmbeddingService", e);
+            log.error("Error during batch re-embedding of products", e);
+        }
+    }
+
+    @Async
+    public void updateProduct(Product product) {
+        if (!isInitialized()) {
+            log.warn("ProductEmbeddingService not initialized, skipping update for product: {}", product.getId());
+            return;
+        }
+
+        try {
+             if (product.isActive() && product.getTitle() != null) {
+                addInternal(product);
+                log.debug("Updated embedding for product: {}", product.getId());
+             }
+        } catch (Exception e) {
+            log.error("Failed to update embedding for product: " + product.getId(), e);
         }
     }
 
@@ -81,14 +116,15 @@ public class ProductEmbeddingService {
         Metadata metadata = Metadata.from("id", product.getId());
         TextSegment segment = TextSegment.from(text, metadata);
 
-        // Embed and add
         Response<dev.langchain4j.data.embedding.Embedding> embeddingResponse = embeddingModel.embed(segment);
-        embeddingStore.add(embeddingResponse.content(), segment);
+        // Use product ID as the document ID for upsert/replacement effect
+        embeddingStore.add(product.getId(), embeddingResponse.content());
     }
 
     public List<String> findRelatedProducts(String productId) {
         if (embeddingStore == null || embeddingModel == null) {
-            log.warn("Embedding store not initialized yet.");
+            // Only warn periodically or just debug to avoid log spam if service is disabled
+            log.debug("Embedding store not initialized.");
             return List.of();
         }
 
@@ -106,12 +142,17 @@ public class ProductEmbeddingService {
                     Response<dev.langchain4j.data.embedding.Embedding> embeddingResponse = embeddingModel.embed(text);
 
                     // Find 6 relevant to include self (potentially) and get 5 others
-                    List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(embeddingResponse.content(), 6);
+                    EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
+                            .queryEmbedding(embeddingResponse.content())
+                            .maxResults(6)
+                            .build();
+                    EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(searchRequest);
+                    List<EmbeddingMatch<TextSegment>> relevant = searchResult.matches();
 
                     List<String> resultIds = new ArrayList<>();
                     for (EmbeddingMatch<TextSegment> match : relevant) {
-                        String matchId = match.embedded().metadata().get("id");
-                        if (!matchId.equals(productId)) {
+                        String matchId = match.embeddingId();
+                        if (matchId != null && !matchId.equals(productId)) {
                             resultIds.add(matchId);
                         }
                     }
