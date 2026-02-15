@@ -35,7 +35,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public Page<ProductClientDto> findAll(Pageable pageable) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        Page<Product> products = productRepository.findAll(pageable);
+        Page<Product> products = productSearchEngine.findAll(pageable, true);
         return mapToEnhancedDtos(products, wishlistProductIds);
     }
 
@@ -70,7 +70,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public Page<ProductClientDto> search(String categoryId, Pageable pageable) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        Page<Product> products = productSearchEngine.findByCategoryIds(categoryId, pageable);
+        Page<Product> products = productSearchEngine.findByCategoryIds(categoryId, pageable, true);
         return mapToEnhancedDtos(products, wishlistProductIds);
     }
 
@@ -120,7 +120,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public java.util.List<ProductClientDto> searchProducts(String query) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        List<Product> products = productSearchEngine.searchAndSort(query);
+        List<Product> products = productSearchEngine.searchAndSort(query, true);
         return mapToEnhancedDtos(products, wishlistProductIds);
     }
 

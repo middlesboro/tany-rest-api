@@ -82,6 +82,13 @@ public class ProductSearchEngine {
 
     private static final int MAX_EDIT_DISTANCE = 2;
 
+    private static final Comparator<Product> STOCK_COMPARATOR = (p1, p2) -> {
+        boolean s1 = p1.getQuantity() != null && p1.getQuantity() > 0;
+        boolean s2 = p2.getQuantity() != null && p2.getQuantity() > 0;
+        if (s1 == s2) return 0;
+        return s1 ? -1 : 1;
+    };
+
     @EventListener(ApplicationReadyEvent.class)
     public void loadProducts() {
         log.info("Loading products into search engine...");
@@ -282,6 +289,10 @@ public class ProductSearchEngine {
     }
 
     public List<Product> searchAndSort(String query) {
+        return searchAndSort(query, false);
+    }
+
+    public List<Product> searchAndSort(String query, boolean prioritizeStock) {
         if (StringUtils.isBlank(query)) {
             return List.of();
         }
@@ -307,6 +318,10 @@ public class ProductSearchEngine {
             })
             // 3. Výpočet skóre a zoradenie
             .sorted((p1, p2) -> {
+                if (prioritizeStock) {
+                    int stockCompare = STOCK_COMPARATOR.compare(p1, p2);
+                    if (stockCompare != 0) return stockCompare;
+                }
                 Double score1 = calculateRelevance(p1.getTitle(), normalizedQuery);
                 Double score2 = calculateRelevance(p2.getTitle(), normalizedQuery);
                 return score2.compareTo(score1); // Od najvyššieho skóre
@@ -356,6 +371,9 @@ public class ProductSearchEngine {
             // Default sort if none specified, or you can leave it unsorted/default
             comparator = Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         }
+
+        // Always prioritize stock for client search with filters
+        comparator = STOCK_COMPARATOR.thenComparing(comparator);
 
         return cachedProducts.stream()
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
@@ -449,6 +467,10 @@ public class ProductSearchEngine {
     }
 
     public Page<Product> findByCategoryIds(String categoryId, Pageable pageable) {
+        return findByCategoryIds(categoryId, pageable, false);
+    }
+
+    public Page<Product> findByCategoryIds(String categoryId, Pageable pageable, boolean prioritizeStock) {
         if (categoryId == null) {
             return new PageImpl<>(List.of(), pageable, 0);
         }
@@ -459,9 +481,13 @@ public class ProductSearchEngine {
                 .collect(Collectors.toCollection(ArrayList::new));
 
         if (pageable.getSort().isSorted()) {
-            sort(filtered, pageable.getSort());
+            sort(filtered, pageable.getSort(), prioritizeStock);
         } else {
-             filtered.sort(Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+            if (prioritizeStock) {
+                filtered.sort(STOCK_COMPARATOR.thenComparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+            } else {
+                filtered.sort(Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+            }
         }
 
         int start = (int) pageable.getOffset();
@@ -475,12 +501,42 @@ public class ProductSearchEngine {
         return new PageImpl<>(pageContent, pageable, filtered.size());
     }
 
+    public Page<Product> findAll(Pageable pageable, boolean prioritizeStock) {
+        List<Product> allProducts = new ArrayList<>(cachedProducts);
+
+        if (pageable.getSort().isSorted()) {
+            sort(allProducts, pageable.getSort(), prioritizeStock);
+        } else {
+             if (prioritizeStock) {
+                 allProducts.sort(STOCK_COMPARATOR);
+             }
+        }
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), allProducts.size());
+
+        if (start > allProducts.size()) {
+            return new PageImpl<>(List.of(), pageable, allProducts.size());
+        }
+
+        List<Product> pageContent = allProducts.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, allProducts.size());
+    }
+
     private void sort(List<Product> list, Sort sort) {
-        if (sort.isUnsorted()) {
+        sort(list, sort, false);
+    }
+
+    private void sort(List<Product> list, Sort sort, boolean prioritizeStock) {
+        if (sort.isUnsorted() && !prioritizeStock) {
             return;
         }
 
         Comparator<Product> comparator = null;
+
+        if (prioritizeStock) {
+            comparator = STOCK_COMPARATOR;
+        }
 
         for (Sort.Order order : sort) {
             Comparator<Product> currentComparator = (o1, o2) -> {
