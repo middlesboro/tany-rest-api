@@ -19,6 +19,8 @@ import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
 import sk.tany.rest.api.event.OrderStatusChangedEvent;
@@ -47,6 +49,7 @@ public class OrderEventHandler {
     private final InvoiceService invoiceService;
     private final ResourceLoader resourceLoader;
     private final ProductClientService productClientService;
+    private final ShopSettingsRepository shopSettingsRepository;
 
     @Value("${eshop.frontend-url}")
     private String frontendUrl;
@@ -116,11 +119,14 @@ public class OrderEventHandler {
     private void sendOrderCreatedEmail(Order order) {
         try {
             String template = getEmailTemplate("templates/email/order_created.html");
+            ShopSettings settings = shopSettingsRepository.getFirstShopSettings();
 
             String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
             template = template.replace("{{firstname}}", HtmlUtils.htmlEscape(firstname));
             template = template.replace("{{orderIdentifier}}", String.valueOf(order.getOrderIdentifier()));
             template = template.replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
+            template = template.replace("{{supportEmail}}", settings.getShopEmail() != null ? settings.getShopEmail() : "");
+            template = template.replace("{{supportPhone}}", settings.getShopPhoneNumber() != null ? settings.getShopPhoneNumber() : "");
 
             String orderConfirmationLink = frontendUrl + "/order/confirmation/" + order.getId();
             template = template.replace("{{orderConfirmationLink}}", orderConfirmationLink);
@@ -245,6 +251,7 @@ public class OrderEventHandler {
         }
         try {
             String template = getEmailTemplate("templates/email/order_sent.html");
+            ShopSettings settings = shopSettingsRepository.getFirstShopSettings();
 
             String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
             String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
@@ -254,7 +261,9 @@ public class OrderEventHandler {
                     .replace("{{firstname}}", firstname)
                     .replace("{{orderIdentifier}}", orderIdentifier)
                     .replace("{{carrierOrderStateLink}}", carrierLink)
-                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
+                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()))
+                    .replace("{{supportEmail}}", settings.getShopEmail() != null ? settings.getShopEmail() : "")
+                    .replace("{{supportPhone}}", settings.getShopPhoneNumber() != null ? settings.getShopPhoneNumber() : "");
 
             emailService.sendEmail(order.getEmail(), "Objednávka odoslaná", body, true, null);
             log.info("Sent 'Order Sent' email for order {}", order.getOrderIdentifier());
@@ -271,6 +280,7 @@ public class OrderEventHandler {
         }
         try {
             String template = getEmailTemplate("templates/email/order_paid.html");
+            ShopSettings settings = shopSettingsRepository.getFirstShopSettings();
 
             String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
             String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
@@ -280,7 +290,9 @@ public class OrderEventHandler {
                     .replace("{{firstname}}", firstname)
                     .replace("{{orderIdentifier}}", orderIdentifier)
                     .replace("{{orderConfirmationLink}}", orderConfirmationLink)
-                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
+                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()))
+                    .replace("{{supportEmail}}", settings.getShopEmail() != null ? settings.getShopEmail() : "")
+                    .replace("{{supportPhone}}", settings.getShopPhoneNumber() != null ? settings.getShopPhoneNumber() : "");
 
             emailService.sendEmail(order.getEmail(), "Objednávka zaplatená", body, true, null);
             log.info("Sent 'Order Paid' email for order {}", order.getOrderIdentifier());

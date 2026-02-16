@@ -16,6 +16,8 @@ import sk.tany.rest.api.domain.auth.MagicLinkTokenState;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.customer.Role;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.service.common.EmailService;
 import org.springframework.util.FileCopyUtils;
 
@@ -37,6 +39,7 @@ public class AuthenticationController {
     private final CustomerRepository customerRepository;
     private final MagicLinkTokenRepository magicLinkTokenRepository;
     private final EmailService emailService;
+    private final ShopSettingsRepository shopSettingsRepository;
 
     @Value("${eshop.frontend-url}")
     private String frontendUrl;
@@ -70,9 +73,12 @@ public class AuthenticationController {
             String baseUrl = customer.getRole() == Role.ADMIN ? frontendAdminUrl : frontendUrl;
             String link = baseUrl + "/magic-link?token=" + exchangeToken;
 
+            ShopSettings settings = shopSettingsRepository.getFirstShopSettings();
             String body = loadTemplate()
                     .replace("{{link}}", link)
-                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
+                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()))
+                    .replace("{{supportEmail}}", settings.getShopEmail() != null ? settings.getShopEmail() : "")
+                    .replace("{{supportPhone}}", settings.getShopPhoneNumber() != null ? settings.getShopPhoneNumber() : "");
             emailService.sendEmail(email, "Odkaz pre prihlásenie", body, true, null);
         }
 

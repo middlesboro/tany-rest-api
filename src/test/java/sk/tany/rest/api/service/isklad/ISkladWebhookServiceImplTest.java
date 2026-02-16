@@ -10,6 +10,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.isklad.ISkladOrderStatusUpdateRequest;
 import sk.tany.rest.api.dto.isklad.ISkladPackage;
 import sk.tany.rest.api.service.common.EmailService;
@@ -34,6 +36,8 @@ class ISkladWebhookServiceImplTest {
 
     @Mock
     private EmailService emailService;
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
 
     @InjectMocks
     private ISkladWebhookServiceImpl webhookService;
@@ -42,6 +46,11 @@ class ISkladWebhookServiceImplTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         ReflectionTestUtils.setField(webhookService, "frontendUrl", "http://localhost:3000");
+
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("test@test.com");
+        settings.setShopPhoneNumber("123456789");
+        lenient().when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
     }
 
     @Test

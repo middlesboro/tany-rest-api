@@ -168,7 +168,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         infoTable.setSpacingBefore(20);
         infoTable.setWidths(new float[]{1, 1});
 
-        ShopSettings shopSettings = getShopSettings();
+        ShopSettings shopSettings = shopSettingsRepository.getFirstShopSettings();
 
         // Supplier
         PdfPCell supplierCell = new PdfPCell();
@@ -400,7 +400,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     private class InvoiceFooter extends PdfPageEventHelper {
-        ShopSettings shopSettings = getShopSettings();
+        ShopSettings shopSettings = shopSettingsRepository.getFirstShopSettings();
 
         @Override
         public void onEndPage(PdfWriter writer, Document document) {
@@ -458,9 +458,4 @@ public class InvoiceServiceImpl implements InvoiceService {
         return cell;
     }
 
-    ShopSettings getShopSettings() {
-        return shopSettingsRepository.findAll().stream()
-                .findFirst()
-                .orElseGet(ShopSettings::new);
-    }
 }

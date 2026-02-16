@@ -8,6 +8,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.service.common.EmailService;
 
 import java.util.Optional;
@@ -35,6 +37,9 @@ public class AuthenticationControllerTest {
     @MockBean
     private EmailService emailService;
 
+    @MockBean
+    private ShopSettingsRepository shopSettingsRepository;
+
     @Test
     public void testRequestMagicLinkUnknownEmailReturns200() throws Exception {
         when(customerRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
@@ -48,6 +53,11 @@ public class AuthenticationControllerTest {
 
     @Test
     public void testRateLimiting() throws Exception {
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("test@test.com");
+        settings.setShopPhoneNumber("123456789");
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
+
         when(customerRepository.findByEmail("rate@example.com")).thenReturn(Optional.of(new Customer()));
 
         // First request - OK
