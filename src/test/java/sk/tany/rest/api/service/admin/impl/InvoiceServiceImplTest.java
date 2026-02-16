@@ -1,7 +1,7 @@
 package sk.tany.rest.api.service.admin.impl;
 
-import com.lowagie.text.pdf.PdfReader;
-import com.lowagie.text.pdf.parser.PdfTextExtractor;
+import org.openpdf.text.pdf.PdfReader;
+import org.openpdf.text.pdf.parser.PdfTextExtractor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,11 +15,14 @@ import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.when;
@@ -37,6 +40,8 @@ class InvoiceServiceImplTest {
     private ProductRepository productRepository;
     @Mock
     private CustomerRepository customerRepository;
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
 
     @InjectMocks
     private InvoiceServiceImpl invoiceService;
@@ -205,6 +210,11 @@ class InvoiceServiceImplTest {
         order.setPaymentId("payment-1");
         when(carrierRepository.findById("carrier-1")).thenReturn(Optional.empty());
         when(paymentRepository.findById("payment-1")).thenReturn(Optional.empty());
+
+        ShopSettings shopSettings = new ShopSettings();
+        shopSettings.setShopEmail("info@tany.sk");
+        shopSettings.setShopPhoneNumber("421 944 432 457");
+        when(shopSettingsRepository.findAll()).thenReturn(List.of(shopSettings));
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
