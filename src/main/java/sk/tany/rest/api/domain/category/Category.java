@@ -27,6 +27,7 @@ public class Category implements BaseEntity {
     private boolean visible;
     private boolean defaultCategory;
     private List<FilterParameterDto> filterParameters;
+    private List<FilterParameterDto> excludedFilterParameters;
     private Instant createdDate;
     private Instant updateDate;
 

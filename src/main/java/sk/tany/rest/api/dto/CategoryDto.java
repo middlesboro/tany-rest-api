@@ -24,4 +24,5 @@ public class CategoryDto {
     private String parentId;
     private List<CategoryDto> children;
     private List<FilterParameterDto> filterParameters;
+    private List<FilterParameterDto> excludedFilterParameters;
 }
