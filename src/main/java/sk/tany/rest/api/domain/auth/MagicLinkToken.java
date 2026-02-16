@@ -11,24 +11,11 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MagicLinkToken implements BaseEntity {
-
-    @Id
-    private String id;
-    private String jti;
+public class MagicLinkToken extends BaseEntity {
+private String jti;
     private String customerEmail;
     private MagicLinkTokenState state;
     private String jwt;
     private Instant expiration;
     private Instant createdDate;
-    private Instant updateDate;
-
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
-    }
 }

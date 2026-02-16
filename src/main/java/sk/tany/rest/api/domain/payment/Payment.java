@@ -8,11 +8,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class Payment implements BaseEntity {
-
-    @Id
-    private String id;
-    private Long prestashopId;
+public class Payment extends BaseEntity {
+private Long prestashopId;
     private Integer iskladId;
     private String name;
     private PaymentType type;
@@ -24,14 +21,4 @@ public class Payment implements BaseEntity {
     private String image;
     private boolean active;
     private Instant createdDate;
-    private Instant updateDate;
-
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
-    }
 }

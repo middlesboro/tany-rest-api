@@ -8,11 +8,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-public class ShopSettings implements BaseEntity {
-
-    @Id
-    private String id;
-    private String bankName;
+public class ShopSettings extends BaseEntity {
+private String bankName;
     private String bankAccount;
     private String bankBic;
     private String shopStreet;
@@ -27,14 +24,4 @@ public class ShopSettings implements BaseEntity {
     private BigDecimal vat;
     private String defaultCountry;
     private Instant createdDate;
-    private Instant updateDate;
-
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
-    }
 }

@@ -8,10 +8,8 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-public class HomepageGrid implements BaseEntity {
-    @Id
-    private String id;
-    private String title;
+public class HomepageGrid extends BaseEntity {
+private String title;
     private String brandId;
     private String categoryId;
     private List<String> productIds;
@@ -19,21 +17,11 @@ public class HomepageGrid implements BaseEntity {
     private Integer order;
     private SortField sortField;
     private SortOrder sortOrder;
-
-    @Override
-    public void setCreatedDate(Instant date) { }
-    @Override
-    public Instant getCreatedDate() { return null; }
-    @Override
-    public void setLastModifiedDate(Instant date) { }
-    @Override
-    public Instant getLastModifiedDate() { return null; }
-
-    @Override
+@Override
     public Object getSortValue(String field) {
         if ("order".equals(field)) {
             return order;
         }
-        return BaseEntity.super.getSortValue(field);
+        return super.getSortValue(field);
     }
 }

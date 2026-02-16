@@ -61,7 +61,8 @@ public class MagicLinkSecurityTest {
 
         assertNotNull(result);
         assertTrue(result.isAuthenticated());
-        assertEquals("test@test.com", result.getPrincipal());
+        assertInstanceOf(Customer.class, result.getPrincipal());
+        assertEquals("test@test.com", ((Customer) result.getPrincipal()).getEmail());
         assertTrue(result.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CUSTOMER")));
 
         verify(magicLinkTokenRepository).save(argThat(t -> t.getState() == MagicLinkTokenState.VERIFIED));

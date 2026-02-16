@@ -12,13 +12,8 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-public class Order implements BaseEntity {
-
-    @Id
-    private String id;
-    private Instant createDate;
-    private Instant updateDate;
-    @Indexed(unique = true)
+public class Order extends BaseEntity {
+@Indexed(unique = true)
     private Long orderIdentifier;
     private String cartId;
     private BigDecimal finalPrice;
@@ -52,25 +47,7 @@ public class Order implements BaseEntity {
     private boolean creditNoteUploadedToOneDrive;
     private Instant iskladImportDate;
     private Instant adminNotificationDate;
-
-    @Override
-    public void setCreatedDate(Instant date) {
-        this.createDate = date;
-    }
-    @Override
-    public Instant getCreatedDate() {
-        return this.createDate;
-    }
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
-    }
-
-    @Override
+@Override
     public Object getSortValue(String field) {
         switch (field) {
             case "orderIdentifier": return orderIdentifier;
@@ -78,7 +55,7 @@ public class Order implements BaseEntity {
             case "status": return status;
             case "email": return email;
             case "lastname": return lastname;
-            default: return BaseEntity.super.getSortValue(field);
+            default: return super.getSortValue(field);
         }
     }
 }

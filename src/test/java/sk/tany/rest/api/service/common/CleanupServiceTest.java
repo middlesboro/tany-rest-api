@@ -45,10 +45,10 @@ class CleanupServiceTest {
     @Test
     void cleanupAuthorizationCodes_ShouldDeleteExpiredCodes() {
         AuthorizationCode expired = new AuthorizationCode();
-        expired.setCreatedDate(Instant.now().minus(31, ChronoUnit.SECONDS));
+        expired.setCreateDate(Instant.now().minus(40, ChronoUnit.SECONDS));
 
         AuthorizationCode active = new AuthorizationCode();
-        active.setCreatedDate(Instant.now().minus(29, ChronoUnit.SECONDS));
+        active.setCreateDate(Instant.now().minus(10, ChronoUnit.SECONDS));
 
         when(authorizationCodeRepository.findAll()).thenReturn(List.of(expired, active));
 
@@ -61,10 +61,10 @@ class CleanupServiceTest {
     @Test
     void cleanupMagicLinkTokens_ShouldDeleteExpiredTokens() {
         MagicLinkToken expired = new MagicLinkToken();
-        expired.setCreatedDate(Instant.now().minus(301, ChronoUnit.SECONDS));
+        expired.setCreateDate(Instant.now().minus(400, ChronoUnit.SECONDS));
 
         MagicLinkToken active = new MagicLinkToken();
-        active.setCreatedDate(Instant.now().minus(299, ChronoUnit.SECONDS));
+        active.setCreateDate(Instant.now().minus(100, ChronoUnit.SECONDS));
 
         when(magicLinkTokenRepository.findAll()).thenReturn(List.of(expired, active));
 
@@ -77,10 +77,10 @@ class CleanupServiceTest {
     @Test
     void cleanupBesteronPayments_ShouldDeleteExpiredPayments() {
         BesteronPayment expired = new BesteronPayment();
-        expired.setCreatedDate(Instant.now().minus(7, ChronoUnit.DAYS).minus(1, ChronoUnit.MINUTES));
+        expired.setCreateDate(Instant.now().minus(7, ChronoUnit.DAYS).minus(1, ChronoUnit.MINUTES));
 
         BesteronPayment active = new BesteronPayment();
-        active.setCreatedDate(Instant.now().minus(7, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES));
+        active.setCreateDate(Instant.now().minus(7, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES));
 
         when(besteronPaymentRepository.findAll()).thenReturn(List.of(expired, active));
 

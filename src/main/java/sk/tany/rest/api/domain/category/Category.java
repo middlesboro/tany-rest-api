@@ -9,11 +9,8 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-public class Category implements BaseEntity {
-
-    @Id
-    private String id;
-    private Long prestashopId;
+public class Category extends BaseEntity {
+private Long prestashopId;
     private Long prestashopParentId;
     private String title;
     private String description;
@@ -28,24 +25,13 @@ public class Category implements BaseEntity {
     private boolean defaultCategory;
     private List<FilterParameterDto> filterParameters;
     private Instant createdDate;
-    private Instant updateDate;
-
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
-    }
-
-    @Override
+@Override
     public Object getSortValue(String field) {
         switch (field) {
             case "position": return position;
             case "title": return title;
             case "visible": return visible;
-            default: return BaseEntity.super.getSortValue(field);
+            default: return super.getSortValue(field);
         }
     }
 }

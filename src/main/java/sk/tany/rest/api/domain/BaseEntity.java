@@ -1,27 +1,41 @@
 package sk.tany.rest.api.domain;
 
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+
 import java.time.Instant;
 
-public interface BaseEntity {
-    String getId();
-    void setId(String id);
+@Getter
+@Setter
+public abstract class BaseEntity {
 
-    void setCreatedDate(Instant date);
-    Instant getCreatedDate();
+    @Id
+    private String id;
 
-    void setLastModifiedDate(Instant date);
-    Instant getLastModifiedDate();
+    @CreatedDate
+    private Instant createDate;
 
-    default Object getSortValue(String field) {
+    @LastModifiedDate
+    private Instant updateDate;
+
+    // Backward compatibility methods for getSortValue if strictly needed by ProductSearchEngine,
+    // but typically we can access fields directly if getters are present.
+    // However, the interface had getSortValue default method. I'll preserve it or adapted logic.
+
+    public Object getSortValue(String field) {
         if ("id".equals(field)) {
             return getId();
         }
         if ("createDate".equals(field) || "createdDate".equals(field)) {
-            return getCreatedDate();
+            return getCreateDate();
         }
         if ("updateDate".equals(field) || "lastModifiedDate".equals(field)) {
-            return getLastModifiedDate();
+            return getUpdateDate();
         }
         return null;
     }
+
 }

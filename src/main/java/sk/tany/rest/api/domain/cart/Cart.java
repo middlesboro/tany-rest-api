@@ -9,11 +9,8 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-public class Cart implements BaseEntity {
-
-    @Id
-    private String id;
-    private String cartId;
+public class Cart extends BaseEntity {
+private String cartId;
     private String customerId;
     private List<CartItem> items;
     private String selectedCarrierId;
@@ -29,23 +26,4 @@ public class Cart implements BaseEntity {
     private boolean deliveryAddressSameAsInvoiceAddress;
     private List<String> discountCodes;
     private boolean discountForNewsletter;
-    private Instant createDate;
-    private Instant updateDate;
-
-    @Override
-    public void setCreatedDate(Instant date) {
-        this.createDate = date;
-    }
-    @Override
-    public Instant getCreatedDate() {
-        return this.createDate;
-    }
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
-    }
 }

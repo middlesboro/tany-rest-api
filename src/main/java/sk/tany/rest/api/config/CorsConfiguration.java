@@ -1,6 +1,8 @@
 package sk.tany.rest.api.config;
 
-import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -11,24 +13,29 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.Arrays;
 
 @Configuration
-@AllArgsConstructor
+@NoArgsConstructor
 public class CorsConfiguration implements WebMvcConfigurer {
 
-    private final CorsConfig corsConfig;
+    @Value("${cors.configs.allowed-origins:}")
+    private String allowedOrigins;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins(corsConfig.getAllowedOrigins().split(","))
+        if (StringUtils.isNotBlank(allowedOrigins)) {
+             registry.addMapping("/**")
+                .allowedOrigins(allowedOrigins.split(","))
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
+        }
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.stream(corsConfig.getAllowedOrigins().split(",")).toList());
+        if (StringUtils.isNotBlank(allowedOrigins)) {
+            configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(",")).toList());
+        }
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "PUT", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
@@ -39,4 +46,3 @@ public class CorsConfiguration implements WebMvcConfigurer {
     }
 
 }
-

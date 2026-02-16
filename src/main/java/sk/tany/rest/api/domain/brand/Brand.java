@@ -7,10 +7,8 @@ import sk.tany.rest.api.domain.BaseEntity;
 import java.time.Instant;
 
 @Data
-public class Brand implements BaseEntity {
-    @Id
-    private String id;
-    private Long prestashopId;
+public class Brand extends BaseEntity {
+private Long prestashopId;
     private String name;
     private String image;
     private String metaTitle;
@@ -18,22 +16,11 @@ public class Brand implements BaseEntity {
     private boolean active;
     private String metaDescription;
     private Instant createdDate;
-    private Instant updateDate;
-
-    @Override
+@Override
     public Object getSortValue(String field) {
         switch (field) {
             case "name": return name;
-            default: return BaseEntity.super.getSortValue(field);
+            default: return super.getSortValue(field);
         }
-    }
-
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
     }
 }

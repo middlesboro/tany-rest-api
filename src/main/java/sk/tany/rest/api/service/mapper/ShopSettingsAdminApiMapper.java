@@ -1,6 +1,7 @@
 package sk.tany.rest.api.service.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import sk.tany.rest.api.domain.shopsettings.ShopSettings;
@@ -14,6 +15,9 @@ import java.util.List;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ShopSettingsAdminApiMapper {
 
+    @Mapping(target = "createDate", ignore = true)
+    @Mapping(target = "updateDate", ignore = true)
+    @Mapping(target = "id", ignore = true)
     ShopSettings toEntity(ShopSettingsCreateRequest request);
 
     ShopSettingsGetResponse toGetResponse(ShopSettings entity);
