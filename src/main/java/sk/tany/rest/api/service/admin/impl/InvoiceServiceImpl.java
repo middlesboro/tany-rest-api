@@ -5,18 +5,18 @@ import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.FontFactory;
+import com.lowagie.text.Image;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.BaseFont;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
-import com.lowagie.text.Image;
-import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.ColumnText;
 import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfPageEventHelper;
+import com.lowagie.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.carrier.Carrier;
@@ -29,6 +29,8 @@ import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
 import sk.tany.rest.api.exception.InvoiceException;
@@ -53,11 +55,11 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final PaymentRepository paymentRepository;
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
+    private final ShopSettingsRepository shopSettingsRepository;
 
     private static final Color BRAND_COLOR = new Color(44, 62, 80);
     private static final Color ACCENT_COLOR = new Color(236, 240, 241);
     private static final Color TEXT_WHITE = Color.WHITE;
-    private static final Color TEXT_DARK = new Color(30, 30, 30);
 
     // Attempt to use CP1250 for Slovak support if possible, otherwise fallback to standard
     private Font getSlovakFont(int size, int style) {
@@ -166,19 +168,21 @@ public class InvoiceServiceImpl implements InvoiceService {
         infoTable.setSpacingBefore(20);
         infoTable.setWidths(new float[]{1, 1});
 
+        ShopSettings shopSettings = getShopSettings();
+
         // Supplier
         PdfPCell supplierCell = new PdfPCell();
         supplierCell.setBorder(Rectangle.NO_BORDER);
         supplierCell.addElement(new Paragraph("DODÁVATEĽ", getSlovakFont(10, Font.BOLD, Color.GRAY)));
-        supplierCell.addElement(new Paragraph("Bc. Tatiana Grňová - Tany.sk", getSlovakFont(12, Font.BOLD)));
-        supplierCell.addElement(new Paragraph("Budatínska 3916/24", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("85106 Bratislava", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("Slovenská republika", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("\nIČO: 50 350 595", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("DIČ: 1077433060", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("IČ DPH: SK1077433060", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("\nEmail: info@tany.sk", getSlovakFont(10, Font.NORMAL)));
-        supplierCell.addElement(new Paragraph("Tel: +421 944 432 457", getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph(shopSettings.getOrganizationName(), getSlovakFont(12, Font.BOLD)));
+        supplierCell.addElement(new Paragraph(shopSettings.getShopStreet(), getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph(shopSettings.getShopZip() + " " + shopSettings.getShopCity(), getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph(shopSettings.getDefaultCountry(), getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("\nIČO: " + shopSettings.getIco(), getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("DIČ: " + shopSettings.getDic(), getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("IČ DPH: " + shopSettings.getVatNumber(), getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("\nEmail: " + shopSettings.getShopEmail(), getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("Tel: " + shopSettings.getShopPhoneNumber(), getSlovakFont(10, Font.NORMAL)));
 
         infoTable.addCell(supplierCell);
 
@@ -204,7 +208,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         customerCell.addElement(new Paragraph(customerName, getSlovakFont(12, Font.BOLD)));
         customerCell.addElement(new Paragraph(street, getSlovakFont(10, Font.NORMAL)));
         customerCell.addElement(new Paragraph(zip + " " + city, getSlovakFont(10, Font.NORMAL)));
-        customerCell.addElement(new Paragraph("Slovenská republika", getSlovakFont(10, Font.NORMAL)));
+        customerCell.addElement(new Paragraph(shopSettings.getDefaultCountry(), getSlovakFont(10, Font.NORMAL)));
 
         infoTable.addCell(customerCell);
         document.add(infoTable);
@@ -231,8 +235,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         PdfPCell bankCell = new PdfPCell();
         bankCell.setBorder(Rectangle.NO_BORDER);
         bankCell.addElement(new Paragraph("BANKOVÉ SPOJENIE", getSlovakFont(9, Font.BOLD, Color.GRAY)));
-        bankCell.addElement(new Paragraph("mBank / BREXSKBX", getSlovakFont(10, Font.NORMAL)));
-        bankCell.addElement(new Paragraph("IBAN: SK52 8360 5207 0042 0571 4953", getSlovakFont(10, Font.BOLD)));
+        bankCell.addElement(new Paragraph(shopSettings.getBankName() + " / " + shopSettings.getBankBic(), getSlovakFont(10, Font.NORMAL)));
+        bankCell.addElement(new Paragraph("IBAN: " + shopSettings.getBankAccount(), getSlovakFont(10, Font.BOLD)));
         paymentInfoTable.addCell(bankCell);
 
         PdfPCell varSymbolCell = new PdfPCell();
@@ -396,10 +400,12 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     private class InvoiceFooter extends PdfPageEventHelper {
+        ShopSettings shopSettings = getShopSettings();
+
         @Override
         public void onEndPage(PdfWriter writer, Document document) {
             PdfContentByte cb = writer.getDirectContent();
-            String footerText = "Tany.sk | Email: info@tany.sk | Tel: +421 944 432 457";
+            String footerText = "Tany.sk | Email: " + shopSettings.getShopEmail() + " | Tel: " + shopSettings.getShopPhoneNumber();
             Phrase footer = new Phrase(footerText, getSlovakFont(9, Font.NORMAL, Color.GRAY));
             ColumnText.showTextAligned(cb, Element.ALIGN_CENTER,
                     footer,
@@ -450,5 +456,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         cell.setBorder(Rectangle.NO_BORDER);
         cell.setPaddingBottom(5);
         return cell;
+    }
+
+    ShopSettings getShopSettings() {
+        return shopSettingsRepository.findAll().stream()
+                .findFirst()
+                .orElseGet(ShopSettings::new);
     }
 }
