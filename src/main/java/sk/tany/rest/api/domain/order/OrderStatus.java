@@ -4,8 +4,10 @@ public enum OrderStatus {
     CREATED,
     PAID,
     COD,
-    SENT,
     PACKING,
+    PACKED,
+    SENT,
+    READY_FOR_PICKUP,
     DELIVERED,
     CANCELED
 }

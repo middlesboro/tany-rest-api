@@ -11,4 +11,6 @@ import java.util.List;
 public class ProductClientSearchResponse {
     private Page<ProductClientListResponse> products;
     private List<FilterParameterDto> filterParameters;
+    private String metaTitle;
+    private String metaDescription;
 }

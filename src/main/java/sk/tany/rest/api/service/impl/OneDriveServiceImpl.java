@@ -1,6 +1,8 @@
 package sk.tany.rest.api.service.impl;
 
 import com.microsoft.graph.models.Drive;
+import com.microsoft.graph.models.DriveItem;
+import com.microsoft.graph.models.DriveItemCollectionResponse;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -9,10 +11,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.onedrive.OneDriveToken;
 import sk.tany.rest.api.domain.onedrive.OneDriveTokenRepository;
+import sk.tany.rest.api.dto.OneDriveFileDto;
 import sk.tany.rest.api.service.OneDriveService;
 
 import java.io.ByteArrayInputStream;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -102,6 +108,70 @@ public class OneDriveServiceImpl implements OneDriveService {
         } catch (Exception e) {
             log.error("Failed to upload file to OneDrive: " + fileName, e);
             throw new RuntimeException("Failed to upload to OneDrive", e);
+        }
+    }
+
+    @Override
+    public List<OneDriveFileDto> listFiles(String folderPath) {
+        if (graphClient == null) {
+            log.warn("OneDrive client is not initialized. Skipping listFiles for {}", folderPath);
+            return Collections.emptyList();
+        }
+
+        try {
+            Drive drive = graphClient.me().drive().get();
+            String driveId = drive.getId();
+
+            String relativePath = folderPath.startsWith("/") ? folderPath.substring(1) : folderPath;
+            String itemPathId = "root:/" + relativePath + ":";
+
+            DriveItemCollectionResponse collectionResponse = graphClient.drives().byDriveId(driveId)
+                    .items()
+                    .byDriveItemId(itemPathId)
+                    .children()
+                    .get();
+
+            if (collectionResponse == null || collectionResponse.getValue() == null) {
+                return Collections.emptyList();
+            }
+
+            List<OneDriveFileDto> files = new ArrayList<>();
+            for (DriveItem item : collectionResponse.getValue()) {
+                if (item.getFile() != null) {
+                    files.add(OneDriveFileDto.builder()
+                            .id(item.getId())
+                            .name(item.getName())
+                            .createdDateTime(item.getCreatedDateTime())
+                            .build());
+                }
+            }
+            return files;
+
+        } catch (Exception e) {
+            log.warn("Failed to list files in folder: {}. Reason: {}", folderPath, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public void deleteFile(String fileId) {
+        if (graphClient == null) {
+            log.warn("OneDrive client is not initialized. Skipping deleteFile for {}", fileId);
+            return;
+        }
+
+        try {
+            Drive drive = graphClient.me().drive().get();
+            String driveId = drive.getId();
+
+            graphClient.drives().byDriveId(driveId)
+                    .items()
+                    .byDriveItemId(fileId)
+                    .delete();
+
+            log.info("Deleted file with ID: {} from OneDrive", fileId);
+        } catch (Exception e) {
+            log.error("Failed to delete file with ID: " + fileId, e);
         }
     }
 }

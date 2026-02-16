@@ -1,21 +1,14 @@
 package sk.tany.rest.api.domain.blog;
 
-import org.dizitart.no2.Nitrite;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
-import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class BlogRepository extends AbstractInMemoryRepository<Blog> {
+public interface BlogRepository extends MongoRepository<Blog, String> {
+    Optional<Blog> findBySlug(String slug);
 
-    public BlogRepository(Nitrite nitrite) {
-        super(nitrite, Blog.class);
-    }
-
-    public List<Blog> findAllByVisibleTrue() {
-        return memoryCache.values().stream()
-                .filter(Blog::isVisible)
-                .toList();
-    }
+    List<Blog> findAllByVisibleTrueOrderByOrderAsc();
 }

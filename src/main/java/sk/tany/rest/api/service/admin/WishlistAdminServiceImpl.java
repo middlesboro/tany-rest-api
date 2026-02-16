@@ -33,7 +33,7 @@ public class WishlistAdminServiceImpl implements WishlistAdminService {
 
     @Override
     public Page<WishlistAdminListResponse> findAll(Pageable pageable) {
-        List<Wishlist> allItems = wishlistRepository.findAllItems();
+        List<Wishlist> allItems = wishlistRepository.findAll();
 
         Map<String, List<Wishlist>> grouped = allItems.stream()
                 .filter(w -> w.getCustomerId() != null)

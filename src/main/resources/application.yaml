@@ -1,4 +1,8 @@
 spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/tany}
+      database: ${MONGODB_DATABASE:tany}
   servlet:
     multipart:
       max-file-size: 3MB
@@ -18,12 +22,9 @@ jwt:
 
 eshop:
   base-url: ${ESHOP_BASE_URL:http://localhost:8080}
-  frontend-admin-url: ${ESHOP_FRONTEND_URL:http://localhost:3000}
+  frontend-admin-url: ${ESHOP_ADMIN_FRONTEND_URL:http://localhost:3000}
   frontend-url: ${ESHOP_FRONTEND_URL:http://localhost:3001}
   load-related-products: true
-  bank-account:
-    iban: ${ESHOP_BANK_IBAN:SK52 8360 5207 0042 0571 4953}
-    bic: ${ESHOP_BANK_BIC:BREXSKBX}
 
 besteron:
   client-id: ${BESTERON_CLIENT_ID}
@@ -55,26 +56,26 @@ security:
     - /api/reviews/**
     - /api/orders/**
     - /api/products/**
+    - /api/feeds/**
     - /api/carriers/**
     - /api/payments/**
     - /api/categories/**
     - /api/blogs/**
     - /api/pages/**
+    - /api/brands/**
     - /api/homepage-grids/**
     - /v3/api-docs/**
     - /swagger-ui/**
     - /auth/magic-link/**
 
+cors:
+  configs:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
 logging:
   level:
     org.springframework.security: TRACE
     sk.tany: ${TANY_LEVEL_LOG:INFO}
-
-admin:
-  database:
-    password: ${DATABASE_PASSWORD}
-    username: ${DATABASE_USERNAME}
-    path: ${DATABASE_PATH}
 
 onedrive:
   client-id: ${ONEDRIVE_CLIENT_ID}
@@ -89,3 +90,4 @@ isklad:
   auth-key: ${ISKLAD_AUTH_KEY}
   auth-token: ${ISKLAD_AUTH_TOKEN}
   shop-setting-id: ${ISKLAD_SHOP_SETTING_ID}
+  incoming-api-key: ${ISKLAD_INCOMING_API_KEY}

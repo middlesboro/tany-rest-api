@@ -10,7 +10,6 @@ public class GlobalPaymentsPayment extends Payment {
     private String orderId;
     private String status;
     private String resultText;
-    private String description;
     private String transactionId;
     private String approvalCode;
     private String prCode;

@@ -1,5 +1,6 @@
 package sk.tany.rest.api.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.util.List;
@@ -10,6 +11,7 @@ public class CategoryDto {
     private Long prestashopId;
     private Long prestashopParentId;
     private Long position;
+    @NotBlank
     private String title;
     private String description;
     private String metaTitle;
@@ -17,8 +19,10 @@ public class CategoryDto {
     private boolean active;
     private boolean visible;
     private boolean defaultCategory;
+    @NotBlank
     private String slug;
     private String parentId;
     private List<CategoryDto> children;
     private List<FilterParameterDto> filterParameters;
+    private List<FilterParameterDto> excludedFilterParameters;
 }

@@ -6,12 +6,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.mapper.OrderMapper;
+import sk.tany.rest.api.service.common.SequenceService;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -31,6 +33,12 @@ class OrderStatusHistoryTest {
 
     @Mock
     private OrderMapper orderMapper;
+
+    @Mock
+    private SequenceService sequenceService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private OrderAdminServiceImpl orderAdminService;

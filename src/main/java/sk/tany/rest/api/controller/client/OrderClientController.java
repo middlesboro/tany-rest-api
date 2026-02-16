@@ -2,6 +2,7 @@ package sk.tany.rest.api.controller.client;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +38,7 @@ public class OrderClientController {
 
     @Operation(summary = "Create order")
     @PostMapping
-    public OrderClientCreateResponse createOrder(@RequestBody OrderClientCreateRequest orderDto) {
+    public OrderClientCreateResponse createOrder(@RequestBody @Valid OrderClientCreateRequest orderDto) {
         OrderDto dto = orderClientApiMapper.toDto(orderDto);
         OrderDto createdOrder = orderClientService.createOrder(dto);
         return orderClientApiMapper.toCreateResponse(createdOrder);

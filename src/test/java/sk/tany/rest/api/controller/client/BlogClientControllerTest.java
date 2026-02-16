@@ -67,4 +67,30 @@ class BlogClientControllerTest {
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
+
+    @Test
+    void getBlogBySlug_WhenFound() {
+        String slug = "test-blog";
+        BlogDto blogDto = new BlogDto();
+        BlogClientGetResponse responseDto = new BlogClientGetResponse();
+
+        when(blogService.getBlogBySlug(slug)).thenReturn(Optional.of(blogDto));
+        when(blogClientApiMapper.toGetResponse(blogDto)).thenReturn(responseDto);
+
+        ResponseEntity<BlogClientGetResponse> response = blogClientController.getBlogBySlug(slug);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(responseDto, response.getBody());
+    }
+
+    @Test
+    void getBlogBySlug_WhenNotFound() {
+        String slug = "non-existent-blog";
+
+        when(blogService.getBlogBySlug(slug)).thenReturn(Optional.empty());
+
+        ResponseEntity<BlogClientGetResponse> response = blogClientController.getBlogBySlug(slug);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
 }

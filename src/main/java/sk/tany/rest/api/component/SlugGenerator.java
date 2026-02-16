@@ -38,9 +38,21 @@ public class SlugGenerator {
 
         String originalSlug = slug;
         int counter = 1;
-        while (productRepository.existsBySlug(slug, excludeId)) {
+        boolean exists;
+        if (excludeId != null) {
+            exists = productRepository.existsBySlugAndIdNot(slug, excludeId);
+        } else {
+            exists = productRepository.existsBySlug(slug);
+        }
+
+        while (exists) {
             slug = originalSlug + "-" + counter;
             counter++;
+            if (excludeId != null) {
+                exists = productRepository.existsBySlugAndIdNot(slug, excludeId);
+            } else {
+                exists = productRepository.existsBySlug(slug);
+            }
         }
 
         return slug;

@@ -2,6 +2,8 @@ package sk.tany.rest.api.service.admin;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.context.ApplicationEventPublisher;
+import sk.tany.rest.api.event.OrderStatusChangedEvent;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -60,6 +62,9 @@ class OrderAdminServiceImplTest {
     private ISkladService iskladService;
     @Mock
     private ISkladMapper iskladMapper;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private OrderAdminServiceImpl orderAdminService;
@@ -185,7 +190,7 @@ class OrderAdminServiceImplTest {
     }
 
     @Test
-    void update_shouldSendEmail_whenStatusChangesToSent() {
+    void update_shouldPublishEvent_whenStatusChangesToSent() {
         String orderId = "123";
         OrderDto orderDto = new OrderDto();
         orderDto.setStatus(OrderStatus.SENT);
@@ -209,11 +214,11 @@ class OrderAdminServiceImplTest {
 
         orderAdminService.update(orderId, orderDto);
 
-        verify(emailService, times(1)).sendEmail(eq("test@example.com"), contains("Objednávka odoslaná"), anyString(), eq(true), any());
+        verify(eventPublisher).publishEvent(any(OrderStatusChangedEvent.class));
     }
 
     @Test
-    void update_shouldSendEmail_whenStatusChangesToPaid() {
+    void update_shouldPublishEvent_whenStatusChangesToPaid() {
         String orderId = "123";
         OrderDto orderDto = new OrderDto();
         orderDto.setStatus(OrderStatus.PAID);
@@ -236,11 +241,11 @@ class OrderAdminServiceImplTest {
 
         orderAdminService.update(orderId, orderDto);
 
-        verify(emailService, times(1)).sendEmail(eq("test@example.com"), contains("Objednávka zaplatená"), anyString(), eq(true), any());
+        verify(eventPublisher).publishEvent(any(OrderStatusChangedEvent.class));
     }
 
     @Test
-    void update_shouldNotSendEmail_whenStatusDoesNotChangeToSentOrPaid() {
+    void update_shouldPublishEvent_whenStatusChanges() {
         String orderId = "123";
         OrderDto orderDto = new OrderDto();
         orderDto.setStatus(OrderStatus.CANCELED);
@@ -261,11 +266,11 @@ class OrderAdminServiceImplTest {
 
         orderAdminService.update(orderId, orderDto);
 
-        verify(emailService, never()).sendEmail(anyString(), anyString(), anyString(), anyBoolean(), any());
+        verify(eventPublisher).publishEvent(any(OrderStatusChangedEvent.class));
     }
 
     @Test
-    void update_shouldNotSendEmail_whenStatusWasAlreadySent() {
+    void update_shouldNotPublishEvent_whenStatusDoesNotChange() {
         String orderId = "123";
         OrderDto orderDto = new OrderDto();
         orderDto.setStatus(OrderStatus.SENT);
@@ -286,7 +291,7 @@ class OrderAdminServiceImplTest {
 
         orderAdminService.update(orderId, orderDto);
 
-        verify(emailService, never()).sendEmail(anyString(), anyString(), anyString(), anyBoolean(), any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test

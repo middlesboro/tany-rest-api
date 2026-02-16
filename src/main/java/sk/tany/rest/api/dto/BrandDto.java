@@ -9,6 +9,7 @@ public class BrandDto {
     private String id;
     private Long prestashopId;
     private String name;
+    private String slug;
     private String metaTitle;
     private String metaDescription;
     private boolean active;

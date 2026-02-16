@@ -108,7 +108,10 @@ class OrderAdminControllerTest {
     void getOrderInvoice_ShouldReturnPdf() {
         String orderId = "123";
         byte[] pdfContent = "PDF".getBytes();
+        OrderDto order = new OrderDto();
+        order.setOrderIdentifier(1L);
 
+        when(orderService.findById(orderId)).thenReturn(Optional.of(order));
         when(invoiceService.generateInvoice(orderId)).thenReturn(pdfContent);
 
         ResponseEntity<byte[]> response = orderAdminController.getOrderInvoice(orderId);

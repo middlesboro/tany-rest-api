@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.CategoryDto;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CategoryAdminService {
@@ -15,4 +16,5 @@ public interface CategoryAdminService {
     CategoryDto patch(String id, sk.tany.rest.api.dto.admin.category.patch.CategoryPatchRequest patchDto);
     void deleteById(String id);
     Optional<CategoryDto> findByPrestashopId(Long prestashopId);
+    CategoryDto addFilterParameters(String id, List<String> filterParameterIds);
 }

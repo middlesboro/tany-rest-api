@@ -18,7 +18,7 @@ public class BlogClientServiceImpl implements BlogClientService {
 
     @Override
     public List<BlogDto> getAll() {
-        return blogRepository.findAllByVisibleTrue().stream()
+        return blogRepository.findAllByVisibleTrueOrderByOrderAsc().stream()
                 .map(blogMapper::toDto)
                 .toList();
     }
@@ -26,6 +26,12 @@ public class BlogClientServiceImpl implements BlogClientService {
     @Override
     public java.util.Optional<BlogDto> getBlog(String id) {
         return blogRepository.findById(id)
+                .map(blogMapper::toDto);
+    }
+
+    @Override
+    public java.util.Optional<BlogDto> getBlogBySlug(String slug) {
+        return blogRepository.findBySlug(slug)
                 .map(blogMapper::toDto);
     }
 }

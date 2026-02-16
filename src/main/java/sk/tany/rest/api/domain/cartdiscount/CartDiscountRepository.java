@@ -1,67 +1,50 @@
 package sk.tany.rest.api.domain.cartdiscount;
 
-import org.apache.commons.lang3.StringUtils;
-import org.dizitart.no2.Nitrite;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import sk.tany.rest.api.domain.AbstractInMemoryRepository;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 @Repository
-public class CartDiscountRepository extends AbstractInMemoryRepository<CartDiscount> {
+public interface CartDiscountRepository extends MongoRepository<CartDiscount, String> {
+    Optional<CartDiscount> findByCode(String code);
 
-    public CartDiscountRepository(Nitrite nitrite) {
-        super(nitrite, CartDiscount.class);
+    boolean existsByCode(String code);
+
+    Optional<CartDiscount> findByCodeAndActiveTrue(String code);
+
+    List<CartDiscount> findAllByCodeIsNullAndActiveTrue();
+
+    List<CartDiscount> findAllByAutomaticTrueAndActiveTrue();
+
+    // Logic: Active, Automatic, and matches criteria
+    // Since we can't easily express "collection intersection" in a derived query name that handles "empty collection in DB means apply to all",
+    // we can either fetch all automatic ones and filter in memory (safest for migration to ensure logic preservation)
+    // or try a complex @Query.
+    // Given the previous implementation likely iterated over all, let's keep it simple by fetching all candidate discounts and filtering in Service or default method.
+    // However, interface default methods can't access instance data easily unless we pass `findAll...` result.
+
+    // Let's implement it as a default method that fetches all automatic discounts and filters them.
+
+    default List<CartDiscount> findApplicableAutomaticDiscounts(Set<String> productIds, Set<String> categoryIds, Set<String> brandIds) {
+        List<CartDiscount> candidates = findAllByAutomaticTrueAndActiveTrue();
+        return candidates.stream().filter(d -> isApplicable(d, productIds, categoryIds, brandIds)).toList();
     }
 
-    public Optional<CartDiscount> findByCode(String code) {
-        return memoryCache.values().stream()
-                .filter(cd -> cd.getCode() != null && cd.getCode().equals(code))
-                .findFirst();
-    }
+    private boolean isApplicable(CartDiscount d, Set<String> productIds, Set<String> categoryIds, Set<String> brandIds) {
+        // If discount has specific products, cart must contain at least one
+        boolean productMatch = d.getProductIds() == null || d.getProductIds().isEmpty() ||
+                               (productIds != null && d.getProductIds().stream().anyMatch(productIds::contains));
 
-    public boolean existsByCode(String code) {
-        return memoryCache.values().stream()
-                .anyMatch(cd -> cd.getCode() != null && cd.getCode().equals(code));
-    }
+        boolean categoryMatch = d.getCategoryIds() == null || d.getCategoryIds().isEmpty() ||
+                                (categoryIds != null && d.getCategoryIds().stream().anyMatch(categoryIds::contains));
 
-    public Optional<CartDiscount> findByCodeAndActiveTrue(String code) {
-        return memoryCache.values().stream()
-                .filter(cd -> cd.getCode() != null && cd.getCode().equals(code) && cd.isActive())
-                .findFirst();
-    }
+        boolean brandMatch = d.getBrandIds() == null || d.getBrandIds().isEmpty() ||
+                             (brandIds != null && d.getBrandIds().stream().anyMatch(brandIds::contains));
 
-    public List<CartDiscount> findAllByCodeIsNullAndActiveTrue() {
-        return memoryCache.values().stream()
-                .filter(cd -> cd.getCode() == null && cd.isActive())
-                .toList();
-    }
-
-    public List<CartDiscount> findAllByAutomaticTrueAndActiveTrue() {
-        return memoryCache.values().stream()
-                .filter(cd -> cd.isAutomatic() && cd.isActive())
-                .toList();
-    }
-
-    public List<CartDiscount> findApplicableAutomaticDiscounts(Set<String> productIds, Set<String> categoryIds, Set<String> brandIds) {
-        return memoryCache.values().stream()
-                .filter(cd -> cd.isActive() && (StringUtils.isBlank(cd.getCode()) || cd.isAutomatic()))
-                .filter(cd -> {
-                    boolean hasProduct = cd.getProductIds() != null && !cd.getProductIds().isEmpty();
-                    boolean hasCategory = cd.getCategoryIds() != null && !cd.getCategoryIds().isEmpty();
-                    boolean hasBrand = cd.getBrandIds() != null && !cd.getBrandIds().isEmpty();
-                    boolean global = !hasProduct && !hasCategory && !hasBrand;
-
-                    if (global) return true;
-                    if (hasProduct && !Collections.disjoint(cd.getProductIds(), productIds)) return true;
-                    if (hasCategory && !Collections.disjoint(cd.getCategoryIds(), categoryIds)) return true;
-                    if (hasBrand && !Collections.disjoint(cd.getBrandIds(), brandIds)) return true;
-
-                    return false;
-                })
-                .toList();
+        return productMatch && categoryMatch && brandMatch;
     }
 }

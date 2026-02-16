@@ -51,7 +51,7 @@ class WishlistAdminServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         Wishlist wishlist = new Wishlist("1", "cust1", "prod1", null);
 
-        when(wishlistRepository.findAllItems()).thenReturn(Collections.singletonList(wishlist));
+        when(wishlistRepository.findAll()).thenReturn(Collections.singletonList(wishlist));
 
         Customer customer = new Customer();
         customer.setFirstname("John");
@@ -71,7 +71,7 @@ class WishlistAdminServiceTest {
         assertEquals(1, response.getProductNames().size());
         assertEquals("Product 1", response.getProductNames().getFirst());
 
-        verify(wishlistRepository).findAllItems();
+        verify(wishlistRepository).findAll();
     }
 
     @Test

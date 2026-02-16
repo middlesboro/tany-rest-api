@@ -10,6 +10,7 @@ import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.CarrierDto;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
+import sk.tany.rest.api.dto.CartQuantityChangeDto;
 import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
 import sk.tany.rest.api.dto.CustomerDto;
@@ -84,15 +85,41 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         customerContextCartDto.setCustomerId(cartDto.getCustomerId());
 
         List<ProductClientDto> products = new ArrayList<>();
+        List<CartQuantityChangeDto> quantityChanges = new ArrayList<>();
+        boolean cartChanged = false;
+
         if (cartDto.getItems() != null && !cartDto.getItems().isEmpty()) {
             List<String> productIds = cartDto.getItems().stream().map(CartItem::getProductId).toList();
             List<ProductClientDto> fetchedProducts = productService.findAllByIds(productIds);
 
             for (ProductClientDto product : fetchedProducts) {
-                cartDto.getItems().stream()
+                Optional<CartItem> cartItemOpt = cartDto.getItems().stream()
                         .filter(item -> item.getProductId().equals(product.getId()))
-                        .findFirst()
-                        .ifPresent(item -> product.setQuantity(item.getQuantity()));
+                        .findFirst();
+
+                if (cartItemOpt.isPresent()) {
+                    CartItem cartItem = cartItemOpt.get();
+                    int availableQuantity = product.getQuantity() != null ? product.getQuantity() : 0;
+
+                    if (cartItem.getQuantity() > availableQuantity) {
+                        CartQuantityChangeDto change = new CartQuantityChangeDto();
+                        change.setProductId(product.getId());
+                        change.setProductName(product.getTitle());
+                        change.setProductImage(product.getImages() != null && !product.getImages().isEmpty() ? product.getImages().getFirst() : null);
+                        change.setRequestedQuantity(cartItem.getQuantity());
+                        change.setCurrentQuantity(availableQuantity);
+                        quantityChanges.add(change);
+
+                        cartChanged = true;
+                        if (availableQuantity <= 0) {
+                            cartDto.getItems().remove(cartItem);
+                            continue;
+                        } else {
+                            cartItem.setQuantity(availableQuantity);
+                        }
+                    }
+                    product.setQuantity(cartItem.getQuantity());
+                }
 
                 if (product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(BigDecimal.ZERO) >= 0) {
                     product.setPrice(product.getDiscountPrice());
@@ -100,6 +127,12 @@ public class CustomerClientServiceImpl implements CustomerClientService {
                 products.add(product);
             }
         }
+
+        if (cartChanged) {
+            cartDto = cartService.save(cartDto);
+        }
+
+        customerContextCartDto.setQuantityChanges(quantityChanges);
         customerContextCartDto.setProducts(products);
         customerContextCartDto.setTotalProductPrice(
                 products.stream()

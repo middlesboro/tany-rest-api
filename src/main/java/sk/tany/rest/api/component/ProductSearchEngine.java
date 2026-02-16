@@ -10,7 +10,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
+import sk.tany.rest.api.domain.brand.Brand;
+import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.filter.FilterParameter;
@@ -60,6 +63,7 @@ public class ProductSearchEngine {
     private final FilterParameterValueRepository filterParameterValueRepository;
     private final ProductSalesRepository productSalesRepository;
     private final CategoryRepository categoryRepository;
+    private final BrandRepository brandRepository;
     private final ProductLabelRepository productLabelRepository;
     private final FilterParameterMapper filterParameterMapper;
     private final FilterParameterValueMapper filterParameterValueMapper;
@@ -74,8 +78,16 @@ public class ProductSearchEngine {
     private final Map<String, Category> cachedCategories = new ConcurrentHashMap<>();
     private final Map<String, List<String>> cachedCategoryChildren = new ConcurrentHashMap<>();
     private final Map<String, ProductLabel> cachedProductLabels = new ConcurrentHashMap<>();
+    private final Map<String, Brand> cachedBrands = new ConcurrentHashMap<>();
 
     private static final int MAX_EDIT_DISTANCE = 2;
+
+    private static final Comparator<Product> STOCK_COMPARATOR = (p1, p2) -> {
+        boolean s1 = p1.getQuantity() != null && p1.getQuantity() > 0;
+        boolean s2 = p2.getQuantity() != null && p2.getQuantity() > 0;
+        if (s1 == s2) return 0;
+        return s1 ? -1 : 1;
+    };
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadProducts() {
@@ -119,6 +131,12 @@ public class ProductSearchEngine {
         cachedProductLabels.putAll(productLabelRepository.findAll().stream()
                 .collect(Collectors.toMap(ProductLabel::getId, Function.identity())));
         log.info("Loaded {} product labels into search engine.", cachedProductLabels.size());
+
+        log.info("Loading brands into search engine...");
+        cachedBrands.clear();
+        cachedBrands.putAll(brandRepository.findAll().stream()
+                .collect(Collectors.toMap(Brand::getId, Function.identity())));
+        log.info("Loaded {} brands into search engine.", cachedBrands.size());
     }
 
     public List<ProductLabelDto> getProductLabels(List<String> ids) {
@@ -141,6 +159,16 @@ public class ProductSearchEngine {
 
     public Integer getSalesCount(String productId) {
         return cachedProductSales.getOrDefault(productId, 0);
+    }
+
+    public List<Product> findAllById(java.util.Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        Set<String> idSet = new HashSet<>(ids);
+        return cachedProducts.stream()
+                .filter(p -> idSet.contains(p.getId()))
+                .toList();
     }
 
     public void addProduct(Product product) {
@@ -261,6 +289,10 @@ public class ProductSearchEngine {
     }
 
     public List<Product> searchAndSort(String query) {
+        return searchAndSort(query, false);
+    }
+
+    public List<Product> searchAndSort(String query, boolean prioritizeStock) {
         if (StringUtils.isBlank(query)) {
             return List.of();
         }
@@ -286,6 +318,10 @@ public class ProductSearchEngine {
             })
             // 3. Výpočet skóre a zoradenie
             .sorted((p1, p2) -> {
+                if (prioritizeStock) {
+                    int stockCompare = STOCK_COMPARATOR.compare(p1, p2);
+                    if (stockCompare != 0) return stockCompare;
+                }
                 Double score1 = calculateRelevance(p1.getTitle(), normalizedQuery);
                 Double score2 = calculateRelevance(p2.getTitle(), normalizedQuery);
                 return score2.compareTo(score1); // Od najvyššieho skóre
@@ -313,7 +349,17 @@ public class ProductSearchEngine {
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .toList();
 
-        return getFilterParametersForProducts(productsInCategory, Collections.emptySet());
+        List<FilterParameterDto> facets = getFilterParametersForProducts(productsInCategory, Collections.emptySet());
+
+        Category category = cachedCategories.get(categoryId);
+        if (category != null && category.getExcludedFilterParameters() != null && !category.getExcludedFilterParameters().isEmpty()) {
+            Set<String> excludedFilterIds = category.getExcludedFilterParameters().stream()
+                    .map(FilterParameterDto::getId)
+                    .collect(Collectors.toSet());
+            facets.removeIf(facet -> excludedFilterIds.contains(facet.getId()));
+        }
+
+        return facets;
     }
 
     public List<Product> search(String categoryId, CategoryFilterRequest request) {
@@ -335,6 +381,9 @@ public class ProductSearchEngine {
             // Default sort if none specified, or you can leave it unsorted/default
             comparator = Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         }
+
+        // Always prioritize stock for client search with filters
+        comparator = STOCK_COMPARATOR.thenComparing(comparator);
 
         return cachedProducts.stream()
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
@@ -404,15 +453,17 @@ public class ProductSearchEngine {
 
                     return true;
                 })
-                .sorted((p1, p2) -> {
-                    if (finalNormalizedQuery != null) {
-                        Double score1 = calculateRelevance(p1.getTitle(), finalNormalizedQuery);
-                        Double score2 = calculateRelevance(p2.getTitle(), finalNormalizedQuery);
-                        return score2.compareTo(score1);
-                    }
-                    return 0; // Or default sort
-                })
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (pageable.getSort().isSorted()) {
+            sort(filteredProducts, pageable.getSort());
+        } else if (finalNormalizedQuery != null) {
+            filteredProducts.sort((p1, p2) -> {
+                Double score1 = calculateRelevance(p1.getTitle(), finalNormalizedQuery);
+                Double score2 = calculateRelevance(p2.getTitle(), finalNormalizedQuery);
+                return score2.compareTo(score1);
+            });
+        }
 
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), filteredProducts.size());
@@ -423,6 +474,120 @@ public class ProductSearchEngine {
 
         List<Product> pageContent = filteredProducts.subList(start, end);
         return new PageImpl<>(pageContent, pageable, filteredProducts.size());
+    }
+
+    public Page<Product> findByCategoryIds(String categoryId, Pageable pageable) {
+        return findByCategoryIds(categoryId, pageable, false);
+    }
+
+    public Page<Product> findByCategoryIds(String categoryId, Pageable pageable, boolean prioritizeStock) {
+        if (categoryId == null) {
+            return new PageImpl<>(List.of(), pageable, 0);
+        }
+
+        Set<String> categoryIds = getAllCategoryIdsIncludingSubcategories(categoryId);
+        List<Product> filtered = cachedProducts.stream()
+                .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (pageable.getSort().isSorted()) {
+            sort(filtered, pageable.getSort(), prioritizeStock);
+        } else {
+            if (prioritizeStock) {
+                filtered.sort(STOCK_COMPARATOR.thenComparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+            } else {
+                filtered.sort(Comparator.comparing(Product::getTitle, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+            }
+        }
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filtered.size());
+
+        if (start > filtered.size()) {
+             return new PageImpl<>(List.of(), pageable, filtered.size());
+        }
+
+        List<Product> pageContent = filtered.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, filtered.size());
+    }
+
+    public Page<Product> findAll(Pageable pageable, boolean prioritizeStock) {
+        List<Product> allProducts = new ArrayList<>(cachedProducts);
+
+        if (pageable.getSort().isSorted()) {
+            sort(allProducts, pageable.getSort(), prioritizeStock);
+        } else {
+             if (prioritizeStock) {
+                 allProducts.sort(STOCK_COMPARATOR);
+             }
+        }
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), allProducts.size());
+
+        if (start > allProducts.size()) {
+            return new PageImpl<>(List.of(), pageable, allProducts.size());
+        }
+
+        List<Product> pageContent = allProducts.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, allProducts.size());
+    }
+
+    private void sort(List<Product> list, Sort sort) {
+        sort(list, sort, false);
+    }
+
+    private void sort(List<Product> list, Sort sort, boolean prioritizeStock) {
+        if (sort.isUnsorted() && !prioritizeStock) {
+            return;
+        }
+
+        Comparator<Product> comparator = null;
+
+        if (prioritizeStock) {
+            comparator = STOCK_COMPARATOR;
+        }
+
+        for (Sort.Order order : sort) {
+            Comparator<Product> currentComparator = (o1, o2) -> {
+                Object v1 = o1.getSortValue(order.getProperty());
+                Object v2 = o2.getSortValue(order.getProperty());
+
+                if (v1 == null && v2 == null) {
+                    return 0;
+                } else if (v1 == null) {
+                    return order.getNullHandling() == Sort.NullHandling.NULLS_FIRST ? -1 : 1;
+                } else if (v2 == null) {
+                    return order.getNullHandling() == Sort.NullHandling.NULLS_FIRST ? 1 : -1;
+                }
+
+                if (v1 instanceof Comparable && v2 instanceof Comparable) {
+                    int result;
+                    if (order.isIgnoreCase() && v1 instanceof String && v2 instanceof String) {
+                        result = ((String) v1).compareToIgnoreCase((String) v2);
+                    } else {
+                        // Unchecked cast is safe because of check above
+                        result = ((Comparable) v1).compareTo(v2);
+                    }
+                    return result;
+                }
+                return 0;
+            };
+
+            if (order.isDescending()) {
+                currentComparator = currentComparator.reversed();
+            }
+
+            if (comparator == null) {
+                comparator = currentComparator;
+            } else {
+                comparator = comparator.thenComparing(currentComparator);
+            }
+        }
+
+        if (comparator != null) {
+            list.sort(comparator);
+        }
     }
 
     public List<FilterParameterDto> getFilterParametersForCategoryWithFilter(String categoryId, CategoryFilterRequest filterRequest) {
@@ -446,24 +611,119 @@ public class ProductSearchEngine {
 
         List<FilterParameterDto> allFacets = getFilterParametersForProducts(productsInCategory, selectedValueIds);
 
+        Category category = cachedCategories.get(categoryId);
+        if (category != null && category.getExcludedFilterParameters() != null && !category.getExcludedFilterParameters().isEmpty()) {
+            Set<String> excludedFilterIds = category.getExcludedFilterParameters().stream()
+                    .map(FilterParameterDto::getId)
+                    .collect(Collectors.toSet());
+            allFacets.removeIf(facet -> excludedFilterIds.contains(facet.getId()));
+        }
+
+        // Add BRAND filter
+        FilterParameterDto brandFacet = new FilterParameterDto();
+        brandFacet.setId("BRAND");
+        brandFacet.setName("Brand");
+        brandFacet.setType(sk.tany.rest.api.domain.filter.FilterParameterType.BRAND);
+        brandFacet.setValues(new ArrayList<>());
+
+        Set<String> presentBrandNames = productsInCategory.stream()
+                .map(Product::getBrandId)
+                .filter(Objects::nonNull)
+                .map(cachedBrands::get)
+                .filter(Objects::nonNull)
+                .map(Brand::getName)
+                .collect(Collectors.toSet());
+
+        for (String brandName : presentBrandNames) {
+            FilterParameterValueDto valueDto = new FilterParameterValueDto();
+            valueDto.setId(brandName);
+            valueDto.setName(brandName);
+            valueDto.setSelected(selectedValueIds.contains(brandName));
+            brandFacet.getValues().add(valueDto);
+        }
+        if (!brandFacet.getValues().isEmpty()) {
+            brandFacet.getValues().sort(Comparator.comparing(FilterParameterValueDto::getName, Comparator.nullsLast(Comparator.naturalOrder())));
+            allFacets.add(brandFacet);
+        }
+
+        // Add AVAILABILITY filter
+        FilterParameterDto availabilityFacet = new FilterParameterDto();
+        availabilityFacet.setId("AVAILABILITY");
+        availabilityFacet.setName("Availability");
+        availabilityFacet.setType(sk.tany.rest.api.domain.filter.FilterParameterType.AVAILABILITY);
+        availabilityFacet.setValues(new ArrayList<>());
+
+        FilterParameterValueDto onStock = new FilterParameterValueDto();
+        onStock.setId("ON_STOCK");
+        onStock.setName("ON_STOCK");
+        onStock.setSelected(selectedValueIds.contains("ON_STOCK"));
+        availabilityFacet.getValues().add(onStock);
+
+        FilterParameterValueDto soldOut = new FilterParameterValueDto();
+        soldOut.setId("SOLD_OUT");
+        soldOut.setName("SOLD_OUT");
+        soldOut.setSelected(selectedValueIds.contains("SOLD_OUT"));
+        availabilityFacet.getValues().add(soldOut);
+
+        allFacets.add(availabilityFacet);
+
         // Calculate availability
         for (FilterParameterDto facet : allFacets) {
             CategoryFilterRequest otherFiltersRequest = createRequestExcludingFacet(filterRequest, facet.getId());
 
-            // Filter products using all OTHER facets
-            Set<String> availableValuesForFacet = productsInCategory.stream()
+            List<Product> productsMatchingOthers = productsInCategory.stream()
                     .filter(p -> matchesFilter(p, otherFiltersRequest))
-                    .flatMap(p -> p.getProductFilterParameters() != null ? p.getProductFilterParameters().stream() : null)
-                    .filter(Objects::nonNull)
-                    .filter(pfp -> facet.getId().equals(pfp.getFilterParameterId()))
-                    .map(ProductFilterParameter::getFilterParameterValueId)
-                    .collect(Collectors.toSet());
+                    .toList();
 
-            if (facet.getValues() != null) {
+            if ("BRAND".equals(facet.getId())) {
+                Set<String> availableBrandNames = productsMatchingOthers.stream()
+                        .map(Product::getBrandId)
+                        .filter(Objects::nonNull)
+                        .map(cachedBrands::get)
+                        .filter(Objects::nonNull)
+                        .map(Brand::getName)
+                        .collect(Collectors.toSet());
+
                 for (FilterParameterValueDto valueDto : facet.getValues()) {
-                    valueDto.setAvailable(availableValuesForFacet.contains(valueDto.getId()));
+                    valueDto.setAvailable(availableBrandNames.contains(valueDto.getId()));
+                }
+            } else if ("AVAILABILITY".equals(facet.getId())) {
+                boolean hasOnStock = productsMatchingOthers.stream().anyMatch(p -> p.getQuantity() != null && p.getQuantity() > 0);
+                boolean hasSoldOut = productsMatchingOthers.stream().anyMatch(p -> p.getQuantity() == null || p.getQuantity() <= 0);
+
+                for (FilterParameterValueDto valueDto : facet.getValues()) {
+                    if ("ON_STOCK".equals(valueDto.getId())) {
+                        valueDto.setAvailable(hasOnStock);
+                    } else if ("SOLD_OUT".equals(valueDto.getId())) {
+                        valueDto.setAvailable(hasSoldOut);
+                    }
+                }
+            } else {
+                Set<String> availableValuesForFacet = productsMatchingOthers.stream()
+                        .flatMap(p -> p.getProductFilterParameters() != null ? p.getProductFilterParameters().stream() : null)
+                        .filter(Objects::nonNull)
+                        .filter(pfp -> facet.getId().equals(pfp.getFilterParameterId()))
+                        .map(ProductFilterParameter::getFilterParameterValueId)
+                        .collect(Collectors.toSet());
+
+                if (facet.getValues() != null) {
+                    for (FilterParameterValueDto valueDto : facet.getValues()) {
+                        valueDto.setAvailable(availableValuesForFacet.contains(valueDto.getId()));
+                    }
                 }
             }
+        }
+
+        if (category != null && category.getFilterParameters() != null && !category.getFilterParameters().isEmpty()) {
+            Set<String> allowedFilterIds = category.getFilterParameters().stream()
+                    .map(FilterParameterDto::getId)
+                    .collect(Collectors.toSet());
+            allowedFilterIds.add("BRAND");
+            allowedFilterIds.add("AVAILABILITY");
+
+            return allFacets.stream()
+                    .filter(facet -> allowedFilterIds.contains(facet.getId()))
+                    .toList();
         }
 
         return allFacets;
@@ -504,22 +764,50 @@ public class ProductSearchEngine {
             return true;
         }
 
-        if (product.getProductFilterParameters() == null) {
-            return false;
-        }
-
         for (FilterParameterRequest paramReq : filterRequest.getFilterParameters()) {
             if (paramReq.getFilterParameterValueIds() == null || paramReq.getFilterParameterValueIds().isEmpty()) {
                 continue;
             }
 
-            boolean matchFound = product.getProductFilterParameters().stream()
-                    .anyMatch(pfp -> pfp.getFilterParameterId() != null &&
-                            pfp.getFilterParameterId().equals(paramReq.getId()) &&
-                            paramReq.getFilterParameterValueIds().contains(pfp.getFilterParameterValueId()));
+            if ("BRAND".equals(paramReq.getId())) {
+                String brandId = product.getBrandId();
+                if (brandId == null) {
+                    return false;
+                }
+                Brand brand = cachedBrands.get(brandId);
+                if (brand == null || !paramReq.getFilterParameterValueIds().contains(brand.getName())) {
+                    return false;
+                }
+            } else if ("AVAILABILITY".equals(paramReq.getId())) {
+                boolean onStockSelected = paramReq.getFilterParameterValueIds().contains("ON_STOCK");
+                boolean soldOutSelected = paramReq.getFilterParameterValueIds().contains("SOLD_OUT");
 
-            if (!matchFound) {
-                return false;
+                boolean match = false;
+                if (onStockSelected) {
+                    if (product.getQuantity() != null && product.getQuantity() > 0) {
+                        match = true;
+                    }
+                }
+                if (soldOutSelected) {
+                    if (product.getQuantity() == null || product.getQuantity() <= 0) {
+                        match = true;
+                    }
+                }
+                if (!match) {
+                    return false;
+                }
+            } else {
+                if (product.getProductFilterParameters() == null) {
+                    return false;
+                }
+                boolean matchFound = product.getProductFilterParameters().stream()
+                        .anyMatch(pfp -> pfp.getFilterParameterId() != null &&
+                                pfp.getFilterParameterId().equals(paramReq.getId()) &&
+                                paramReq.getFilterParameterValueIds().contains(pfp.getFilterParameterValueId()));
+
+                if (!matchFound) {
+                    return false;
+                }
             }
         }
         return true;

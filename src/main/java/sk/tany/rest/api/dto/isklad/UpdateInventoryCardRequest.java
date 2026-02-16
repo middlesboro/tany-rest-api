@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -28,4 +29,19 @@ public class UpdateInventoryCardRequest {
 
     @JsonProperty("price_without_tax")
     private BigDecimal priceWithoutTax;
+
+    @JsonProperty("mj")
+    private String mj;
+
+    @JsonProperty("enabled")
+    private Boolean enabled;
+
+    @JsonProperty("producer")
+    private String producer;
+
+    @JsonProperty("supplier")
+    private String supplier;
+
+    @JsonProperty("images")
+    private List<String> images;
 }

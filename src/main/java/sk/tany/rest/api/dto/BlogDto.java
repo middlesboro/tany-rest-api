@@ -15,6 +15,7 @@ public class BlogDto {
     private String slug;
     private String author;
     private boolean visible;
+    private int order;
     private Instant createdDate;
     private Instant updateDate;
 }

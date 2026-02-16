@@ -24,7 +24,9 @@ import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
+import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.InputStream;
 import java.util.Collections;
@@ -62,6 +64,10 @@ class ProductImportServiceTest {
     private sk.tany.rest.api.component.SlugGenerator slugGenerator;
     @Mock
     private SequenceService sequenceService;
+    @Mock
+    private ImageService imageService;
+    @Mock
+    private RestTemplate restTemplate;
 
     @InjectMocks
     private ProductImportService productImportService;
@@ -152,5 +158,49 @@ class ProductImportServiceTest {
         verify(productSearchEngine).updateProduct(any(Product.class));
         verify(productSearchEngine, org.mockito.Mockito.atLeastOnce()).addFilterParameter(any(FilterParameter.class));
         verify(productSearchEngine).addFilterParameterValue(any(FilterParameterValue.class));
+    }
+
+    @Test
+    void importProducts_shouldOnlyUpdateQuantityIfProductExists() throws Exception {
+        // Arrange
+        ProductImportEntryDto entry = new ProductImportEntryDto();
+        entry.setType("table");
+        entry.setName("p_sale");
+
+        ProductImportDataDto data = new ProductImportDataDto();
+        data.setIdProduct("123");
+        data.setProductName("Updated Name"); // Should NOT update name
+        data.setStockQty("50");
+        data.setExternalStock("0");
+
+        entry.setData(List.of(data));
+        List<ProductImportEntryDto> entries = List.of(entry);
+
+        when(objectMapper.readValue(any(InputStream.class), any(TypeReference.class)))
+                .thenReturn(entries);
+
+        Product existingProduct = new Product();
+        existingProduct.setId("p1");
+        existingProduct.setProductIdentifier(123L);
+        existingProduct.setTitle("Original Name");
+        existingProduct.setQuantity(10);
+
+        when(productRepository.findByProductIdentifier(123L)).thenReturn(Optional.of(existingProduct));
+        when(productRepository.save(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        productImportService.importProducts();
+
+        // Assert
+        verify(productRepository).save(argThat(p ->
+                p.getQuantity() == 50 &&
+                        "Original Name".equals(p.getTitle()) // Name should NOT change
+        ));
+        verify(productSearchEngine).updateProduct(any(Product.class));
+
+        // Ensure other repository interactions that happen during full import are NOT called
+        verify(supplierRepository, org.mockito.Mockito.never()).save(any(Supplier.class));
+        verify(brandRepository, org.mockito.Mockito.never()).save(any(Brand.class));
+        verify(categoryRepository, org.mockito.Mockito.never()).findByPrestashopId(any(Long.class));
     }
 }

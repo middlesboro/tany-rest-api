@@ -2,6 +2,7 @@ package sk.tany.rest.api.controller.client;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,7 @@ public class ReviewClientController {
 
     @PostMapping
     @Operation(summary = "Create review")
-    public void create(@RequestBody ReviewClientCreateRequest request) {
+    public void create(@RequestBody @Valid ReviewClientCreateRequest request) {
         service.create(request);
     }
 }

@@ -1,104 +1,131 @@
 package sk.tany.rest.api.service.admin.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dizitart.no2.Nitrite;
-import org.dizitart.no2.tool.Exporter;
-import org.dizitart.no2.tool.Importer;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.repository.support.Repositories;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.service.admin.DatabaseAdminService;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class DatabaseAdminServiceImpl implements DatabaseAdminService {
 
-    private final Nitrite nitrite;
-
-    @Value("${admin.database.password}")
-    private String databasePassword;
-    @Value("${admin.database.username}")
-    private String databaseUsername;
+    private final ApplicationContext applicationContext;
+    private final ObjectMapper objectMapper;
+    private final ProductSearchEngine productSearchEngine;
 
     @Override
-    public File exportEncryptedDatabase() {
-        File encryptedDbFile = null;
-        Nitrite encryptedDb = null;
-        boolean success = false;
-
+    public File exportDatabaseToJson() {
         try {
-            // 1. Create new encrypted Nitrite DB file
-            encryptedDbFile = File.createTempFile("tany_encrypted_", ".db");
+            Path tempDir = Files.createTempDirectory("tany_export_");
+            Repositories repositories = new Repositories(applicationContext);
 
-            // Restrict permissions to owner only
-            if (!encryptedDbFile.setReadable(true, true) || !encryptedDbFile.setWritable(true, true)) {
-                log.warn("Could not restrict permissions on temporary DB file: {}", encryptedDbFile.getAbsolutePath());
-            }
-
-            // Delete the file so Nitrite creates it fresh (important for security initialization)
-            if (encryptedDbFile.delete()) {
-                log.info("Temporary DB file deleted to allow fresh creation: {}", encryptedDbFile.getAbsolutePath());
-            }
-
-            log.info("Creating new encrypted database at: {}", encryptedDbFile.getAbsolutePath());
-            encryptedDb = Nitrite.builder()
-                    .compressed()
-                    .filePath(encryptedDbFile)
-                    .openOrCreate(databaseUsername, databasePassword);
-
-            // 2. Setup Piping
-            // Use a large buffer for the pipe to improve performance (e.g. 64KB)
-            PipedInputStream pipedIn = new PipedInputStream(65536);
-            PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
-
-            // 3. Start Export Asynchronously
-            CompletableFuture<Void> exportFuture = CompletableFuture.runAsync(() -> {
-                try (pipedOut) { // Ensure stream is closed to signal EOF to reader
-                    log.info("Starting export to pipe...");
-                    Exporter.of(nitrite).exportTo(pipedOut);
-                    log.info("Export to pipe finished.");
-                } catch (IOException e) {
-                    log.error("Export to pipe failed", e);
-                    throw new CompletionException(e);
+            for (Class<?> domainType : repositories) {
+                Object repo = repositories.getRepositoryFor(domainType).orElse(null);
+                if (repo instanceof MongoRepository) {
+                    MongoRepository mongoRepo = (MongoRepository) repo;
+                    List<?> all = mongoRepo.findAll();
+                    if (!all.isEmpty()) {
+                        String className = domainType.getSimpleName();
+                        File file = tempDir.resolve(className + ".json").toFile();
+                        objectMapper.writeValue(file, all);
+                    }
                 }
-            });
+            }
 
-            // 4. Run Import Synchronously
-            log.info("Starting import from pipe...");
-            Importer.of(encryptedDb).importFrom(pipedIn);
-            log.info("Import from pipe finished.");
+            Path zipFile = Files.createTempFile("tany_export_", ".zip");
+            zipDirectory(tempDir, zipFile);
 
-            // 5. Check if export failed
-            exportFuture.join();
+            // Cleanup temp dir
+            Files.walk(tempDir)
+                .sorted((a, b) -> b.compareTo(a)) // Delete files first
+                .map(Path::toFile)
+                .forEach(File::delete);
 
-            // Commit changes
-            encryptedDb.commit();
-            success = true;
+            return zipFile.toFile();
 
-            return encryptedDbFile;
-
-        } catch (IOException | CompletionException e) {
-            log.error("Error during database export", e);
+        } catch (IOException e) {
             throw new RuntimeException("Failed to export database", e);
-        } finally {
-            // Cleanup
-            if (encryptedDb != null) {
-                encryptedDb.close();
-            }
-            // If failed, delete the partial/corrupt file
-            if (!success && encryptedDbFile != null && encryptedDbFile.exists()) {
-                if (!encryptedDbFile.delete()) {
-                    log.warn("Failed to delete temporary DB file after error: {}", encryptedDbFile.getAbsolutePath());
+        }
+    }
+
+    @Override
+    public void importDatabaseFromJson(File input) {
+        if (input.isDirectory()) {
+            importFromDirectory(input);
+        } else {
+             throw new IllegalArgumentException("Input must be a directory containing JSON files");
+        }
+    }
+
+    private void importFromDirectory(File directory) {
+        File[] files = directory.listFiles((dir, name) -> name.endsWith(".json"));
+        if (files == null) return;
+
+        Repositories repositories = new Repositories(applicationContext);
+
+        for (File jsonFile : files) {
+            String entityName = jsonFile.getName().replace(".json", "");
+
+            Object repository = null;
+            Class<?> entityType = null;
+
+            for (Class<?> domainType : repositories) {
+                if (domainType.getSimpleName().equals(entityName)) {
+                    repository = repositories.getRepositoryFor(domainType).orElse(null);
+                    entityType = domainType;
+                    break;
                 }
             }
+
+            if (repository instanceof MongoRepository && entityType != null) {
+                try {
+                    MongoRepository mongoRepo = (MongoRepository) repository;
+                    log.info("Importing {} from {}", entityType.getSimpleName(), jsonFile.getName());
+                    List<?> entities = objectMapper.readValue(jsonFile, objectMapper.getTypeFactory().constructCollectionType(List.class, entityType));
+
+                    if (!entities.isEmpty()) {
+                        mongoRepo.deleteAll();
+                        mongoRepo.saveAll(entities);
+                        log.info("Imported {} entities.", entities.size());
+                    }
+                } catch (IOException e) {
+                    log.error("Failed to import file: {}", jsonFile.getName(), e);
+                }
+            } else {
+                log.warn("No repository found for entity type: {}", entityName);
+            }
+        }
+        productSearchEngine.loadProducts();
+    }
+
+    private void zipDirectory(Path sourceDir, Path zipFile) throws IOException {
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            Files.walk(sourceDir)
+                .filter(path -> !Files.isDirectory(path))
+                .forEach(path -> {
+                    ZipEntry zipEntry = new ZipEntry(sourceDir.relativize(path).toString());
+                    try {
+                        zos.putNextEntry(zipEntry);
+                        Files.copy(path, zos);
+                        zos.closeEntry();
+                    } catch (IOException e) {
+                        log.error("Error zipping file: " + path, e);
+                    }
+                });
         }
     }
 }

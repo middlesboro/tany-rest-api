@@ -1,48 +1,30 @@
-# --- BUILD & RUN STAGE ---
-# Používame oficiálny GraalVM obraz ako základ pre build aj beh
-FROM --platform=linux/amd64 ghcr.io/graalvm/native-image-community:21 AS build
-
-# 1. Inštalácia systémových nástrojov a knižníc pre C++ kompiláciu
-# Povolíme Oracle Linux repozitáre, aby sme mohli stiahnuť statické knižnice
-RUN sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/oracle-linux-ol9.repo && \
-    microdnf install -y \
-    findutils \
-    maven \
-    gcc \
-    glibc-devel \
-    zlib-devel \
-    glibc-static \
-    libstdc++-static \
-    zlib-static && \
-    microdnf clean all
-
+# 1. Fáza: Build (JDK)
+FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
-# 2. Cache Maven závislostí
-COPY pom.xml ./
-RUN mvn dependency:go-offline -B
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
 
-# 3. Kopírovanie zdrojového kódu
-COPY src ./src
+RUN chmod +x mvnw
+RUN ./mvnw dependency:go-offline
 
-# 4. Natívna kompilácia
-# -DexecutableName=tany zabezpečí, že sa binárka bude volať 'tany'
-# --initialize-at-build-time rieši chybu s logovaním (Error 95.84)
-RUN mvn -Pnative native:compile -DskipTests \
-    -DexecutableName=tany \
-    -Dnative.build.args="--initialize-at-build-time=ch.qos.logback,org.slf4j"
+COPY src src
+RUN ./mvnw clean package -DskipTests
 
-# 5. Stabilizácia cesty k binárke
-# Nájdeme skompilovanú binárku v target/ a presunieme ju na fixné miesto
-RUN find target/ -maxdepth 1 -type f -executable -not -name "*.jar" -exec cp {} /app/tany-bin \; && \
-    chmod +x /app/tany-bin
+# 2. Fáza: Runtime (JRE)
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
 
-# 6. Príprava priečinka pre Nitrite DB
-RUN mkdir -p /app/data
+RUN addgroup -S spring && adduser -S spring -G spring \
+    && mkdir -p /data \
+    && chown -R spring:spring /data \
+    && chmod 700 /data
 
-# Nastavenie portu
+USER spring:spring
+
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
 
-# 7. Spustenie aplikácie
-# Používame priamu cestu k nájdenej binárke
-ENTRYPOINT ["/app/tany-bin"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

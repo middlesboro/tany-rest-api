@@ -19,6 +19,9 @@ import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
 import sk.tany.rest.api.dto.client.product.list.ProductClientListResponse;
 import sk.tany.rest.api.mapper.ProductClientApiMapper;
 import sk.tany.rest.api.service.client.ProductClientService;
+import sk.tany.rest.api.dto.request.CategoryFilterRequest;
+import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
+import sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -194,5 +197,30 @@ class ProductClientControllerTest {
         assertEquals(1, result.size());
         assertEquals("Searched Product", result.getFirst().getTitle());
         verify(productService, times(1)).searchProducts(query);
+    }
+
+    @Test
+    void searchProductsByCategory_ShouldReturnResponseWithMetaInfo() {
+        String categoryId = "cat123";
+        Pageable pageable = PageRequest.of(0, 10);
+        CategoryFilterRequest request = new CategoryFilterRequest();
+
+        ProductClientSearchDto searchDto = new ProductClientSearchDto();
+        searchDto.setProducts(Page.empty());
+        searchDto.setFilterParameters(Collections.emptyList());
+
+        Category category = new Category();
+        category.setId(categoryId);
+        category.setMetaTitle("Meta Title");
+        category.setMetaDescription("Meta Description");
+
+        when(productService.search(categoryId, request, pageable)).thenReturn(searchDto);
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+
+        ProductClientSearchResponse response = productClientController.searchProductsByCategory(categoryId, request, pageable);
+
+        assertEquals("Meta Title", response.getMetaTitle());
+        assertEquals("Meta Description", response.getMetaDescription());
+        verify(categoryRepository, times(1)).findById(categoryId);
     }
 }

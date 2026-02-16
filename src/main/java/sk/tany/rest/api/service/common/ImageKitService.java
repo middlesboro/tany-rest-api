@@ -37,12 +37,14 @@ public class ImageKitService implements ImageService {
     public String upload(byte[] file, String fileName, ImageKitType type) {
         try {
             FileCreateRequest fileCreateRequest = new FileCreateRequest(file, fileName);
+            fileCreateRequest.setUseUniqueFileName(false);
             if (type != null) {
                 switch (type) {
                     case PRODUCT -> fileCreateRequest.setFolder("products");
                     case BRAND -> fileCreateRequest.setFolder("brands");
                     case CARRIER -> fileCreateRequest.setFolder("carriers");
                     case PAYMENT_METHOD -> fileCreateRequest.setFolder("payment_methods");
+                    case BLOG -> fileCreateRequest.setFolder("blogs");
                 }
             }
             Result result = imageKit.upload(fileCreateRequest);

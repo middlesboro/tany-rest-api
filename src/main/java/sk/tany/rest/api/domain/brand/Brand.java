@@ -1,7 +1,7 @@
 package sk.tany.rest.api.domain.brand;
 
 import lombok.Data;
-import org.dizitart.no2.objects.Id;
+import org.springframework.data.annotation.Id;
 import sk.tany.rest.api.domain.BaseEntity;
 
 import java.time.Instant;
@@ -14,6 +14,7 @@ public class Brand implements BaseEntity {
     private String name;
     private String image;
     private String metaTitle;
+    private String slug;
     private boolean active;
     private String metaDescription;
     private Instant createdDate;

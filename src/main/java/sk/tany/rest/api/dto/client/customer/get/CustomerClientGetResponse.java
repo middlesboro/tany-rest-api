@@ -10,6 +10,7 @@ import sk.tany.rest.api.domain.customer.Role;
 import sk.tany.rest.api.domain.payment.PaymentType;
 import sk.tany.rest.api.domain.product.ProductStatus;
 import sk.tany.rest.api.dto.AddressDto;
+import sk.tany.rest.api.dto.CartQuantityChangeDto;
 import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.math.BigDecimal;
@@ -59,6 +60,7 @@ public class CustomerClientGetResponse {
         private BigDecimal totalDiscount;
         private BigDecimal finalPrice; // Total - Discount + Carrier + Payment
         private PriceBreakDown priceBreakDown;
+        private java.util.List<CartQuantityChangeDto> quantityChanges;
     }
 
     @Data

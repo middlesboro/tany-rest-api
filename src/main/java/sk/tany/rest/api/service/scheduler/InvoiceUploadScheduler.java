@@ -73,7 +73,7 @@ public class InvoiceUploadScheduler {
                 continue; // Only canceled orders have credit notes
             }
             try {
-                byte[] pdf = invoiceService.generateInvoice(order.getId());
+                byte[] pdf = invoiceService.generateCreditNote(order.getId());
                 LocalDateTime date = order.getCancelDate() != null ?
                         LocalDateTime.ofInstant(order.getCancelDate(), ZoneId.systemDefault()) :
                         LocalDateTime.now();

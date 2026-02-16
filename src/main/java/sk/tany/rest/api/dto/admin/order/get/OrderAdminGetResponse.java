@@ -1,6 +1,7 @@
 package sk.tany.rest.api.dto.admin.order.get;
 
 import lombok.Data;
+import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.OrderStatusHistoryDto;
@@ -32,6 +33,7 @@ public class OrderAdminGetResponse {
     private String note;
     private PriceBreakDown priceBreakDown;
     private String selectedPickupPointName;
+    private OrderStatus status;
     private List<OrderStatusHistoryDto> statusHistory;
     private String carrierOrderStateLink;
     private boolean authenticatedUser;

@@ -80,16 +80,37 @@ public class OrderAdminController {
         OrderDto order = orderService.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
         byte[] pdfBytes = invoiceService.generateInvoice(id);
 
-        boolean isCreditNote = order.getStatus() == OrderStatus.CANCELED;
         int year = 2026;
-        if (isCreditNote && order.getCancelDate() != null) {
-            year = java.time.LocalDateTime.ofInstant(order.getCancelDate(), java.time.ZoneId.systemDefault()).getYear();
-        } else if (order.getCreateDate() != null) {
+        if (order.getCreateDate() != null) {
             year = java.time.LocalDateTime.ofInstant(order.getCreateDate(), java.time.ZoneId.systemDefault()).getYear();
         }
 
-        String docNumber = String.format("%d%06d", year, isCreditNote ? order.getCreditNoteIdentifier() : order.getOrderIdentifier());
-        String filename = (isCreditNote ? "dobropis-" : "faktura-") + docNumber + ".pdf";
+        String docNumber = String.format("%d%06d", year, order.getOrderIdentifier());
+        String filename = "faktura-" + docNumber + ".pdf";
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=" + filename)
+                .body(pdfBytes);
+    }
+
+    @GetMapping("/{id}/credit-note")
+    public ResponseEntity<byte[]> getOrderCreditNote(@PathVariable String id) {
+        OrderDto order = orderService.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != OrderStatus.CANCELED) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        byte[] pdfBytes = invoiceService.generateCreditNote(id);
+
+        int year = 2026;
+        if (order.getCancelDate() != null) {
+            year = java.time.LocalDateTime.ofInstant(order.getCancelDate(), java.time.ZoneId.systemDefault()).getYear();
+        }
+
+        String docNumber = String.format("%d%06d", year, order.getCreditNoteIdentifier());
+        String filename = "dobropis-" + docNumber + ".pdf";
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")

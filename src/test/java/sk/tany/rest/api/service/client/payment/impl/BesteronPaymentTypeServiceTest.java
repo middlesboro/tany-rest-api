@@ -118,7 +118,7 @@ class BesteronPaymentTypeServiceTest {
         BesteronPayment besteronPayment = new BesteronPayment();
         besteronPayment.setTransactionId("trans123");
         besteronPayment.setStatus("Created");
-        when(besteronPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId)).thenReturn(Optional.of(besteronPayment));
+        when(besteronPaymentRepository.findTopByOrderIdOrderByCreatedDateDesc(orderId)).thenReturn(Optional.of(besteronPayment));
 
         BesteronTokenResponse tokenResponse = new BesteronTokenResponse("token123", 3600, "bearer");
         when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))
@@ -159,7 +159,7 @@ class BesteronPaymentTypeServiceTest {
         BesteronPayment besteronPayment = new BesteronPayment();
         besteronPayment.setTransactionId("trans123");
         besteronPayment.setStatus("Created");
-        when(besteronPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId)).thenReturn(Optional.of(besteronPayment));
+        when(besteronPaymentRepository.findTopByOrderIdOrderByCreatedDateDesc(orderId)).thenReturn(Optional.of(besteronPayment));
 
         BesteronTokenResponse tokenResponse = new BesteronTokenResponse("token123", 3600, "bearer");
         when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))

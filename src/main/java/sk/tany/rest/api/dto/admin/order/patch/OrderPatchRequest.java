@@ -24,4 +24,5 @@ public class OrderPatchRequest {
     private String customerId;
     private String note;
     private OrderStatus status;
+    private String carrierOrderStateLink;
 }
