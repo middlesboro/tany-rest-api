@@ -349,7 +349,17 @@ public class ProductSearchEngine {
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .toList();
 
-        return getFilterParametersForProducts(productsInCategory, Collections.emptySet());
+        List<FilterParameterDto> facets = getFilterParametersForProducts(productsInCategory, Collections.emptySet());
+
+        Category category = cachedCategories.get(categoryId);
+        if (category != null && category.getExcludedFilterParameters() != null && !category.getExcludedFilterParameters().isEmpty()) {
+            Set<String> excludedFilterIds = category.getExcludedFilterParameters().stream()
+                    .map(FilterParameterDto::getId)
+                    .collect(Collectors.toSet());
+            facets.removeIf(facet -> excludedFilterIds.contains(facet.getId()));
+        }
+
+        return facets;
     }
 
     public List<Product> search(String categoryId, CategoryFilterRequest request) {
@@ -601,6 +611,14 @@ public class ProductSearchEngine {
 
         List<FilterParameterDto> allFacets = getFilterParametersForProducts(productsInCategory, selectedValueIds);
 
+        Category category = cachedCategories.get(categoryId);
+        if (category != null && category.getExcludedFilterParameters() != null && !category.getExcludedFilterParameters().isEmpty()) {
+            Set<String> excludedFilterIds = category.getExcludedFilterParameters().stream()
+                    .map(FilterParameterDto::getId)
+                    .collect(Collectors.toSet());
+            allFacets.removeIf(facet -> excludedFilterIds.contains(facet.getId()));
+        }
+
         // Add BRAND filter
         FilterParameterDto brandFacet = new FilterParameterDto();
         brandFacet.setId("BRAND");
@@ -696,7 +714,6 @@ public class ProductSearchEngine {
             }
         }
 
-        Category category = cachedCategories.get(categoryId);
         if (category != null && category.getFilterParameters() != null && !category.getFilterParameters().isEmpty()) {
             Set<String> allowedFilterIds = category.getFilterParameters().stream()
                     .map(FilterParameterDto::getId)

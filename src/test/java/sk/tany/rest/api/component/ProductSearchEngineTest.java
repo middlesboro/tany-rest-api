@@ -419,4 +419,51 @@ class ProductSearchEngineTest {
 
         assertEquals(2, result.getTotalElements());
     }
+
+    @Test
+    void getFilterParametersForCategory_ShouldExcludeParameters() {
+        setupMappers();
+
+        Category cat1 = new Category();
+        cat1.setId("cat1");
+
+        FilterParameterDto excludedParam = new FilterParameterDto();
+        excludedParam.setId("color");
+        cat1.setExcludedFilterParameters(List.of(excludedParam));
+
+        when(categoryRepository.findAll()).thenReturn(List.of(cat1));
+
+        productSearchEngine.loadProducts();
+
+        List<FilterParameterDto> result = productSearchEngine.getFilterParametersForCategory("cat1");
+
+        assertEquals(1, result.size());
+        assertEquals("brand", result.getFirst().getId());
+    }
+
+    @Test
+    void getFilterParametersForCategoryWithFilter_ShouldExcludeParameters() {
+        setupMappers();
+
+        Category cat1 = new Category();
+        cat1.setId("cat1");
+
+        FilterParameterDto excludedParam = new FilterParameterDto();
+        excludedParam.setId("color");
+        cat1.setExcludedFilterParameters(List.of(excludedParam));
+
+        when(categoryRepository.findAll()).thenReturn(List.of(cat1));
+
+        productSearchEngine.loadProducts();
+
+        CategoryFilterRequest request = new CategoryFilterRequest();
+
+        List<FilterParameterDto> result = productSearchEngine.getFilterParametersForCategoryWithFilter("cat1", request);
+
+        // Expect "brand" and "AVAILABILITY". "color" should be excluded.
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(f -> f.getId().equals("brand")));
+        assertTrue(result.stream().anyMatch(f -> f.getId().equals("AVAILABILITY")));
+        assertFalse(result.stream().anyMatch(f -> f.getId().equals("color")));
+    }
 }
