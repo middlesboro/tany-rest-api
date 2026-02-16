@@ -15,6 +15,8 @@ import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PriceBreakDown;
 
 import java.io.IOException;
@@ -37,12 +39,19 @@ class InvoiceServiceImplTest {
     private ProductRepository productRepository;
     @Mock
     private CustomerRepository customerRepository;
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
 
     @InjectMocks
     private InvoiceServiceImpl invoiceService;
 
     @Test
     void generateInvoice_OrderPaid_ShouldContainPaidText() throws IOException {
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("info@tany.sk");
+        settings.setShopPhoneNumber("421944432457");
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
+
         String orderId = "order-123";
         Order order = new Order();
         order.setId(orderId);
@@ -77,6 +86,11 @@ class InvoiceServiceImplTest {
 
     @Test
     void generateInvoice_shouldUseCorrectDocumentNumberFormat() throws IOException {
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("info@tany.sk");
+        settings.setShopPhoneNumber("421944432457");
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
+
         String orderId = "order-doc-1";
         Order order = new Order();
         order.setId(orderId);
@@ -107,6 +121,11 @@ class InvoiceServiceImplTest {
 
     @Test
     void generateCreditNote_shouldDisplayNegativeDiscountInCreditNote() throws IOException {
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("info@tany.sk");
+        settings.setShopPhoneNumber("421944432457");
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
+
         String orderId = "order-cn-1";
         Order order = new Order();
         order.setId(orderId);
@@ -154,6 +173,11 @@ class InvoiceServiceImplTest {
 
     @Test
     void generateInvoice_WhenOrderIsCanceled_ShouldStillGenerateInvoice() throws IOException {
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("info@tany.sk");
+        settings.setShopPhoneNumber("421944432457");
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
+
         String orderId = "order-canceled-invoice";
         Order order = new Order();
         order.setId(orderId);
@@ -190,6 +214,11 @@ class InvoiceServiceImplTest {
 
     @Test
     void generateInvoice_shouldContainFooter() throws IOException {
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("info@tany.sk");
+        settings.setShopPhoneNumber("421944432457");
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
+
         String orderId = "order-footer-1";
         Order order = new Order();
         order.setId(orderId);

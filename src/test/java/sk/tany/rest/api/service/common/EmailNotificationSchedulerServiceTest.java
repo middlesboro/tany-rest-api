@@ -12,6 +12,8 @@ import sk.tany.rest.api.domain.emailnotification.EmailNotification;
 import sk.tany.rest.api.domain.emailnotification.EmailNotificationRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,6 +32,8 @@ class EmailNotificationSchedulerServiceTest {
     private ProductRepository productRepository;
     @Mock
     private EmailService emailService;
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
 
     @InjectMocks
     private EmailNotificationSchedulerService schedulerService;
@@ -37,6 +41,10 @@ class EmailNotificationSchedulerServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(schedulerService, "frontendUrl", "http://localhost:3000");
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("test@test.com");
+        settings.setShopPhoneNumber("123456789");
+        lenient().when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
     }
 
     @Test
@@ -68,7 +76,7 @@ class EmailNotificationSchedulerServiceTest {
 
         String body = bodyCaptor.getValue();
         // Check for the link
-        String expectedLink = "<a href='http://localhost:3000/products/test-product'>Test Product</a>";
+        String expectedLink = "<a href='http://localhost:3000/produkt/test-product'>Test Product</a>";
         assertTrue(body.contains(expectedLink),
                 "Email body should contain clickable product link.\nExpected: " + expectedLink + "\nActual Body: " + body);
     }
