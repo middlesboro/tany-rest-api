@@ -2,24 +2,18 @@ package sk.tany.rest.api.service.client.payment.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import scala.Option;
-import scala.math.BigDecimal;
-import sk.softwave.paybysquare.PayBySquare$;
-import sk.softwave.paybysquare.SimplePay;
 import sk.tany.rest.api.domain.payment.PaymentType;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.service.client.payment.PaymentTypeService;
+import sk.tany.rest.api.service.payment.PayBySquareService;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.Base64;
 import java.util.Locale;
 
 @Service
@@ -27,11 +21,8 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class BankTransferPaymentTypeService implements PaymentTypeService {
 
-    @Value("${eshop.bank-account.iban}")
-    private String iban;
-
-    @Value("${eshop.bank-account.bic}")
-    private String bic;
+    private final PayBySquareService payBySquareService;
+    private final ShopSettingsRepository shopSettingsRepository;
 
     @Override
     public PaymentType getSupportedType() {
@@ -40,37 +31,36 @@ public class BankTransferPaymentTypeService implements PaymentTypeService {
 
     @Override
     public PaymentInfoDto getPaymentInfo(OrderDto order, PaymentDto payment) {
+        ShopSettings settings = getShopSettings();
         return PaymentInfoDto.builder()
-                .iban(getIban())
-                .swift(getSwift())
+                .iban(settings.getBankAccount())
+                .swift(settings.getBankBic())
                 .variableSymbol(getVariableSymbol(order))
-                .qrCode(generateQrCodeBase64(order))
-                .paymentLink(generatePaymeLink(order))
+                .qrCode(generateQrCodeBase64(order, settings))
+                .paymentLink(generatePaymeLink(order, settings))
                 .build();
     }
 
-    private String getIban() {
-        return iban;
-    }
-
-    private String getSwift() {
-        return bic;
+    private ShopSettings getShopSettings() {
+        return shopSettingsRepository.findAll().stream()
+                .findFirst()
+                .orElseGet(ShopSettings::new);
     }
 
     private String getVariableSymbol(OrderDto order) {
         return order.getOrderIdentifier() != null ? String.valueOf(order.getOrderIdentifier()) : null;
     }
 
-    private String generateQrCodeBase64(OrderDto order) {
+    private String generateQrCodeBase64(OrderDto order, ShopSettings settings) {
         try {
-            return generateQrCode(order);
+            return generateQrCode(order, settings);
         } catch (Exception e) {
             log.error("Error generating QR code for order {}", order.getId(), e);
             return null;
         }
     }
 
-    private String generatePaymeLink(OrderDto order) {
+    private String generatePaymeLink(OrderDto order, ShopSettings settings) {
         try {
             String vs = getVariableSymbol(order);
             if (vs == null) {
@@ -78,46 +68,35 @@ public class BankTransferPaymentTypeService implements PaymentTypeService {
             }
             String msg = "Objednavka VS: " + vs;
 
+            String organizationName = settings.getOrganizationName();
+            if (organizationName == null) {
+                organizationName = "Tany.sk"; // Fallback if settings missing
+            }
+
             return "https://payme.sk?V=1" +
-                    "&IBAN=" + iban.replace(" ", "") +
-                    "&AM=" + String.format(Locale.US, "%.2f", order.getFinalPrice()) + // Locale.US to ensure dot as decimal separator
+                    "&IBAN=" + (settings.getBankAccount() != null ? settings.getBankAccount().replace(" ", "") : "") +
+                    "&AM=" + String.format(Locale.US, "%.2f", order.getFinalPrice()) +
                     "&CC=EUR" +
                     "&MSG=" + URLEncoder.encode(msg, StandardCharsets.UTF_8) +
-                    "&CN=" + URLEncoder.encode("Bc. Tatiana Grňová - Tany.sk", StandardCharsets.UTF_8); // todo change to config
+                    "&CN=" + URLEncoder.encode(organizationName, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("Error generating Payme link for order {}", order.getId(), e);
             return null;
         }
     }
 
-    private String generateQrCode(OrderDto order) throws IOException {
-        BigDecimal amount = new BigDecimal(order.getFinalPrice());
-        String vsValue = getVariableSymbol(order);
-        Option<String> vs = Option.apply(vsValue);
-        Option<String> none = Option.apply(null);
-        Option<String> bicOpt = Option.apply(bic);
-
-        SimplePay pay = new SimplePay(
-                amount,
+    private String generateQrCode(OrderDto order, ShopSettings settings) {
+        return payBySquareService.generateQrCode(
+                order.getFinalPrice(),
                 "EUR",
-                vs,
-                none,
-                none,
-                none,
-                none,
-                iban,
-                bicOpt
+                getVariableSymbol(order),
+                null,
+                null,
+                null,
+                null,
+                settings.getBankAccount(),
+                settings.getBankBic(),
+                settings.getOrganizationName()
         );
-
-        File tempFile = Files.createTempFile("qr", ".png").toFile();
-        try {
-            PayBySquare$.MODULE$.encodePlainQR(pay, tempFile.getAbsolutePath(), 300, 4);
-            byte[] fileContent = Files.readAllBytes(tempFile.toPath());
-            return Base64.getEncoder().encodeToString(fileContent);
-        } finally {
-            if (tempFile.exists()) {
-                tempFile.delete();
-            }
-        }
     }
 }
