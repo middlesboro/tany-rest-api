@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.dto.isklad.ISkladResponse;
 import sk.tany.rest.api.dto.isklad.InventoryDetailRequest;
 import sk.tany.rest.api.dto.isklad.InventoryDetailResult;
@@ -22,10 +23,15 @@ import java.util.Map;
 public class IskladInventoryScheduler {
 
     private final ISkladService iskladService;
+    private final ISkladProperties iSkladProperties;
     private final OneDriveService oneDriveService;
 
     @Scheduled(cron = "0 30 23 * * *")
     public void exportInventoryToOneDrive() {
+        if (!iSkladProperties.isEnabled()) {
+            return;
+        }
+
         log.info("Starting ISklad inventory export to OneDrive");
 
         InventoryDetailRequest request = InventoryDetailRequest.builder()
