@@ -2,9 +2,10 @@ package sk.tany.rest.api.service.client.payment.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.payment.PaymentType;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
@@ -21,12 +22,7 @@ import java.util.Locale;
 public class BankTransferPaymentTypeService implements PaymentTypeService {
 
     private final PayBySquareService payBySquareService;
-
-    @Value("${eshop.bank-account.iban}")
-    private String iban;
-
-    @Value("${eshop.bank-account.bic}")
-    private String bic;
+    private final ShopSettingsRepository shopSettingsRepository;
 
     @Override
     public PaymentType getSupportedType() {
@@ -35,37 +31,36 @@ public class BankTransferPaymentTypeService implements PaymentTypeService {
 
     @Override
     public PaymentInfoDto getPaymentInfo(OrderDto order, PaymentDto payment) {
+        ShopSettings settings = getShopSettings();
         return PaymentInfoDto.builder()
-                .iban(getIban())
-                .swift(getSwift())
+                .iban(settings.getBankAccount())
+                .swift(settings.getBankBic())
                 .variableSymbol(getVariableSymbol(order))
-                .qrCode(generateQrCodeBase64(order))
-                .paymentLink(generatePaymeLink(order))
+                .qrCode(generateQrCodeBase64(order, settings))
+                .paymentLink(generatePaymeLink(order, settings))
                 .build();
     }
 
-    private String getIban() {
-        return iban;
-    }
-
-    private String getSwift() {
-        return bic;
+    private ShopSettings getShopSettings() {
+        return shopSettingsRepository.findAll().stream()
+                .findFirst()
+                .orElseGet(ShopSettings::new);
     }
 
     private String getVariableSymbol(OrderDto order) {
         return order.getOrderIdentifier() != null ? String.valueOf(order.getOrderIdentifier()) : null;
     }
 
-    private String generateQrCodeBase64(OrderDto order) {
+    private String generateQrCodeBase64(OrderDto order, ShopSettings settings) {
         try {
-            return generateQrCode(order);
+            return generateQrCode(order, settings);
         } catch (Exception e) {
             log.error("Error generating QR code for order {}", order.getId(), e);
             return null;
         }
     }
 
-    private String generatePaymeLink(OrderDto order) {
+    private String generatePaymeLink(OrderDto order, ShopSettings settings) {
         try {
             String vs = getVariableSymbol(order);
             if (vs == null) {
@@ -73,19 +68,24 @@ public class BankTransferPaymentTypeService implements PaymentTypeService {
             }
             String msg = "Objednavka VS: " + vs;
 
+            String organizationName = settings.getOrganizationName();
+            if (organizationName == null) {
+                organizationName = "Tany.sk"; // Fallback if settings missing
+            }
+
             return "https://payme.sk?V=1" +
-                    "&IBAN=" + iban.replace(" ", "") +
-                    "&AM=" + String.format(Locale.US, "%.2f", order.getFinalPrice()) + // Locale.US to ensure dot as decimal separator
+                    "&IBAN=" + (settings.getBankAccount() != null ? settings.getBankAccount().replace(" ", "") : "") +
+                    "&AM=" + String.format(Locale.US, "%.2f", order.getFinalPrice()) +
                     "&CC=EUR" +
                     "&MSG=" + URLEncoder.encode(msg, StandardCharsets.UTF_8) +
-                    "&CN=" + URLEncoder.encode("Bc. Tatiana Grňová - Tany.sk", StandardCharsets.UTF_8); // todo change to config
+                    "&CN=" + URLEncoder.encode(organizationName, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("Error generating Payme link for order {}", order.getId(), e);
             return null;
         }
     }
 
-    private String generateQrCode(OrderDto order) {
+    private String generateQrCode(OrderDto order, ShopSettings settings) {
         return payBySquareService.generateQrCode(
                 order.getFinalPrice(),
                 "EUR",
@@ -94,8 +94,9 @@ public class BankTransferPaymentTypeService implements PaymentTypeService {
                 null,
                 null,
                 null,
-                iban,
-                bic
+                settings.getBankAccount(),
+                settings.getBankBic(),
+                settings.getOrganizationName()
         );
     }
 }

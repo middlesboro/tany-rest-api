@@ -31,9 +31,9 @@ public class PayBySquareService {
     private static final int LP = 0;
     private static final int PB = 2;
 
-    public String generateQrCode(BigDecimal amount, String currency, String vs, String ss, String ks, String reference, String note, String iban, String bic) {
+    public String generateQrCode(BigDecimal amount, String currency, String vs, String ss, String ks, String reference, String note, String iban, String bic, String beneficiaryName) {
         try {
-            String serialized = serialize(amount, currency, vs, ss, ks, reference, note, iban, bic);
+            String serialized = serialize(amount, currency, vs, ss, ks, reference, note, iban, bic, beneficiaryName);
             String encoded = compressAndEncode(serialized);
             return generateQrImage(encoded);
         } catch (Exception e) {
@@ -43,12 +43,12 @@ public class PayBySquareService {
     }
 
     // Exposed for testing
-    public String generateQrString(BigDecimal amount, String currency, String vs, String ss, String ks, String reference, String note, String iban, String bic) throws IOException {
-        String serialized = serialize(amount, currency, vs, ss, ks, reference, note, iban, bic);
+    public String generateQrString(BigDecimal amount, String currency, String vs, String ss, String ks, String reference, String note, String iban, String bic, String beneficiaryName) throws IOException {
+        String serialized = serialize(amount, currency, vs, ss, ks, reference, note, iban, bic, beneficiaryName);
         return compressAndEncode(serialized);
     }
 
-    private String serialize(BigDecimal amount, String currency, String vs, String ss, String ks, String reference, String note, String iban, String bic) {
+    private String serialize(BigDecimal amount, String currency, String vs, String ss, String ks, String reference, String note, String iban, String bic, String beneficiaryName) {
         StringBuilder sb = new StringBuilder();
         sb.append("\t"); // 0: Prefix
         sb.append("1"); // 1: Payment count (1)
@@ -80,6 +80,11 @@ public class PayBySquareService {
         sb.append("0"); // 14: Standing orders count (0)
         sb.append("\t");
         sb.append("0"); // 15: Direct debits count (0)
+
+        if (beneficiaryName != null && !beneficiaryName.isEmpty()) {
+            sb.append("\t");
+            sb.append(beneficiaryName); // 16: Beneficiary Name
+        }
 
         return sb.toString();
     }
