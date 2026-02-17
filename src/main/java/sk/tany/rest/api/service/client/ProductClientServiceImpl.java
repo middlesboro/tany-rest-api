@@ -10,16 +10,16 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
 import sk.tany.rest.api.dto.client.review.ProductRatingDto;
-import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.exception.ProductException;
-import sk.tany.rest.api.service.common.ProductEmbeddingService;
+import sk.tany.rest.api.mapper.ProductMapper;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +29,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     private final ProductMapper productMapper;
     private final ProductSearchEngine productSearchEngine;
     private final WishlistClientService wishlistClientService;
-    private final ProductEmbeddingService productEmbeddingService;
+//    private final ProductEmbeddingService productEmbeddingService;
     private final ReviewClientService reviewClientService;
 
     @Override
@@ -126,7 +126,7 @@ public class ProductClientServiceImpl implements ProductClientService {
 
     @Override
     public java.util.List<ProductClientDto> getRelatedProducts(String productId) {
-        java.util.List<String> relatedIds = productEmbeddingService.findRelatedProducts(productId);
+        java.util.List<String> relatedIds =  new ArrayList<>(); //productEmbeddingService.findRelatedProducts(productId);
         if (relatedIds.isEmpty()) {
             return java.util.Collections.emptyList();
         }

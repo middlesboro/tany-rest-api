@@ -15,7 +15,6 @@ import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.client.review.ProductRatingDto;
 import sk.tany.rest.api.mapper.ProductMapper;
-import sk.tany.rest.api.service.common.ProductEmbeddingService;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -36,8 +35,8 @@ class ProductClientServiceImplTest {
     private ProductSearchEngine productSearchEngine;
     @Mock
     private WishlistClientService wishlistClientService;
-    @Mock
-    private ProductEmbeddingService productEmbeddingService;
+//    @Mock
+//    private ProductEmbeddingService productEmbeddingService;
     @Mock
     private ReviewClientService reviewClientService;
 

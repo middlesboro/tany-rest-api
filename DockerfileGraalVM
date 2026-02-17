@@ -37,9 +37,6 @@ RUN mvn -Pnative native:compile -DskipTests \
 RUN find target/ -maxdepth 1 -type f -executable -not -name "*.jar" -exec cp {} /app/tany-bin \; && \
     chmod +x /app/tany-bin
 
-# 6. Príprava priečinka pre Nitrite DB
-RUN mkdir -p /app/data
-
 # Nastavenie portu
 EXPOSE 8080
 
