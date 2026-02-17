@@ -1,38 +1,30 @@
 package sk.tany.rest.api.dto.client.cart.update;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import sk.tany.rest.api.dto.AddressDto;
+import sk.tany.rest.api.validation.CartClientUpdateConstraint;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
+@CartClientUpdateConstraint
 @Data
 public class CartClientUpdateRequest {
-    @NotBlank
     private String cartId;
     private String customerId;
     private String selectedCarrierId;
     private String selectedPaymentId;
     private String selectedPickupPointId;
     private String selectedPickupPointName;
-    @Valid
     private List<CartItem> items;
     private String firstname;
     private String lastname;
-    @Email
     private String email;
     private String phone;
-    @Valid
     private AddressDto invoiceAddress;
-    @Valid
     private AddressDto deliveryAddress;
     private Boolean discountForNewsletter;
     private Instant createDate;
@@ -42,10 +34,7 @@ public class CartClientUpdateRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CartItem {
-        @NotBlank
         private String productId;
-        @NotNull
-        @Min(1)
         private Integer quantity;
         private String title;
         private String image;
