@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sk.tany.rest.api.dto.admin.homepage.HomepageGridAdminDto;
+import sk.tany.rest.api.dto.admin.homepage.patch.HomepageGridPatchRequest;
 import sk.tany.rest.api.service.admin.HomepageGridAdminService;
 
 @RestController
@@ -39,6 +40,12 @@ public class HomepageGridAdminController {
     @PutMapping("/{id}")
     public ResponseEntity<HomepageGridAdminDto> updateHomepageGrid(@PathVariable String id, @RequestBody HomepageGridAdminDto dto) {
         HomepageGridAdminDto updated = homepageGridAdminService.update(id, dto);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<HomepageGridAdminDto> patchHomepageGrid(@PathVariable String id, @RequestBody HomepageGridPatchRequest dto) {
+        HomepageGridAdminDto updated = homepageGridAdminService.patch(id, dto);
         return ResponseEntity.ok(updated);
     }
 
