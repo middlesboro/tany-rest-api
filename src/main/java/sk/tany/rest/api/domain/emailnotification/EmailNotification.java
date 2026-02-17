@@ -8,6 +8,6 @@ import java.time.Instant;
 
 @Data
 public class EmailNotification extends BaseEntity {
-private String email;
+    private String email;
     private String productId;
 }

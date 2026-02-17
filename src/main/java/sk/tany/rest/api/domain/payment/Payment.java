@@ -9,7 +9,7 @@ import java.time.Instant;
 
 @Data
 public class Payment extends BaseEntity {
-private Long prestashopId;
+    private Long prestashopId;
     private Integer iskladId;
     private String name;
     private PaymentType type;
@@ -20,5 +20,4 @@ private Long prestashopId;
     private String description;
     private String image;
     private boolean active;
-    private Instant createdDate;
 }

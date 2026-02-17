@@ -13,7 +13,7 @@ import java.util.List;
 
 @Data
 public class Order extends BaseEntity {
-@Indexed(unique = true)
+    @Indexed(unique = true)
     private Long orderIdentifier;
     private String cartId;
     private BigDecimal finalPrice;
@@ -47,7 +47,7 @@ public class Order extends BaseEntity {
     private boolean creditNoteUploadedToOneDrive;
     private Instant iskladImportDate;
     private Instant adminNotificationDate;
-@Override
+    @Override
     public Object getSortValue(String field) {
         switch (field) {
             case "orderIdentifier": return orderIdentifier;

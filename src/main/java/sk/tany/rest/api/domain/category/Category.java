@@ -10,7 +10,7 @@ import java.util.List;
 
 @Data
 public class Category extends BaseEntity {
-private Long prestashopId;
+    private Long prestashopId;
     private Long prestashopParentId;
     private String title;
     private String description;
@@ -24,8 +24,7 @@ private Long prestashopId;
     private boolean visible;
     private boolean defaultCategory;
     private List<FilterParameterDto> filterParameters;
-    private Instant createdDate;
-@Override
+    @Override
     public Object getSortValue(String field) {
         switch (field) {
             case "position": return position;

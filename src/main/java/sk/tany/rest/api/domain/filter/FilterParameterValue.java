@@ -8,7 +8,7 @@ import java.time.Instant;
 
 @Data
 public class FilterParameterValue extends BaseEntity {
-private String name;
+    private String name;
     private String filterParameterId;
     private Boolean active;
 }

@@ -8,6 +8,6 @@ import java.time.Instant;
 
 @Data
 public class ProductSales extends BaseEntity {
-private String productId;
+    private String productId;
     private Integer salesCount;
 }

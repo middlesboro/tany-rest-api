@@ -8,15 +8,14 @@ import java.time.Instant;
 
 @Data
 public class Brand extends BaseEntity {
-private Long prestashopId;
+    private Long prestashopId;
     private String name;
     private String image;
     private String metaTitle;
     private String slug;
     private boolean active;
     private String metaDescription;
-    private Instant createdDate;
-@Override
+    @Override
     public Object getSortValue(String field) {
         switch (field) {
             case "name": return name;

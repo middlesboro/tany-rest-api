@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 public class HomepageGrid extends BaseEntity {
-private String title;
+    private String title;
     private String brandId;
     private String categoryId;
     private List<String> productIds;
@@ -17,7 +17,7 @@ private String title;
     private Integer order;
     private SortField sortField;
     private SortOrder sortOrder;
-@Override
+    @Override
     public Object getSortValue(String field) {
         if ("order".equals(field)) {
             return order;

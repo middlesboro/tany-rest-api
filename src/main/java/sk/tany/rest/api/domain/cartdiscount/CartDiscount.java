@@ -10,7 +10,7 @@ import java.util.List;
 
 @Data
 public class CartDiscount extends BaseEntity {
-private String code;
+    private String code;
     private String title;
     private String description;
     private BigDecimal value;

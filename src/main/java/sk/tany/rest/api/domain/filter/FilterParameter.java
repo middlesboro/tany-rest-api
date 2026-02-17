@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 public class FilterParameter extends BaseEntity {
-private String name;
+    private String name;
     private FilterParameterType type;
     private List<String> filterParameterValueIds;
     private Boolean active;

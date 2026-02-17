@@ -8,7 +8,7 @@ import java.time.Instant;
 
 @Data
 public class Review extends BaseEntity {
-private String productId;
+    private String productId;
     private Long prestashopProductId;
     private String text;
     private Integer rating;
@@ -17,7 +17,7 @@ private String productId;
     private String customerId;
     private String customerName;
     private boolean active;
-@Override
+    @Override
     public Object getSortValue(String field) {
         if ("rating".equals(field)) {
             return rating;

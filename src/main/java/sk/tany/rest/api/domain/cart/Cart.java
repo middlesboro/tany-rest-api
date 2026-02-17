@@ -10,7 +10,7 @@ import java.util.List;
 
 @Data
 public class Cart extends BaseEntity {
-private String cartId;
+    private String cartId;
     private String customerId;
     private List<CartItem> items;
     private String selectedCarrierId;

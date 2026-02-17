@@ -11,9 +11,9 @@ import java.util.List;
 
 @Data
 public class Product extends BaseEntity {
-@Indexed(unique = true)
+    @Indexed(unique = true)
     private Long productIdentifier;
-private String title;
+    private String title;
     private String shortDescription;
     private String description;
     private BigDecimal wholesalePrice;
@@ -42,7 +42,7 @@ private String title;
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
     private BigDecimal discountPriceWithoutVat;
-@Override
+    @Override
     public Object getSortValue(String field) {
         switch (field) {
             case "title": return title;

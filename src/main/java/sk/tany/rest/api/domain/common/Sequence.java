@@ -8,5 +8,5 @@ import java.time.Instant;
 
 @Data
 public class Sequence extends BaseEntity {
-private Long seq;
+    private Long seq;
 }

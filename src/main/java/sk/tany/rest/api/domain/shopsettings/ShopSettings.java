@@ -9,7 +9,7 @@ import java.time.Instant;
 
 @Data
 public class ShopSettings extends BaseEntity {
-private String bankName;
+    private String bankName;
     private String bankAccount;
     private String bankBic;
     private String shopStreet;
@@ -23,5 +23,4 @@ private String bankName;
     private String vatNumber;
     private BigDecimal vat;
     private String defaultCountry;
-    private Instant createdDate;
 }

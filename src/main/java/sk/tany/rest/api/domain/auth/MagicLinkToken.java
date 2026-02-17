@@ -12,10 +12,9 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MagicLinkToken extends BaseEntity {
-private String jti;
+    private String jti;
     private String customerEmail;
     private MagicLinkTokenState state;
     private String jwt;
     private Instant expiration;
-    private Instant createdDate;
 }

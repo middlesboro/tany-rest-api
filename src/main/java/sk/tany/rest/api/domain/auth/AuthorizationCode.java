@@ -13,12 +13,11 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthorizationCode extends BaseEntity {
-private String code;
+    private String code;
     private String email;
     private String jwt;
     private Instant expiration;
-    private Instant createdDate;
-public AuthorizationCode(String code, String email, Date expiration) {
+    public AuthorizationCode(String code, String email, Date expiration) {
         this.code = code;
         this.email = email;
         if (expiration != null) {

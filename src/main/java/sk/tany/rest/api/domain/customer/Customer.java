@@ -8,7 +8,7 @@ import java.time.Instant;
 
 @Data
 public class Customer extends BaseEntity {
-private String email;
+    private String email;
     private String firstname;
     private String lastname;
     private String phone;
@@ -17,8 +17,7 @@ private String email;
     private Address invoiceAddress;
     private Address deliveryAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
-    private Instant createdDate;
-@Override
+    @Override
     public Object getSortValue(String field) {
         switch (field) {
             case "firstname": return firstname;

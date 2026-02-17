@@ -8,7 +8,7 @@ import java.time.Instant;
 
 @Data
 public class Blog extends BaseEntity {
-private String title;
+    private String title;
     private String shortDescription;
     private String description;
     private String image;
@@ -18,5 +18,4 @@ private String title;
     private String author;
     private boolean visible;
     private int order;
-    private Instant createdDate;
 }

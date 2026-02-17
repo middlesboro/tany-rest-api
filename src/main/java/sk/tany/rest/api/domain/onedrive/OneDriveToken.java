@@ -8,5 +8,5 @@ import java.time.Instant;
 
 @Data
 public class OneDriveToken extends BaseEntity {
-private String refreshToken;
+    private String refreshToken;
 }

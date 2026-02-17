@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 public class Carrier extends BaseEntity {
-private Long prestashopId;
+    private Long prestashopId;
     private Integer iskladId;
     private String name;
     private CarrierType type;
@@ -18,8 +18,7 @@ private Long prestashopId;
     private String image;
     private List<CarrierPriceRange> ranges;
     private boolean selected;
-    private Instant createdDate;
-@Override
+    @Override
     public Object getSortValue(String field) {
         if ("order".equals(field)) return order;
         if ("name".equals(field)) return name;

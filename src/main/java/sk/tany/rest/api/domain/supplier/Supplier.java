@@ -8,10 +8,9 @@ import java.time.Instant;
 
 @Data
 public class Supplier extends BaseEntity {
-private Long prestashopId;
+    private Long prestashopId;
     private String name;
-    private Instant createdDate;
-@Override
+    @Override
     public Object getSortValue(String field) {
         switch (field) {
             case "name": return name;
