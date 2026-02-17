@@ -117,7 +117,8 @@ public class ProductEmbeddingService {
         TextSegment segment = TextSegment.from(text, metadata);
 
         Response<dev.langchain4j.data.embedding.Embedding> embeddingResponse = embeddingModel.embed(segment);
-        // Use product ID as the document ID for upsert/replacement effect
+        // first remove old embedding if exists, then add new one
+        embeddingStore.remove(product.getId());
         embeddingStore.add(product.getId(), embeddingResponse.content());
     }
 
