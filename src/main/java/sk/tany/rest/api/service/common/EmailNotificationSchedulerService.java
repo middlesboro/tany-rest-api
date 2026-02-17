@@ -11,6 +11,8 @@ import sk.tany.rest.api.domain.emailnotification.EmailNotification;
 import sk.tany.rest.api.domain.emailnotification.EmailNotificationRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +30,7 @@ public class EmailNotificationSchedulerService {
     private final EmailNotificationRepository emailNotificationRepository;
     private final ProductRepository productRepository;
     private final EmailService emailService;
+    private final ShopSettingsRepository shopSettingsRepository;
 
     @Value("${eshop.frontend-url}")
     private String frontendUrl;
@@ -90,9 +93,12 @@ public class EmailNotificationSchedulerService {
                         .append("</tr>");
             }
 
+            ShopSettings settings = shopSettingsRepository.getFirstShopSettings();
             String body = template
                     .replace("{{PRODUCTS_LIST}}", productsListHtml.toString())
-                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
+                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()))
+                    .replace("{{supportEmail}}", settings.getShopEmail() != null ? settings.getShopEmail() : "")
+                    .replace("{{supportPhone}}", settings.getShopPhoneNumber() != null ? settings.getShopPhoneNumber() : "");
             emailService.sendEmail(to, "Produkt je opäť na sklade!", body, true, null);
 
         } catch (Exception e) {

@@ -24,7 +24,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
         if (StringUtils.isNotBlank(allowedOrigins)) {
              registry.addMapping("/**")
                 .allowedOrigins(allowedOrigins.split(","))
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
         }
@@ -36,7 +36,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
         if (StringUtils.isNotBlank(allowedOrigins)) {
             configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(",")).toList());
         }
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "PUT", "DELETE"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
 

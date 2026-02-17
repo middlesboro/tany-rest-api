@@ -16,4 +16,5 @@ public class CategoryPatchRequest {
     private String slug;
     private String parentId;
     private List<FilterParameterDto> filterParameters;
+    private List<FilterParameterDto> excludedFilterParameters;
 }

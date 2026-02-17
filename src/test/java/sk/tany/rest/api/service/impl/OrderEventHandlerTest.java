@@ -17,6 +17,8 @@ import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.order.OrderItem;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.event.OrderStatusChangedEvent;
 import sk.tany.rest.api.service.admin.InvoiceService;
 import sk.tany.rest.api.service.client.ProductClientService;
@@ -55,6 +57,8 @@ class OrderEventHandlerTest {
     private ResourceLoader resourceLoader;
     @Mock
     private ProductClientService productClientService;
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
 
     @InjectMocks
     private OrderEventHandler orderEventHandler;
@@ -81,6 +85,11 @@ class OrderEventHandlerTest {
         lenient().when(resourceLoader.getResource("classpath:obchodne-podmienky.pdf")).thenReturn(pdfResource);
 
         lenient().when(invoiceService.generateInvoice(anyString())).thenReturn(new byte[0]);
+
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("test@test.com");
+        settings.setShopPhoneNumber("123456789");
+        lenient().when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
     }
 
     @Test

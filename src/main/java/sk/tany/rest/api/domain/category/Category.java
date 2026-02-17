@@ -24,6 +24,7 @@ public class Category extends BaseEntity {
     private boolean visible;
     private boolean defaultCategory;
     private List<FilterParameterDto> filterParameters;
+    private List<FilterParameterDto> excludedFilterParameters;
     @Override
     public Object getSortValue(String field) {
         switch (field) {

@@ -10,6 +10,8 @@ import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.isklad.ISkladOrderStatusUpdateRequest;
 import sk.tany.rest.api.dto.isklad.ISkladPackage;
 import sk.tany.rest.api.service.common.EmailService;
@@ -28,6 +30,7 @@ public class ISkladWebhookServiceImpl implements ISkladWebhookService {
     private final OrderRepository orderRepository;
     private final SequenceService sequenceService;
     private final EmailService emailService;
+    private final ShopSettingsRepository shopSettingsRepository;
 
     @Value("${eshop.frontend-url}")
     private String frontendUrl;
@@ -127,6 +130,7 @@ public class ISkladWebhookServiceImpl implements ISkladWebhookService {
         }
         try {
             String template = getEmailTemplate();
+            ShopSettings settings = shopSettingsRepository.getFirstShopSettings();
 
             String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
             String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
@@ -136,7 +140,9 @@ public class ISkladWebhookServiceImpl implements ISkladWebhookService {
                     .replace("{{firstname}}", firstname)
                     .replace("{{orderIdentifier}}", orderIdentifier)
                     .replace("{{carrierOrderStateLink}}", carrierLink)
-                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()));
+                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()))
+                    .replace("{{supportEmail}}", settings.getShopEmail() != null ? settings.getShopEmail() : "")
+                    .replace("{{supportPhone}}", settings.getShopPhoneNumber() != null ? settings.getShopPhoneNumber() : "");
 
             emailService.sendEmail(order.getEmail(), "Objednávka odoslaná", body, true, null);
             log.info("Sent 'Order Sent' email for order {}", order.getOrderIdentifier());

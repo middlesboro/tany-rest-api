@@ -12,6 +12,8 @@ import sk.tany.rest.api.domain.emailnotification.EmailNotification;
 import sk.tany.rest.api.domain.emailnotification.EmailNotificationRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,6 +32,8 @@ class EmailNotificationSchedulerServiceTest {
     private ProductRepository productRepository;
     @Mock
     private EmailService emailService;
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
 
     @InjectMocks
     private EmailNotificationSchedulerService schedulerService;
@@ -37,6 +41,10 @@ class EmailNotificationSchedulerServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(schedulerService, "frontendUrl", "http://localhost:3000");
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("test@test.com");
+        settings.setShopPhoneNumber("123456789");
+        lenient().when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
     }
 
     @Test

@@ -11,6 +11,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import sk.tany.rest.api.config.MockRepositoriesConfig;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.service.common.EmailService;
 
 import java.util.Optional;
@@ -50,6 +52,9 @@ public class AuthenticationControllerTest {
     private EmailService emailService;
 
     @MockBean
+    private ShopSettingsRepository shopSettingsRepository;
+
+    @MockBean
     private org.springframework.security.web.context.SecurityContextRepository securityContextRepository;
 
     @org.junit.jupiter.api.BeforeEach
@@ -83,6 +88,11 @@ public class AuthenticationControllerTest {
 
     @Test
     public void testRateLimiting() throws Exception {
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("test@test.com");
+        settings.setShopPhoneNumber("123456789");
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
+
         when(customerRepository.findByEmail("rate@example.com")).thenReturn(Optional.of(new Customer()));
 
         // First request - OK
