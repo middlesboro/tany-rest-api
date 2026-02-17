@@ -9,5 +9,6 @@ public record ProductFilter(String query,
                             String id,
                             Boolean externalStock,
                             Integer quantity,
+                            Long productIdentifier,
                             Boolean active) {
 }

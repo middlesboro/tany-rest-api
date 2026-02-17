@@ -422,6 +422,9 @@ public class ProductSearchEngine {
                     if (filter.quantity() != null && !filter.quantity().equals(p.getQuantity())) {
                         return false;
                     }
+                    if (filter.productIdentifier() != null && !filter.productIdentifier().equals(p.getProductIdentifier())) {
+                        return false;
+                    }
                     if (filter.externalStock() != null) {
                         if (filter.externalStock() && p.getStatus() != ProductStatus.AVAILABLE_ON_EXTERNAL_STOCK) {
                             return false;
