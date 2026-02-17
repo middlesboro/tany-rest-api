@@ -41,7 +41,7 @@ public class SupplierAdminServiceImpl implements SupplierAdminService {
         var savedSupplier = supplierRepository.save(supplier);
         SupplierDto savedDto = supplierMapper.toDto(savedSupplier);
 
-        if (isNew) {
+        if (isNew && iskladProperties.isEnabled()) {
             try {
                 iskladService.createSupplier(iskladMapper.toCreateSupplierRequest(savedDto));
             } catch (Exception e) {

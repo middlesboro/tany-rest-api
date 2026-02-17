@@ -8,10 +8,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-public class Carrier implements BaseEntity {
-
-    @Id
-    private String id;
+public class Carrier extends BaseEntity {
     private Long prestashopId;
     private Integer iskladId;
     private String name;
@@ -21,22 +18,10 @@ public class Carrier implements BaseEntity {
     private String image;
     private List<CarrierPriceRange> ranges;
     private boolean selected;
-    private Instant createdDate;
-    private Instant updateDate;
-
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
-    }
-
     @Override
     public Object getSortValue(String field) {
         if ("order".equals(field)) return order;
         if ("name".equals(field)) return name;
-        return BaseEntity.super.getSortValue(field);
+        return super.getSortValue(field);
     }
 }

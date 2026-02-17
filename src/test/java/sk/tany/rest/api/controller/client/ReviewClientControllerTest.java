@@ -11,6 +11,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.web.servlet.MockMvc;
 import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
+import sk.tany.rest.api.config.security.MagicLinkLoginFilter;
+import sk.tany.rest.api.domain.auth.MagicLinkTokenRepository;
+import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
 import sk.tany.rest.api.dto.client.review.ReviewClientCreateRequest;
 import sk.tany.rest.api.dto.client.review.ReviewClientProductResponse;
@@ -46,6 +49,24 @@ class ReviewClientControllerTest {
 
     @MockBean
     private SecurityContextRepository securityContextRepository;
+
+    @MockBean
+    private MagicLinkTokenRepository magicLinkTokenRepository;
+
+    @MockBean
+    private CustomerRepository customerRepository;
+
+    @MockBean
+    private MagicLinkLoginFilter magicLinkLoginFilter;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() throws Exception {
+        org.mockito.Mockito.doAnswer(invocation -> {
+            jakarta.servlet.FilterChain chain = invocation.getArgument(2);
+            chain.doFilter(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        }).when(magicLinkLoginFilter).doFilter(any(), any(), any());
+    }
 
     @Test
     @WithMockUser

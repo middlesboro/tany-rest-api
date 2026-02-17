@@ -153,14 +153,14 @@ class ProductAdminServiceImplTest {
         dto.setId("1");
         dto.setTitle("Test Product");
 
-        when(productSearchEngine.searchAndSort(query)).thenReturn(List.of(product));
+        when(productSearchEngine.searchAndSort(eq(query), anyBoolean())).thenReturn(List.of(product));
         when(productMapper.toAdminDto(product)).thenReturn(dto);
 
         List<ProductAdminDto> result = productAdminService.searchByQuery(query);
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getTitle()).isEqualTo("Test Product");
-        verify(productSearchEngine).searchAndSort(query);
+        verify(productSearchEngine).searchAndSort(eq(query), anyBoolean());
     }
 
     @Test

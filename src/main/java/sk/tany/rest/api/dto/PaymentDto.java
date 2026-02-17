@@ -18,7 +18,7 @@ public class PaymentDto {
     private BigDecimal priceWithoutVat;
     private BigDecimal vatValue;
     private PaymentType type;
-    private Instant createdDate;
+    private Instant createDate;
     private Instant updateDate;
     private boolean selected;
 }

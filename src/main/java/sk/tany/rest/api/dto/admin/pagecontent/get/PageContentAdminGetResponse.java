@@ -12,6 +12,6 @@ public class PageContentAdminGetResponse {
     private String metaDescription;
     private String slug;
     private boolean visible;
-    private Instant createdDate;
+    private Instant createDate;
     private Instant updateDate;
 }

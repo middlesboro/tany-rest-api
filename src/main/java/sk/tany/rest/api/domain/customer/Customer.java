@@ -7,10 +7,7 @@ import sk.tany.rest.api.domain.BaseEntity;
 import java.time.Instant;
 
 @Data
-public class Customer implements BaseEntity {
-
-    @Id
-    private String id;
+public class Customer extends BaseEntity {
     private String email;
     private String firstname;
     private String lastname;
@@ -20,25 +17,13 @@ public class Customer implements BaseEntity {
     private Address invoiceAddress;
     private Address deliveryAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
-    private Instant createdDate;
-    private Instant updateDate;
-
     @Override
     public Object getSortValue(String field) {
         switch (field) {
             case "firstname": return firstname;
             case "lastname": return lastname;
             case "email": return email;
-            default: return BaseEntity.super.getSortValue(field);
+            default: return super.getSortValue(field);
         }
-    }
-
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
     }
 }
