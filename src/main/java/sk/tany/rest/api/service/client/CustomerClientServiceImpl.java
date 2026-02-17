@@ -7,6 +7,9 @@ import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.cartdiscount.DiscountType;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
+import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.CarrierDto;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
@@ -38,6 +41,7 @@ public class CustomerClientServiceImpl implements CustomerClientService {
     private final ProductClientService productService;
     private final CarrierClientService carrierService;
     private final PaymentClientService paymentService;
+    private final ShopSettingsRepository shopSettingsRepository;
     private final SecurityUtil securityUtil;
 
     public CustomerContextDto getCustomerContext(String cartId) {
@@ -78,6 +82,23 @@ public class CustomerClientServiceImpl implements CustomerClientService {
                 cartDto.setDeliveryAddress(customerDto.getDeliveryAddress());
             } // save just in case if something was changed
             cartDto = cartService.save(cartDto);
+        } else {
+            if (cartDto.getDeliveryAddress() == null) {
+                AddressDto addressDto = new AddressDto();
+                cartDto.setDeliveryAddress(addressDto);
+            }
+            if (cartDto.getInvoiceAddress() == null) {
+                AddressDto addressDto = new AddressDto();
+                cartDto.setInvoiceAddress(addressDto);
+            }
+
+            ShopSettings shopSettings = shopSettingsRepository.getFirstShopSettings();
+            if (cartDto.getDeliveryAddress().getCountry() == null) {
+                cartDto.getDeliveryAddress().setCountry(shopSettings.getDefaultCountry());
+            }
+            if (cartDto.getInvoiceAddress().getCountry() == null) {
+                cartDto.getInvoiceAddress().setCountry(shopSettings.getDefaultCountry());
+            }
         }
 
         CustomerContextCartDto customerContextCartDto = new CustomerContextCartDto();
