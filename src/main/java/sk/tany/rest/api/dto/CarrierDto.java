@@ -22,7 +22,7 @@ public class CarrierDto {
     private BigDecimal price;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<CarrierPriceRangeDto> ranges;
-    private Instant createdDate;
+    private Instant createDate;
     private Instant updateDate;
     private boolean selected;
 }
