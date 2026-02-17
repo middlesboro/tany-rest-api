@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.filter.FilterParameter;
@@ -20,6 +21,7 @@ import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
+import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
@@ -465,5 +467,41 @@ class ProductSearchEngineTest {
         assertTrue(result.stream().anyMatch(f -> f.getId().equals("brand")));
         assertTrue(result.stream().anyMatch(f -> f.getId().equals("AVAILABILITY")));
         assertFalse(result.stream().anyMatch(f -> f.getId().equals("color")));
+    }
+
+    @Test
+    void search_ShouldFilterByProductIdentifier() {
+        product1.setProductIdentifier(100L);
+        product2.setProductIdentifier(200L);
+        product3.setProductIdentifier(300L);
+
+        productSearchEngine.loadProducts();
+
+        ProductFilter filter = new ProductFilter(null, null, null, null, null, null, null, 200L, null);
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Product> result = productSearchEngine.search(filter, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("p2", result.getContent().getFirst().getId());
+    }
+
+    @Test
+    void search_ShouldSortByProductIdentifier() {
+        product1.setProductIdentifier(300L);
+        product2.setProductIdentifier(100L);
+        product3.setProductIdentifier(200L);
+
+        productSearchEngine.loadProducts();
+
+        ProductFilter filter = new ProductFilter(null, null, null, null, null, null, null, null, null);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("productIdentifier").ascending());
+
+        Page<Product> result = productSearchEngine.search(filter, pageable);
+
+        assertEquals(3, result.getTotalElements());
+        assertEquals("p2", result.getContent().get(0).getId()); // 100L
+        assertEquals("p3", result.getContent().get(1).getId()); // 200L
+        assertEquals("p1", result.getContent().get(2).getId()); // 300L
     }
 }

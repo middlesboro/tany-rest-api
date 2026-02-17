@@ -72,6 +72,7 @@ public class Product implements BaseEntity {
             case "price": return price;
             case "active": return active;
             case "quantity": return quantity;
+            case "productIdentifier": return productIdentifier;
             default: return BaseEntity.super.getSortValue(field);
         }
     }

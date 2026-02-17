@@ -57,7 +57,7 @@ public class HomepageClientServiceImpl implements HomepageClientService {
         Stream<Product> productStream = Stream.empty();
 
         if (StringUtils.hasText(grid.getBrandId())) {
-            ProductFilter filter = new ProductFilter(null, null, null, grid.getBrandId(), null, null, null, null);
+            ProductFilter filter = new ProductFilter(null, null, null, grid.getBrandId(), null, null, null, null, null);
             productStream = productSearchEngine.search(filter, Pageable.unpaged()).getContent().stream();
         } else if (StringUtils.hasText(grid.getCategoryId())) {
             productStream = productSearchEngine.search(grid.getCategoryId(), null).stream();
