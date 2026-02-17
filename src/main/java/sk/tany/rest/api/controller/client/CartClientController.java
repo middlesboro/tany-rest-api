@@ -1,6 +1,5 @@
 package sk.tany.rest.api.controller.client;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,7 +33,7 @@ public class CartClientController {
     private final CartClientApiMapper cartClientApiMapper;
 
     @PutMapping
-    public ResponseEntity<CartClientUpdateResponse> updateCart(@RequestBody @Valid CartClientUpdateRequest request) {
+    public ResponseEntity<CartClientUpdateResponse> updateCart(@RequestBody CartClientUpdateRequest request) {
         CartDto cartDto = cartService.getOrCreateCart(request.getCartId(), null);
 
         if (request.getItems() != null) {

@@ -12,29 +12,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.BesteronPayment;
 import sk.tany.rest.api.domain.payment.BesteronPaymentRepository;
 import sk.tany.rest.api.domain.payment.PaymentType;
+import sk.tany.rest.api.domain.payment.enums.PaymentStatus;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.dto.OrderItemDto;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentRequest;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
-import sk.tany.rest.api.domain.payment.enums.PaymentStatus;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTransactionResponse;
 import sk.tany.rest.api.event.OrderStatusChangedEvent;
-import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 import sk.tany.rest.api.exception.PaymentException;
-import sk.tany.rest.api.exception.CustomerException;
+import sk.tany.rest.api.service.client.payment.PaymentTypeService;
 import sk.tany.rest.api.service.common.EmailService;
-import sk.tany.rest.api.domain.order.Order;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -177,9 +175,6 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     }
 
     private String createPaymentIntent(OrderDto order, String token) {
-        Customer customer = customerRepository.findById(order.getCustomerId())
-                .orElseThrow(() -> new CustomerException.NotFound("Customer not found for order: " + order.getId()));
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -211,9 +206,9 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
                         .notificationUrl(notificationUrl)
                         .build())
                 .buyer(BesteronIntentRequest.Buyer.builder()
-                        .email(customer.getEmail())
-                        .firstName(customer.getFirstname())
-                        .lastName(customer.getLastname())
+                        .email(order.getEmail())
+                        .firstName(order.getFirstname())
+                        .lastName(order.getLastname())
                         .build())
                 .build();
 
