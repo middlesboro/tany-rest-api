@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import sk.tany.rest.api.dto.AddressDto;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -31,12 +30,20 @@ public class CartClientUpdateRequest {
     private String email;
     private String phone;
     @Valid
-    private AddressDto invoiceAddress;
+    private CartAddressDto invoiceAddress;
     @Valid
-    private AddressDto deliveryAddress;
+    private CartAddressDto deliveryAddress;
     private Boolean discountForNewsletter;
     private Instant createDate;
     private Instant updateDate;
+
+    public void setEmail(String email) {
+        if (email == null || email.isBlank()) {
+            this.email = null;
+        } else {
+            this.email = email;
+        }
+    }
 
     @Data
     @NoArgsConstructor
@@ -55,5 +62,15 @@ public class CartClientUpdateRequest {
             this.productId = productId;
             this.quantity = quantity;
         }
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CartAddressDto {
+        private String street;
+        private String city;
+        private String zip;
+        private String country;
     }
 }
