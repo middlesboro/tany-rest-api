@@ -10,14 +10,9 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
-public class Product implements BaseEntity {
-
-    @Id
-    private String id;
+public class Product extends BaseEntity {
     @Indexed(unique = true)
     private Long productIdentifier;
-    private Instant createDate;
-    private Instant updateDate;
     private String title;
     private String shortDescription;
     private String description;
@@ -47,24 +42,6 @@ public class Product implements BaseEntity {
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
     private BigDecimal discountPriceWithoutVat;
-
-    @Override
-    public void setCreatedDate(Instant date) {
-        this.createDate = date;
-    }
-    @Override
-    public Instant getCreatedDate() {
-        return this.createDate;
-    }
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
-    }
-
     @Override
     public Object getSortValue(String field) {
         switch (field) {
@@ -72,7 +49,7 @@ public class Product implements BaseEntity {
             case "price": return price;
             case "active": return active;
             case "quantity": return quantity;
-            default: return BaseEntity.super.getSortValue(field);
+            default: return super.getSortValue(field);
         }
     }
 }

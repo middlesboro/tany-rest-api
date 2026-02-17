@@ -59,7 +59,7 @@ class ProductClientServiceImplTest {
     @Test
     void findAll_shouldPopulateRating() {
         when(wishlistClientService.getWishlistProductIds()).thenReturn(Collections.emptyList());
-        when(productRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(product)));
+        when(productSearchEngine.findAll(any(Pageable.class), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(new PageImpl<>(List.of(product)));
         when(productMapper.toClientDto(product)).thenReturn(productClientDto);
 
         ProductRatingDto ratingDto = new ProductRatingDto(BigDecimal.valueOf(4.5), 10);

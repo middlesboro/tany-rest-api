@@ -7,6 +7,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.web.servlet.MockMvc;
 
 import sk.tany.rest.api.controller.admin.BrandAdminController;
@@ -15,9 +16,6 @@ import sk.tany.rest.api.service.admin.BrandAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.common.ImageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.context.annotation.Import;
-import sk.tany.rest.api.config.SecurityConfig;
-import sk.tany.rest.api.config.SecurityProperties;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
 import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
@@ -35,7 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BrandAdminController.class)
-@Import({SecurityConfig.class, SecurityProperties.class})
 class BrandAdminControllerTest {
 
     @Autowired
@@ -61,6 +58,9 @@ class BrandAdminControllerTest {
 
     @MockBean
     private AuthorizationServerSettings authorizationServerSettings;
+
+    @MockBean
+    private SecurityContextRepository securityContextRepository;
 
     @Test
     @WithMockUser(roles = "ADMIN")

@@ -112,7 +112,8 @@ class WishlistClientServiceTest {
     @Test
     void getWishlistProductIds_ShouldReturnIds() {
         when(securityUtil.getLoggedInUserId()).thenReturn("cust1");
-        Wishlist wishlist = new Wishlist("1", "cust1", "prod1", null);
+        Wishlist wishlist = new Wishlist("cust1", "prod1");
+        wishlist.setId("1");
         when(wishlistRepository.findByCustomerId("cust1")).thenReturn(Collections.singletonList(wishlist));
 
         List<String> result = wishlistClientService.getWishlistProductIds();
@@ -135,7 +136,8 @@ class WishlistClientServiceTest {
     void getWishlist_ShouldReturnPageOfProducts() {
         String customerId = "cust1";
         Pageable pageable = PageRequest.of(0, 10);
-        Wishlist wishlist = new Wishlist("1", customerId, "prod1", null);
+        Wishlist wishlist = new Wishlist(customerId, "prod1");
+        wishlist.setId("1");
 
         when(wishlistRepository.findByCustomerId(customerId)).thenReturn(Collections.singletonList(wishlist));
 

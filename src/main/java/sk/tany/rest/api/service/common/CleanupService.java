@@ -36,7 +36,7 @@ public class CleanupService {
     public void cleanupAuthorizationCodes() {
         Instant threshold = Instant.now().minus(30, ChronoUnit.SECONDS);
         List<AuthorizationCode> toDelete = authorizationCodeRepository.findAll().stream()
-                .filter(code -> code.getCreatedDate() != null && code.getCreatedDate().isBefore(threshold))
+                .filter(code -> code.getCreateDate() != null && code.getCreateDate().isBefore(threshold))
                 .toList();
 
         if (!toDelete.isEmpty()) {
@@ -49,7 +49,7 @@ public class CleanupService {
     public void cleanupMagicLinkTokens() {
         Instant threshold = Instant.now().minus(300, ChronoUnit.SECONDS);
         List<MagicLinkToken> toDelete = magicLinkTokenRepository.findAll().stream()
-                .filter(token -> token.getCreatedDate() != null && token.getCreatedDate().isBefore(threshold))
+                .filter(token -> token.getCreateDate() != null && token.getCreateDate().isBefore(threshold))
                 .toList();
 
         if (!toDelete.isEmpty()) {
@@ -62,7 +62,7 @@ public class CleanupService {
     public void cleanupBesteronPayments() {
         Instant threshold = Instant.now().minus(604800, ChronoUnit.SECONDS); // 7 days
         List<BesteronPayment> toDelete = besteronPaymentRepository.findAll().stream()
-                .filter(payment -> payment.getCreatedDate() != null && payment.getCreatedDate().isBefore(threshold))
+                .filter(payment -> payment.getCreateDate() != null && payment.getCreateDate().isBefore(threshold))
                 .toList();
 
         if (!toDelete.isEmpty()) {

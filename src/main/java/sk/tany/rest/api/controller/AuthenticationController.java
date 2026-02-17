@@ -65,7 +65,7 @@ public class AuthenticationController {
             token.setJti(exchangeToken);
             token.setCustomerEmail(email);
             token.setState(MagicLinkTokenState.PENDING);
-            token.setCreatedDate(Instant.now());
+            token.setCreateDate(Instant.now());
             token.setExpiration(Instant.now().plus(5, ChronoUnit.MINUTES));
             magicLinkTokenRepository.save(token);
 
