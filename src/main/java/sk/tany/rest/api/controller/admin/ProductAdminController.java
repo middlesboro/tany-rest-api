@@ -1,5 +1,6 @@
 package sk.tany.rest.api.controller.admin;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -112,7 +113,7 @@ public class ProductAdminController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductUpdateResponse> updateProduct(@PathVariable String id, @RequestBody ProductUpdateRequest product) {
+    public ResponseEntity<ProductUpdateResponse> updateProduct(@PathVariable String id, @Valid @RequestBody ProductUpdateRequest product) {
         ProductAdminDto productDto = productAdminApiMapper.toDto(product);
         ProductAdminDto updatedProduct = productService.update(id, productDto);
         return ResponseEntity.ok(productAdminApiMapper.toUpdateResponse(updatedProduct));

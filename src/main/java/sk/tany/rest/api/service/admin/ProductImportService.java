@@ -113,10 +113,15 @@ public class ProductImportService {
         Long productIdentifier = Long.parseLong(idProductStr);
 
         Optional<Product> existingProductOpt = productRepository.findByProductIdentifier(productIdentifier);
+        if (existingProductOpt.isEmpty()) {
+            existingProductOpt = productRepository.findBySlug(baseData.getLinkRewrite());
+        }
+
         if (existingProductOpt.isPresent()) {
             Product existingProduct = existingProductOpt.get();
             if (StringUtils.isNotBlank(baseData.getStockQty())) {
                 existingProduct.setQuantity(Integer.parseInt(baseData.getStockQty()));
+                existingProduct.setProductIdentifier(productIdentifier);
                 Product savedProduct = productRepository.save(existingProduct);
                 productSearchEngine.updateProduct(savedProduct);
             }
