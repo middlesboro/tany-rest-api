@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -56,7 +57,7 @@ public class CartAdminServiceImpl implements CartAdminService {
         Query query = new Query();
 
         if (cartId != null && !cartId.isEmpty()) {
-            query.addCriteria(Criteria.where("cartId").regex(cartId, "i"));
+            query.addCriteria(Criteria.where("id").regex(Pattern.quote(cartId), "i"));
         }
 
         if (customerName != null && !customerName.isEmpty()) {
@@ -64,8 +65,8 @@ public class CartAdminServiceImpl implements CartAdminService {
             List<Criteria> criteriaList = new ArrayList<>();
             for (String part : parts) {
                 criteriaList.add(new Criteria().orOperator(
-                        Criteria.where("firstname").regex(part, "i"),
-                        Criteria.where("lastname").regex(part, "i")
+                        Criteria.where("firstname").regex(Pattern.quote(part), "i"),
+                        Criteria.where("lastname").regex(Pattern.quote(part), "i")
                 ));
             }
             if (!criteriaList.isEmpty()) {
@@ -73,11 +74,15 @@ public class CartAdminServiceImpl implements CartAdminService {
             }
         }
 
-        if (dateFrom != null) {
-            query.addCriteria(Criteria.where("createDate").gte(dateFrom.atStartOfDay(ZoneId.systemDefault()).toInstant()));
-        }
-        if (dateTo != null) {
-            query.addCriteria(Criteria.where("createDate").lte(dateTo.atStartOfDay(ZoneId.systemDefault()).plusDays(1).toInstant()));
+        if (dateFrom != null || dateTo != null) {
+            Criteria createDateCriteria = Criteria.where("createDate");
+            if (dateFrom != null) {
+                createDateCriteria.gte(dateFrom.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            }
+            if (dateTo != null) {
+                createDateCriteria.lte(dateTo.atStartOfDay(ZoneId.systemDefault()).plusDays(1).toInstant());
+            }
+            query.addCriteria(createDateCriteria);
         }
 
         long count = mongoTemplate.count(query, Cart.class);
