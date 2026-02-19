@@ -69,11 +69,7 @@ public class SecurityConfig {
     private final JwkKeyRepository jwkKeyRepository;
     private final SecurityProperties securityProperties;
 
-    @Value("${eshop.frontend-url}")
-    private String frontendUrl;
-
-    @Value("${eshop.frontend-admin-url}")
-    private String frontendAdminUrl;
+    private final EshopConfig eshopConfig;
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -91,7 +87,7 @@ public class SecurityConfig {
         http.addFilterBefore(magicLinkLoginFilter, SecurityContextHolderFilter.class);
 
         http.exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint(frontendUrl + "/login"))
+                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint(eshopConfig.getFrontendUrl() + "/login"))
         );
 
         http.securityContext(context -> context.securityContextRepository(repo));
@@ -141,8 +137,8 @@ public class SecurityConfig {
 
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient publicClient = createClient("public-client", frontendUrl, "openid", "profile");
-        RegisteredClient adminClient = createClient("admin-client", frontendAdminUrl, "openid", "profile");
+        RegisteredClient publicClient = createClient("public-client", eshopConfig.getFrontendUrl(), "openid", "profile");
+        RegisteredClient adminClient = createClient("admin-client", eshopConfig.getFrontendAdminUrl(), "openid", "profile");
         return new InMemoryRegisteredClientRepository(publicClient, adminClient);
     }
 

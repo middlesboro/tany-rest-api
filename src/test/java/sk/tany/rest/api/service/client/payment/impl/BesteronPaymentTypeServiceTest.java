@@ -5,6 +5,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -36,6 +38,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class BesteronPaymentTypeServiceTest {
 
     @Mock
@@ -50,6 +53,9 @@ class BesteronPaymentTypeServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private sk.tany.rest.api.config.BesteronConfig besteronConfig;
+
     @InjectMocks
     private BesteronPaymentTypeService service;
 
@@ -61,11 +67,11 @@ class BesteronPaymentTypeServiceTest {
     @Test
     void getPaymentInfo_SuccessfulFlow() {
         // Arrange
-        ReflectionTestUtils.setField(service, "clientId", "testClient");
-        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
-        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
-        ReflectionTestUtils.setField(service, "returnUrl", "http://return.com");
-        ReflectionTestUtils.setField(service, "notificationUrl", "http://notification.com");
+        when(besteronConfig.getClientId()).thenReturn("testClient");
+        when(besteronConfig.getClientSecret()).thenReturn("testSecret");
+        when(besteronConfig.getBaseUrl()).thenReturn("http://test.com");
+        when(besteronConfig.getReturnUrl()).thenReturn("http://return.com");
+        when(besteronConfig.getNotificationUrl()).thenReturn("http://notification.com");
 
         OrderDto order = new OrderDto();
         order.setId("order1");
@@ -90,11 +96,11 @@ class BesteronPaymentTypeServiceTest {
         PaymentDto payment = new PaymentDto();
 
         BesteronTokenResponse tokenResponse = new BesteronTokenResponse("token123", 3600, "bearer");
-        when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))
+        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))
                 .thenReturn(ResponseEntity.ok(tokenResponse));
 
         BesteronIntentResponse intentResponse = new BesteronIntentResponse("http://payment.link", "trans123");
-        when(restTemplate.postForEntity(eq("http://test.com/api/payment-intent"), any(HttpEntity.class), eq(BesteronIntentResponse.class)))
+        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/payment-intent"), any(HttpEntity.class), eq(BesteronIntentResponse.class)))
                 .thenReturn(ResponseEntity.ok(intentResponse));
 
         // Act
@@ -110,9 +116,9 @@ class BesteronPaymentTypeServiceTest {
     @Test
     void checkStatus_UpdatesOrderWhenCompleted() {
         // Arrange
-        ReflectionTestUtils.setField(service, "clientId", "testClient");
-        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
-        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
+        when(besteronConfig.getClientId()).thenReturn("testClient");
+        when(besteronConfig.getApiKey()).thenReturn("testSecret");
+        when(besteronConfig.getVerifyUrl()).thenReturn("http://test.com");
 
         String orderId = "order1";
         BesteronPayment besteronPayment = new BesteronPayment();
@@ -121,7 +127,7 @@ class BesteronPaymentTypeServiceTest {
         when(besteronPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId)).thenReturn(Optional.of(besteronPayment));
 
         BesteronTokenResponse tokenResponse = new BesteronTokenResponse("token123", 3600, "bearer");
-        when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))
+        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))
                 .thenReturn(ResponseEntity.ok(tokenResponse));
 
         BesteronTransactionResponse.Transaction transaction = new BesteronTransactionResponse.Transaction();
@@ -129,7 +135,7 @@ class BesteronPaymentTypeServiceTest {
         BesteronTransactionResponse statusResponse = new BesteronTransactionResponse();
         statusResponse.setTransaction(transaction);
 
-        when(restTemplate.postForEntity(eq("http://test.com/api/payment-intents/trans123"), any(HttpEntity.class), eq(BesteronTransactionResponse.class)))
+        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/payment-intents/trans123"), any(HttpEntity.class), eq(BesteronTransactionResponse.class)))
                 .thenReturn(ResponseEntity.ok(statusResponse));
 
         Order order = new Order();
@@ -151,9 +157,9 @@ class BesteronPaymentTypeServiceTest {
     @Test
     void checkStatus_NoUpdateWhenNotCompleted() {
         // Arrange
-        ReflectionTestUtils.setField(service, "clientId", "testClient");
-        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
-        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
+        when(besteronConfig.getClientId()).thenReturn("testClient");
+        when(besteronConfig.getApiKey()).thenReturn("testSecret");
+        when(besteronConfig.getVerifyUrl()).thenReturn("http://test.com");
 
         String orderId = "order1";
         BesteronPayment besteronPayment = new BesteronPayment();
@@ -162,7 +168,7 @@ class BesteronPaymentTypeServiceTest {
         when(besteronPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId)).thenReturn(Optional.of(besteronPayment));
 
         BesteronTokenResponse tokenResponse = new BesteronTokenResponse("token123", 3600, "bearer");
-        when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))
+        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))
                 .thenReturn(ResponseEntity.ok(tokenResponse));
 
         BesteronTransactionResponse.Transaction transaction = new BesteronTransactionResponse.Transaction();
@@ -170,7 +176,7 @@ class BesteronPaymentTypeServiceTest {
         BesteronTransactionResponse statusResponse = new BesteronTransactionResponse();
         statusResponse.setTransaction(transaction);
 
-        when(restTemplate.postForEntity(eq("http://test.com/api/payment-intents/trans123"), any(HttpEntity.class), eq(BesteronTransactionResponse.class)))
+        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/payment-intents/trans123"), any(HttpEntity.class), eq(BesteronTransactionResponse.class)))
                 .thenReturn(ResponseEntity.ok(statusResponse));
 
         // Act

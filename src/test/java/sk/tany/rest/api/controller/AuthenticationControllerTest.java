@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "prestashop.url=http://mock-prestashop.com",
         "prestashop.key=mock-key",
         "eshop.frontend-url=http://127.0.0.1:3001",
+        "eshop.frontend-admin-url=http://127.0.0.1:3002",
         "eshop.base-url=http://localhost:8080"
 })
 @EnableAutoConfiguration(exclude = {
@@ -51,7 +52,7 @@ public class AuthenticationControllerTest {
     @MockBean
     private EmailService emailService;
 
-    @MockBean
+    @Autowired
     private ShopSettingsRepository shopSettingsRepository;
 
     @MockBean
