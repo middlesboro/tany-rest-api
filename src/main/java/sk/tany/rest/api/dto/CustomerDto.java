@@ -14,4 +14,6 @@ public class CustomerDto {
     private Role role;
     private AddressDto invoiceAddress;
     private AddressDto deliveryAddress;
+    private String preferredPacketaBranchId;
+    private String preferredBalikovoBranchId;
 }

@@ -12,13 +12,11 @@
     <artifactId>tany-rest-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>tany-rest-api</name>
-    <description>Demo project for Spring Boot</description>
+    <description>Tany rest api</description>
     <properties>
         <java.version>21</java.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <lombok.version>1.18.30</lombok.version>
-        <nitrite.version>4.2.0</nitrite.version>
-        <okio.version>3.6.0</okio.version> <!-- Force recent Okio version -->
     </properties>
 
     <repositories>
