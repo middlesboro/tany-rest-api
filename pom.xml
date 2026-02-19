@@ -17,6 +17,23 @@
         <java.version>21</java.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <lombok.version>1.18.30</lombok.version>
+        <okhttp.version>4.12.0</okhttp.version>
+        <imagekit.version>2.0.1</imagekit.version>
+        <mailersend.version>1.4.1</mailersend.version>
+        <jjwt.version>0.11.5</jjwt.version>
+        <springdoc.version>2.8.3</springdoc.version>
+        <openpdf.version>3.0.0</openpdf.version>
+        <commons-text.version>1.12.0</commons-text.version>
+        <commons-lang3.version>3.20.0</commons-lang3.version>
+        <langchain4j.version>1.11.0</langchain4j.version>
+        <langchain4j-experimental.version>1.11.0-beta19</langchain4j-experimental.version>
+        <microsoft-graph.version>6.13.0</microsoft-graph.version>
+        <azure-identity.version>1.13.0</azure-identity.version>
+        <resilience4j.version>2.2.0</resilience4j.version>
+        <zxing.version>3.5.3</zxing.version>
+        <xz.version>1.10</xz.version>
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     </properties>
 
     <repositories>
@@ -52,7 +69,7 @@
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
-            <version>4.12.0</version>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -80,7 +97,7 @@
         <dependency>
             <groupId>com.github.imagekit-developer</groupId>
             <artifactId>imagekit-java</artifactId>
-            <version>2.0.1</version>
+            <version>${imagekit.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.squareup.okio</groupId>
@@ -91,79 +108,79 @@
         <dependency>
             <groupId>com.mailersend</groupId>
             <artifactId>java-sdk</artifactId>
-            <version>1.4.1</version>
+            <version>${mailersend.version}</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.11.5</version>
+            <version>${jjwt.version}</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.11.5</version>
+            <version>${jjwt.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>0.11.5</version>
+            <version>${jjwt.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.8.3</version>
+            <version>${springdoc.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>
-            <version>3.0.0</version>
+            <version>${openpdf.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>1.12.0</version>
+            <version>${commons-text.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.20.0</version>
+            <version>${commons-lang3.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-core</artifactId>
-            <version>1.11.0</version>
+            <version>${langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-embeddings-bge-small-en-v15-q</artifactId>
-            <version>1.11.0-beta19</version>
+            <version>${langchain4j-experimental.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j</artifactId>
-            <version>1.11.0</version>
+            <version>${langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-mongodb-atlas</artifactId>
-            <version>1.11.0-beta19</version>
+            <version>${langchain4j-experimental.version}</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.graph</groupId>
             <artifactId>microsoft-graph</artifactId>
-            <version>6.13.0</version>
+            <version>${microsoft-graph.version}</version>
         </dependency>
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-identity</artifactId>
-            <version>1.13.0</version>
+            <version>${azure-identity.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-spring-boot3</artifactId>
-            <version>2.2.0</version>
+            <version>${resilience4j.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
@@ -172,17 +189,17 @@
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
-            <version>3.5.3</version>
+            <version>${zxing.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>
-            <version>3.5.3</version>
+            <version>${zxing.version}</version>
         </dependency>
         <dependency>
             <groupId>org.tukaani</groupId>
             <artifactId>xz</artifactId>
-            <version>1.10</version>
+            <version>${xz.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -195,7 +212,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <source>21</source>
                     <target>21</target>
@@ -203,17 +220,17 @@
                         <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
-                            <version>1.5.5.Final</version>
+                            <version>${org.mapstruct.version}</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
+                            <version>${lombok.version}</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok-mapstruct-binding</artifactId>
-                            <version>0.2.0</version>
+                            <version>${lombok-mapstruct-binding.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
