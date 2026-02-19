@@ -17,8 +17,6 @@
         <java.version>21</java.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <lombok.version>1.18.30</lombok.version>
-        <nitrite.version>4.2.0</nitrite.version>
-        <okio.version>3.6.0</okio.version> <!-- Force recent Okio version -->
         <okhttp.version>4.12.0</okhttp.version>
         <imagekit.version>2.0.1</imagekit.version>
         <mailersend.version>1.4.1</mailersend.version>
