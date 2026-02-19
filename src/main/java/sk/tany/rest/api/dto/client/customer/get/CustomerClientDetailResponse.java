@@ -13,5 +13,7 @@ public class CustomerClientDetailResponse {
     private AddressDto invoiceAddress;
     private AddressDto deliveryAddress;
     private String preferredPacketaBranchId;
+    private String preferredPacketaBranchName;
     private String preferredBalikovoBranchId;
+    private String preferredBalikovoBranchName;
 }

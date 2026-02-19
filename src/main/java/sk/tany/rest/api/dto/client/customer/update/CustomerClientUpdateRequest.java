@@ -14,5 +14,7 @@ public class CustomerClientUpdateRequest {
     @Valid
     private AddressDto deliveryAddress;
     private String preferredPacketaBranchId;
+    private String preferredPacketaBranchName;
     private String preferredBalikovoBranchId;
+    private String preferredBalikovoBranchName;
 }

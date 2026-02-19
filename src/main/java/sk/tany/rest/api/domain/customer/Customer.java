@@ -15,7 +15,9 @@ public class Customer extends BaseEntity {
     private Address deliveryAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
     private String preferredPacketaBranchId;
+    private String preferredPacketaBranchName;
     private String preferredBalikovoBranchId;
+    private String preferredBalikovoBranchName;
     @Override
     public Object getSortValue(String field) {
         switch (field) {
