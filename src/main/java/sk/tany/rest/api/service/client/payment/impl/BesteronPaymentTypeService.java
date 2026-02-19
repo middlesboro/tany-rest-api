@@ -49,28 +49,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     private final BesteronPaymentRepository besteronPaymentRepository;
     private final OrderRepository orderRepository;
     private final ApplicationEventPublisher eventPublisher;
-
-    // TODO add to config class
-    @Value("${besteron.client-id}")
-    private String clientId;
-
-    @Value("${besteron.client-secret}")
-    private String clientSecret;
-
-    @Value("${besteron.api-key}")
-    private String apiKey;
-
-    @Value("${besteron.base-url}")
-    private String baseUrl;
-
-    @Value("${besteron.verify-url}")
-    private String verifyUrl;
-
-    @Value("${besteron.return-url}")
-    private String returnUrl;
-
-    @Value("${besteron.notification-url}")
-    private String notificationUrl;
+    private final sk.tany.rest.api.config.BesteronConfig besteronConfig;
 
     @Override
     public PaymentType getSupportedType() {
@@ -104,7 +83,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
             HttpEntity<Void> request = new HttpEntity<>(headers);
 
             ResponseEntity<BesteronTransactionResponse> response = restTemplate.postForEntity(
-                    verifyUrl + "/api/payment-intents/" + payment.getTransactionId(),
+                    besteronConfig.getVerifyUrl() + "/api/payment-intents/" + payment.getTransactionId(),
                     request,
                     BesteronTransactionResponse.class
             );
@@ -159,16 +138,16 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
         String besteronBaseUrl;
         String secret;
         if (type == BesteronUrlType.BASE) {
-            besteronBaseUrl = baseUrl;
-            secret = clientSecret;
+            besteronBaseUrl = besteronConfig.getBaseUrl();
+            secret = besteronConfig.getClientSecret();
         } else {
-            besteronBaseUrl = verifyUrl;
-            secret = apiKey;
+            besteronBaseUrl = besteronConfig.getVerifyUrl();
+            secret = besteronConfig.getApiKey();
         }
 
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.add("grant_type", "client_credentials");
-        map.add("client_id", clientId);
+        map.add("client_id", besteronConfig.getClientId());
         map.add("client_secret", secret);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
@@ -214,8 +193,8 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
                 .paymentMethods(List.of("GIBASKBX", "POBNSKBA", "SUBASKBX", "TATRSKBX", "UNCRSKBX", "VIAMO"))
                 .items(items)
                 .callback(BesteronIntentRequest.Callback.builder()
-                        .returnUrl(returnUrl)
-                        .notificationUrl(notificationUrl)
+                        .returnUrl(besteronConfig.getReturnUrl())
+                        .notificationUrl(besteronConfig.getNotificationUrl())
                         .build())
                 .buyer(BesteronIntentRequest.Buyer.builder()
                         .email(order.getEmail())
@@ -227,7 +206,7 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
         HttpEntity<BesteronIntentRequest> request = new HttpEntity<>(intentRequest, headers);
 
         ResponseEntity<BesteronIntentResponse> response = restTemplate.postForEntity(
-                baseUrl + "/api/payment-intent",
+                besteronConfig.getBaseUrl() + "/api/payment-intent",
                 request,
                 BesteronIntentResponse.class
         );

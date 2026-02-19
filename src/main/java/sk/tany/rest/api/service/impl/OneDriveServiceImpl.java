@@ -25,29 +25,21 @@ import java.util.List;
 @Slf4j
 public class OneDriveServiceImpl implements OneDriveService {
 
-    @Value("${onedrive.client-id:}")
-    private String clientId;
-
-    @Value("${onedrive.client-secret:}")
-    private String clientSecret;
-
-    @Value("${onedrive.refresh-token:}")
-    private String refreshToken;
-
+    private final sk.tany.rest.api.config.OneDriveConfig oneDriveConfig;
     private final OneDriveTokenRepository oneDriveTokenRepository;
     private GraphServiceClient graphClient;
     private static final String TOKEN_ID = "onedrive_token";
 
     @PostConstruct
     public void init() {
-        if (clientId == null || clientId.isEmpty()) {
+        if (oneDriveConfig.getClientId() == null || oneDriveConfig.getClientId().isEmpty()) {
             log.warn("OneDrive client-id is missing. OneDrive integration will be disabled.");
             return;
         }
         try {
             String resolvedToken = loadPersistedToken();
             if (resolvedToken == null || resolvedToken.isEmpty()) {
-                resolvedToken = refreshToken;
+                resolvedToken = oneDriveConfig.getRefreshToken();
             }
 
             if (resolvedToken == null || resolvedToken.isEmpty()) {
@@ -55,7 +47,7 @@ public class OneDriveServiceImpl implements OneDriveService {
                 return;
             }
 
-            OneDriveTokenCredential credential = new OneDriveTokenCredential(clientId, clientSecret, resolvedToken, this::persistToken);
+            OneDriveTokenCredential credential = new OneDriveTokenCredential(oneDriveConfig.getClientId(), oneDriveConfig.getClientSecret(), resolvedToken, this::persistToken);
             graphClient = new GraphServiceClient(credential, "https://graph.microsoft.com/.default");
             log.info("Initialized OneDrive service with Personal Account (RefreshToken flow)");
         } catch (Exception e) {

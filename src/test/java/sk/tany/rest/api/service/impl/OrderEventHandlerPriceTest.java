@@ -55,17 +55,28 @@ class OrderEventHandlerPriceTest {
     private InvoiceService invoiceService;
     @Mock
     private ResourceLoader resourceLoader;
+    @Mock
+    private sk.tany.rest.api.config.EshopConfig eshopConfig;
+    @Mock
+    private sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository shopSettingsRepository;
+    @Mock
+    private sk.tany.rest.api.service.client.ProductClientService productClientService;
 
     @InjectMocks
     private OrderEventHandler orderEventHandler;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(orderEventHandler, "frontendUrl", "http://localhost:3000");
+        lenient().when(eshopConfig.getFrontendUrl()).thenReturn("http://localhost:3000");
         Resource pdfResource = new ByteArrayResource("dummy pdf".getBytes());
         lenient().when(resourceLoader.getResource("classpath:formular-na-odstupenie-od-zmluvy-tany.sk.pdf")).thenReturn(pdfResource);
         lenient().when(resourceLoader.getResource("classpath:obchodne-podmienky.pdf")).thenReturn(pdfResource);
         lenient().when(invoiceService.generateInvoice(anyString())).thenReturn(new byte[0]);
+
+        sk.tany.rest.api.domain.shopsettings.ShopSettings settings = new sk.tany.rest.api.domain.shopsettings.ShopSettings();
+        settings.setShopEmail("test@test.com");
+        settings.setShopPhoneNumber("123456789");
+        lenient().when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
     }
 
     @Test

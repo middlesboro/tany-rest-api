@@ -51,8 +51,7 @@ public class OrderEventHandler {
     private final ProductClientService productClientService;
     private final ShopSettingsRepository shopSettingsRepository;
 
-    @Value("${eshop.frontend-url}")
-    private String frontendUrl;
+    private final sk.tany.rest.api.config.EshopConfig eshopConfig;
 
     @EventListener
     public void handleOrderStatusChanged(OrderStatusChangedEvent event) {
@@ -128,7 +127,7 @@ public class OrderEventHandler {
             template = template.replace("{{supportEmail}}", settings.getShopEmail() != null ? settings.getShopEmail() : "");
             template = template.replace("{{supportPhone}}", settings.getShopPhoneNumber() != null ? settings.getShopPhoneNumber() : "");
 
-            String orderConfirmationLink = frontendUrl + "/order/confirmation/" + order.getId();
+            String orderConfirmationLink = eshopConfig.getFrontendUrl() + "/order/confirmation/" + order.getId();
             template = template.replace("{{orderConfirmationLink}}", orderConfirmationLink);
 
             // Products
@@ -284,7 +283,7 @@ public class OrderEventHandler {
 
             String firstname = order.getFirstname() != null ? order.getFirstname() : "Customer";
             String orderIdentifier = order.getOrderIdentifier() != null ? order.getOrderIdentifier().toString() : "";
-            String orderConfirmationLink = frontendUrl + "/order/confirmation/" + order.getId();
+            String orderConfirmationLink = eshopConfig.getFrontendUrl() + "/order/confirmation/" + order.getId();
 
             String body = template
                     .replace("{{firstname}}", firstname)

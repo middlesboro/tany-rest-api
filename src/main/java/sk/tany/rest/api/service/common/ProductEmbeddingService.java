@@ -31,11 +31,8 @@ public class ProductEmbeddingService {
     private final ProductRepository productRepository;
     private final MongoClient mongoClient;
 
-    @Value("${eshop.load-related-products:true}")
-    private boolean loadRelatedProducts;
-
-    @Value("${spring.data.mongodb.database:tany}")
-    private String databaseName;
+    private final sk.tany.rest.api.config.MongoDbConfigProperties mongoDbConfigProperties;
+    private final sk.tany.rest.api.config.EshopConfig eshopConfig;
 
     private static final String COLLECTION_NAME = "product_embeddings";
     private static final String INDEX_NAME = "vector_index";
@@ -49,7 +46,7 @@ public class ProductEmbeddingService {
             log.info("Initializing ProductEmbeddingService connection to MongoDB Atlas...");
             this.embeddingStore = MongoDbEmbeddingStore.builder()
                     .fromClient(mongoClient)
-                    .databaseName(databaseName)
+                    .databaseName(mongoDbConfigProperties.getDatabase())
                     .collectionName(COLLECTION_NAME)
                     .indexName(INDEX_NAME)
                     .createIndex(false) // Assuming index is created in Atlas
