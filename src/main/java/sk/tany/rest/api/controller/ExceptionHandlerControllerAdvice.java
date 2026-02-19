@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import sk.tany.rest.api.exception.AuthenticationException;
 import sk.tany.rest.api.exception.BaseException;
 import sk.tany.rest.api.exception.CartDiscountException;
 import sk.tany.rest.api.exception.CartException;
@@ -68,6 +69,14 @@ public class ExceptionHandlerControllerAdvice {
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception ex) {
         log.error(ex.getMessage(), ex);
         return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler({
+            AuthenticationException.class,
+    })
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(Exception ex) {
+        log.error(ex.getMessage(), ex);
+        return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler({
