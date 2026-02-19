@@ -5,17 +5,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.cart.Cart;
 import sk.tany.rest.api.domain.cart.CartItem;
 import sk.tany.rest.api.domain.cart.CartRepository;
-import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
-import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.admin.cart.list.CartAdminListResponse;
@@ -45,24 +45,78 @@ public class CartAdminServiceImpl implements CartAdminService {
     private final CustomerRepository customerRepository;
     private final CarrierRepository carrierRepository;
     private final PaymentRepository paymentRepository;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public Page<CartAdminListResponse> findAll(String cartId, Long orderIdentifier, String customerName, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
-
-        // OPTIMIZATION 1: Filter by Order Identifier
         if (orderIdentifier != null) {
             return findAllByOrderIdentifier(cartId, orderIdentifier, customerName, dateFrom, dateTo, pageable);
         }
 
-        // OPTIMIZATION 2: Simple Listing (No expensive filtering/sorting)
-        if (customerName == null && !isSortedByDerivedField(pageable.getSort())) {
-            return findAllSimple(cartId, dateFrom, dateTo, pageable);
+        Query query = new Query();
+
+        if (cartId != null && !cartId.isEmpty()) {
+            query.addCriteria(Criteria.where("cartId").regex(cartId, "i"));
         }
 
-        // FALLBACK: Full In-Memory Join (Required for complex filtering/sorting)
-        // Note: This loads all entities into memory. This is acceptable for the current "In-Memory Repository" architecture
-        // but would require refactoring for a production SQL database with large datasets.
-        return findAllFullJoin(cartId, null, customerName, dateFrom, dateTo, pageable);
+        if (customerName != null && !customerName.isEmpty()) {
+            String[] parts = customerName.split("\\s+");
+            List<Criteria> criteriaList = new ArrayList<>();
+            for (String part : parts) {
+                criteriaList.add(new Criteria().orOperator(
+                        Criteria.where("firstname").regex(part, "i"),
+                        Criteria.where("lastname").regex(part, "i")
+                ));
+            }
+            if (!criteriaList.isEmpty()) {
+                query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
+            }
+        }
+
+        if (dateFrom != null) {
+            query.addCriteria(Criteria.where("createDate").gte(dateFrom.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        }
+        if (dateTo != null) {
+            query.addCriteria(Criteria.where("createDate").lte(dateTo.atStartOfDay(ZoneId.systemDefault()).plusDays(1).toInstant()));
+        }
+
+        long count = mongoTemplate.count(query, Cart.class);
+
+        // Sort logic replacement
+        List<Sort.Order> sortOrders = new ArrayList<>();
+        if (pageable.getSort().isSorted()) {
+            for (Sort.Order order : pageable.getSort()) {
+                if ("customerName".equals(order.getProperty())) {
+                    sortOrders.add(new Sort.Order(order.getDirection(), "lastname"));
+                    sortOrders.add(new Sort.Order(order.getDirection(), "firstname"));
+                } else if ("price".equals(order.getProperty()) || "orderIdentifier".equals(order.getProperty()) || "carrierName".equals(order.getProperty()) || "paymentName".equals(order.getProperty())) {
+                    // Ignore derived fields for DB sort to avoid errors
+                } else {
+                    sortOrders.add(order);
+                }
+            }
+        }
+
+        if (sortOrders.isEmpty()) {
+            // Default sort if none provided or all filtered out
+            sortOrders.add(new Sort.Order(Sort.Direction.DESC, "createDate"));
+        }
+
+        query.with(org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(sortOrders)));
+
+        List<Cart> carts = mongoTemplate.find(query, Cart.class);
+
+        // Fetch related Orders
+        List<String> cartIds = carts.stream().map(Cart::getId).collect(Collectors.toList());
+        Map<String, Order> ordersByCartId = orderRepository.findByCartIdIn(cartIds).stream()
+                .filter(o -> o.getCartId() != null)
+                .collect(Collectors.toMap(Order::getCartId, o -> o, (o1, o2) -> o1));
+
+        List<CartAdminListResponse> content = carts.stream()
+                .map(cart -> mapToResponse(cart, ordersByCartId.get(cart.getId())))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(content, pageable, count);
     }
 
     private Page<CartAdminListResponse> findAllByOrderIdentifier(String cartId, Long orderIdentifier, String customerName, LocalDate createDateFrom, LocalDate createDateTo, Pageable pageable) {
@@ -83,173 +137,6 @@ public class CartAdminServiceImpl implements CartAdminService {
         }
 
         return new PageImpl<>(result, pageable, result.size());
-    }
-
-    private Page<CartAdminListResponse> findAllSimple(String cartId, LocalDate createDateFrom, LocalDate createDateTo, Pageable pageable) {
-        Stream<Cart> stream = cartRepository.findAll().stream();
-
-        if (cartId != null) {
-            stream = stream.filter(c -> c.getId() != null && c.getId().contains(cartId));
-        }
-        if (createDateFrom != null) {
-            stream = stream.filter(c -> c.getCreateDate() != null && !createLocalDateFromInstant(c.getCreateDate()).isBefore(createDateFrom));
-        }
-        if (createDateTo != null) {
-            stream = stream.filter(c -> c.getCreateDate() != null && !createLocalDateFromInstant(c.getCreateDate()).isAfter(createDateTo));
-        }
-
-        List<Cart> filteredCarts = stream.collect(Collectors.toList());
-
-        // Sort Carts
-        if (pageable.getSort().isSorted()) {
-            Comparator<Cart> comparator = null;
-            for (Sort.Order order : pageable.getSort()) {
-                Comparator<Cart> current = null;
-                switch (order.getProperty()) {
-                    case "cartId": current = Comparator.comparing(Cart::getId, Comparator.nullsLast(String::compareTo)); break;
-                    case "createDate": current = Comparator.comparing(Cart::getCreateDate, Comparator.nullsLast(Instant::compareTo)); break;
-                    case "updateDate": current = Comparator.comparing(Cart::getUpdateDate, Comparator.nullsLast(Instant::compareTo)); break;
-                }
-                if (current != null) {
-                    if (order.isDescending()) current = current.reversed();
-                    if (comparator == null) comparator = current;
-                    else comparator = comparator.thenComparing(current);
-                }
-            }
-             if (comparator != null) {
-                filteredCarts.sort(comparator);
-            }
-        } else {
-             filteredCarts.sort(Comparator.comparing(Cart::getCreateDate, Comparator.nullsLast(Comparator.reverseOrder())));
-        }
-
-        // Paginate
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), filteredCarts.size());
-        if (start > filteredCarts.size()) {
-            return new PageImpl<>(Collections.emptyList(), pageable, filteredCarts.size());
-        }
-
-        List<Cart> pageCarts = filteredCarts.subList(start, end);
-
-        // Enrich
-        List<CartAdminListResponse> content = pageCarts.stream()
-                .map(cart -> {
-                    // Fetch related data for this single item
-                    Order order = orderRepository.findByCartId(cart.getId()).orElse(null);
-                    return mapToResponse(cart, order);
-                })
-                .toList();
-
-        return new PageImpl<>(content, pageable, filteredCarts.size());
-    }
-
-    private Page<CartAdminListResponse> findAllFullJoin(String cartId, Long orderIdentifier, String customerName, LocalDate createDateFrom, LocalDate createDateTo, Pageable pageable) {
-        // ... Logic from previous implementation ...
-        // Fetch all data needed for in-memory join
-        List<Cart> allCarts = cartRepository.findAll();
-        List<Order> allOrders = orderRepository.findAll();
-        Map<String, Order> ordersByCartId = allOrders.stream()
-                .filter(o -> o.getCartId() != null)
-                .collect(Collectors.toMap(Order::getCartId, o -> o, (o1, o2) -> o1));
-
-        // Note: For sorting by derived names, we need to resolve all names.
-        // We optimize by fetching all and mapping.
-        List<Customer> allCustomers = customerRepository.findAll();
-        Map<String, Customer> customerMap = allCustomers.stream().collect(Collectors.toMap(Customer::getId, c -> c));
-
-        List<Carrier> allCarriers = carrierRepository.findAll();
-        Map<String, String> carrierNames = allCarriers.stream().collect(Collectors.toMap(Carrier::getId, Carrier::getName));
-
-        List<Payment> allPayments = paymentRepository.findAll();
-        Map<String, String> paymentNames = allPayments.stream().collect(Collectors.toMap(Payment::getId, Payment::getName));
-
-        Stream<CartAdminListResponse> stream = allCarts.stream().map(cart -> {
-            CartAdminListResponse response = mapToResponse(cart, ordersByCartId.get(cart.getId()));
-
-            // Re-resolve names using maps for speed in full join
-             String cId = response.getCustomerId();
-            if (cId != null && customerMap.containsKey(cId)) {
-                Customer c = customerMap.get(cId);
-                response.setCustomerName(c.getFirstname() + " " + c.getLastname());
-            }
-
-            String carId = cart.getSelectedCarrierId();
-            if (carId == null && ordersByCartId.containsKey(cart.getId())) {
-                carId = ordersByCartId.get(cart.getId()).getCarrierId();
-            }
-            if (carId != null) {
-                response.setCarrierName(carrierNames.get(carId));
-            }
-
-            String payId = cart.getSelectedPaymentId();
-            if (payId == null && ordersByCartId.containsKey(cart.getId())) {
-                 payId = ordersByCartId.get(cart.getId()).getPaymentId();
-            }
-            if (payId != null) {
-                response.setPaymentName(paymentNames.get(payId));
-            }
-
-            return response;
-        });
-
-        // Apply filters
-        if (cartId != null) {
-             stream = stream.filter(r -> r.getCartId() != null && r.getCartId().contains(cartId));
-        }
-        if (orderIdentifier != null) {
-            stream = stream.filter(r -> r.getOrderIdentifier() != null && r.getOrderIdentifier().equals(orderIdentifier));
-        }
-        if (customerName != null) {
-            String lowerName = customerName.toLowerCase();
-            stream = stream.filter(r -> r.getCustomerName() != null && r.getCustomerName().toLowerCase().contains(lowerName));
-        }
-        if (createDateFrom != null) {
-            stream = stream.filter(r -> r.getCreateDate() != null && !createLocalDateFromInstant(r.getCreateDate()).isBefore(createDateFrom));
-        }
-        if (createDateTo != null) {
-            stream = stream.filter(r -> r.getCreateDate() != null && !createLocalDateFromInstant(r.getCreateDate()).isAfter(createDateTo));
-        }
-
-        List<CartAdminListResponse> filtered = stream.collect(Collectors.toList());
-
-        // Sort
-        if (pageable.getSort().isSorted()) {
-            Comparator<CartAdminListResponse> comparator = null;
-            for (Sort.Order order : pageable.getSort()) {
-                Comparator<CartAdminListResponse> current = null;
-                switch (order.getProperty()) {
-                    case "cartId": current = Comparator.comparing(CartAdminListResponse::getCartId, Comparator.nullsLast(String::compareTo)); break;
-                    case "orderIdentifier": current = Comparator.comparing(CartAdminListResponse::getOrderIdentifier, Comparator.nullsLast(Long::compareTo)); break;
-                    case "customerName": current = Comparator.comparing(CartAdminListResponse::getCustomerName, Comparator.nullsLast(String::compareTo)); break;
-                    case "price": current = Comparator.comparing(CartAdminListResponse::getPrice, Comparator.nullsLast(BigDecimal::compareTo)); break;
-                    case "createDate": current = Comparator.comparing(CartAdminListResponse::getCreateDate, Comparator.nullsLast(Instant::compareTo)); break;
-                    default: break;
-                }
-                if (current != null) {
-                    if (order.isDescending()) current = current.reversed();
-                    if (comparator == null) comparator = current;
-                    else comparator = comparator.thenComparing(current);
-                }
-            }
-            if (comparator != null) {
-                filtered.sort(comparator);
-            }
-        } else {
-             filtered.sort(Comparator.comparing(CartAdminListResponse::getCreateDate, Comparator.nullsLast(Comparator.reverseOrder())));
-        }
-
-        // Pagination
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), filtered.size());
-        List<CartAdminListResponse> pageContent;
-        if (start > filtered.size()) {
-            pageContent = Collections.emptyList();
-        } else {
-            pageContent = filtered.subList(start, end);
-        }
-
-        return new PageImpl<>(pageContent, pageable, filtered.size());
     }
 
     private CartAdminListResponse mapToResponse(Cart cart, Order order) {
@@ -277,19 +164,21 @@ public class CartAdminServiceImpl implements CartAdminService {
             response.setPrice(total);
         }
 
-        // Resolve Name (Lazy/Single) - Used in Simple Path.
-        // Full Join Path overwrites this with Map-based resolution.
+        // Resolve Name (Lazy/Single)
         if (response.getCustomerName() == null) {
-            String cId = response.getCustomerId();
-            if (cId != null) {
-                customerRepository.findById(cId).ifPresent(c ->
-                    response.setCustomerName(c.getFirstname() + " " + c.getLastname()));
-            }
-            if (response.getCustomerName() == null && order != null && order.getFirstname() != null) {
-                response.setCustomerName(order.getFirstname() + " " + order.getLastname());
-            }
-            if (response.getCustomerName() == null && cart.getFirstname() != null) {
+            if (cart.getFirstname() != null) {
                 response.setCustomerName(cart.getFirstname() + " " + cart.getLastname());
+            }
+            // Fallback to Order or Customer if not in Cart (for backward compatibility)
+            if (response.getCustomerName() == null && order != null && order.getFirstname() != null) {
+                 response.setCustomerName(order.getFirstname() + " " + order.getLastname());
+            }
+            if (response.getCustomerName() == null) {
+                 String cId = response.getCustomerId();
+                if (cId != null) {
+                    customerRepository.findById(cId).ifPresent(c ->
+                        response.setCustomerName(c.getFirstname() + " " + c.getLastname()));
+                }
             }
         }
 
@@ -325,14 +214,6 @@ public class CartAdminServiceImpl implements CartAdminService {
         if (from != null && (r.getCreateDate() == null || createLocalDateFromInstant(r.getCreateDate()).isBefore(from))) return false;
         if (to != null && (r.getCreateDate() == null || createLocalDateFromInstant(r.getCreateDate()).isAfter(to))) return false;
         return true;
-    }
-
-    private boolean isSortedByDerivedField(Sort sort) {
-        if (!sort.isSorted()) return false;
-        return sort.stream().anyMatch(order ->
-            Set.of("orderIdentifier", "price", "customerName", "carrierName", "paymentName")
-               .contains(order.getProperty())
-        );
     }
 
     // ... existing findById, deleteById, save, patch ...
