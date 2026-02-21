@@ -3,7 +3,7 @@ package sk.tany.rest.api.controller;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -41,25 +41,25 @@ class BrandAdminControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private BrandAdminService brandService;
 
-    @MockBean
+    @MockitoBean
     private ImageService imageService;
 
-    @MockBean
+    @MockitoBean
     private PrestaShopImportService prestaShopImportService;
 
-    @MockBean
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
-    @MockBean
+    @MockitoBean
     private JwkKeyRepository jwkKeyRepository;
 
-    @MockBean
+    @MockitoBean
     private AuthorizationServerSettings authorizationServerSettings;
 
-    @MockBean
+    @MockitoBean
     private SecurityContextRepository securityContextRepository;
 
     @Test

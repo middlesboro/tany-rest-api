@@ -60,7 +60,7 @@ public class ExceptionHandlerControllerAdvice {
     })
     public ResponseEntity<ErrorResponse> handleNotFoundException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
     @ExceptionHandler({
@@ -68,7 +68,7 @@ public class ExceptionHandlerControllerAdvice {
     })
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
     }
 
     @ExceptionHandler({
@@ -76,7 +76,7 @@ public class ExceptionHandlerControllerAdvice {
     })
     public ResponseEntity<ErrorResponse> handleUnauthorizedException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
 
     @ExceptionHandler({
@@ -84,7 +84,7 @@ public class ExceptionHandlerControllerAdvice {
     })
     public ResponseEntity<ErrorResponse> handleInternalServerErrorException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
 
 }

@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.component.SlugGenerator;
 import sk.tany.rest.api.domain.brand.Brand;
@@ -66,7 +66,7 @@ public class ProductImportService {
     private final SlugGenerator slugGenerator;
     private final SequenceService sequenceService;
     private final ImageService imageService;
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
 
     public void importProducts() {
@@ -212,7 +212,10 @@ public class ProductImportService {
         for (int i = 0; i < images.size(); i++) {
             ImageInfo img = images.get(i);
             try {
-                byte[] imageBytes = restTemplate.getForObject(img.url, byte[].class);
+                byte[] imageBytes = restClient.get()
+                        .uri(img.url)
+                        .retrieve()
+                        .body(byte[].class);
                 if (imageBytes != null && imageBytes.length > 0) {
                     String extension = org.springframework.util.StringUtils.getFilenameExtension(img.url);
                     if (StringUtils.isBlank(extension)) {

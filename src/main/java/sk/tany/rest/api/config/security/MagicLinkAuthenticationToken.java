@@ -10,7 +10,7 @@ public class MagicLinkAuthenticationToken extends AbstractAuthenticationToken {
     private final Object principal;
 
     public MagicLinkAuthenticationToken(String exchangeToken) {
-        super(null);
+        super((Collection<? extends GrantedAuthority>) null);
         this.principal = exchangeToken;
         setAuthenticated(false);
     }

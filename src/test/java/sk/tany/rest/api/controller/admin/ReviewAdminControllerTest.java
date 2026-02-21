@@ -3,7 +3,7 @@ package sk.tany.rest.api.controller.admin;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
@@ -34,13 +34,13 @@ class ReviewAdminControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private ReviewAdminService reviewAdminService;
 
-    @MockBean
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
-    @MockBean
+    @MockitoBean
     private SecurityContextRepository securityContextRepository;
 
     @Test

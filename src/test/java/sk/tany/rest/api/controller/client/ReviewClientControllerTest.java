@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -38,25 +38,25 @@ class ReviewClientControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private ReviewClientService reviewClientService;
 
-    @MockBean
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
-    @MockBean
+    @MockitoBean
     private JwkKeyRepository jwkKeyRepository;
 
-    @MockBean
+    @MockitoBean
     private SecurityContextRepository securityContextRepository;
 
-    @MockBean
+    @MockitoBean
     private MagicLinkTokenRepository magicLinkTokenRepository;
 
-    @MockBean
+    @MockitoBean
     private CustomerRepository customerRepository;
 
-    @MockBean
+    @MockitoBean
     private MagicLinkLoginFilter magicLinkLoginFilter;
 
     @org.junit.jupiter.api.BeforeEach

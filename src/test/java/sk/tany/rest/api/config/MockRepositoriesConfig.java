@@ -1,7 +1,7 @@
 package sk.tany.rest.api.config;
 
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -46,29 +46,29 @@ import sk.tany.rest.api.domain.auth.MagicLinkTokenRepository;
 @TestConfiguration
 public class MockRepositoriesConfig {
 
-    @MockBean
+    @MockitoBean
     private BlogRepository blogRepository;
-    @MockBean
+    @MockitoBean
     private BrandRepository brandRepository;
-    @MockBean
+    @MockitoBean
     private CarrierRepository carrierRepository;
-    @MockBean
+    @MockitoBean
     private CartRepository cartRepository;
-    @MockBean
+    @MockitoBean
     private CartDiscountRepository cartDiscountRepository;
-    @MockBean
+    @MockitoBean
     private CategoryRepository categoryRepository;
-    @MockBean
+    @MockitoBean
     private SequenceRepository sequenceRepository;
-    @MockBean
+    @MockitoBean
     private CustomerRepository customerRepository;
-    @MockBean
+    @MockitoBean
     private EmailNotificationRepository emailNotificationRepository;
-    @MockBean
+    @MockitoBean
     private FilterParameterRepository filterParameterRepository;
-    @MockBean
+    @MockitoBean
     private FilterParameterValueRepository filterParameterValueRepository;
-    @MockBean
+    @MockitoBean
     private HomepageGridRepository homepageGridRepository;
     @Bean
     @Primary
@@ -92,41 +92,41 @@ public class MockRepositoriesConfig {
         return repo;
     }
 
-    @MockBean
+    @MockitoBean
     private OneDriveTokenRepository oneDriveTokenRepository;
-    @MockBean
+    @MockitoBean
     private OrderRepository orderRepository;
-    @MockBean
+    @MockitoBean
     private PageContentRepository pageContentRepository;
-    @MockBean
+    @MockitoBean
     private BesteronPaymentRepository besteronPaymentRepository;
-    @MockBean
+    @MockitoBean
     private GlobalPaymentsPaymentRepository globalPaymentsPaymentRepository;
-    @MockBean
+    @MockitoBean
     private PaymentRepository paymentRepository;
-    @MockBean
+    @MockitoBean
     private ProductRepository productRepository;
-    @MockBean
+    @MockitoBean
     private ProductLabelRepository productLabelRepository;
-    @MockBean
+    @MockitoBean
     private ProductSalesRepository productSalesRepository;
-    @MockBean
+    @MockitoBean
     private ReviewRepository reviewRepository;
-    @MockBean
+    @MockitoBean
     private ShopSettingsRepository shopSettingsRepository;
-    @MockBean
+    @MockitoBean
     private SupplierRepository supplierRepository;
-    @MockBean
+    @MockitoBean
     private WishlistRepository wishlistRepository;
-    @MockBean
+    @MockitoBean
     private AuthorizationCodeRepository authorizationCodeRepository;
-    @MockBean
+    @MockitoBean
     private MagicLinkTokenRepository magicLinkTokenRepository;
 
-    @MockBean
+    @MockitoBean
     private com.mongodb.client.MongoClient mongoClient;
 
-    @MockBean
+    @MockitoBean
     private MongoDatabaseFactory mongoDatabaseFactory;
 
     @Bean
