@@ -60,17 +60,12 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     private final CategoryAdminService categoryAdminService;
     private final ImageService imageService;
     private final ShopSettingsAdminService shopSettingsAdminService;
-
-    @Value("${prestashop.url}")
-    private String prestashopUrl;
-
-    @Value("${prestashop.key}")
-    private String prestashopKey;
+    private final sk.tany.rest.api.config.PrestaShopConfig prestaShopConfig;
 
     @Override
     public void importAllProducts() {
         log.info("Starting import of all products from PrestaShop");
-        String url = String.format("%s/api/products?ws_key=%s&output_format=JSON", prestashopUrl, prestashopKey);
+        String url = String.format("%s/api/products?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), prestaShopConfig.getKey());
         try {
             PrestaShopProductsResponse response = restClient.get()
                     .uri(url)
@@ -95,7 +90,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     @Override
     public void importProduct(String id) {
         log.info("Importing product with ID: {}", id);
-        String url = String.format("%s/api/products/%s?ws_key=%s&output_format=JSON", prestashopUrl, id, prestashopKey);
+        String url = String.format("%s/api/products/%s?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), id, prestaShopConfig.getKey());
         try {
             PrestaShopProductWrapper wrapper = restClient.get()
                     .uri(url)
@@ -115,7 +110,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     @Override
     public void importAllSuppliers() {
         log.info("Starting import of all suppliers from PrestaShop");
-        String url = String.format("%s/api/suppliers?ws_key=%s&output_format=JSON", prestashopUrl, prestashopKey);
+        String url = String.format("%s/api/suppliers?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), prestaShopConfig.getKey());
         try {
             PrestaShopSuppliersResponse response = restClient.get()
                     .uri(url)
@@ -139,7 +134,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
 
     private void importSupplier(String id) {
         log.info("Importing supplier with ID: {}", id);
-        String url = String.format("%s/api/suppliers/%s?ws_key=%s&output_format=JSON", prestashopUrl, id, prestashopKey);
+        String url = String.format("%s/api/suppliers/%s?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), id, prestaShopConfig.getKey());
         try {
             PrestaShopSupplierWrapper wrapper = restClient.get()
                     .uri(url)
@@ -168,7 +163,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     @Override
     public void importAllManufacturers() {
         log.info("Starting import of all manufacturers from PrestaShop");
-        String url = String.format("%s/api/manufacturers?ws_key=%s&output_format=JSON", prestashopUrl, prestashopKey);
+        String url = String.format("%s/api/manufacturers?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), prestaShopConfig.getKey());
         try {
             PrestaShopManufacturersResponse response = restClient.get()
                     .uri(url)
@@ -192,7 +187,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
 
     private void importManufacturer(String id) {
         log.info("Importing manufacturer with ID: {}", id);
-        String url = String.format("%s/api/manufacturers/%s?ws_key=%s&output_format=JSON", prestashopUrl, id, prestashopKey);
+        String url = String.format("%s/api/manufacturers/%s?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), id, prestaShopConfig.getKey());
         try {
             PrestaShopManufacturerWrapper wrapper = restClient.get()
                     .uri(url)
@@ -301,7 +296,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
 
     private String downloadAndUploadImage(String resource, Long id, String imageId, String name, ImageKitType type) {
         String urlPart = imageId != null ? id + "/" + imageId : String.valueOf(id);
-        String imageUrl = String.format("%s/api/images/%s/%s?ws_key=%s", prestashopUrl, resource, urlPart, prestashopKey);
+        String imageUrl = String.format("%s/api/images/%s/%s?ws_key=%s", prestaShopConfig.getUrl(), resource, urlPart, prestaShopConfig.getKey());
         try {
             byte[] imageBytes = restClient.get()
                     .uri(imageUrl)
@@ -320,7 +315,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     @Override
     public void importAllCategories() {
         log.info("Starting import of all categories from PrestaShop");
-        String url = String.format("%s/api/categories?ws_key=%s&output_format=JSON", prestashopUrl, prestashopKey);
+        String url = String.format("%s/api/categories?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), prestaShopConfig.getKey());
         try {
             PrestaShopCategoriesResponse response = restClient.get()
                     .uri(url)
@@ -345,7 +340,7 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
     @Override
     public void importCategory(String id) {
         log.info("Importing category with ID: {}", id);
-        String url = String.format("%s/api/categories/%s?ws_key=%s&output_format=JSON", prestashopUrl, id, prestashopKey);
+        String url = String.format("%s/api/categories/%s?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), id, prestaShopConfig.getKey());
         try {
             PrestaShopCategoryWrapper wrapper = restClient.get()
                     .uri(url)

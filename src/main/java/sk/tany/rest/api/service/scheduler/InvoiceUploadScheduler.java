@@ -20,8 +20,7 @@ import java.util.List;
 @Slf4j
 public class InvoiceUploadScheduler {
 
-    @Value("${onedrive.send-documents}")
-    private boolean sendDocumentsToOneDrive;
+    private final sk.tany.rest.api.config.OneDriveConfig oneDriveConfig;
 
     private final OrderRepository orderRepository;
     private final InvoiceService invoiceService;
@@ -29,7 +28,7 @@ public class InvoiceUploadScheduler {
 
     @Scheduled(cron = "0 0 * * * *") // Every hour
     public void processUploads() {
-        if (!sendDocumentsToOneDrive) {
+        if (!oneDriveConfig.isSendDocuments()) {
             log.info("Skipping upload of send documents");
         }
 
