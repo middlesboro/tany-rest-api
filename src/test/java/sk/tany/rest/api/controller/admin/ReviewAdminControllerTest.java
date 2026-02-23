@@ -3,12 +3,14 @@ package sk.tany.rest.api.controller.admin;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import sk.tany.rest.api.config.PageSerializationAdvice;
 import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminDetailResponse;
@@ -27,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ReviewAdminController.class)
+@Import(PageSerializationAdvice.class)
 class ReviewAdminControllerTest {
 
     @Autowired

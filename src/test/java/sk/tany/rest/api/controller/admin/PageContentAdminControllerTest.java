@@ -14,6 +14,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import sk.tany.rest.api.config.PageSerializationAdvice;
 import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
 import sk.tany.rest.api.dto.PageContentDto;
 import sk.tany.rest.api.dto.admin.pagecontent.get.PageContentAdminGetResponse;
@@ -32,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(PageContentAdminController.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(PageContentAdminApiMapper.class)
+@Import({PageContentAdminApiMapper.class, PageSerializationAdvice.class})
 public class PageContentAdminControllerTest {
 
     @Autowired

@@ -17,6 +17,8 @@ import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PriceBreakDown;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
@@ -46,12 +48,15 @@ public class InvoiceServiceTest {
     private ProductRepository productRepository;
     @Mock
     private CustomerRepository customerRepository;
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
 
     @InjectMocks
     private InvoiceServiceImpl invoiceService;
 
     @Test
     public void generateInvoice_shouldReturnPdfBytes() {
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
         String orderId = "order123";
         Order order = new Order();
         order.setId(orderId);
@@ -110,6 +115,7 @@ public class InvoiceServiceTest {
 
     @Test
     public void generateInvoice_shouldReturnPdfBytes_whenOrderCanceled() {
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
         String orderId = "orderCanceled";
         Order order = new Order();
         order.setId(orderId);

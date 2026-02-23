@@ -23,34 +23,34 @@ public class ExceptionHandlerControllerAdvice {
     @ExceptionHandler({
             BaseException.class,
     })
-    public ResponseEntity<ErrorResponse> handleBaseException(BaseException ex) {
+    public ResponseEntity<Object> handleBaseException(BaseException ex) {
         log.error(ex.getMessage(), ex);
 
         HttpStatus status = ex.getHttpStatus();
         ErrorResponse error = new ErrorResponseException(status, ProblemDetail.forStatus(status.value()), ex);
-        return new ResponseEntity<>(error, status);
+        return new ResponseEntity<>(error.getBody(), status);
     }
 
     @ExceptionHandler({
             MethodArgumentTypeMismatchException.class,
     })
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentTypeMismatchException ex) {
+    public ResponseEntity<Object> handleValidationException(MethodArgumentTypeMismatchException ex) {
         log.error(ex.getMessage(), ex);
 
         HttpStatus status = HttpStatus.BAD_REQUEST;
         ErrorResponse error = new ErrorResponseException(status, ProblemDetail.forStatus(status.value()), ex);
-        return new ResponseEntity<>(error, status);
+        return new ResponseEntity<>(error.getBody(), status);
     }
 
     @ExceptionHandler({
             MethodArgumentNotValidException.class,
     })
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Object> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         log.error(ex.getMessage(), ex);
 
         HttpStatus status = HttpStatus.BAD_REQUEST;
         ErrorResponse error = new ErrorResponseException(status, ProblemDetail.forStatus(status.value()), ex);
-        return new ResponseEntity<>(error, status);
+        return new ResponseEntity<>(error.getBody(), status);
     }
 
     // todo add all not found exceptions
@@ -58,7 +58,7 @@ public class ExceptionHandlerControllerAdvice {
             CartException.NotFound.class,
             CartDiscountException.NotFound.class,
     })
-    public ResponseEntity<ErrorResponse> handleNotFoundException(Exception ex) {
+    public ResponseEntity<Object> handleNotFoundException(Exception ex) {
         log.error(ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
@@ -66,7 +66,7 @@ public class ExceptionHandlerControllerAdvice {
     @ExceptionHandler({
             AuthorizationDeniedException.class,
     })
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception ex) {
+    public ResponseEntity<Object> handleAccessDeniedException(Exception ex) {
         log.error(ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
     }
@@ -74,7 +74,7 @@ public class ExceptionHandlerControllerAdvice {
     @ExceptionHandler({
             AuthenticationException.class,
     })
-    public ResponseEntity<ErrorResponse> handleUnauthorizedException(Exception ex) {
+    public ResponseEntity<Object> handleUnauthorizedException(Exception ex) {
         log.error(ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
@@ -82,7 +82,7 @@ public class ExceptionHandlerControllerAdvice {
     @ExceptionHandler({
             Exception.class,
     })
-    public ResponseEntity<ErrorResponse> handleInternalServerErrorException(Exception ex) {
+    public ResponseEntity<Object> handleInternalServerErrorException(Exception ex) {
         log.error(ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }

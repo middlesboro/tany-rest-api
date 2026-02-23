@@ -6,6 +6,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.dto.isklad.ISkladResponse;
 import sk.tany.rest.api.dto.isklad.InventoryDetailResult;
 import sk.tany.rest.api.service.OneDriveService;
@@ -27,11 +28,15 @@ class IskladInventorySchedulerTest {
     @Mock
     private OneDriveService oneDriveService;
 
+    @Mock
+    private ISkladProperties iSkladProperties;
+
     @InjectMocks
     private IskladInventoryScheduler scheduler;
 
     @Test
     void exportInventoryToOneDrive_NoResponse_DoesNothing() {
+        when(iSkladProperties.isEnabled()).thenReturn(true);
         when(iskladService.getInventory(any())).thenReturn(null);
 
         scheduler.exportInventoryToOneDrive();
@@ -41,6 +46,7 @@ class IskladInventorySchedulerTest {
 
     @Test
     void exportInventoryToOneDrive_Success_UploadsCsv() {
+        when(iSkladProperties.isEnabled()).thenReturn(true);
         ISkladResponse<InventoryDetailResult> response = new ISkladResponse<>();
         InventoryDetailResult result = new InventoryDetailResult();
         Map<String, InventoryDetailResult.InventoryDetailItem> items = new HashMap<>();

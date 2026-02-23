@@ -236,11 +236,6 @@ class InvoiceServiceImplTest {
         when(carrierRepository.findById("carrier-1")).thenReturn(Optional.empty());
         when(paymentRepository.findById("payment-1")).thenReturn(Optional.empty());
 
-        ShopSettings shopSettings = new ShopSettings();
-        shopSettings.setShopEmail("info@tany.sk");
-        shopSettings.setShopPhoneNumber("421 944 432 457");
-        when(shopSettingsRepository.findAll()).thenReturn(List.of(shopSettings));
-
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         byte[] pdfBytes = invoiceService.generateInvoice(orderId);
