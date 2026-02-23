@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import sk.tany.rest.api.domain.product.ProductStatus;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.CategoryDto;
@@ -53,7 +53,7 @@ import java.util.Optional;
 @Slf4j
 public class PrestaShopImportServiceImpl implements PrestaShopImportService {
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final ProductAdminService productAdminService;
     private final SupplierAdminService supplierAdminService;
     private final BrandAdminService brandAdminService;
@@ -67,7 +67,10 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         log.info("Starting import of all products from PrestaShop");
         String url = String.format("%s/api/products?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), prestaShopConfig.getKey());
         try {
-            PrestaShopProductsResponse response = restTemplate.getForObject(url, PrestaShopProductsResponse.class);
+            PrestaShopProductsResponse response = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(PrestaShopProductsResponse.class);
             if (response != null && response.getProducts() != null) {
                 for (PrestaShopProductResponse product : response.getProducts()) {
                     try {
@@ -89,7 +92,10 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         log.info("Importing product with ID: {}", id);
         String url = String.format("%s/api/products/%s?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), id, prestaShopConfig.getKey());
         try {
-            PrestaShopProductWrapper wrapper = restTemplate.getForObject(url, PrestaShopProductWrapper.class);
+            PrestaShopProductWrapper wrapper = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(PrestaShopProductWrapper.class);
             if (wrapper != null && wrapper.getProduct() != null) {
                 ProductAdminDto productDto = mapToProductDto(wrapper.getProduct());
                 productAdminService.save(productDto);
@@ -106,7 +112,10 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         log.info("Starting import of all suppliers from PrestaShop");
         String url = String.format("%s/api/suppliers?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), prestaShopConfig.getKey());
         try {
-            PrestaShopSuppliersResponse response = restTemplate.getForObject(url, PrestaShopSuppliersResponse.class);
+            PrestaShopSuppliersResponse response = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(PrestaShopSuppliersResponse.class);
             if (response != null && response.getSuppliers() != null) {
                 for (PrestaShopSupplierResponse supplier : response.getSuppliers()) {
                     try {
@@ -127,7 +136,10 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         log.info("Importing supplier with ID: {}", id);
         String url = String.format("%s/api/suppliers/%s?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), id, prestaShopConfig.getKey());
         try {
-            PrestaShopSupplierWrapper wrapper = restTemplate.getForObject(url, PrestaShopSupplierWrapper.class);
+            PrestaShopSupplierWrapper wrapper = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(PrestaShopSupplierWrapper.class);
             if (wrapper != null && wrapper.getSupplier() != null) {
                 SupplierDto dto = mapToSupplierDto(wrapper.getSupplier());
                 supplierAdminService.save(dto);
@@ -153,7 +165,10 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         log.info("Starting import of all manufacturers from PrestaShop");
         String url = String.format("%s/api/manufacturers?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), prestaShopConfig.getKey());
         try {
-            PrestaShopManufacturersResponse response = restTemplate.getForObject(url, PrestaShopManufacturersResponse.class);
+            PrestaShopManufacturersResponse response = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(PrestaShopManufacturersResponse.class);
             if (response != null && response.getManufacturers() != null) {
                 for (PrestaShopManufacturerResponse manufacturer : response.getManufacturers()) {
                     try {
@@ -174,7 +189,10 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         log.info("Importing manufacturer with ID: {}", id);
         String url = String.format("%s/api/manufacturers/%s?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), id, prestaShopConfig.getKey());
         try {
-            PrestaShopManufacturerWrapper wrapper = restTemplate.getForObject(url, PrestaShopManufacturerWrapper.class);
+            PrestaShopManufacturerWrapper wrapper = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(PrestaShopManufacturerWrapper.class);
             if (wrapper != null && wrapper.getManufacturer() != null) {
                 BrandDto dto = mapToBrandDto(wrapper.getManufacturer());
                 brandAdminService.save(dto);
@@ -280,7 +298,10 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         String urlPart = imageId != null ? id + "/" + imageId : String.valueOf(id);
         String imageUrl = String.format("%s/api/images/%s/%s?ws_key=%s", prestaShopConfig.getUrl(), resource, urlPart, prestaShopConfig.getKey());
         try {
-            byte[] imageBytes = restTemplate.getForObject(imageUrl, byte[].class);
+            byte[] imageBytes = restClient.get()
+                    .uri(imageUrl)
+                    .retrieve()
+                    .body(byte[].class);
             if (imageBytes != null && imageBytes.length > 0) {
                 String filename = StringHelper.slugify(name) + ".jpg";
                 return imageService.upload(imageBytes, filename, type);
@@ -296,7 +317,10 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         log.info("Starting import of all categories from PrestaShop");
         String url = String.format("%s/api/categories?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), prestaShopConfig.getKey());
         try {
-            PrestaShopCategoriesResponse response = restTemplate.getForObject(url, PrestaShopCategoriesResponse.class);
+            PrestaShopCategoriesResponse response = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(PrestaShopCategoriesResponse.class);
             if (response != null && response.getCategories() != null) {
                 for (PrestaShopCategoryResponse category : response.getCategories()) {
                     try {
@@ -318,7 +342,10 @@ public class PrestaShopImportServiceImpl implements PrestaShopImportService {
         log.info("Importing category with ID: {}", id);
         String url = String.format("%s/api/categories/%s?ws_key=%s&output_format=JSON", prestaShopConfig.getUrl(), id, prestaShopConfig.getKey());
         try {
-            PrestaShopCategoryWrapper wrapper = restTemplate.getForObject(url, PrestaShopCategoryWrapper.class);
+            PrestaShopCategoryWrapper wrapper = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(PrestaShopCategoryWrapper.class);
             if (wrapper != null && wrapper.getCategory() != null) {
                 CategoryDto dto = mapToCategoryDto(wrapper.getCategory());
 

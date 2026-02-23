@@ -2,38 +2,35 @@ package sk.tany.rest.api.service.isklad;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestClient;
 import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
 import sk.tany.rest.api.dto.isklad.CreateNewOrderRequest;
 import sk.tany.rest.api.dto.isklad.CreateSupplierRequest;
 import sk.tany.rest.api.dto.isklad.ISkladResponse;
 import sk.tany.rest.api.dto.isklad.UpdateInventoryCardRequest;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 class ISkladServiceImplTest {
 
     @Mock
     private ISkladProperties iskladProperties;
 
-    @Mock
-    private RestTemplate restTemplate;
-
-    @InjectMocks
     private ISkladServiceImpl iSkladService;
+    private MockRestServiceServer mockServer;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -43,83 +40,80 @@ class ISkladServiceImplTest {
         when(iskladProperties.getAuthKey()).thenReturn("testKey");
         when(iskladProperties.getAuthToken()).thenReturn("testToken");
         when(iskladProperties.isEnabled()).thenReturn(true);
+
+        RestClient.Builder builder = RestClient.builder();
+        mockServer = MockRestServiceServer.bindTo(builder).build();
+        iSkladService = new ISkladServiceImpl(iskladProperties, builder.build());
     }
 
     @Test
-    void createNewOrder() {
+    void createNewOrder() throws Exception {
         CreateNewOrderRequest request = CreateNewOrderRequest.builder().customerName("John").build();
         ISkladResponse<Object> mockResponse = new ISkladResponse<>();
         mockResponse.setAuthStatus(200);
 
-        when(restTemplate.exchange(
-                eq("http://api.isklad.com"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                any(ParameterizedTypeReference.class)
-        )).thenReturn(new ResponseEntity<>(mockResponse, HttpStatus.OK));
+        mockServer.expect(requestTo("http://api.isklad.com"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(mockResponse), MediaType.APPLICATION_JSON));
 
         ISkladResponse<Object> response = iSkladService.createNewOrder(request);
 
         assertNotNull(response);
         assertEquals(200, response.getAuthStatus());
+        mockServer.verify();
     }
 
     @Test
-    void createBrand() {
+    void createBrand() throws Exception {
         CreateBrandRequest request = CreateBrandRequest.builder().name("Producer").build();
         ISkladResponse<Object> mockResponse = new ISkladResponse<>();
         mockResponse.setAuthStatus(200);
 
-        when(restTemplate.exchange(
-                eq("http://api.isklad.com"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                any(ParameterizedTypeReference.class)
-        )).thenReturn(new ResponseEntity<>(mockResponse, HttpStatus.OK));
+        mockServer.expect(requestTo("http://api.isklad.com"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(mockResponse), MediaType.APPLICATION_JSON));
 
         ISkladResponse<Object> response = iSkladService.createBrand(request);
 
         assertNotNull(response);
         assertEquals(200, response.getAuthStatus());
+        mockServer.verify();
     }
 
     @Test
-    void createSupplier() {
+    void createSupplier() throws Exception {
         CreateSupplierRequest request = CreateSupplierRequest.builder().name("Supplier").build();
         ISkladResponse<Object> mockResponse = new ISkladResponse<>();
         mockResponse.setAuthStatus(200);
 
-        when(restTemplate.exchange(
-                eq("http://api.isklad.com"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                any(ParameterizedTypeReference.class)
-        )).thenReturn(new ResponseEntity<>(mockResponse, HttpStatus.OK));
+        mockServer.expect(requestTo("http://api.isklad.com"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(mockResponse), MediaType.APPLICATION_JSON));
 
         ISkladResponse<Object> response = iSkladService.createSupplier(request);
 
         assertNotNull(response);
         assertEquals(200, response.getAuthStatus());
+        mockServer.verify();
     }
 
     @Test
-    void createOrUpdateProduct() {
+    void createOrUpdateProduct() throws Exception {
         UpdateInventoryCardRequest request = UpdateInventoryCardRequest.builder().itemId(123L).name("Product").build();
         ISkladResponse<Object> mockResponse = new ISkladResponse<>();
         mockResponse.setAuthStatus(200);
 
         when(iskladProperties.getShopSettingId()).thenReturn(1);
-        when(restTemplate.exchange(
-                eq("http://api.isklad.com"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                any(ParameterizedTypeReference.class)
-        )).thenReturn(new ResponseEntity<>(mockResponse, HttpStatus.OK));
+
+        mockServer.expect(requestTo("http://api.isklad.com"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(mockResponse), MediaType.APPLICATION_JSON));
 
         ISkladResponse<Object> response = iSkladService.createOrUpdateProduct(request);
 
         assertNotNull(response);
         assertEquals(200, response.getAuthStatus());
         assertEquals(1, request.getShopSettingId());
+        mockServer.verify();
     }
 }

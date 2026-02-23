@@ -18,8 +18,11 @@ import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.CustomerContextCartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
+import sk.tany.rest.api.mapper.AddressMapper;
 import sk.tany.rest.api.mapper.CustomerMapper;
 import sk.tany.rest.api.component.SecurityUtil;
 
@@ -42,6 +45,12 @@ class CustomerClientServiceImplTest {
 
     @Mock
     private CustomerMapper customerMapper;
+
+    @Mock
+    private AddressMapper addressMapper;
+
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
 
     @Mock
     private CartClientService cartService;
@@ -78,6 +87,7 @@ class CustomerClientServiceImplTest {
         cartDto.setItems(new ArrayList<>(List.of(cartItem)));
 
         when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
 
         ProductClientDto productDto = new ProductClientDto();
         productDto.setId("prod1");
@@ -144,6 +154,7 @@ class CustomerClientServiceImplTest {
         // selectedCarrierId and selectedPaymentId are null
 
         when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
 
         CarrierDto carrier1 = new CarrierDto();
         carrier1.setId("carrier1");
@@ -186,6 +197,7 @@ class CustomerClientServiceImplTest {
         cartDto.setDiscountForNewsletter(true);
 
         when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
         when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
         when(paymentService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
 
@@ -208,6 +220,7 @@ class CustomerClientServiceImplTest {
         cartDto.setAppliedDiscounts(List.of(discount));
 
         when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
         when(carrierService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
         when(paymentService.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
 
@@ -229,6 +242,7 @@ class CustomerClientServiceImplTest {
         cartDto.setItems(new ArrayList<>(List.of(cartItem)));
 
         when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
         when(cartService.save(any(CartDto.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ProductClientDto productDto = new ProductClientDto();
@@ -268,6 +282,7 @@ class CustomerClientServiceImplTest {
         cartDto.setItems(new ArrayList<>(List.of(cartItem)));
 
         when(cartService.findCart(cartId)).thenReturn(Optional.of(cartDto));
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
         when(cartService.save(any(CartDto.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ProductClientDto productDto = new ProductClientDto();

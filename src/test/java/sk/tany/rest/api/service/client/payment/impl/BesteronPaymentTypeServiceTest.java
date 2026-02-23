@@ -1,16 +1,17 @@
 package sk.tany.rest.api.service.client.payment.impl;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.ResponseEntity;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestClient;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.Order;
@@ -26,6 +27,7 @@ import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTransactionResponse;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -34,15 +36,13 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class BesteronPaymentTypeServiceTest {
-
-    @Mock
-    private RestTemplate restTemplate;
 
     @Mock
     private CustomerRepository customerRepository;
@@ -54,10 +54,19 @@ class BesteronPaymentTypeServiceTest {
     private OrderRepository orderRepository;
 
     @Mock
-    private sk.tany.rest.api.config.BesteronConfig besteronConfig;
+    private ApplicationEventPublisher eventPublisher;
 
-    @InjectMocks
     private BesteronPaymentTypeService service;
+    private MockRestServiceServer mockServer;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        RestClient.Builder builder = RestClient.builder();
+        mockServer = MockRestServiceServer.bindTo(builder).build();
+        service = new BesteronPaymentTypeService(builder.build(), besteronPaymentRepository, orderRepository, eventPublisher);
+    }
 
     @Test
     void getSupportedType_ReturnsBesteron() {
@@ -65,13 +74,13 @@ class BesteronPaymentTypeServiceTest {
     }
 
     @Test
-    void getPaymentInfo_SuccessfulFlow() {
+    void getPaymentInfo_SuccessfulFlow() throws Exception {
         // Arrange
-        when(besteronConfig.getClientId()).thenReturn("testClient");
-        when(besteronConfig.getClientSecret()).thenReturn("testSecret");
-        when(besteronConfig.getBaseUrl()).thenReturn("http://test.com");
-        when(besteronConfig.getReturnUrl()).thenReturn("http://return.com");
-        when(besteronConfig.getNotificationUrl()).thenReturn("http://notification.com");
+        ReflectionTestUtils.setField(service, "clientId", "testClient");
+        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
+        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
+        ReflectionTestUtils.setField(service, "returnUrl", "http://return.com");
+        ReflectionTestUtils.setField(service, "notificationUrl", "http://notification.com");
 
         OrderDto order = new OrderDto();
         order.setId("order1");
@@ -91,17 +100,17 @@ class BesteronPaymentTypeServiceTest {
         customer.setFirstname("John");
         customer.setLastname("Doe");
 
-        when(customerRepository.findById("customer1")).thenReturn(Optional.of(customer));
-
         PaymentDto payment = new PaymentDto();
 
         BesteronTokenResponse tokenResponse = new BesteronTokenResponse("token123", 3600, "bearer");
-        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))
-                .thenReturn(ResponseEntity.ok(tokenResponse));
+        mockServer.expect(requestTo("http://test.com/api/oauth2/token"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(tokenResponse), MediaType.APPLICATION_JSON));
 
         BesteronIntentResponse intentResponse = new BesteronIntentResponse("http://payment.link", "trans123");
-        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/payment-intent"), any(HttpEntity.class), eq(BesteronIntentResponse.class)))
-                .thenReturn(ResponseEntity.ok(intentResponse));
+        mockServer.expect(requestTo("http://test.com/api/payment-intent"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(intentResponse), MediaType.APPLICATION_JSON));
 
         // Act
         PaymentInfoDto result = service.getPaymentInfo(order, payment);
@@ -111,14 +120,16 @@ class BesteronPaymentTypeServiceTest {
         assertEquals("http://payment.link", result.getPaymentLink());
 
         verify(besteronPaymentRepository).save(any(BesteronPayment.class));
+        mockServer.verify();
     }
 
     @Test
-    void checkStatus_UpdatesOrderWhenCompleted() {
+    void checkStatus_UpdatesOrderWhenCompleted() throws Exception {
         // Arrange
-        when(besteronConfig.getClientId()).thenReturn("testClient");
-        when(besteronConfig.getApiKey()).thenReturn("testSecret");
-        when(besteronConfig.getVerifyUrl()).thenReturn("http://test.com");
+        ReflectionTestUtils.setField(service, "clientId", "testClient");
+        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
+        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
+        ReflectionTestUtils.setField(service, "verifyUrl", "http://verify.com"); // Need to set verifyUrl as it's used in checkStatus
 
         String orderId = "order1";
         BesteronPayment besteronPayment = new BesteronPayment();
@@ -127,16 +138,25 @@ class BesteronPaymentTypeServiceTest {
         when(besteronPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId)).thenReturn(Optional.of(besteronPayment));
 
         BesteronTokenResponse tokenResponse = new BesteronTokenResponse("token123", 3600, "bearer");
-        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))
-                .thenReturn(ResponseEntity.ok(tokenResponse));
+        // checkStatus calls getAuthToken(VERIFY) which uses verifyUrl if type is VERIFY?
+        // Let's check implementation.
+        // if (type == BesteronUrlType.BASE) ... else { besteronBaseUrl = verifyUrl; secret = apiKey; }
+        // So expected URL is verifyUrl + /api/oauth2/token
+        // I need to set apiKey too.
+        ReflectionTestUtils.setField(service, "apiKey", "testApiKey");
+
+        mockServer.expect(requestTo("http://verify.com/api/oauth2/token"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(tokenResponse), MediaType.APPLICATION_JSON));
 
         BesteronTransactionResponse.Transaction transaction = new BesteronTransactionResponse.Transaction();
         transaction.setStatus("Completed");
         BesteronTransactionResponse statusResponse = new BesteronTransactionResponse();
         statusResponse.setTransaction(transaction);
 
-        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/payment-intents/trans123"), any(HttpEntity.class), eq(BesteronTransactionResponse.class)))
-                .thenReturn(ResponseEntity.ok(statusResponse));
+        mockServer.expect(requestTo("http://verify.com/api/payment-intents/trans123"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(statusResponse), MediaType.APPLICATION_JSON));
 
         Order order = new Order();
         order.setId(orderId);
@@ -152,14 +172,18 @@ class BesteronPaymentTypeServiceTest {
         assertEquals("Completed", besteronPayment.getOriginalStatus());
         verify(orderRepository).save(order);
         assertEquals(OrderStatus.PAID, order.getStatus());
+        mockServer.verify();
     }
 
     @Test
-    void checkStatus_NoUpdateWhenNotCompleted() {
+    void checkStatus_NoUpdateWhenNotCompleted() throws Exception {
         // Arrange
-        when(besteronConfig.getClientId()).thenReturn("testClient");
-        when(besteronConfig.getApiKey()).thenReturn("testSecret");
-        when(besteronConfig.getVerifyUrl()).thenReturn("http://test.com");
+        ReflectionTestUtils.setField(service, "clientId", "testClient");
+        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
+        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
+        ReflectionTestUtils.setField(service, "verifyUrl", "http://verify.com");
+        ReflectionTestUtils.setField(service, "apiKey", "testApiKey");
+
 
         String orderId = "order1";
         BesteronPayment besteronPayment = new BesteronPayment();
@@ -168,16 +192,16 @@ class BesteronPaymentTypeServiceTest {
         when(besteronPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId)).thenReturn(Optional.of(besteronPayment));
 
         BesteronTokenResponse tokenResponse = new BesteronTokenResponse("token123", 3600, "bearer");
-        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/oauth2/token"), any(HttpEntity.class), eq(BesteronTokenResponse.class)))
-                .thenReturn(ResponseEntity.ok(tokenResponse));
+        mockServer.expect(requestTo("http://verify.com/api/oauth2/token"))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(tokenResponse), MediaType.APPLICATION_JSON));
 
         BesteronTransactionResponse.Transaction transaction = new BesteronTransactionResponse.Transaction();
         transaction.setStatus("WaitingForConfirmation");
         BesteronTransactionResponse statusResponse = new BesteronTransactionResponse();
         statusResponse.setTransaction(transaction);
 
-        lenient().when(restTemplate.postForEntity(eq("http://test.com/api/payment-intents/trans123"), any(HttpEntity.class), eq(BesteronTransactionResponse.class)))
-                .thenReturn(ResponseEntity.ok(statusResponse));
+        mockServer.expect(requestTo("http://verify.com/api/payment-intents/trans123"))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(statusResponse), MediaType.APPLICATION_JSON));
 
         // Act
         String status = service.checkStatus(orderId);
@@ -188,5 +212,6 @@ class BesteronPaymentTypeServiceTest {
         assertEquals("WAITING", besteronPayment.getStatus());
         assertEquals("WaitingForConfirmation", besteronPayment.getOriginalStatus());
         verify(orderRepository, never()).save(any());
+        mockServer.verify();
     }
 }

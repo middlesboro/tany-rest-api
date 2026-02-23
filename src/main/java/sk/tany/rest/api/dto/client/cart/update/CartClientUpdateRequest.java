@@ -1,5 +1,6 @@
 package sk.tany.rest.api.dto.client.cart.update;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,7 +25,9 @@ public class CartClientUpdateRequest {
     private String lastname;
     private String email;
     private String phone;
+    @Valid
     private AddressDto invoiceAddress;
+    @Valid
     private AddressDto deliveryAddress;
     private Boolean discountForNewsletter;
     private Instant createDate;

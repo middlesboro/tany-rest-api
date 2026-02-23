@@ -119,15 +119,10 @@ class OrderClientServiceImplTest {
         order.setPaymentPrice(BigDecimal.valueOf(2));
         order.setId("order1"); // Simulate ID after save
 
-        Carrier carrier = new Carrier();
-        carrier.setName("Test Carrier");
-        carrier.setId("carrierId");
-
         Payment payment = new Payment();
         payment.setName("Test Payment");
         payment.setId("paymentId");
 
-        when(carrierRepository.findById("carrierId")).thenReturn(Optional.of(carrier));
         when(paymentRepository.findById("paymentId")).thenReturn(Optional.of(payment));
         when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
 
@@ -178,12 +173,9 @@ class OrderClientServiceImplTest {
         order.setOrderIdentifier(123L);
         order.setId("order1");
 
-        Carrier carrier = new Carrier();
-        carrier.setId("carrierId");
         Payment payment = new Payment();
         payment.setId("paymentId");
 
-        when(carrierRepository.findById("carrierId")).thenReturn(Optional.of(carrier));
         when(paymentRepository.findById("paymentId")).thenReturn(Optional.of(payment));
         when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
 

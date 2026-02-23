@@ -4,14 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
 import sk.tany.rest.api.domain.order.OrderStatus;
@@ -45,7 +44,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BesteronPaymentTypeService implements PaymentTypeService {
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final BesteronPaymentRepository besteronPaymentRepository;
     private final OrderRepository orderRepository;
     private final ApplicationEventPublisher eventPublisher;
@@ -78,15 +77,12 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
         BesteronPayment payment = paymentOpt.get();
         try {
             String token = getAuthToken(BesteronUrlType.VERIFY);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            HttpEntity<Void> request = new HttpEntity<>(headers);
 
-            ResponseEntity<BesteronTransactionResponse> response = restTemplate.postForEntity(
-                    besteronConfig.getVerifyUrl() + "/api/payment-intents/" + payment.getTransactionId(),
-                    request,
-                    BesteronTransactionResponse.class
-            );
+            ResponseEntity<BesteronTransactionResponse> response = restClient.post()
+                    .uri(besteronConfig.getVerifyUrl() + "/api/payment-intents/" + payment.getTransactionId())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .toEntity(BesteronTransactionResponse.class);
 
             if (response.getBody() != null && response.getBody().getTransaction() != null) {
                 String status = response.getBody().getTransaction().getStatus();
@@ -131,10 +127,6 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     }
 
     private String getAuthToken(BesteronUrlType type) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-
         String besteronBaseUrl;
         String secret;
         if (type == BesteronUrlType.BASE) {
@@ -150,13 +142,13 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
         map.add("client_id", besteronConfig.getClientId());
         map.add("client_secret", secret);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
-
-        ResponseEntity<BesteronTokenResponse> response = restTemplate.postForEntity(
-                besteronBaseUrl + "/api/oauth2/token",
-                request,
-                BesteronTokenResponse.class
-        );
+        ResponseEntity<BesteronTokenResponse> response = restClient.post()
+                .uri(besteronBaseUrl + "/api/oauth2/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(map)
+                .retrieve()
+                .toEntity(BesteronTokenResponse.class);
 
         if (response.getBody() == null || response.getBody().getAccessToken() == null) {
             throw new PaymentException("Failed to retrieve access token from Besteron");
@@ -166,11 +158,6 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
     }
 
     private String createPaymentIntent(OrderDto order, String token) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.setBearerAuth(token);
-
         int totalAmount = order.getFinalPrice().multiply(BigDecimal.valueOf(100)).intValue();
 
         List<BesteronIntentRequest.Item> items = new ArrayList<>();
@@ -203,13 +190,14 @@ public class BesteronPaymentTypeService implements PaymentTypeService {
                         .build())
                 .build();
 
-        HttpEntity<BesteronIntentRequest> request = new HttpEntity<>(intentRequest, headers);
-
-        ResponseEntity<BesteronIntentResponse> response = restTemplate.postForEntity(
-                besteronConfig.getBaseUrl() + "/api/payment-intent",
-                request,
-                BesteronIntentResponse.class
-        );
+        ResponseEntity<BesteronIntentResponse> response = restClient.post()
+                .uri(besteronConfig.getBaseUrl() + "/api/payment-intent")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .body(intentRequest)
+                .retrieve()
+                .toEntity(BesteronIntentResponse.class);
 
         if (response.getBody() == null || response.getBody().getRedirectUrl() == null) {
             throw new PaymentException("Failed to retrieve redirect URL from Besteron");

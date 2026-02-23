@@ -1,13 +1,12 @@
 package sk.tany.rest.api.controller.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
@@ -17,6 +16,7 @@ import sk.tany.rest.api.dto.client.order.create.OrderClientCreateRequest;
 import sk.tany.rest.api.dto.client.order.create.OrderClientCreateResponse;
 import sk.tany.rest.api.mapper.OrderClientApiMapper;
 import sk.tany.rest.api.service.client.OrderClientService;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -33,22 +33,22 @@ class OrderClientControllerValidationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private OrderClientService orderClientService;
 
-    @MockBean
+    @MockitoBean
     private OrderClientApiMapper orderClientApiMapper;
 
-    @MockBean
+    @MockitoBean
     private SecurityUtil securityUtil;
 
-    @MockBean
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
-    @MockBean
+    @MockitoBean
     private JwkKeyRepository jwkKeyRepository;
 
-    @MockBean
+    @MockitoBean
     private SecurityContextRepository securityContextRepository;
 
     @Test

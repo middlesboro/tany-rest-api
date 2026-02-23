@@ -1,8 +1,7 @@
 spring:
-  data:
-    mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/tany}
-      database: ${MONGODB_DATABASE:tany}
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://localhost:27017/tany}
+    database: ${MONGODB_DATABASE:tany}
   servlet:
     multipart:
       max-file-size: 3MB
