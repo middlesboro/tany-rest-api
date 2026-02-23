@@ -14,10 +14,12 @@ public class PageableDto {
 
     public static PageableDto from(Pageable pageable) {
         PageableDto dto = new PageableDto();
-        dto.setPageNumber(pageable.getPageNumber());
-        dto.setPageSize(pageable.getPageSize());
+        if (pageable.isPaged()) {
+            dto.setPageNumber(pageable.getPageNumber());
+            dto.setPageSize(pageable.getPageSize());
+            dto.setOffset(pageable.getOffset());
+        }
         dto.setSort(SortDto.from(pageable.getSort()));
-        dto.setOffset(pageable.getOffset());
         dto.setPaged(pageable.isPaged());
         dto.setUnpaged(pageable.isUnpaged());
         return dto;
