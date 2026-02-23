@@ -9,9 +9,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
+import sk.tany.rest.api.config.BesteronConfig;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.Order;
@@ -56,6 +56,7 @@ class BesteronPaymentTypeServiceTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    private BesteronConfig besteronConfig;
     private BesteronPaymentTypeService service;
     private MockRestServiceServer mockServer;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -65,7 +66,17 @@ class BesteronPaymentTypeServiceTest {
         MockitoAnnotations.openMocks(this);
         RestClient.Builder builder = RestClient.builder();
         mockServer = MockRestServiceServer.bindTo(builder).build();
-        service = new BesteronPaymentTypeService(builder.build(), besteronPaymentRepository, orderRepository, eventPublisher);
+
+        besteronConfig = new BesteronConfig();
+        besteronConfig.setClientId("testClient");
+        besteronConfig.setClientSecret("testSecret");
+        besteronConfig.setBaseUrl("http://test.com");
+        besteronConfig.setReturnUrl("http://return.com");
+        besteronConfig.setNotificationUrl("http://notification.com");
+        besteronConfig.setVerifyUrl("http://verify.com");
+        besteronConfig.setApiKey("testApiKey");
+
+        service = new BesteronPaymentTypeService(builder.build(), besteronPaymentRepository, orderRepository, eventPublisher, besteronConfig);
     }
 
     @Test
@@ -76,12 +87,6 @@ class BesteronPaymentTypeServiceTest {
     @Test
     void getPaymentInfo_SuccessfulFlow() throws Exception {
         // Arrange
-        ReflectionTestUtils.setField(service, "clientId", "testClient");
-        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
-        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
-        ReflectionTestUtils.setField(service, "returnUrl", "http://return.com");
-        ReflectionTestUtils.setField(service, "notificationUrl", "http://notification.com");
-
         OrderDto order = new OrderDto();
         order.setId("order1");
         order.setCustomerId("customer1");
@@ -126,11 +131,6 @@ class BesteronPaymentTypeServiceTest {
     @Test
     void checkStatus_UpdatesOrderWhenCompleted() throws Exception {
         // Arrange
-        ReflectionTestUtils.setField(service, "clientId", "testClient");
-        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
-        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
-        ReflectionTestUtils.setField(service, "verifyUrl", "http://verify.com"); // Need to set verifyUrl as it's used in checkStatus
-
         String orderId = "order1";
         BesteronPayment besteronPayment = new BesteronPayment();
         besteronPayment.setTransactionId("trans123");
@@ -138,12 +138,6 @@ class BesteronPaymentTypeServiceTest {
         when(besteronPaymentRepository.findTopByOrderIdOrderByCreateDateDesc(orderId)).thenReturn(Optional.of(besteronPayment));
 
         BesteronTokenResponse tokenResponse = new BesteronTokenResponse("token123", 3600, "bearer");
-        // checkStatus calls getAuthToken(VERIFY) which uses verifyUrl if type is VERIFY?
-        // Let's check implementation.
-        // if (type == BesteronUrlType.BASE) ... else { besteronBaseUrl = verifyUrl; secret = apiKey; }
-        // So expected URL is verifyUrl + /api/oauth2/token
-        // I need to set apiKey too.
-        ReflectionTestUtils.setField(service, "apiKey", "testApiKey");
 
         mockServer.expect(requestTo("http://verify.com/api/oauth2/token"))
                 .andExpect(method(HttpMethod.POST))
@@ -178,13 +172,6 @@ class BesteronPaymentTypeServiceTest {
     @Test
     void checkStatus_NoUpdateWhenNotCompleted() throws Exception {
         // Arrange
-        ReflectionTestUtils.setField(service, "clientId", "testClient");
-        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
-        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
-        ReflectionTestUtils.setField(service, "verifyUrl", "http://verify.com");
-        ReflectionTestUtils.setField(service, "apiKey", "testApiKey");
-
-
         String orderId = "order1";
         BesteronPayment besteronPayment = new BesteronPayment();
         besteronPayment.setTransactionId("trans123");
