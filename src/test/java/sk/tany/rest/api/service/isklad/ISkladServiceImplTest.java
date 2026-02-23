@@ -1,6 +1,5 @@
 package sk.tany.rest.api.service.isklad;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -10,7 +9,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 import sk.tany.rest.api.config.ISkladProperties;
-import sk.tany.rest.api.dto.isklad.*;
+import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
+import sk.tany.rest.api.dto.isklad.CreateNewOrderRequest;
+import sk.tany.rest.api.dto.isklad.CreateSupplierRequest;
+import sk.tany.rest.api.dto.isklad.ISkladResponse;
+import sk.tany.rest.api.dto.isklad.UpdateInventoryCardRequest;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

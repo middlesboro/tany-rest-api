@@ -2,24 +2,23 @@ package sk.tany.rest.api.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
+import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
 import sk.tany.rest.api.controller.admin.BrandAdminController;
+import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
 import sk.tany.rest.api.dto.BrandDto;
+import sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest;
 import sk.tany.rest.api.service.admin.BrandAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.common.ImageService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
-import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
-import sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Optional;
 

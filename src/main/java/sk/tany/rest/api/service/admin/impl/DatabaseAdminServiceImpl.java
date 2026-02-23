@@ -1,6 +1,5 @@
 package sk.tany.rest.api.service.admin.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -9,6 +8,7 @@ import org.springframework.data.repository.support.Repositories;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.service.admin.DatabaseAdminService;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,18 +92,14 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
             }
 
             if (repository instanceof MongoRepository && entityType != null) {
-                try {
-                    MongoRepository mongoRepo = (MongoRepository) repository;
-                    log.info("Importing {} from {}", entityType.getSimpleName(), jsonFile.getName());
-                    List<?> entities = objectMapper.readValue(jsonFile, objectMapper.getTypeFactory().constructCollectionType(List.class, entityType));
+                MongoRepository mongoRepo = (MongoRepository) repository;
+                log.info("Importing {} from {}", entityType.getSimpleName(), jsonFile.getName());
+                List<?> entities = objectMapper.readValue(jsonFile, objectMapper.getTypeFactory().constructCollectionType(List.class, entityType));
 
-                    if (!entities.isEmpty()) {
-                        mongoRepo.deleteAll();
-                        mongoRepo.saveAll(entities);
-                        log.info("Imported {} entities.", entities.size());
-                    }
-                } catch (IOException e) {
-                    log.error("Failed to import file: {}", jsonFile.getName(), e);
+                if (!entities.isEmpty()) {
+                    mongoRepo.deleteAll();
+                    mongoRepo.saveAll(entities);
+                    log.info("Imported {} entities.", entities.size());
                 }
             } else {
                 log.warn("No repository found for entity type: {}", entityName);

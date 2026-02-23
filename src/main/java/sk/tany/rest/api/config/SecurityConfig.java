@@ -17,7 +17,9 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
@@ -29,8 +31,6 @@ import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
@@ -82,13 +82,21 @@ public class SecurityConfig {
             MagicLinkLoginFilter magicLinkLoginFilter,
             SecurityContextRepository repo) throws Exception {
 
-        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
-        http.with(authorizationServerConfigurer, Customizer.withDefaults());
+        // 1. Vytvoríme configurer
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+                new OAuth2AuthorizationServerConfigurer();
 
-        authorizationServerConfigurer
-                .oidc(Customizer.withDefaults());
+        // 2. Definujeme endpointy, ktoré má tento chain obsluhovať
+        // Toto nahradzuje pôvodnú nefunkčnú logiku a rieši tvoj Error
+        http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher());
 
-        // Integrácia tvojho Magic Linku priamo do Auth procesu
+        // 3. Aplikujeme konfiguráciu
+        http.with(authorizationServerConfigurer, (authorizationServer) ->
+                authorizationServer
+                        .oidc(Customizer.withDefaults()) // Povolenie OpenID Connect
+        );
+
+        // Tvoj Magic Link a ostatné nastavenia
         http.addFilterBefore(magicLinkLoginFilter, SecurityContextHolderFilter.class);
 
         http.exceptionHandling(exceptions -> exceptions
@@ -100,6 +108,10 @@ public class SecurityConfig {
         http.sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
         );
+
+        // Povinné pre Auth Server v nových verziách:
+        http.oauth2ResourceServer((resourceServer) -> resourceServer
+                .jwt(Customizer.withDefaults()));
 
         return http.build();
     }
