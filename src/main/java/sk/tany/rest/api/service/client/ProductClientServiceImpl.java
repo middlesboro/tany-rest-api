@@ -126,14 +126,16 @@ public class ProductClientServiceImpl implements ProductClientService {
 
     @Override
     public java.util.List<ProductClientDto> getRelatedProducts(String productId) {
-        java.util.List<String> relatedIds = productEmbeddingService.findRelatedProducts(productId);
-        if (relatedIds.isEmpty()) {
+        java.util.List<ProductClientDto> relatedProducts = productEmbeddingService.findRelatedProducts(productId);
+        if (relatedProducts.isEmpty()) {
             return java.util.Collections.emptyList();
         }
 
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        List<Product> products = productRepository.findAllById(relatedIds);
-        return mapToEnhancedDtos(products, wishlistProductIds);
+        for (ProductClientDto dto : relatedProducts) {
+            dto.setInWishlist(wishlistProductIds.contains(dto.getId()));
+        }
+        return relatedProducts;
     }
 
     private Page<ProductClientDto> mapToEnhancedDtos(Page<Product> productsPage, Set<String> wishlistProductIds) {
