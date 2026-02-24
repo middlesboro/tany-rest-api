@@ -49,6 +49,9 @@ class CartClientControllerValidationTest {
     private JwkKeyRepository jwkKeyRepository;
 
     @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
+    @MockitoBean
     private SecurityContextRepository securityContextRepository;
 
     @Test

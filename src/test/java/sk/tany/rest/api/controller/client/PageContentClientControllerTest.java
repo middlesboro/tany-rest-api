@@ -41,6 +41,9 @@ public class PageContentClientControllerTest {
     @MockitoBean
     private SecurityContextRepository securityContextRepository;
 
+    @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
     @Test
     void getPageBySlug_shouldReturnOk() throws Exception {
         when(pageContentService.findBySlug("test-slug")).thenReturn(Optional.of(new PageContentDto()));

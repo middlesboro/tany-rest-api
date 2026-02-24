@@ -38,6 +38,9 @@ public class ShopSettingsAdminControllerTest {
     @MockitoBean
     private SecurityContextRepository securityContextRepository;
 
+    @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
     @Autowired
     private ObjectMapper objectMapper;
 

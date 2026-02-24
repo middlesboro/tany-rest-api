@@ -48,6 +48,9 @@ class CustomerClientControllerValidationTest {
     private SecurityUtil securityUtil;
 
     @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
     @MockitoBean

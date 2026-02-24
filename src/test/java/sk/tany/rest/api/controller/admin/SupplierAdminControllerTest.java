@@ -36,6 +36,9 @@ class SupplierAdminControllerTest {
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
     @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
+    @MockitoBean
     private SecurityContextRepository securityContextRepository;
 
     @Test
