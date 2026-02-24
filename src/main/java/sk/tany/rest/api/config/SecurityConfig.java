@@ -7,7 +7,6 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -78,21 +77,16 @@ public class SecurityConfig {
             MagicLinkLoginFilter magicLinkLoginFilter,
             SecurityContextRepository repo) throws Exception {
 
-        // 1. Vytvoríme configurer
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer();
 
-        // 2. Definujeme endpointy, ktoré má tento chain obsluhovať
-        // Toto nahradzuje pôvodnú nefunkčnú logiku a rieši tvoj Error
         http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher());
 
-        // 3. Aplikujeme konfiguráciu
         http.with(authorizationServerConfigurer, (authorizationServer) ->
                 authorizationServer
                         .oidc(Customizer.withDefaults()) // Povolenie OpenID Connect
         );
 
-        // Tvoj Magic Link a ostatné nastavenia
         http.addFilterBefore(magicLinkLoginFilter, SecurityContextHolderFilter.class);
 
         http.exceptionHandling(exceptions -> exceptions
@@ -105,7 +99,6 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
         );
 
-        // Povinné pre Auth Server v nových verziách:
         http.oauth2ResourceServer((resourceServer) -> resourceServer
                 .jwt(Customizer.withDefaults()));
 
