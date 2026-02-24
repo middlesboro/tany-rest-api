@@ -13,11 +13,8 @@ COPY src src
 RUN ./mvnw clean package -DskipTests
 
 # 2. Fáza: Runtime (JRE)
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-
-# Inštalácia knižníc pre kompatibilitu s ONNX (musia byť pod root-om)
-RUN apk add --no-cache libstdc++ gcompat
 
 RUN addgroup -S spring && adduser -S spring -G spring \
     && mkdir -p /data \
