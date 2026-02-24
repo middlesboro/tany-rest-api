@@ -26,6 +26,7 @@ import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.dto.PaymentInfoDto;
 import sk.tany.rest.api.dto.besteron.BesteronIntentResponse;
 import sk.tany.rest.api.dto.besteron.BesteronTokenResponse;
+import sk.tany.rest.api.config.BesteronConfig;
 import sk.tany.rest.api.dto.besteron.BesteronTransactionResponse;
 import tools.jackson.databind.ObjectMapper;
 
@@ -57,6 +58,7 @@ class BesteronPaymentTypeServiceTest {
     private ApplicationEventPublisher eventPublisher;
 
     private BesteronPaymentTypeService service;
+    private BesteronConfig besteronConfig;
     private MockRestServiceServer mockServer;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -65,7 +67,8 @@ class BesteronPaymentTypeServiceTest {
         MockitoAnnotations.openMocks(this);
         RestClient.Builder builder = RestClient.builder();
         mockServer = MockRestServiceServer.bindTo(builder).build();
-        service = new BesteronPaymentTypeService(builder.build(), besteronPaymentRepository, orderRepository, eventPublisher);
+        besteronConfig = new BesteronConfig();
+        service = new BesteronPaymentTypeService(builder.build(), besteronPaymentRepository, orderRepository, eventPublisher, besteronConfig);
     }
 
     @Test
@@ -76,11 +79,11 @@ class BesteronPaymentTypeServiceTest {
     @Test
     void getPaymentInfo_SuccessfulFlow() throws Exception {
         // Arrange
-        ReflectionTestUtils.setField(service, "clientId", "testClient");
-        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
-        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
-        ReflectionTestUtils.setField(service, "returnUrl", "http://return.com");
-        ReflectionTestUtils.setField(service, "notificationUrl", "http://notification.com");
+        besteronConfig.setClientId("testClient");
+        besteronConfig.setClientSecret("testSecret");
+        besteronConfig.setBaseUrl("http://test.com");
+        besteronConfig.setReturnUrl("http://return.com");
+        besteronConfig.setNotificationUrl("http://notification.com");
 
         OrderDto order = new OrderDto();
         order.setId("order1");
@@ -126,10 +129,10 @@ class BesteronPaymentTypeServiceTest {
     @Test
     void checkStatus_UpdatesOrderWhenCompleted() throws Exception {
         // Arrange
-        ReflectionTestUtils.setField(service, "clientId", "testClient");
-        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
-        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
-        ReflectionTestUtils.setField(service, "verifyUrl", "http://verify.com"); // Need to set verifyUrl as it's used in checkStatus
+        besteronConfig.setClientId("testClient");
+        besteronConfig.setClientSecret("testSecret");
+        besteronConfig.setBaseUrl("http://test.com");
+        besteronConfig.setVerifyUrl("http://verify.com");
 
         String orderId = "order1";
         BesteronPayment besteronPayment = new BesteronPayment();
@@ -143,7 +146,7 @@ class BesteronPaymentTypeServiceTest {
         // if (type == BesteronUrlType.BASE) ... else { besteronBaseUrl = verifyUrl; secret = apiKey; }
         // So expected URL is verifyUrl + /api/oauth2/token
         // I need to set apiKey too.
-        ReflectionTestUtils.setField(service, "apiKey", "testApiKey");
+        besteronConfig.setApiKey("testApiKey");
 
         mockServer.expect(requestTo("http://verify.com/api/oauth2/token"))
                 .andExpect(method(HttpMethod.POST))
@@ -178,11 +181,11 @@ class BesteronPaymentTypeServiceTest {
     @Test
     void checkStatus_NoUpdateWhenNotCompleted() throws Exception {
         // Arrange
-        ReflectionTestUtils.setField(service, "clientId", "testClient");
-        ReflectionTestUtils.setField(service, "clientSecret", "testSecret");
-        ReflectionTestUtils.setField(service, "baseUrl", "http://test.com");
-        ReflectionTestUtils.setField(service, "verifyUrl", "http://verify.com");
-        ReflectionTestUtils.setField(service, "apiKey", "testApiKey");
+        besteronConfig.setClientId("testClient");
+        besteronConfig.setClientSecret("testSecret");
+        besteronConfig.setBaseUrl("http://test.com");
+        besteronConfig.setVerifyUrl("http://verify.com");
+        besteronConfig.setApiKey("testApiKey");
 
 
         String orderId = "order1";
