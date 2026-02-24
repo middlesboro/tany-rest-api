@@ -21,7 +21,7 @@ public class MagicLinkLoginFilter extends OncePerRequestFilter {
 
     private final MagicLinkAuthenticationProvider authenticationProvider;
     private final SecurityContextRepository securityContextRepository;
-    private final RequestMatcher requestMatcher = new RegexRequestMatcher("/oauth2/authorize", null);
+    private final RequestMatcher requestMatcher = new RegexRequestMatcher("/oauth2/authorize.*", null);
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
