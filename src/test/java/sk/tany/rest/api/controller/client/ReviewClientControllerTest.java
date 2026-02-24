@@ -59,6 +59,9 @@ class ReviewClientControllerTest {
     @MockitoBean
     private MagicLinkLoginFilter magicLinkLoginFilter;
 
+    @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
     @org.junit.jupiter.api.BeforeEach
     void setUp() throws Exception {
         org.mockito.Mockito.doAnswer(invocation -> {

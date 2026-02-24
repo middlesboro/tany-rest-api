@@ -22,10 +22,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = AuthenticationController.class, properties = {
-        "eshop.frontend-url=http://127.0.0.1:3001",
-        "eshop.frontend-admin-url=http://localhost:3000"
-})
+@WebMvcTest(controllers = AuthenticationController.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class AuthenticationControllerTest {
 
@@ -49,6 +46,12 @@ public class AuthenticationControllerTest {
 
     @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
+
+    @MockitoBean
+    private sk.tany.rest.api.config.EshopConfig eshopConfig;
+
+    @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
