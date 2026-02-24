@@ -599,6 +599,10 @@ public class ProductSearchEngine {
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .toList();
 
+        if (productsInCategory.isEmpty()) {
+            return List.of();
+        }
+
         Set<String> selectedValueIds = new HashSet<>();
         if (filterRequest != null && filterRequest.getFilterParameters() != null) {
             for (FilterParameterRequest param : filterRequest.getFilterParameters()) {
