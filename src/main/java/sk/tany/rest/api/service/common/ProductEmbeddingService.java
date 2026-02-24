@@ -2,6 +2,7 @@ package sk.tany.rest.api.service.common;
 
 import com.mongodb.client.MongoClient;
 import dev.langchain4j.data.document.Metadata;
+import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.bgesmallenv15q.BgeSmallEnV15QuantizedEmbeddingModel;
@@ -14,7 +15,6 @@ import dev.langchain4j.store.embedding.mongodb.MongoDbEmbeddingStore;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.product.Product;
@@ -23,6 +23,7 @@ import sk.tany.rest.api.dto.client.product.ProductClientDto;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -128,9 +129,14 @@ public class ProductEmbeddingService {
         TextSegment segment = TextSegment.from(text, metadata);
 
         Response<dev.langchain4j.data.embedding.Embedding> embeddingResponse = embeddingModel.embed(segment);
-        // first remove old embedding if exists, then add new one
+
         embeddingStore.remove(product.getId());
-        embeddingStore.add(product.getId(), embeddingResponse.content());
+
+        List<String> ids = Collections.singletonList(product.getId());
+        List<Embedding> embeddings = Collections.singletonList(embeddingResponse.content());
+        List<TextSegment> segments = Collections.singletonList(segment);
+
+        embeddingStore.addAll(ids, embeddings, segments);
     }
 
     public List<ProductClientDto> findRelatedProducts(String productId) {
