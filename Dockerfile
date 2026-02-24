@@ -16,6 +16,9 @@ RUN ./mvnw clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
+# Inštalácia knižníc pre kompatibilitu s ONNX (musia byť pod root-om)
+RUN apk add --no-cache libstdc++ gcompat
+
 RUN addgroup -S spring && adduser -S spring -G spring \
     && mkdir -p /data \
     && chown -R spring:spring /data \
@@ -24,7 +27,5 @@ RUN addgroup -S spring && adduser -S spring -G spring \
 USER spring:spring
 
 COPY --from=build /app/target/*.jar app.jar
-
 EXPOSE 8080
-
 ENTRYPOINT ["java", "-jar", "app.jar"]
