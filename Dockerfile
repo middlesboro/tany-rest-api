@@ -16,7 +16,7 @@ RUN ./mvnw clean package -DskipTests
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-RUN addgroup -S spring && adduser -S spring -G spring \
+RUN groupadd -r spring && useradd -r -g spring spring \
     && mkdir -p /data \
     && chown -R spring:spring /data \
     && chmod 700 /data
