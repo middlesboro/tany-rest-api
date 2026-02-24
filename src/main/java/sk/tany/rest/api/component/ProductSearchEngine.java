@@ -818,7 +818,7 @@ public class ProductSearchEngine {
 
     private List<FilterParameterDto> getFilterParametersForProducts(List<Product> products, Set<String> selectedValueIds) {
         if (products.isEmpty()) {
-            return List.of();
+            return new ArrayList<>();
         }
 
         Map<String, Set<String>> filterParamToValuesMap = new HashMap<>();
