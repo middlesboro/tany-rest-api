@@ -23,16 +23,17 @@
     <div class="content">
         <p>Dobrý deň <strong>{{firstname}}</strong>,</p>
         <p>Vaša online platba pre objednávku č. <strong>{{orderIdentifier}}</strong> neprebehla úspešne alebo nebola dokončená.</p>
-        <p>Prosíme o úhradu sumy <strong>{{finalPrice}}</strong> bankovým prevodom na účet:</p>
+        <p>Pre opätovnú platbu prosím kliknite na tlačidlo nižšie. </p>
+        <a href="{{orderConfirmationLink}}" class="btn">Zaplatiť objednávku</a>
 
+        <p>Ak vám online platba nefunguje, môžete zaplatiť bankovým prevodom:</p>
         <p style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #e74c3c;">
+            <strong>Suma:</strong> {{finalPrice}}<br>
             <strong>IBAN:</strong> {{iban}}<br>
             <strong>Variabilný symbol:</strong> {{orderIdentifier}}
         </p>
 
-        <p>Stav Vašej objednávky si môžete kedykoľvek skontrolovať tu:</p>
-        <a href="{{orderConfirmationLink}}" class="btn">Skontrolovať stav objednávky</a>
-        <p style="font-size: 13px; margin-top: 0;"><a href="{{orderConfirmationLink}}">{{orderConfirmationLink}}</a></p>
+        <p>V prípade akýchkoľvek otázok nás neváhajte kontaktovať.</p>
     </div>
     <div class="footer">
         <p>&copy; {{currentYear}} Tany.sk. Všetky práva vyhradené.</p>
