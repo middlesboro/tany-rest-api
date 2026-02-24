@@ -47,6 +47,7 @@ public class Order extends BaseEntity {
     private boolean creditNoteUploadedToOneDrive;
     private Instant iskladImportDate;
     private Instant adminNotificationDate;
+    private Instant paymentNotificationDate;
     @Override
     public Object getSortValue(String field) {
         switch (field) {

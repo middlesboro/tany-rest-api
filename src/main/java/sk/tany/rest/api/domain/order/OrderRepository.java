@@ -32,4 +32,6 @@ public interface OrderRepository extends MongoRepository<Order, String>, OrderRe
     List<Order> findAllByIskladImportDateIsNullAndStatusNot(OrderStatus status);
 
     List<Order> findAllByAdminNotificationDateIsNull();
+
+    List<Order> findAllByStatusAndCreateDateAfterAndPaymentNotificationDateIsNull(OrderStatus status, Instant afterDate);
 }
