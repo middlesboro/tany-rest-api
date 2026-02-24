@@ -68,10 +68,66 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
 
     @Override
     public void delete(String id) {
-        if (!repository.existsById(id)) {
-            throw new ReviewException.NotFound("Review not found");
-        }
+        Review review = repository.findById(id)
+                .orElseThrow(() -> new ReviewException.NotFound("Review not found"));
         repository.deleteById(id);
+        if (review.getProductId() != null) {
+            recalculateProductRating(review.getProductId());
+        }
+    }
+
+    private void recalculateProductRating(String productId) {
+        java.util.List<Review> activeReviews = repository.findAllByProductId(productId).stream()
+                .filter(Review::isActive)
+                .toList();
+
+        java.math.BigDecimal averageRating = java.math.BigDecimal.ZERO;
+        int reviewsCount = activeReviews.size();
+
+        if (reviewsCount > 0) {
+            double average = activeReviews.stream()
+                    .mapToInt(Review::getRating)
+                    .average()
+                    .orElse(0.0);
+            averageRating = java.math.BigDecimal.valueOf(average).setScale(1, java.math.RoundingMode.HALF_UP);
+        }
+
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            product.setAverageRating(averageRating);
+            product.setReviewsCount(reviewsCount);
+            productRepository.save(product);
+        }
+    }
+
+    @Override
+    public void recalculateAllProductRatings() {
+        log.info("Starting recalculation of product ratings...");
+        java.util.List<Product> allProducts = productRepository.findAll();
+        int count = 0;
+        for (Product product : allProducts) {
+            java.util.List<Review> activeReviews = repository.findAllByProductId(product.getId()).stream()
+                    .filter(Review::isActive)
+                    .toList();
+
+            java.math.BigDecimal averageRating = java.math.BigDecimal.ZERO;
+            int reviewsCount = activeReviews.size();
+
+            if (reviewsCount > 0) {
+                double average = activeReviews.stream()
+                        .mapToInt(Review::getRating)
+                        .average()
+                        .orElse(0.0);
+                averageRating = java.math.BigDecimal.valueOf(average).setScale(1, java.math.RoundingMode.HALF_UP);
+            }
+
+            product.setAverageRating(averageRating);
+            product.setReviewsCount(reviewsCount);
+            productRepository.save(product);
+            count++;
+        }
+        log.info("Finished recalculation of ratings for {} products.", count);
     }
 
     @Override

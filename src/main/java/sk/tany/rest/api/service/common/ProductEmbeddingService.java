@@ -2,6 +2,7 @@ package sk.tany.rest.api.service.common;
 
 import com.mongodb.client.MongoClient;
 import dev.langchain4j.data.document.Metadata;
+import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.bgesmallenv15q.BgeSmallEnV15QuantizedEmbeddingModel;
@@ -14,13 +15,15 @@ import dev.langchain4j.store.embedding.mongodb.MongoDbEmbeddingStore;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -110,16 +113,33 @@ public class ProductEmbeddingService {
 
         text = text.length() > 1200 ? text.substring(0, 1200) : text;
 
-        Metadata metadata = Metadata.from("id", product.getId());
+        Metadata metadata = new Metadata();
+        metadata.put("id", product.getId());
+        metadata.put("title", product.getTitle());
+        if (product.getPrice() != null) metadata.put("price", product.getPrice().toString());
+        if (product.getDiscountPrice() != null) metadata.put("discountPrice", product.getDiscountPrice().toString());
+        if (product.getQuantity() != null) metadata.put("quantity", String.valueOf(product.getQuantity()));
+        if (product.getSlug() != null) metadata.put("slug", product.getSlug());
+        if (product.getAverageRating() != null) metadata.put("averageRating", product.getAverageRating().toString());
+        if (product.getReviewsCount() != null) metadata.put("reviewsCount", String.valueOf(product.getReviewsCount()));
+        if (product.getImages() != null && !product.getImages().isEmpty()) {
+            metadata.put("image", product.getImages().getFirst());
+        }
+
         TextSegment segment = TextSegment.from(text, metadata);
 
         Response<dev.langchain4j.data.embedding.Embedding> embeddingResponse = embeddingModel.embed(segment);
-        // first remove old embedding if exists, then add new one
+
         embeddingStore.remove(product.getId());
-        embeddingStore.add(product.getId(), embeddingResponse.content());
+
+        List<String> ids = Collections.singletonList(product.getId());
+        List<Embedding> embeddings = Collections.singletonList(embeddingResponse.content());
+        List<TextSegment> segments = Collections.singletonList(segment);
+
+        embeddingStore.addAll(ids, embeddings, segments);
     }
 
-    public List<String> findRelatedProducts(String productId) {
+    public List<ProductClientDto> findRelatedProducts(String productId) {
         if (embeddingStore == null || embeddingModel == null) {
             // Only warn periodically or just debug to avoid log spam if service is disabled
             log.debug("Embedding store not initialized.");
@@ -147,19 +167,30 @@ public class ProductEmbeddingService {
                     EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(searchRequest);
                     List<EmbeddingMatch<TextSegment>> relevant = searchResult.matches();
 
-                    List<String> resultIds = new ArrayList<>();
+                    List<ProductClientDto> results = new ArrayList<>();
                     for (EmbeddingMatch<TextSegment> match : relevant) {
                         String matchId = match.embeddingId();
                         if (matchId != null && !matchId.equals(productId)) {
-                            resultIds.add(matchId);
+                            Metadata m = match.embedded().metadata();
+                            ProductClientDto dto = new ProductClientDto();
+                            dto.setId(m.getString("id"));
+                            dto.setTitle(m.getString("title"));
+                            if (m.getString("price") != null) dto.setPrice(new BigDecimal(m.getString("price")));
+                            if (m.getString("discountPrice") != null) dto.setDiscountPrice(new BigDecimal(m.getString("discountPrice")));
+                            if (m.getString("quantity") != null) dto.setQuantity(Integer.parseInt(m.getString("quantity")));
+                            if (m.getString("slug") != null) dto.setSlug(m.getString("slug"));
+                            if (m.getString("averageRating") != null) dto.setAverageRating(new BigDecimal(m.getString("averageRating")));
+                            if (m.getString("reviewsCount") != null) dto.setReviewsCount(Integer.parseInt(m.getString("reviewsCount")));
+                            if (m.getString("image") != null) dto.setImages(List.of(m.getString("image")));
+                            results.add(dto);
                         }
                     }
 
                     // limit to 5 just in case
-                    if (resultIds.size() > 5) {
-                        return resultIds.subList(0, 5);
+                    if (results.size() > 5) {
+                        return results.subList(0, 5);
                     }
-                    return resultIds;
+                    return results;
                 })
                 .orElse(List.of());
     }

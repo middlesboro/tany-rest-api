@@ -10,5 +10,4 @@ import org.springframework.stereotype.Component;
 public class EshopConfig {
     private String frontendUrl;
     private String frontendAdminUrl;
-    private boolean loadRelatedProducts = true;
 }
