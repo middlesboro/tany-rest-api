@@ -39,7 +39,6 @@ public class HomepageClientServiceImpl implements HomepageClientService {
     private final HomepageGridRepository homepageGridRepository;
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-    private final ReviewClientService reviewClientService;
     private final WishlistClientService wishlistClientService;
     private final ProductSearchEngine productSearchEngine;
 
@@ -114,17 +113,14 @@ public class HomepageClientServiceImpl implements HomepageClientService {
     private List<ProductClientDto> mapToEnhancedDtos(List<Product> products) {
         if (products.isEmpty()) return Collections.emptyList();
 
-        List<String> productIds = products.stream().map(Product::getId).toList();
-        Map<String, ProductRatingDto> ratings = reviewClientService.getProductRatings(productIds);
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
 
         return products.stream().map(product -> {
             ProductClientDto dto = productMapper.toClientDto(product);
             dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-            ProductRatingDto rating = ratings.getOrDefault(product.getId(), new ProductRatingDto(BigDecimal.ZERO, 0));
-            dto.setAverageRating(rating.getAverageRating());
-            dto.setReviewsCount(rating.getReviewsCount());
+            dto.setAverageRating(product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO);
+            dto.setReviewsCount(product.getReviewsCount() != null ? product.getReviewsCount() : 0);
             return dto;
         }).toList();
     }
