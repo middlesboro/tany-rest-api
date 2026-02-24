@@ -59,13 +59,15 @@ class OrderEventHandlerPriceTest {
     private ResourceLoader resourceLoader;
     @Mock
     private ShopSettingsRepository shopSettingsRepository;
+    @Mock
+    private sk.tany.rest.api.config.EshopConfig eshopConfig;
 
     @InjectMocks
     private OrderEventHandler orderEventHandler;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(orderEventHandler, "frontendUrl", "http://localhost:3000");
+        lenient().when(eshopConfig.getFrontendUrl()).thenReturn("http://localhost:3000");
         Resource pdfResource = new ByteArrayResource("dummy pdf".getBytes());
         lenient().when(resourceLoader.getResource("classpath:formular-na-odstupenie-od-zmluvy-tany.sk.pdf")).thenReturn(pdfResource);
         lenient().when(resourceLoader.getResource("classpath:obchodne-podmienky.pdf")).thenReturn(pdfResource);

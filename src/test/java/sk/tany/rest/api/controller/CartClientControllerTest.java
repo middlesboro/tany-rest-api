@@ -46,6 +46,9 @@ public class CartClientControllerTest {
     @MockitoBean
     private CartClientApiMapper cartClientApiMapper;
 
+    @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
     @Autowired
     private ObjectMapper objectMapper;
 

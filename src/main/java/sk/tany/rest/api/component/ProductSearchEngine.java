@@ -479,10 +479,6 @@ public class ProductSearchEngine {
         return new PageImpl<>(pageContent, pageable, filteredProducts.size());
     }
 
-    public Page<Product> findByCategoryIds(String categoryId, Pageable pageable) {
-        return findByCategoryIds(categoryId, pageable, false);
-    }
-
     public Page<Product> findByCategoryIds(String categoryId, Pageable pageable, boolean prioritizeStock) {
         if (categoryId == null) {
             return new PageImpl<>(List.of(), pageable, 0);

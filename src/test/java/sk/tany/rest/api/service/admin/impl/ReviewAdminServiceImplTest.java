@@ -106,7 +106,7 @@ public class ReviewAdminServiceImplTest {
     @Test
     void delete() {
         String id = "1";
-        when(repository.existsById(id)).thenReturn(true);
+        when(repository.findById(id)).thenReturn(Optional.of(new Review()));
 
         service.delete(id);
 

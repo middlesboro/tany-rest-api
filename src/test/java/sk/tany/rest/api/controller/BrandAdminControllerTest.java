@@ -50,6 +50,9 @@ class BrandAdminControllerTest {
     private PrestaShopImportService prestaShopImportService;
 
     @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
     @MockitoBean

@@ -44,6 +44,9 @@ class ReviewAdminControllerTest {
     @MockitoBean
     private SecurityContextRepository securityContextRepository;
 
+    @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
     @Test
     @WithMockUser(roles = "ADMIN")
     void findAll_ShouldReturnPageOfReviews() throws Exception {
