@@ -41,10 +41,7 @@ public class AuthenticationController {
     private final EmailService emailService;
     private final ShopSettingsRepository shopSettingsRepository;
 
-    @Value("${eshop.frontend-url}")
-    private String frontendUrl;
-    @Value("${eshop.frontend-admin-url}")
-    private String frontendAdminUrl;
+    private final sk.tany.rest.api.config.EshopConfig eshopConfig;
 
     private final Map<String, Instant> rateLimitMap = new ConcurrentHashMap<>();
 
@@ -70,7 +67,7 @@ public class AuthenticationController {
             magicLinkTokenRepository.save(token);
 
             Customer customer = customerOptional.get();
-            String baseUrl = customer.getRole() == Role.ADMIN ? frontendAdminUrl : frontendUrl;
+            String baseUrl = customer.getRole() == Role.ADMIN ? eshopConfig.getFrontendAdminUrl() : eshopConfig.getFrontendUrl();
             String link = baseUrl + "/magic-link?token=" + exchangeToken;
 
             ShopSettings settings = shopSettingsRepository.getFirstShopSettings();

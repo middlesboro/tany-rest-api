@@ -1,10 +1,7 @@
 package sk.tany.rest.api.domain.customer;
 
 import lombok.Data;
-import org.springframework.data.annotation.Id;
 import sk.tany.rest.api.domain.BaseEntity;
-
-import java.time.Instant;
 
 @Data
 public class Customer extends BaseEntity {
@@ -17,6 +14,10 @@ public class Customer extends BaseEntity {
     private Address invoiceAddress;
     private Address deliveryAddress;
     private boolean deliveryAddressSameAsInvoiceAddress;
+    private String preferredPacketaBranchId;
+    private String preferredPacketaBranchName;
+    private String preferredBalikovoBranchId;
+    private String preferredBalikovoBranchName;
     @Override
     public Object getSortValue(String field) {
         switch (field) {

@@ -1,12 +1,16 @@
 package sk.tany.rest.api.service.admin;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestClient;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.category.Category;
@@ -19,31 +23,35 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.productlabel.ProductLabel;
 import sk.tany.rest.api.domain.productlabel.ProductLabelRepository;
+import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
 import sk.tany.rest.api.domain.supplier.Supplier;
-import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
-import org.springframework.web.client.RestTemplate;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @ExtendWith(MockitoExtension.class)
 class ProductImportServiceTest {
 
     @Mock
     private ProductRepository productRepository;
+    @Mock
+    private ProductSalesRepository productSalesRepository;
     @Mock
     private ProductLabelRepository productLabelRepository;
     @Mock
@@ -66,11 +74,22 @@ class ProductImportServiceTest {
     private SequenceService sequenceService;
     @Mock
     private ImageService imageService;
-    @Mock
-    private RestTemplate restTemplate;
 
-    @InjectMocks
     private ProductImportService productImportService;
+    private MockRestServiceServer mockServer;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        RestClient.Builder builder = RestClient.builder();
+        mockServer = MockRestServiceServer.bindTo(builder).build();
+        productImportService = new ProductImportService(
+                productRepository, productSalesRepository, productLabelRepository,
+                filterParameterRepository, filterParameterValueRepository, categoryRepository,
+                supplierRepository, brandRepository, objectMapper, productSearchEngine,
+                slugGenerator, sequenceService, imageService, builder.build()
+        );
+    }
 
     @Test
     void importProducts_shouldProcessData() throws Exception {
@@ -143,6 +162,10 @@ class ProductImportServiceTest {
             return v;
         });
 
+        mockServer.expect(requestTo("http://image.com/1.jpg"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(new byte[]{1, 2, 3}, MediaType.IMAGE_JPEG));
+
         // Act
         productImportService.importProducts();
 
@@ -158,6 +181,7 @@ class ProductImportServiceTest {
         verify(productSearchEngine).updateProduct(any(Product.class));
         verify(productSearchEngine, org.mockito.Mockito.atLeastOnce()).addFilterParameter(any(FilterParameter.class));
         verify(productSearchEngine).addFilterParameterValue(any(FilterParameterValue.class));
+        mockServer.verify();
     }
 
     @Test

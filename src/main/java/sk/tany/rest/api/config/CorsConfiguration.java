@@ -1,8 +1,7 @@
 package sk.tany.rest.api.config;
 
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -13,17 +12,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.Arrays;
 
 @Configuration
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class CorsConfiguration implements WebMvcConfigurer {
 
-    @Value("${cors.configs.allowed-origins:}")
-    private String allowedOrigins;
+    private final CorsConfig corsConfig;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        if (StringUtils.isNotBlank(allowedOrigins)) {
+        if (StringUtils.isNotBlank(corsConfig.getAllowedOrigins())) {
              registry.addMapping("/**")
-                .allowedOrigins(allowedOrigins.split(","))
+                .allowedOrigins(corsConfig.getAllowedOrigins().split(","))
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
@@ -33,8 +31,8 @@ public class CorsConfiguration implements WebMvcConfigurer {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        if (StringUtils.isNotBlank(allowedOrigins)) {
-            configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(",")).toList());
+        if (StringUtils.isNotBlank(corsConfig.getAllowedOrigins())) {
+            configuration.setAllowedOrigins(Arrays.stream(corsConfig.getAllowedOrigins().split(",")).toList());
         }
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));

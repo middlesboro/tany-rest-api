@@ -16,14 +16,12 @@ import java.util.List;
 
 @Data
 public class CartClientUpdateRequest {
-    @NotBlank
     private String cartId;
     private String customerId;
     private String selectedCarrierId;
     private String selectedPaymentId;
     private String selectedPickupPointId;
     private String selectedPickupPointName;
-    @Valid
     private List<CartItem> items;
     private String firstname;
     private String lastname;
@@ -43,10 +41,7 @@ public class CartClientUpdateRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CartItem {
-        @NotBlank
         private String productId;
-        @NotNull
-        @Min(1)
         private Integer quantity;
         private String title;
         private String image;

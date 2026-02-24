@@ -17,6 +17,8 @@ public interface OrderRepository extends MongoRepository<Order, String>, OrderRe
 
     Optional<Order> findByCartId(String cartId);
 
+    List<Order> findByCartIdIn(java.util.Collection<String> cartIds);
+
     List<Order> findAllByCustomerId(String customerId);
 
     Page<Order> findAllByCustomerId(String customerId, Pageable pageable);
@@ -30,4 +32,6 @@ public interface OrderRepository extends MongoRepository<Order, String>, OrderRe
     List<Order> findAllByIskladImportDateIsNullAndStatusNot(OrderStatus status);
 
     List<Order> findAllByAdminNotificationDateIsNull();
+
+    List<Order> findAllByStatusAndCreateDateAfterAndPaymentNotificationDateIsNull(OrderStatus status, Instant afterDate);
 }

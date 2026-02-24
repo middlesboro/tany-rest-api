@@ -1,13 +1,11 @@
 package sk.tany.rest.api.service.admin;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.component.SlugGenerator;
 import sk.tany.rest.api.domain.brand.Brand;
@@ -34,6 +32,8 @@ import sk.tany.rest.api.exception.ImportException;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,7 +66,7 @@ public class ProductImportService {
     private final SlugGenerator slugGenerator;
     private final SequenceService sequenceService;
     private final ImageService imageService;
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
 
     public void importProducts() {
@@ -113,10 +113,15 @@ public class ProductImportService {
         Long productIdentifier = Long.parseLong(idProductStr);
 
         Optional<Product> existingProductOpt = productRepository.findByProductIdentifier(productIdentifier);
+        if (existingProductOpt.isEmpty()) {
+            existingProductOpt = productRepository.findBySlug(baseData.getLinkRewrite());
+        }
+
         if (existingProductOpt.isPresent()) {
             Product existingProduct = existingProductOpt.get();
             if (StringUtils.isNotBlank(baseData.getStockQty())) {
                 existingProduct.setQuantity(Integer.parseInt(baseData.getStockQty()));
+                existingProduct.setProductIdentifier(productIdentifier);
                 Product savedProduct = productRepository.save(existingProduct);
                 productSearchEngine.updateProduct(savedProduct);
             }
@@ -207,7 +212,10 @@ public class ProductImportService {
         for (int i = 0; i < images.size(); i++) {
             ImageInfo img = images.get(i);
             try {
-                byte[] imageBytes = restTemplate.getForObject(img.url, byte[].class);
+                byte[] imageBytes = restClient.get()
+                        .uri(img.url)
+                        .retrieve()
+                        .body(byte[].class);
                 if (imageBytes != null && imageBytes.length > 0) {
                     String extension = org.springframework.util.StringUtils.getFilenameExtension(img.url);
                     if (StringUtils.isBlank(extension)) {

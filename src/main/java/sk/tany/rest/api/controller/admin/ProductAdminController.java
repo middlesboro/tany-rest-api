@@ -1,5 +1,6 @@
 package sk.tany.rest.api.controller.admin;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -77,8 +78,9 @@ public class ProductAdminController {
     public Page<ProductListResponse> getProducts(@RequestParam(value = "query", required = false) String query, @RequestParam(value = "priceFrom", required = false) BigDecimal priceFrom,
                                                  @RequestParam(value = "priceTo", required = false) BigDecimal priceTo, @RequestParam(value = "brandId", required = false) String brandId,
                                                  @RequestParam(value = "id", required = false) String id, @RequestParam(value = "externalStock", required = false) Boolean externalStock,
-                                                 @RequestParam(value = "quantity", required = false) Integer quantity, @RequestParam(value = "active", required = false) Boolean active, Pageable pageable) {
-        return productService.findAll(new ProductFilter(query, priceFrom, priceTo, brandId, id, externalStock, quantity, active), pageable)
+                                                 @RequestParam(value = "quantity", required = false) Integer quantity, @RequestParam(value = "productIdentifier", required = false) Long productIdentifier,
+                                                 @RequestParam(value = "active", required = false) Boolean active, Pageable pageable) {
+        return productService.findAll(new ProductFilter(query, priceFrom, priceTo, brandId, id, externalStock, quantity, productIdentifier, active), pageable)
                 .map(productAdminApiMapper::toListResponse);
     }
 
@@ -111,7 +113,7 @@ public class ProductAdminController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductUpdateResponse> updateProduct(@PathVariable String id, @RequestBody ProductUpdateRequest product) {
+    public ResponseEntity<ProductUpdateResponse> updateProduct(@PathVariable String id, @Valid @RequestBody ProductUpdateRequest product) {
         ProductAdminDto productDto = productAdminApiMapper.toDto(product);
         ProductAdminDto updatedProduct = productService.update(id, productDto);
         return ResponseEntity.ok(productAdminApiMapper.toUpdateResponse(updatedProduct));

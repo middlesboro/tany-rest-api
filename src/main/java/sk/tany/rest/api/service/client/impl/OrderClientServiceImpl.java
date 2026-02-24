@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
+import sk.tany.rest.api.domain.carrier.CarrierType;
 import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.customer.Address;
 import sk.tany.rest.api.domain.customer.Customer;
@@ -41,6 +42,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -138,10 +140,6 @@ public class OrderClientServiceImpl implements OrderClientService {
             order.setAppliedDiscountCodes(codes);
         }
 
-        Carrier carrier = null;
-        if (order.getCarrierId() != null) {
-            carrier = carrierRepository.findById(order.getCarrierId()).orElse(null);
-        }
         // Extract carrier price from breakdown if possible or calculate?
         // CartDto does not expose carrier price directly as a field except inside breakdown or implicitly in final price.
         // However, we can find it in breakdown.
@@ -240,6 +238,20 @@ public class OrderClientServiceImpl implements OrderClientService {
                 changed = true;
             }
 
+            Optional<Carrier> carrierOptional = carrierRepository.findById(order.getCarrierId());
+            if (carrierOptional.isPresent()) {
+                Carrier carrier = carrierOptional.get();
+                if (StringUtils.isBlank(customer.getPreferredPacketaBranchId()) &&  StringUtils.isNotBlank(order.getSelectedPickupPointId())
+                        && CarrierType.PACKETA == carrier.getType()) {
+                    customer.setPreferredPacketaBranchId(order.getSelectedPickupPointId());
+                    changed = true;
+                }
+                if (StringUtils.isBlank(customer.getPreferredBalikovoBranchId()) &&  StringUtils.isNotBlank(order.getSelectedPickupPointId())
+                        && CarrierType.BALIKOVO == carrier.getType()) {
+                    customer.setPreferredBalikovoBranchId(order.getSelectedPickupPointId());
+                    changed = true;
+                }
+            }
             if (changed) {
                 customerRepository.save(customer);
             }

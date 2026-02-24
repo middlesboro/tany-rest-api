@@ -422,6 +422,9 @@ public class ProductSearchEngine {
                     if (filter.quantity() != null && !filter.quantity().equals(p.getQuantity())) {
                         return false;
                     }
+                    if (filter.productIdentifier() != null && !filter.productIdentifier().equals(p.getProductIdentifier())) {
+                        return false;
+                    }
                     if (filter.externalStock() != null) {
                         if (filter.externalStock() && p.getStatus() != ProductStatus.AVAILABLE_ON_EXTERNAL_STOCK) {
                             return false;
@@ -474,10 +477,6 @@ public class ProductSearchEngine {
 
         List<Product> pageContent = filteredProducts.subList(start, end);
         return new PageImpl<>(pageContent, pageable, filteredProducts.size());
-    }
-
-    public Page<Product> findByCategoryIds(String categoryId, Pageable pageable) {
-        return findByCategoryIds(categoryId, pageable, false);
     }
 
     public Page<Product> findByCategoryIds(String categoryId, Pageable pageable, boolean prioritizeStock) {
@@ -599,6 +598,10 @@ public class ProductSearchEngine {
         List<Product> productsInCategory = cachedProducts.stream()
                 .filter(p -> p.getCategoryIds() != null && !Collections.disjoint(p.getCategoryIds(), categoryIds))
                 .toList();
+
+        if (productsInCategory.isEmpty()) {
+            return List.of();
+        }
 
         Set<String> selectedValueIds = new HashSet<>();
         if (filterRequest != null && filterRequest.getFilterParameters() != null) {
@@ -815,7 +818,7 @@ public class ProductSearchEngine {
 
     private List<FilterParameterDto> getFilterParametersForProducts(List<Product> products, Set<String> selectedValueIds) {
         if (products.isEmpty()) {
-            return List.of();
+            return new ArrayList<>();
         }
 
         Map<String, Set<String>> filterParamToValuesMap = new HashMap<>();

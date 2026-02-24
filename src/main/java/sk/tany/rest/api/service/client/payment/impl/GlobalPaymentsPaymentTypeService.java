@@ -37,25 +37,7 @@ public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
     private final GlobalPaymentsSigner signer;
     private final EmailService emailService;
     private final ApplicationEventPublisher eventPublisher;
-
-    // todo load as config class
-    @Value("${gpwebpay.merchant-number}")
-    private String merchantNumber;
-
-    @Value("${gpwebpay.private-key}")
-    private String privateKey;
-
-    @Value("${gpwebpay.public-key}")
-    private String publicKey;
-
-    @Value("${gpwebpay.private-key-password}")
-    private String privateKeyPassword;
-
-    @Value("${gpwebpay.return-url}")
-    private String returnUrl;
-
-    @Value("${gpwebpay.url}")
-    private String url;
+    private final sk.tany.rest.api.config.GpWebPayConfig gpWebPayConfig;
 
     @Override
     public PaymentType getSupportedType() {
@@ -71,21 +53,21 @@ public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
         String depositFlag = "1";
         String merOrderNum = String.valueOf(order.getOrderIdentifier());
 
-        String textToSign = merchantNumber + "|" + operation + "|" + orderNumber + "|" + amount + "|" + currency + "|" + depositFlag + "|" + merOrderNum + "|" + returnUrl + "||" + order.getId();
+        String textToSign = gpWebPayConfig.getMerchantNumber() + "|" + operation + "|" + orderNumber + "|" + amount + "|" + currency + "|" + depositFlag + "|" + merOrderNum + "|" + gpWebPayConfig.getReturnUrl() + "||" + order.getId();
 
-        String digest = signer.sign(textToSign, privateKey, privateKeyPassword);
+        String digest = signer.sign(textToSign, gpWebPayConfig.getPrivateKey(), gpWebPayConfig.getPrivateKeyPassword());
 
         return PaymentInfoDto.builder()
                 .globalPaymentDetails(GlobalPaymentDetailsDto.builder()
-                        .merchantNumber(merchantNumber)
+                        .merchantNumber(gpWebPayConfig.getMerchantNumber())
                         .operation("CREATE_ORDER")
                         .orderNumber(orderNumber)
                         .amount(amount)
                         .currency(currency)
                         .depositFlag(depositFlag)
                         .merOrderNum(merOrderNum)
-                        .url(returnUrl)
-                        .paymentUrl(url)
+                        .url(gpWebPayConfig.getReturnUrl())
+                        .paymentUrl(gpWebPayConfig.getUrl())
                         .md(order.getId())
                         .digest(digest)
                         .build())
@@ -114,8 +96,8 @@ public class GlobalPaymentsPaymentTypeService implements PaymentTypeService {
         if (resultText != null && !resultText.isEmpty()) {
             textToVerify.append("|").append(resultText);
         }
-        textToVerify.append("|").append(merchantNumber);
-        boolean isValid = signer.verify(textToVerify.toString(), digest, publicKey);
+        textToVerify.append("|").append(gpWebPayConfig.getMerchantNumber());
+        boolean isValid = signer.verify(textToVerify.toString(), digest, gpWebPayConfig.getPublicKey());
 
         if (isValid) {
             orderRepository.findById(md).ifPresent(order -> {

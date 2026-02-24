@@ -3,11 +3,9 @@ package sk.tany.rest.api.service.isklad;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
 import sk.tany.rest.api.dto.isklad.CreateNewOrderRequest;
@@ -25,7 +23,7 @@ import sk.tany.rest.api.dto.isklad.UpdateInventoryCardRequest;
 public class ISkladServiceImpl implements ISkladService {
 
     private final ISkladProperties iskladProperties;
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
     @Override
     public ISkladResponse<Object> createNewOrder(CreateNewOrderRequest request) {
@@ -77,12 +75,11 @@ public class ISkladServiceImpl implements ISkladService {
                 .build();
 
         try {
-            ResponseEntity<ISkladResponse<Res>> response = restTemplate.exchange(
-                    iskladProperties.getUrl(),
-                    HttpMethod.POST,
-                    new HttpEntity<>(requestWrapper),
-                    responseType
-            );
+            ResponseEntity<ISkladResponse<Res>> response = restClient.post()
+                    .uri(iskladProperties.getUrl())
+                    .body(requestWrapper)
+                    .retrieve()
+                    .toEntity(responseType);
             return response.getBody();
 
 //            return null;

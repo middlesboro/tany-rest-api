@@ -46,7 +46,7 @@ gpwebpay:
   private-key-password: 123
   public-key: 123
   url: ${GPWEBPAY_URL:https://test.3dsecure.gpwebpay.com/pgw/order.do}
-  return-url: ${GPWEBPAY_RETURN_URL:http://localhost:3000/global-payments-callback}
+  return-url: ${GPWEBPAY_RETURN_URL:http://localhost:3001/global-payments-callback}
 
 prestashop:
   url: ""

@@ -1,8 +1,7 @@
 spring:
-  data:
-    mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/tany}
-      database: ${MONGODB_DATABASE:tany}
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://localhost:27017/tany}
+    database: ${MONGODB_DATABASE:tany}
   servlet:
     multipart:
       max-file-size: 3MB
@@ -17,20 +16,17 @@ mailersend:
   from-email: ${MAILERSEND_FROM_EMAIL:info@tany.sk}
   from-name: ${MAILERSEND_FROM_NAME:Tany.sk}
 
-jwt:
-  secret: ${JWT_SECRET}
-
 eshop:
-  base-url: ${ESHOP_BASE_URL:http://localhost:8080}
   frontend-admin-url: ${ESHOP_ADMIN_FRONTEND_URL:http://localhost:3000}
   frontend-url: ${ESHOP_FRONTEND_URL:http://localhost:3001}
-  load-related-products: true
 
 besteron:
   client-id: ${BESTERON_CLIENT_ID}
   client-secret: ${BESTERON_CLIENT_SECRET}
+  api-key: ${BESTERON_API_KEY}
   base-url: ${BESTERON_BASE_URL:https://gate.besteron.com}
-  return-url: ${BESTERON_RETURN_URL:http://localhost:3000/besteron-callback}
+  verify-url: ${BESTERON_VERIFY_URL:https://passive.besteron.com}
+  return-url: ${BESTERON_RETURN_URL:http://localhost:3001/besteron-callback}
   notification-url: ${BESTERON_NOTIFICATION_URL:http://localhost:8080/api/payments/besteron-callback}
 
 gpwebpay:
@@ -39,7 +35,7 @@ gpwebpay:
   private-key-password: ${GPWEBPAY_PRIVATE_KEY_PASSWORD}
   public-key: ${GPWEBPAY_PUBLIC_KEY}
   url: ${GPWEBPAY_URL:https://test.3dsecure.gpwebpay.com/pgw/order.do}
-  return-url: ${GPWEBPAY_RETURN_URL:http://localhost:3000/global-payments-callback}
+  return-url: ${GPWEBPAY_RETURN_URL:http://localhost:3001/global-payments-callback}
 
 prestashop:
   url: ${PRESTASHOP_URL}

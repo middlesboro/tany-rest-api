@@ -1,15 +1,11 @@
 package sk.tany.rest.api.service.admin.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
@@ -18,9 +14,11 @@ import sk.tany.rest.api.dto.admin.review.ReviewAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminDetailResponse;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminListResponse;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminUpdateRequest;
+import sk.tany.rest.api.exception.ReviewException;
 import sk.tany.rest.api.service.admin.ReviewAdminService;
 import sk.tany.rest.api.service.mapper.ReviewMapper;
-import sk.tany.rest.api.exception.ReviewException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,10 +68,66 @@ public class ReviewAdminServiceImpl implements ReviewAdminService {
 
     @Override
     public void delete(String id) {
-        if (!repository.existsById(id)) {
-            throw new ReviewException.NotFound("Review not found");
-        }
+        Review review = repository.findById(id)
+                .orElseThrow(() -> new ReviewException.NotFound("Review not found"));
         repository.deleteById(id);
+        if (review.getProductId() != null) {
+            recalculateProductRating(review.getProductId());
+        }
+    }
+
+    private void recalculateProductRating(String productId) {
+        java.util.List<Review> activeReviews = repository.findAllByProductId(productId).stream()
+                .filter(Review::isActive)
+                .toList();
+
+        java.math.BigDecimal averageRating = java.math.BigDecimal.ZERO;
+        int reviewsCount = activeReviews.size();
+
+        if (reviewsCount > 0) {
+            double average = activeReviews.stream()
+                    .mapToInt(Review::getRating)
+                    .average()
+                    .orElse(0.0);
+            averageRating = java.math.BigDecimal.valueOf(average).setScale(1, java.math.RoundingMode.HALF_UP);
+        }
+
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            product.setAverageRating(averageRating);
+            product.setReviewsCount(reviewsCount);
+            productRepository.save(product);
+        }
+    }
+
+    @Override
+    public void recalculateAllProductRatings() {
+        log.info("Starting recalculation of product ratings...");
+        java.util.List<Product> allProducts = productRepository.findAll();
+        int count = 0;
+        for (Product product : allProducts) {
+            java.util.List<Review> activeReviews = repository.findAllByProductId(product.getId()).stream()
+                    .filter(Review::isActive)
+                    .toList();
+
+            java.math.BigDecimal averageRating = java.math.BigDecimal.ZERO;
+            int reviewsCount = activeReviews.size();
+
+            if (reviewsCount > 0) {
+                double average = activeReviews.stream()
+                        .mapToInt(Review::getRating)
+                        .average()
+                        .orElse(0.0);
+                averageRating = java.math.BigDecimal.valueOf(average).setScale(1, java.math.RoundingMode.HALF_UP);
+            }
+
+            product.setAverageRating(averageRating);
+            product.setReviewsCount(reviewsCount);
+            productRepository.save(product);
+            count++;
+        }
+        log.info("Finished recalculation of ratings for {} products.", count);
     }
 
     @Override

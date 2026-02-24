@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 public class ProductGetResponse {
     private String id;
+    private Long productIdentifier;
     private String title;
     private String shortDescription;
     private String description;

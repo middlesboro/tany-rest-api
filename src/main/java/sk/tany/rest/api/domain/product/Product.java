@@ -49,6 +49,7 @@ public class Product extends BaseEntity {
             case "price": return price;
             case "active": return active;
             case "quantity": return quantity;
+            case "productIdentifier": return productIdentifier;
             default: return super.getSortValue(field);
         }
     }

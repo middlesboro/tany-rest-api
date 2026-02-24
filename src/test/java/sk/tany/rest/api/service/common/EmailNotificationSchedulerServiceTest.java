@@ -34,13 +34,15 @@ class EmailNotificationSchedulerServiceTest {
     private EmailService emailService;
     @Mock
     private ShopSettingsRepository shopSettingsRepository;
+    @Mock
+    private sk.tany.rest.api.config.EshopConfig eshopConfig;
 
     @InjectMocks
     private EmailNotificationSchedulerService schedulerService;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(schedulerService, "frontendUrl", "http://localhost:3000");
+        lenient().when(eshopConfig.getFrontendUrl()).thenReturn("http://localhost:3000");
         ShopSettings settings = new ShopSettings();
         settings.setShopEmail("test@test.com");
         settings.setShopPhoneNumber("123456789");

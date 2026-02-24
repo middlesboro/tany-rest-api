@@ -18,6 +18,8 @@ import sk.tany.rest.api.domain.order.OrderStatus;
 import sk.tany.rest.api.domain.order.OrderStatusHistory;
 import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PriceBreakDown;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
@@ -55,17 +57,22 @@ class OrderEventHandlerPriceTest {
     private InvoiceService invoiceService;
     @Mock
     private ResourceLoader resourceLoader;
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
+    @Mock
+    private sk.tany.rest.api.config.EshopConfig eshopConfig;
 
     @InjectMocks
     private OrderEventHandler orderEventHandler;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(orderEventHandler, "frontendUrl", "http://localhost:3000");
+        lenient().when(eshopConfig.getFrontendUrl()).thenReturn("http://localhost:3000");
         Resource pdfResource = new ByteArrayResource("dummy pdf".getBytes());
         lenient().when(resourceLoader.getResource("classpath:formular-na-odstupenie-od-zmluvy-tany.sk.pdf")).thenReturn(pdfResource);
         lenient().when(resourceLoader.getResource("classpath:obchodne-podmienky.pdf")).thenReturn(pdfResource);
         lenient().when(invoiceService.generateInvoice(anyString())).thenReturn(new byte[0]);
+        lenient().when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
     }
 
     @Test

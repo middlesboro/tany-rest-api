@@ -12,7 +12,10 @@ import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CustomerContextDto;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PaymentDto;
+import sk.tany.rest.api.mapper.AddressMapper;
 import sk.tany.rest.api.mapper.CustomerMapper;
 
 import java.util.Arrays;
@@ -29,6 +32,10 @@ class CustomerClientServiceImplPaymentSortTest {
     private CustomerRepository customerRepository;
     @Mock
     private CustomerMapper customerMapper;
+    @Mock
+    private AddressMapper addressMapper;
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
     @Mock
     private CartClientService cartService;
     @Mock
@@ -49,6 +56,7 @@ class CustomerClientServiceImplPaymentSortTest {
         CartDto cartDto = new CartDto();
         cartDto.setCartId("cart1");
         when(cartService.findCart("cart1")).thenReturn(java.util.Optional.of(cartDto));
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
 
         // Mock Carrier Service to return empty page
         when(carrierService.findAll(any(Pageable.class))).thenReturn(Page.empty());
@@ -89,6 +97,7 @@ class CustomerClientServiceImplPaymentSortTest {
         CartDto cartDto = new CartDto();
         cartDto.setCartId("cart1");
         when(cartService.findCart("cart1")).thenReturn(java.util.Optional.of(cartDto));
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
 
         // Mock Carrier Service to return empty page
         when(carrierService.findAll(any(Pageable.class))).thenReturn(Page.empty());

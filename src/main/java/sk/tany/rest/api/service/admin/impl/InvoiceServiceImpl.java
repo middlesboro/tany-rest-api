@@ -1,5 +1,6 @@
 package sk.tany.rest.api.service.admin.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.openpdf.text.Document;
 import org.openpdf.text.DocumentException;
 import org.openpdf.text.Element;
@@ -17,7 +18,6 @@ import org.openpdf.text.pdf.PdfPCell;
 import org.openpdf.text.pdf.PdfPTable;
 import org.openpdf.text.pdf.PdfPageEventHelper;
 import org.openpdf.text.pdf.PdfWriter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
@@ -121,7 +121,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             writer.setPageEvent(new InvoiceFooter());
             document.open();
 
-            addContent(document, order, customer, carrierName, paymentName, productMap, isCreditNote);
+            addContent(document, order, productMap, isCreditNote);
 
             document.close();
             return baos.toByteArray();
@@ -130,7 +130,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
     }
 
-    private void addContent(Document document, Order order, Customer customer, String carrierName, String paymentName, Map<String, Product> productMap, boolean isCreditNote) throws DocumentException {
+    private void addContent(Document document, Order order, Map<String, Product> productMap, boolean isCreditNote) throws DocumentException {
         String title = isCreditNote ? "DOBROPIS" : "FAKTÚRA";
 
         int year = 2026;
@@ -191,10 +191,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         customerCell.setBorder(Rectangle.NO_BORDER);
         customerCell.addElement(new Paragraph("ODBERATEĽ", getSlovakFont(10, Font.BOLD, Color.GRAY)));
 
-        String customerName = "Neregistrovaný zákazník";
-        if (customer != null && customer.getFirstname() != null) {
-            customerName = customer.getFirstname() + " " + (customer.getLastname() != null ? customer.getLastname() : "");
-        }
+        String customerName = order.getFirstname() + " " + (order.getLastname() != null ? order.getLastname() : "");
 
         String street = "";
         String city = "";
