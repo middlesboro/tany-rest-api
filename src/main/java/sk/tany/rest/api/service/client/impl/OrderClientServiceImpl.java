@@ -244,11 +244,13 @@ public class OrderClientServiceImpl implements OrderClientService {
                 if (StringUtils.isBlank(customer.getPreferredPacketaBranchId()) &&  StringUtils.isNotBlank(order.getSelectedPickupPointId())
                         && CarrierType.PACKETA == carrier.getType()) {
                     customer.setPreferredPacketaBranchId(order.getSelectedPickupPointId());
+                    customer.setPreferredPacketaBranchName(order.getSelectedPickupPointName());
                     changed = true;
                 }
                 if (StringUtils.isBlank(customer.getPreferredBalikovoBranchId()) &&  StringUtils.isNotBlank(order.getSelectedPickupPointId())
                         && CarrierType.BALIKOVO == carrier.getType()) {
                     customer.setPreferredBalikovoBranchId(order.getSelectedPickupPointId());
+                    customer.setPreferredBalikovoBranchName(order.getSelectedPickupPointName());
                     changed = true;
                 }
             }

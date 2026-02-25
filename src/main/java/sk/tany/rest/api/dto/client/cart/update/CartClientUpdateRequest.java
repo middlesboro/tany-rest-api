@@ -1,18 +1,18 @@
 package sk.tany.rest.api.dto.client.cart.update;
 
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.validation.CartClientUpdateConstraint;
+import sk.tany.rest.api.validation.ValidEmail;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-@CartClientUpdateConstraint
 @Data
+@CartClientUpdateConstraint
 public class CartClientUpdateRequest {
     private String cartId;
     private String customerId;
@@ -23,11 +23,13 @@ public class CartClientUpdateRequest {
     private List<CartItem> items;
     private String firstname;
     private String lastname;
+    @ValidEmail
     private String email;
     private String phone;
-    @Valid
+    // We intentionally removed @Valid here to allow partial/empty updates (e.g. clearing an address field).
+    // AddressDto has @NotBlank constraints which would fail if we validated empty fields.
+    // The requirement is to allow empty values, effectively making address fields optional for this request.
     private AddressDto invoiceAddress;
-    @Valid
     private AddressDto deliveryAddress;
     private Boolean discountForNewsletter;
     private Instant createDate;
