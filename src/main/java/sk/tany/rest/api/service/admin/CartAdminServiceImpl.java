@@ -26,15 +26,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +53,7 @@ public class CartAdminServiceImpl implements CartAdminService {
         Query query = new Query();
 
         if (cartId != null && !cartId.isEmpty()) {
-            query.addCriteria(Criteria.where("id").regex(Pattern.quote(cartId), "i"));
+            query.addCriteria(Criteria.where("cartId").regex(Pattern.quote(cartId), "i"));
         }
 
         if (customerName != null && !customerName.isEmpty()) {

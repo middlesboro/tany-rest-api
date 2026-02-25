@@ -1,13 +1,10 @@
 package sk.tany.rest.api.dto.client.cart.update;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import sk.tany.rest.api.dto.AddressDto;
+import sk.tany.rest.api.validation.CartClientUpdateConstraint;
 import sk.tany.rest.api.validation.ValidEmail;
 
 import java.math.BigDecimal;
@@ -15,6 +12,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Data
+@CartClientUpdateConstraint
 public class CartClientUpdateRequest {
     private String cartId;
     private String customerId;

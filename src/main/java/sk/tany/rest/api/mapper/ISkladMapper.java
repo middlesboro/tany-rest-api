@@ -59,7 +59,7 @@ public abstract class ISkladMapper {
     @Mapping(target = "faIcdph", ignore = true)
 
     @Mapping(target = "idDelivery", source = "carrier.iskladId")
-    @Mapping(target = "paymentCod", expression = "java(isCod(orderDto))")
+    @Mapping(target = "paymentCod", expression = "java(isCod(payment))")
     @Mapping(target = "items", expression = "java(mapItems(orderDto))")
     // Ignore others for now to avoid warnings/errors
     @Mapping(target = "entranceNumber", ignore = true)
@@ -75,7 +75,7 @@ public abstract class ISkladMapper {
     @Mapping(target = "defaultTax", constant = "23")
     @Mapping(target = "idPayment", source = "payment.iskladId")
     @Mapping(target = "codPriceWithoutTax", ignore = true)
-    @Mapping(target = "codPrice", expression = "java(getCodPrice(orderDto))")
+    @Mapping(target = "codPrice", expression = "java(getCodPrice(orderDto, payment))")
     @Mapping(target = "declaredValue", ignore = true)
     @Mapping(target = "depositWithoutTax", ignore = true)
     @Mapping(target = "deposit", ignore = true)
@@ -113,7 +113,10 @@ public abstract class ISkladMapper {
             // Retrieve Product Identifier
             productRepository.findById(item.getId()).ifPresent(product -> {
                 if (product.getProductIdentifier() != null) {
-                    iskladItem.setItemId(product.getProductIdentifier().intValue());
+                    String input = String.valueOf(product.getProductIdentifier());
+                    int inputLength = input.length();
+                    int targetLength = (inputLength <= 3) ? 10 : 11;
+                    iskladItem.setItemId(Long.valueOf(String.format("%-" + targetLength + "s", input).replace(' ', '0')));
                 }
                 iskladItem.setName(product.getTitle());
             });
@@ -154,12 +157,12 @@ public abstract class ISkladMapper {
         return result;
     }
 
-    protected Integer isCod(OrderDto orderDto) {
-        return orderDto.getPaymentType() == PaymentType.COD ? 1 : 0;
+    protected Integer isCod(Payment payment) {
+        return payment.getType() == PaymentType.COD ? 1 : 0;
     }
 
-    protected BigDecimal getCodPrice(OrderDto orderDto) {
-        if (orderDto.getPaymentType() == PaymentType.COD) {
+    protected BigDecimal getCodPrice(OrderDto orderDto, Payment payment) {
+        if (PaymentType.COD == payment.getType()) {
             return orderDto.getFinalPrice();
         }
 
