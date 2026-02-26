@@ -8,6 +8,8 @@ import sk.tany.rest.api.domain.carrier.CarrierType;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.exception.CartValidationException;
+import sk.tany.rest.api.service.HtmlSanitizerService;
+import org.jsoup.parser.Parser;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -18,9 +20,9 @@ public class CartOrderValidator {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$", Pattern.CASE_INSENSITIVE);
     private static final Pattern SK_PHONE_PATTERN = Pattern.compile("^(\\+421|0)?9\\d{8}$");
-    private static final Pattern DANGEROUS_HTML_PATTERN = Pattern.compile("(?i)<script|javascript:|onload|onerror|<iframe>|<object>|<embed>|<link>|<style>|<meta>");
 
     private final CarrierRepository carrierRepository;
+    private final HtmlSanitizerService htmlSanitizerService;
 
     public void validate(CartDto cart, String note) {
         if (cart == null) {
@@ -96,6 +98,7 @@ public class CartOrderValidator {
 
     private boolean isDangerous(String value) {
         if (value == null || value.isBlank()) return false;
-        return DANGEROUS_HTML_PATTERN.matcher(value).find();
+        String sanitized = htmlSanitizerService.sanitize(value);
+        return !value.equals(Parser.unescapeEntities(sanitized, false));
     }
 }
