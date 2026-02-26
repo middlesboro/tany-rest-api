@@ -88,3 +88,13 @@ isklad:
   auth-token: ${ISKLAD_AUTH_TOKEN}
   shop-setting-id: ${ISKLAD_SHOP_SETTING_ID}
   incoming-api-key: ${ISKLAD_INCOMING_API_KEY}
+
+tany:
+  ai:
+    provider: ${TANY_AI_PROVIDER:gemini}
+
+langchain4j:
+  google-ai-gemini:
+    api-key: ${GOOGLE_AI_GEMINI_API_KEY}
+  mistral:
+    api-key: ${MISTRAL_API_KEY}
