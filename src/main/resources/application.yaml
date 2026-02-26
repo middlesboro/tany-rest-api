@@ -63,6 +63,7 @@ security:
     - /v3/api-docs/**
     - /swagger-ui/**
     - /auth/magic-link/**
+    - /api/chat/**
 
 cors:
   configs:
