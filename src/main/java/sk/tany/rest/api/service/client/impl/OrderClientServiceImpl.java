@@ -37,6 +37,7 @@ import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.SequenceService;
+import sk.tany.rest.api.validation.CartOrderValidator;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -62,6 +63,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final CartRepository cartRepository;
     private final sk.tany.rest.api.service.client.CartClientService cartService;
     private final ApplicationEventPublisher eventPublisher;
+    private final CartOrderValidator cartOrderValidator;
 
     private String getCurrentCustomerId() {
         try {
@@ -89,6 +91,8 @@ public class OrderClientServiceImpl implements OrderClientService {
         if (cartDto == null || cartDto.getItems() == null || cartDto.getItems().isEmpty()) {
             throw new OrderException.BadRequest("Cart is empty or not found");
         }
+
+        cartOrderValidator.validate(cartDto, orderDto.getNote());
 
         Order order = new Order();
         order.setStatus(OrderStatus.CREATED);

@@ -31,12 +31,16 @@ import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.client.CartClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.SequenceService;
+import sk.tany.rest.api.validation.CartOrderValidator;
+import sk.tany.rest.api.exception.CartValidationException;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -70,6 +74,8 @@ class OrderClientServiceImplTest {
     private CartClientService cartService;
     @Mock
     private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private CartOrderValidator cartOrderValidator;
 
     @InjectMocks
     private OrderClientServiceImpl orderClientService;
@@ -81,6 +87,25 @@ class OrderClientServiceImplTest {
         lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
         lenient().when(authentication.getName()).thenReturn("user@example.com");
         SecurityContextHolder.setContext(securityContext);
+    }
+
+    @Test
+    void createOrder_shouldThrowCartValidationException_whenValidationFails() {
+        OrderDto orderDto = new OrderDto();
+        orderDto.setCartId("cart1");
+        orderDto.setNote("Test note");
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId("cart1");
+        cartDto.setItems(Collections.singletonList(new CartItem("p1", 1)));
+
+        when(cartService.getOrCreateCart("cart1", null)).thenReturn(cartDto);
+
+        doThrow(new CartValidationException("Validation failed")).when(cartOrderValidator).validate(cartDto, "Test note");
+
+        assertThrows(CartValidationException.class, () -> orderClientService.createOrder(orderDto));
+
+        verify(orderRepository, times(0)).save(any());
     }
 
     @Test
