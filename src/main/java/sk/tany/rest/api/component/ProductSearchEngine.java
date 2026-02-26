@@ -300,45 +300,48 @@ public class ProductSearchEngine {
             return List.of();
         }
 
-        // 1. Normalizácia vstupu
         String normalizedQuery = StringUtils.stripAccents(query.toLowerCase()).trim();
         String[] queryWords = normalizedQuery.split("\\s+");
 
         return cachedProducts.stream()
-            // 2. Filtrovanie (musí obsahovať aspoň niečo podobné všetkým slovám v dopyte)
-            .filter(product -> {
-                if (product.getTitle() == null) {
-                    return false;
-                }
-                String normalizedName = StringUtils.stripAccents(product.getTitle().toLowerCase());
-                String[] nameWords = normalizedName.split("\\s+");
+                // 1. Základné textové pred-filtrovanie (rýchle)
+                .filter(product -> {
+                    if (product.getTitle() == null) return false;
+                    String normalizedName = StringUtils.stripAccents(product.getTitle().toLowerCase());
+                    String[] nameWords = normalizedName.split("\\s+");
+                    return Arrays.stream(queryWords).allMatch(qWord ->
+                            Arrays.stream(nameWords).anyMatch(nWord ->
+                                    nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
+                            )
+                    );
+                })
+                // 2. Výpočet relevancie a zabalenie do pomocného záznamu (Record/Tuple)
+                .map(product -> new Object() {
+                    Product p = product;
+                    double rel = calculateRelevance(product.getTitle(), normalizedQuery);
+                })
+                // 3. Filter na minimálnu relevanciu 0.6
+                .filter(item -> item.rel >= 0.51)
+                // 4. Komplexné triedenie
+                .sorted((a, b) -> {
+                    if (prioritizeStock) {
+                        int stockCompare = STOCK_COMPARATOR.compare(a.p, b.p);
+                        if (stockCompare != 0) return stockCompare;
+                    }
 
-                return Arrays.stream(queryWords).allMatch(qWord ->
-                    Arrays.stream(nameWords).anyMatch(nWord ->
-                        nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
-                    )
-                );
-            })
-            // 3. Výpočet skóre a zoradenie
-            .sorted((p1, p2) -> {
-                if (prioritizeStock) {
-                    int stockCompare = STOCK_COMPARATOR.compare(p1, p2);
-                    if (stockCompare != 0) return stockCompare;
-                }
-                Double score1 = calculateRelevance(p1.getTitle(), normalizedQuery);
-                Double score2 = calculateRelevance(p2.getTitle(), normalizedQuery);
-                int scoreCompare = score2.compareTo(score1); // Od najvyššieho skóre
-                if (scoreCompare != 0) {
-                    return scoreCompare;
-                }
-                Integer sales1 = getSalesCount(p1.getId());
-                Integer sales2 = getSalesCount(p2.getId());
-                return Integer.compare(
-                        sales2 != null ? sales2 : 0,
-                        sales1 != null ? sales1 : 0
-                );
-            })
-            .toList();
+                    // Ak je rozdiel v relevancii citeľný, uprednostni relevanciu
+                    if (Math.abs(a.rel - b.rel) > 0.05) {
+                        return Double.compare(b.rel, a.rel);
+                    }
+
+                    // Inak rozhoduje predajnosť
+                    int salesA = getSalesCount(a.p.getId()) != null ? getSalesCount(a.p.getId()) : 0;
+                    int salesB = getSalesCount(b.p.getId()) != null ? getSalesCount(b.p.getId()) : 0;
+
+                    return Integer.compare(salesB, salesA);
+                })
+                .map(item -> item.p)
+                .toList();
     }
 
     private Double calculateRelevance(String productName, String normalizedQuery) {
