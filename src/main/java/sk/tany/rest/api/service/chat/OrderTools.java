@@ -16,7 +16,18 @@ public class OrderTools {
 
     @Tool("Check the status of an order given its ID and email or phone number. " +
             "The orderIdentifier must be a number. " +
-            "The emailOrPhone can be an email address or a phone number.")
+            "The emailOrPhone can be an email address or a phone number." +
+            "Order statu mapping " +
+            "    CREATED - Order created. Waiting to packaging" +
+            "    PAID  - Order paid" +
+            "    COD  - Order created as dobierka. Waiting to packaging. " +
+            "    PACKING,\n" +
+            "    PACKED,\n" +
+            "    SENT,\n" +
+            "    READY_FOR_PICKUP,\n" +
+            "    DELIVERED,\n" +
+            "    CANCELED\n" +
+            "Translate response to slovak language.")
     public String checkOrderStatus(String orderIdentifier, String emailOrPhone) {
         long id;
         try {

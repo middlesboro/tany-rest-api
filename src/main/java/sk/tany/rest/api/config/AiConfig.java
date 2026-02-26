@@ -16,10 +16,10 @@ public class AiConfig {
     @Value("${tany.ai.provider:gemini}")
     private String aiProvider;
 
-    @Value("${langchain4j.google-ai-gemini.api-key:demo}")
+    @Value("${langchain4j.google-ai-gemini.api-key}")
     private String googleAiApiKey;
 
-    @Value("${langchain4j.mistral.api-key:demo}")
+    @Value("${langchain4j.mistral.api-key}")
     private String mistralApiKey;
 
     @Bean
@@ -32,7 +32,7 @@ public class AiConfig {
         }
         return GoogleAiGeminiChatModel.builder()
                 .apiKey(googleAiApiKey)
-                .modelName("gemini-1.5-flash")
+                .modelName("gemini-2.5-flash-lite")
                 .build();
     }
 
