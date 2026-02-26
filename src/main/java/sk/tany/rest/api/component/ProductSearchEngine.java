@@ -158,6 +158,9 @@ public class ProductSearchEngine {
     }
 
     public Integer getSalesCount(String productId) {
+        if (productId == null) {
+            return 0;
+        }
         return cachedProductSales.getOrDefault(productId, 0);
     }
 
@@ -324,7 +327,16 @@ public class ProductSearchEngine {
                 }
                 Double score1 = calculateRelevance(p1.getTitle(), normalizedQuery);
                 Double score2 = calculateRelevance(p2.getTitle(), normalizedQuery);
-                return score2.compareTo(score1); // Od najvyššieho skóre
+                int scoreCompare = score2.compareTo(score1); // Od najvyššieho skóre
+                if (scoreCompare != 0) {
+                    return scoreCompare;
+                }
+                Integer sales1 = getSalesCount(p1.getId());
+                Integer sales2 = getSalesCount(p2.getId());
+                return Integer.compare(
+                        sales2 != null ? sales2 : 0,
+                        sales1 != null ? sales1 : 0
+                );
             })
             .toList();
     }
