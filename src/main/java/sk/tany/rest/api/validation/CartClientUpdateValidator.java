@@ -2,17 +2,22 @@ package sk.tany.rest.api.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import lombok.RequiredArgsConstructor;
+import org.jsoup.parser.Parser;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateRequest;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateRequest.CartItem;
+import sk.tany.rest.api.service.HtmlSanitizerService;
 
 import java.util.regex.Pattern;
 
+@RequiredArgsConstructor
 public class CartClientUpdateValidator implements ConstraintValidator<CartClientUpdateConstraint, CartClientUpdateRequest> {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$", Pattern.CASE_INSENSITIVE);
     private static final Pattern SK_PHONE_PATTERN = Pattern.compile("^(\\+421|0)?9\\d{8}$");
-    private static final Pattern DANGEROUS_HTML_PATTERN = Pattern.compile("(?i)<script|javascript:|onload|onerror|<iframe>|<object>|<embed>|<link>|<style>|<meta>");
+
+    private final HtmlSanitizerService htmlSanitizerService;
 
     @Override
     public boolean isValid(CartClientUpdateRequest request, ConstraintValidatorContext context) {
@@ -125,7 +130,8 @@ public class CartClientUpdateValidator implements ConstraintValidator<CartClient
 
     private boolean isDangerous(String value) {
         if (value == null || value.isBlank()) return false;
-        return DANGEROUS_HTML_PATTERN.matcher(value).find();
+        String sanitized = htmlSanitizerService.sanitize(value);
+        return !value.equals(Parser.unescapeEntities(sanitized, false));
     }
 
     private boolean isBlank(String value) {

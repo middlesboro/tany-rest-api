@@ -1,5 +1,6 @@
 package sk.tany.rest.api.validation;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,12 +12,14 @@ import sk.tany.rest.api.domain.carrier.CarrierType;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.exception.CartValidationException;
+import sk.tany.rest.api.service.HtmlSanitizerService;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,9 +27,16 @@ class CartOrderValidatorTest {
 
     @Mock
     private CarrierRepository carrierRepository;
+    @Mock
+    private HtmlSanitizerService htmlSanitizerService;
 
     @InjectMocks
     private CartOrderValidator validator;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(htmlSanitizerService.sanitize(anyString())).thenAnswer(i -> i.getArgument(0));
+    }
 
     private CartDto createValidCart() {
         CartDto cart = new CartDto();
@@ -82,14 +92,18 @@ class CartOrderValidatorTest {
     @Test
     void validate_dangerousContent_shouldFail() {
         CartDto cart = createValidCart();
-        cart.setFirstname("<script>alert(1)</script>");
+        String dangerous = "<script>alert(1)</script>";
+        cart.setFirstname(dangerous);
+        when(htmlSanitizerService.sanitize(dangerous)).thenReturn("");
         assertThrows(CartValidationException.class, () -> validator.validate(cart, null));
     }
 
     @Test
     void validate_dangerousNote_shouldFail() {
         CartDto cart = createValidCart();
-        assertThrows(CartValidationException.class, () -> validator.validate(cart, "<script>"));
+        String dangerous = "<script>";
+        when(htmlSanitizerService.sanitize(dangerous)).thenReturn("");
+        assertThrows(CartValidationException.class, () -> validator.validate(cart, dangerous));
     }
 
     @Test

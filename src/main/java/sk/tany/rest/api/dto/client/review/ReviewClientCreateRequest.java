@@ -5,8 +5,10 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import sk.tany.rest.api.validation.ReviewClientCreateConstraint;
 
 @Data
+@ReviewClientCreateConstraint
 public class ReviewClientCreateRequest {
     @NotBlank
     private String productId;
