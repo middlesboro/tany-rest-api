@@ -115,8 +115,6 @@ public abstract class CartAdminApiMapper {
             paymentRepository.findById(paymentId).ifPresent(p -> response.setPaymentName(p.getName()));
         }
 
-        response.setPriceBreakDown(dto.getPriceBreakDown());
-
         return response;
     }
 
