@@ -92,6 +92,8 @@ isklad:
 tany:
   ai:
     provider: ${TANY_AI_PROVIDER:gemini}
+    cross-sell:
+      provider: ${TANY_AI_CROSS_SELL_PROVIDER:java}
 
 langchain4j:
   google-ai-gemini:
