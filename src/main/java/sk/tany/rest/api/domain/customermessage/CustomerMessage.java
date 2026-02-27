@@ -18,5 +18,6 @@ public class CustomerMessage extends BaseEntity {
 
     private String message;
     private String email;
+    private MessageType type;
 
 }

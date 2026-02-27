@@ -2,6 +2,7 @@ package sk.tany.rest.api.service.chat;
 
 import dev.langchain4j.agent.tool.Tool;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderRepository;
@@ -17,17 +18,17 @@ public class OrderTools {
     @Tool("Check the status of an order given its ID and email or phone number. " +
             "The orderIdentifier must be a number. " +
             "The emailOrPhone can be an email address or a phone number." +
-            "Status mapping " +
-            "    CREATED - Order created. Waiting to packaging" +
-            "    PAID  - Order paid. Waiting to packaging" +
-            "    COD  - Order created as dobierka. Waiting to packaging. " +
-            "    PACKING - Order is packing,\n" +
-            "    PACKED - Order is packed and ready to send,\n" +
-            "    SENT,\n" +
-            "    READY_FOR_PICKUP,\n" +
-            "    DELIVERED,\n" +
-            "    CANCELED. Order is cancelled. Can create a new one or contact us.\n" +
-            "Translate response to slovak language.")
+            "Use slovak text from status mapping " +
+            "    CREATED - Objednávka je prijatá a čaká na zabalenie" +
+            "    PAID  - Objednávka je prijatá, uhradená a čaká na zabalenie" +
+            "    COD  - Objednávka je prijatá a čaká na zabalenie. " +
+            "    PACKING - Objednávka sa práve balí a čoskoro bude odoslaná,\n" +
+            "    PACKED - Objednávka je zabalená a pripravená na odoslanie,\n" +
+            "    SENT - Objednávka bola odoslaná,\n" +
+            "    READY_FOR_PICKUP - Objednávka je pripravená na odbernom mieste,\n" +
+            "    DELIVERED - Objednávka bola úspešne doručená,\n" +
+            "    CANCELED - Objednávka bola zrušená. V prípade otázok nás prosím kontaktujte \n" +
+            "If there is a tracking link append 'Balík môžete sledovať na tomto odkaze: ' Translate response to slovak language.")
     public String checkOrderStatus(String orderIdentifier, String emailOrPhone) {
         long id;
         try {
@@ -43,14 +44,16 @@ public class OrderTools {
 
         Order order = orderOpt.get();
 
-        // Check email
-        if (emailOrPhone.equalsIgnoreCase(order.getEmail())) {
-            return "Order status: " + order.getStatus();
-        }
+        String response = "Order status: ";
 
-        // Check phone
-        if (checkPhone(order.getPhone(), emailOrPhone)) {
-             return "Order status: " + order.getStatus();
+        // Check email
+        if (emailOrPhone.equalsIgnoreCase(order.getEmail()) || checkPhone(order.getPhone(), emailOrPhone)) {
+            response = response + order.getStatus();
+            if (StringUtils.isNotBlank(order.getCarrierOrderStateLink())) {
+                response = response + ". You can track your order here: " + order.getCarrierOrderStateLink();
+            }
+
+            return response;
         }
 
         return "Order found, but the provided email or phone number does not match our records.";

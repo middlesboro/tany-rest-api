@@ -49,6 +49,7 @@ public class CustomerMessageAdminController {
         return CustomerMessageDto.builder()
                 .id(entity.getId())
                 .message(entity.getMessage())
+                .type(entity.getType())
                 .email(entity.getEmail())
                 .createDate(entity.getCreateDate())
                 .build();

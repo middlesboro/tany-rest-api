@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.domain.customermessage.CustomerMessage;
 import sk.tany.rest.api.domain.customermessage.CustomerMessageRepository;
+import sk.tany.rest.api.domain.customermessage.MessageType;
 import sk.tany.rest.api.dto.client.customermessage.CustomerMessageCreateRequest;
 import sk.tany.rest.api.service.chat.OrderAssistant;
 
@@ -26,6 +27,12 @@ public class ChatAssistantController {
     @Operation(summary = "Chat with the AI assistant")
     public ChatResponse chat(@RequestBody ChatRequest request) {
         String response = orderAssistant.chat(request.message());
+
+        customerMessageRepository.save(CustomerMessage.builder()
+                .message(request.message() + " Assistant response: " + response)
+                .type(MessageType.ORDER_STATUS)
+                .build());
+
         return new ChatResponse(response);
     }
 
@@ -35,6 +42,7 @@ public class ChatAssistantController {
         customerMessageRepository.save(CustomerMessage.builder()
                 .message(request.getMessage())
                 .email(request.getEmail())
+                .type(MessageType.MESSAGE_REQUEST)
                 .build());
     }
 
