@@ -2,11 +2,15 @@ package sk.tany.rest.api.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import sk.tany.rest.api.domain.customermessage.CustomerMessage;
+import sk.tany.rest.api.domain.customermessage.CustomerMessageRepository;
+import sk.tany.rest.api.dto.client.customermessage.CustomerMessageCreateRequest;
 import sk.tany.rest.api.service.chat.OrderAssistant;
 
 @RestController
@@ -16,12 +20,22 @@ import sk.tany.rest.api.service.chat.OrderAssistant;
 public class ChatAssistantController {
 
     private final OrderAssistant orderAssistant;
+    private final CustomerMessageRepository customerMessageRepository;
 
     @PostMapping("/assistant")
     @Operation(summary = "Chat with the AI assistant")
     public ChatResponse chat(@RequestBody ChatRequest request) {
         String response = orderAssistant.chat(request.message());
         return new ChatResponse(response);
+    }
+
+    @PostMapping("/message")
+    @Operation(summary = "Send a customer message")
+    public void sendMessage(@Valid @RequestBody CustomerMessageCreateRequest request) {
+        customerMessageRepository.save(CustomerMessage.builder()
+                .message(request.getMessage())
+                .email(request.getEmail())
+                .build());
     }
 
     public record ChatRequest(String message) {}
