@@ -6,8 +6,10 @@ import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import dev.langchain4j.service.AiServices;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import sk.tany.rest.api.service.chat.CrossSellAiAgent;
 import sk.tany.rest.api.service.chat.CrossSellAssistant;
 import sk.tany.rest.api.service.chat.CrossSellTools;
 import sk.tany.rest.api.service.chat.OrderAssistant;
@@ -49,8 +51,9 @@ public class AiConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "tany.ai.cross-sell.provider", havingValue = "ai")
     public CrossSellAssistant crossSellAssistant(ChatModel chatModel, CrossSellTools crossSellTools) {
-        return AiServices.builder(CrossSellAssistant.class)
+        return AiServices.builder(CrossSellAiAgent.class)
                 .chatModel(chatModel)
                 .tools(crossSellTools)
                 .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
