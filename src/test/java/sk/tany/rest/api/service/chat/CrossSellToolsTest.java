@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.dto.CrossSellProductDto;
 
 import java.util.List;
 
@@ -38,7 +39,7 @@ class CrossSellToolsTest {
 
         when(productSearchEngine.searchAndSort("query", true)).thenReturn(List.of(p1, p2, p3));
 
-        List<Product> result = crossSellTools.searchProducts("query");
+        List<CrossSellProductDto> result = crossSellTools.searchProducts("query", List.of());
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo("1");

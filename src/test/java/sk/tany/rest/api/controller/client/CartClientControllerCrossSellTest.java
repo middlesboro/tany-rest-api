@@ -6,9 +6,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
+import sk.tany.rest.api.dto.CrossSellProductDto;
+import sk.tany.rest.api.dto.CrossSellProductsResponse;
 import sk.tany.rest.api.dto.CrossSellResponse;
 import sk.tany.rest.api.service.chat.CrossSellAssistant;
 import sk.tany.rest.api.service.client.CartClientService;
@@ -19,7 +20,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -46,16 +46,19 @@ class CartClientControllerCrossSellTest {
         item.setTitle("Henna");
         cartDto.setItems(List.of(item));
 
-        Product recommendation = new Product();
+        CrossSellProductDto recommendation = new CrossSellProductDto();
         recommendation.setId("p2");
         recommendation.setTitle("Shampoo");
         recommendation.setSlug("shampoo");
         recommendation.setPrice(BigDecimal.TEN);
-        recommendation.setImages(List.of("img.jpg"));
+        recommendation.setImage("img.jpg");
 
         when(cartService.getOrCreateCart(cartId, null)).thenReturn(cartDto);
+
+        CrossSellProductsResponse crossSellProductsResponse = new CrossSellProductsResponse();
+        crossSellProductsResponse.setProducts(List.of(recommendation));
         when(crossSellAssistant.findCrossSellProducts(eq("Henna"), anyList()))
-                .thenReturn(List.of(recommendation));
+                .thenReturn(crossSellProductsResponse);
 
         ResponseEntity<List<CrossSellResponse>> response = cartClientController.getCrossSell(cartId);
 

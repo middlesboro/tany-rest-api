@@ -4,18 +4,17 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
-import sk.tany.rest.api.dto.CrossSellProductDto;
+import sk.tany.rest.api.dto.CrossSellProductsResponse;
 import sk.tany.rest.api.dto.CrossSellResponse;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddItemRequest;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddProductResponse;
@@ -153,25 +152,10 @@ public class CartClientController {
         List<CrossSellResponse> responses = new ArrayList<>();
 
         for (CartItem item : cartDto.getItems()) {
-            List<Product> products = crossSellAssistant.findCrossSellProducts(item.getTitle(), excludeIds);
-
-            List<CrossSellProductDto> crossSellDtos = products.stream()
-                    .map(p -> {
-                        CrossSellProductDto dto = new CrossSellProductDto();
-                        dto.setId(p.getId());
-                        dto.setTitle(p.getTitle());
-                        dto.setSlug(p.getSlug());
-                        dto.setPrice(p.getDiscountPrice() != null ? p.getDiscountPrice() : p.getPrice());
-                        if (p.getImages() != null && !p.getImages().isEmpty()) {
-                            dto.setImage(p.getImages().get(0));
-                        }
-                        return dto;
-                    })
-                    .toList();
-
+            CrossSellProductsResponse assistantResponse = crossSellAssistant.findCrossSellProducts(item.getTitle(), excludeIds);
             CrossSellResponse response = new CrossSellResponse();
             response.setSourceProductId(item.getProductId());
-            response.setCrossSellProducts(crossSellDtos);
+            response.setCrossSellProducts(assistantResponse.getProducts());
             responses.add(response);
         }
 

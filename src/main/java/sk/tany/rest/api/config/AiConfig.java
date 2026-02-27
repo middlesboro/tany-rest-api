@@ -1,5 +1,6 @@
 package sk.tany.rest.api.config;
 
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
@@ -42,6 +43,7 @@ public class AiConfig {
     public OrderAssistant orderAssistant(ChatModel chatModel, OrderTools orderTools) {
         return AiServices.builder(OrderAssistant.class)
                 .chatModel(chatModel)
+                // add chat memory to maintain context across interactions?
                 .tools(orderTools)
                 .build();
     }
@@ -51,6 +53,7 @@ public class AiConfig {
         return AiServices.builder(CrossSellAssistant.class)
                 .chatModel(chatModel)
                 .tools(crossSellTools)
+                .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
                 .build();
     }
 }
