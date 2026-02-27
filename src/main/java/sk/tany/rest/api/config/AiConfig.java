@@ -1,5 +1,6 @@
 package sk.tany.rest.api.config;
 
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
@@ -7,6 +8,8 @@ import dev.langchain4j.service.AiServices;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import sk.tany.rest.api.service.chat.CrossSellAssistant;
+import sk.tany.rest.api.service.chat.CrossSellTools;
 import sk.tany.rest.api.service.chat.OrderAssistant;
 import sk.tany.rest.api.service.chat.OrderTools;
 
@@ -40,7 +43,17 @@ public class AiConfig {
     public OrderAssistant orderAssistant(ChatModel chatModel, OrderTools orderTools) {
         return AiServices.builder(OrderAssistant.class)
                 .chatModel(chatModel)
+                // add chat memory to maintain context across interactions?
                 .tools(orderTools)
+                .build();
+    }
+
+    @Bean
+    public CrossSellAssistant crossSellAssistant(ChatModel chatModel, CrossSellTools crossSellTools) {
+        return AiServices.builder(CrossSellAssistant.class)
+                .chatModel(chatModel)
+                .tools(crossSellTools)
+                .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
                 .build();
     }
 }

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.dto.CartItem;
+import sk.tany.rest.api.dto.CrossSellProductsResponse;
+import sk.tany.rest.api.dto.CrossSellResponse;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddItemRequest;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddProductResponse;
 import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierRequest;
@@ -23,7 +27,12 @@ import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemResponse;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateRequest;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateResponse;
 import sk.tany.rest.api.mapper.CartClientApiMapper;
+import sk.tany.rest.api.service.chat.CrossSellAssistant;
 import sk.tany.rest.api.service.client.CartClientService;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/cart")
@@ -32,6 +41,7 @@ public class CartClientController {
 
     private final CartClientService cartService;
     private final CartClientApiMapper cartClientApiMapper;
+    private final CrossSellAssistant crossSellAssistant;
 
     @PutMapping
     public ResponseEntity<CartClientUpdateResponse> updateCart(@RequestBody @Valid CartClientUpdateRequest request) {
@@ -125,5 +135,30 @@ public class CartClientController {
     @DeleteMapping("/{cartId}/discount")
     public ResponseEntity<CartDto> removeDiscount(@PathVariable String cartId, @RequestParam String code) {
         return ResponseEntity.ok(cartService.removeDiscount(cartId, code));
+    }
+
+    @GetMapping("/cross-sell")
+    public ResponseEntity<List<CrossSellResponse>> getCrossSell(@RequestParam String cartId) {
+        CartDto cartDto = cartService.getOrCreateCart(cartId, null);
+
+        if (cartDto.getItems() == null || cartDto.getItems().isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<String> excludeIds = cartDto.getItems().stream()
+                .map(CartItem::getProductId)
+                .collect(Collectors.toList());
+
+        List<CrossSellResponse> responses = new ArrayList<>();
+
+        for (CartItem item : cartDto.getItems()) {
+            CrossSellProductsResponse assistantResponse = crossSellAssistant.findCrossSellProducts(item.getTitle(), excludeIds);
+            CrossSellResponse response = new CrossSellResponse();
+            response.setSourceProductId(item.getProductId());
+            response.setCrossSellProducts(assistantResponse.getProducts());
+            responses.add(response);
+        }
+
+        return ResponseEntity.ok(responses);
     }
 }
