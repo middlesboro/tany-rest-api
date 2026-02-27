@@ -14,18 +14,24 @@ import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.PriceBreakDown;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
+import sk.tany.rest.api.dto.client.cart.add.CartClientAddProductResponse;
 import sk.tany.rest.api.dto.client.cartdiscount.CartDiscountClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
+import sk.tany.rest.api.dto.client.product.ProductDto;
 import sk.tany.rest.api.exception.CartDiscountException;
 import sk.tany.rest.api.exception.CartException;
 import sk.tany.rest.api.exception.ProductException;
 import sk.tany.rest.api.mapper.CartDiscountMapper;
 import sk.tany.rest.api.mapper.CartMapper;
+import sk.tany.rest.api.mapper.ProductClientApiMapper;
+import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.domain.product.Product;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -44,6 +50,8 @@ public class CartClientServiceImpl implements CartClientService {
     private final CartDiscountMapper cartDiscountMapper;
     private final CarrierRepository carrierRepository;
     private final PaymentRepository paymentRepository;
+    private final ProductSearchEngine productSearchEngine;
+    private final ProductClientApiMapper productClientApiMapper;
 
     @Override
     public Optional<CartDto> findCart(String cartId) {
@@ -173,7 +181,7 @@ public class CartClientServiceImpl implements CartClientService {
         return resultDto;
     }
 
-    public String addProductToCart(String cartId, String productId, Integer quantity) {
+    public CartClientAddProductResponse addProductToCart(String cartId, String productId, Integer quantity) {
         CartDto cartDto = null;
         if (cartId != null) {
             cartDto = findCart(cartId).orElse(null);
@@ -218,7 +226,55 @@ public class CartClientServiceImpl implements CartClientService {
             cartDto.getItems().add(newItem);
         }
 
-        return save(cartDto).getCartId();
+        CartDto savedCart = save(cartDto);
+        CartClientAddProductResponse response = new CartClientAddProductResponse();
+        response.setCartId(savedCart.getCartId());
+        response.setPriceBreakDown(savedCart.getPriceBreakDown());
+
+        // Set added product details
+        response.setProduct(productClientApiMapper.toProductDto(productDto));
+
+        // Generate suggested products
+        List<String> queries = List.of("sojova sviecka", "mydlo", "voskovy", "bambus", "mydelnicka", "set aroma", "vonne");
+        List<ProductDto> suggestedProducts = new ArrayList<>();
+        List<List<Product>> queryResults = new ArrayList<>();
+
+        // Fetch products for all queries
+        for (String query : queries) {
+            List<Product> products = productSearchEngine.searchAndSort(query, true);
+            // Filter only on-stock products
+            List<Product> onStockProducts = products.stream()
+                    .filter(p -> p.getQuantity() != null && p.getQuantity() > 0)
+                    .toList();
+            queryResults.add(new ArrayList<>(onStockProducts));
+        }
+
+        // Try to pick one product from each query result
+        for (List<Product> results : queryResults) {
+            if (!results.isEmpty()) {
+                suggestedProducts.add(productClientApiMapper.toProductDto(results.removeFirst()));
+            }
+        }
+
+        // Fill up to 6 products if needed
+        int queryIndex = 0;
+        while (suggestedProducts.size() < 6 && queryResults.stream().anyMatch(list -> !list.isEmpty())) {
+            List<Product> results = queryResults.get(queryIndex % queryResults.size());
+            if (!results.isEmpty()) {
+                suggestedProducts.add(productClientApiMapper.toProductDto(results.removeFirst()));
+            }
+            queryIndex++;
+        }
+
+        // Trim to max 6 just in case (though loop above handles it)
+        if (suggestedProducts.size() > 6) {
+             suggestedProducts = suggestedProducts.subList(0, 6);
+        }
+
+        Collections.shuffle(suggestedProducts);
+        response.setSuggestedProducts(suggestedProducts);
+
+        return response;
     }
 
     @Override

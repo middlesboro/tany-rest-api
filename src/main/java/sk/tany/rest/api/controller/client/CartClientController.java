@@ -97,12 +97,7 @@ public class CartClientController {
 
     @PostMapping("/items")
     public ResponseEntity<CartClientAddProductResponse> addProduct(@RequestBody CartClientAddItemRequest request) {
-        String cartId = cartService.addProductToCart(request.getCartId(), request.getProductId(), request.getQuantity());
-        CartDto cartDto = cartService.getOrCreateCart(cartId, null);
-        CartClientAddProductResponse response = new CartClientAddProductResponse();
-        response.setCartId(cartId);
-        response.setPriceBreakDown(cartDto.getPriceBreakDown());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(cartService.addProductToCart(request.getCartId(), request.getProductId(), request.getQuantity()));
     }
 
     @DeleteMapping("/items")
