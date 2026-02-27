@@ -296,15 +296,12 @@ public class ProductSearchEngine {
     }
 
     public List<Product> searchAndSort(String query, boolean prioritizeStock) {
-        if (StringUtils.isBlank(query)) {
-            return List.of();
-        }
+        if (StringUtils.isBlank(query)) return List.of();
 
         String normalizedQuery = StringUtils.stripAccents(query.toLowerCase()).trim();
         String[] queryWords = normalizedQuery.split("\\s+");
 
         return cachedProducts.stream()
-                // 1. Základné textové pred-filtrovanie (rýchle)
                 .filter(product -> {
                     if (product.getTitle() == null) return false;
                     String normalizedName = StringUtils.stripAccents(product.getTitle().toLowerCase());
@@ -315,30 +312,31 @@ public class ProductSearchEngine {
                             )
                     );
                 })
-                // 2. Výpočet relevancie a zabalenie do pomocného záznamu (Record/Tuple)
-                .map(product -> new Object() {
-                    Product p = product;
+                .map(product -> {
                     double rel = calculateRelevance(product.getTitle(), normalizedQuery);
+                    int sales = getSalesCount(product.getId()) != null ? getSalesCount(product.getId()) : 0;
+
+                    // VÝPOČET FINÁLNEHO SKÓRE
+                    // Relevancia má váhu (1000 bodov), predaje pridajú bonus.
+                    // Týmto zabezpečíme, že poradie je vždy lineárne a konzistentné.
+                    double finalScore = rel * 100 + (sales / 1000.0);
+
+                    return new Object() {
+                        Product p = product;
+                        double relevance = rel;
+                        double score = finalScore;
+                    };
                 })
-                // 3. Filter na minimálnu relevanciu 0.6
-                .filter(item -> item.rel >= 0.51)
-                // 4. Komplexné triedenie
+                .filter(item -> item.relevance >= 0.51)
                 .sorted((a, b) -> {
+                    // 1. Priorita skladu (stále môže byť prvá, ak je to binárne skladom/neskladom)
                     if (prioritizeStock) {
                         int stockCompare = STOCK_COMPARATOR.compare(a.p, b.p);
                         if (stockCompare != 0) return stockCompare;
                     }
 
-                    // Ak je rozdiel v relevancii citeľný, uprednostni relevanciu
-                    if (Math.abs(a.rel - b.rel) > 0.05) {
-                        return Double.compare(b.rel, a.rel);
-                    }
-
-                    // Inak rozhoduje predajnosť
-                    int salesA = getSalesCount(a.p.getId()) != null ? getSalesCount(a.p.getId()) : 0;
-                    int salesB = getSalesCount(b.p.getId()) != null ? getSalesCount(b.p.getId()) : 0;
-
-                    return Integer.compare(salesB, salesA);
+                    // 2. Triedenie podľa vypočítaného skóre
+                    return Double.compare(b.score, a.score);
                 })
                 .map(item -> item.p)
                 .toList();
