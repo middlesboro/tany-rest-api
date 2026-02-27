@@ -7,6 +7,8 @@ import dev.langchain4j.service.AiServices;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import sk.tany.rest.api.service.chat.CrossSellAssistant;
+import sk.tany.rest.api.service.chat.CrossSellTools;
 import sk.tany.rest.api.service.chat.OrderAssistant;
 import sk.tany.rest.api.service.chat.OrderTools;
 
@@ -41,6 +43,14 @@ public class AiConfig {
         return AiServices.builder(OrderAssistant.class)
                 .chatModel(chatModel)
                 .tools(orderTools)
+                .build();
+    }
+
+    @Bean
+    public CrossSellAssistant crossSellAssistant(ChatModel chatModel, CrossSellTools crossSellTools) {
+        return AiServices.builder(CrossSellAssistant.class)
+                .chatModel(chatModel)
+                .tools(crossSellTools)
                 .build();
     }
 }
