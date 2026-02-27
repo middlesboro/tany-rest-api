@@ -22,19 +22,8 @@ import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemRequest;
 import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemResponse;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateRequest;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateResponse;
-import sk.tany.rest.api.dto.client.product.ProductClientDto;
-import sk.tany.rest.api.dto.client.product.ProductDto;
 import sk.tany.rest.api.mapper.CartClientApiMapper;
-import sk.tany.rest.api.mapper.ProductClientApiMapper;
 import sk.tany.rest.api.service.client.CartClientService;
-import sk.tany.rest.api.service.client.ProductClientService;
-import sk.tany.rest.api.component.ProductSearchEngine;
-import sk.tany.rest.api.domain.product.Product;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/cart")
@@ -43,9 +32,6 @@ public class CartClientController {
 
     private final CartClientService cartService;
     private final CartClientApiMapper cartClientApiMapper;
-    private final ProductClientService productService;
-    private final ProductClientApiMapper productClientApiMapper;
-    private final ProductSearchEngine productSearchEngine;
 
     @PutMapping
     public ResponseEntity<CartClientUpdateResponse> updateCart(@RequestBody @Valid CartClientUpdateRequest request) {
@@ -101,55 +87,7 @@ public class CartClientController {
 
     @PostMapping("/items")
     public ResponseEntity<CartClientAddProductResponse> addProduct(@RequestBody CartClientAddItemRequest request) {
-        String cartId = cartService.addProductToCart(request.getCartId(), request.getProductId(), request.getQuantity());
-        CartDto cartDto = cartService.getOrCreateCart(cartId, null);
-        CartClientAddProductResponse response = new CartClientAddProductResponse();
-        response.setCartId(cartId);
-        response.setPriceBreakDown(cartDto.getPriceBreakDown());
-
-        Optional<ProductClientDto> productOpt = productService.findById(request.getProductId());
-        productOpt.ifPresent(product -> response.setProduct(productClientApiMapper.toProductDto(product)));
-
-        List<String> queries = List.of("sojova sviecka", "mydlo", "voskovy", "bambus", "mydelnicka", "set aroma", "vonne");
-        List<ProductDto> suggestedProducts = new ArrayList<>();
-        List<List<Product>> queryResults = new ArrayList<>();
-
-        // Fetch products for all queries
-        for (String query : queries) {
-            List<Product> products = productSearchEngine.searchAndSort(query, true);
-            // Filter only on-stock products
-            List<Product> onStockProducts = products.stream()
-                    .filter(p -> p.getQuantity() != null && p.getQuantity() > 0)
-                    .toList();
-            queryResults.add(new ArrayList<>(onStockProducts));
-        }
-
-        // Try to pick one product from each query result
-        for (List<Product> results : queryResults) {
-            if (!results.isEmpty()) {
-                suggestedProducts.add(productClientApiMapper.toProductDto(results.removeFirst()));
-            }
-        }
-
-        // Fill up to 6 products if needed
-        int queryIndex = 0;
-        while (suggestedProducts.size() < 6 && queryResults.stream().anyMatch(list -> !list.isEmpty())) {
-            List<Product> results = queryResults.get(queryIndex % queryResults.size());
-            if (!results.isEmpty()) {
-                suggestedProducts.add(productClientApiMapper.toProductDto(results.removeFirst()));
-            }
-            queryIndex++;
-        }
-
-        // Trim to max 6 just in case (though loop above handles it)
-        if (suggestedProducts.size() > 6) {
-             suggestedProducts = suggestedProducts.subList(0, 6);
-        }
-
-        Collections.shuffle(suggestedProducts);
-        response.setSuggestedProducts(suggestedProducts);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(cartService.addProductToCart(request.getCartId(), request.getProductId(), request.getQuantity()));
     }
 
     @DeleteMapping("/items")

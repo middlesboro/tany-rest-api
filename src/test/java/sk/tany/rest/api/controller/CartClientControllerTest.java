@@ -12,6 +12,7 @@ import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
 import sk.tany.rest.api.controller.client.CartClientController;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddItemRequest;
+import sk.tany.rest.api.dto.client.cart.add.CartClientAddProductResponse;
 import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierRequest;
 import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierResponse;
 import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentRequest;
@@ -49,15 +50,6 @@ public class CartClientControllerTest {
     @MockitoBean
     private sk.tany.rest.api.config.CorsConfig corsConfig;
 
-    @MockitoBean
-    private sk.tany.rest.api.service.client.ProductClientService productService;
-
-    @MockitoBean
-    private sk.tany.rest.api.mapper.ProductClientApiMapper productClientApiMapper;
-
-    @MockitoBean
-    private sk.tany.rest.api.component.ProductSearchEngine productSearchEngine;
-
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -72,10 +64,10 @@ public class CartClientControllerTest {
         request.setProductId(productId);
         request.setQuantity(quantity);
 
-        CartDto cartDto = new CartDto();
-        cartDto.setCartId(cartId);
-        given(cartService.getOrCreateCart(cartId, null)).willReturn(cartDto);
-        given(cartService.addProductToCart(cartId, productId, quantity)).willReturn(cartId);
+        CartClientAddProductResponse response = new CartClientAddProductResponse();
+        response.setCartId(cartId);
+
+        given(cartService.addProductToCart(cartId, productId, quantity)).willReturn(response);
 
         mockMvc.perform(post("/api/cart/items")
                 .contentType(MediaType.APPLICATION_JSON)
