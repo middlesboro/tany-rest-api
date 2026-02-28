@@ -11,11 +11,16 @@ import sk.tany.rest.api.exception.EmailException;
 
 import java.io.File;
 
-@Service
+@Service("mailerSendEmailService")
 @RequiredArgsConstructor
-public class EmailServiceImpl implements EmailService {
+public class MailerSendEmailService implements PlatformEmailService {
 
     private final MailerSendConfig mailerSendConfig;
+
+    @Override
+    public sk.tany.rest.api.domain.mailplatform.MailPlatformType getPlatformType() {
+        return sk.tany.rest.api.domain.mailplatform.MailPlatformType.MAILER_SEND;
+    }
 
     @Override
     public void sendEmail(String to, String subject, String body, boolean isHtml, File... attachments) {
