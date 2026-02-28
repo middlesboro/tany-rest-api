@@ -1,11 +1,10 @@
 package sk.tany.rest.api.domain.cart;
 
 import lombok.Data;
-import org.springframework.data.annotation.Id;
 import sk.tany.rest.api.domain.BaseEntity;
 import sk.tany.rest.api.domain.customer.Address;
+import sk.tany.rest.api.dto.PriceBreakDown;
 
-import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -26,4 +25,5 @@ public class Cart extends BaseEntity {
     private boolean deliveryAddressSameAsInvoiceAddress;
     private List<String> discountCodes;
     private boolean discountForNewsletter;
+    private PriceBreakDown priceBreakDown;
 }

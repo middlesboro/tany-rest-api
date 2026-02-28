@@ -9,15 +9,16 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
-import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.exception.ProductException;
+import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ProductEmbeddingService;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -103,9 +104,11 @@ public class ProductClientServiceImpl implements ProductClientService {
     }
 
     @Override
-    public java.util.List<ProductClientDto> findAllByIds(Iterable<String> ids) {
+    public java.util.List<ProductClientDto> findAllByIds(List<String> ids) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
         List<Product> products = productRepository.findAllById(ids);
+        // sorting products by the order of ids in the input list. spring data does not guarantee order when using findAllById, so we need to sort manually
+        products.sort(Comparator.comparingInt(p -> ids.indexOf(p.getId())));
         return mapToEnhancedDtos(products, wishlistProductIds);
     }
 

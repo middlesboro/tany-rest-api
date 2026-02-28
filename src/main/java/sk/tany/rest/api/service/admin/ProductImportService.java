@@ -122,6 +122,9 @@ public class ProductImportService {
             if (StringUtils.isNotBlank(baseData.getStockQty())) {
                 existingProduct.setQuantity(Integer.parseInt(baseData.getStockQty()));
                 existingProduct.setProductIdentifier(productIdentifier);
+                if (StringUtils.isNotBlank(baseData.getExternalStock())) {
+                    existingProduct.setExternalStock(baseData.getExternalStock().equals("1"));
+                }
                 Product savedProduct = productRepository.save(existingProduct);
                 productSearchEngine.updateProduct(savedProduct);
             }

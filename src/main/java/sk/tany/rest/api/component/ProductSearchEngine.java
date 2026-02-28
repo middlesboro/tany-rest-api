@@ -158,6 +158,9 @@ public class ProductSearchEngine {
     }
 
     public Integer getSalesCount(String productId) {
+        if (productId == null) {
+            return 0;
+        }
         return cachedProductSales.getOrDefault(productId, 0);
     }
 
@@ -293,40 +296,50 @@ public class ProductSearchEngine {
     }
 
     public List<Product> searchAndSort(String query, boolean prioritizeStock) {
-        if (StringUtils.isBlank(query)) {
-            return List.of();
-        }
+        if (StringUtils.isBlank(query)) return List.of();
 
-        // 1. Normalizácia vstupu
         String normalizedQuery = StringUtils.stripAccents(query.toLowerCase()).trim();
         String[] queryWords = normalizedQuery.split("\\s+");
 
         return cachedProducts.stream()
-            // 2. Filtrovanie (musí obsahovať aspoň niečo podobné všetkým slovám v dopyte)
-            .filter(product -> {
-                if (product.getTitle() == null) {
-                    return false;
-                }
-                String normalizedName = StringUtils.stripAccents(product.getTitle().toLowerCase());
-                String[] nameWords = normalizedName.split("\\s+");
+                .filter(product -> {
+                    if (product.getTitle() == null) return false;
+                    String normalizedName = StringUtils.stripAccents(product.getTitle().toLowerCase());
+                    String[] nameWords = normalizedName.split("\\s+");
+                    return Arrays.stream(queryWords).allMatch(qWord ->
+                            Arrays.stream(nameWords).anyMatch(nWord ->
+                                    nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
+                            )
+                    );
+                })
+                .map(product -> {
+                    double rel = calculateRelevance(product.getTitle(), normalizedQuery);
+                    int sales = getSalesCount(product.getId()) != null ? getSalesCount(product.getId()) : 0;
 
-                return Arrays.stream(queryWords).allMatch(qWord ->
-                    Arrays.stream(nameWords).anyMatch(nWord ->
-                        nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
-                    )
-                );
-            })
-            // 3. Výpočet skóre a zoradenie
-            .sorted((p1, p2) -> {
-                if (prioritizeStock) {
-                    int stockCompare = STOCK_COMPARATOR.compare(p1, p2);
-                    if (stockCompare != 0) return stockCompare;
-                }
-                Double score1 = calculateRelevance(p1.getTitle(), normalizedQuery);
-                Double score2 = calculateRelevance(p2.getTitle(), normalizedQuery);
-                return score2.compareTo(score1); // Od najvyššieho skóre
-            })
-            .toList();
+                    // VÝPOČET FINÁLNEHO SKÓRE
+                    // Relevancia má váhu (1000 bodov), predaje pridajú bonus.
+                    // Týmto zabezpečíme, že poradie je vždy lineárne a konzistentné.
+                    double finalScore = rel * 100 + (sales / 1000.0);
+
+                    return new Object() {
+                        Product p = product;
+                        double relevance = rel;
+                        double score = finalScore;
+                    };
+                })
+                .filter(item -> item.relevance >= 0.51)
+                .sorted((a, b) -> {
+                    // 1. Priorita skladu (stále môže byť prvá, ak je to binárne skladom/neskladom)
+                    if (prioritizeStock) {
+                        int stockCompare = STOCK_COMPARATOR.compare(a.p, b.p);
+                        if (stockCompare != 0) return stockCompare;
+                    }
+
+                    // 2. Triedenie podľa vypočítaného skóre
+                    return Double.compare(b.score, a.score);
+                })
+                .map(item -> item.p)
+                .toList();
     }
 
     private Double calculateRelevance(String productName, String normalizedQuery) {

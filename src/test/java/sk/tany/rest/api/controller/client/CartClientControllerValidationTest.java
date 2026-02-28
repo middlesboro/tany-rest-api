@@ -72,13 +72,55 @@ class CartClientControllerValidationTest {
     void updateCart_WhenEmailIsInvalid_ShouldReturnBadRequest() throws Exception {
         CartClientUpdateRequest request = new CartClientUpdateRequest();
         request.setCartId("cart-1");
-        request.setEmail("invalid-email");
+        request.setEmail("invalid-email"); // Invalid format
 
         mockMvc.perform(put("/api/cart")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser
+    void updateCart_WhenEmailIsEmpty_ShouldReturnOk() throws Exception {
+        CartClientUpdateRequest request = new CartClientUpdateRequest();
+        request.setCartId("cart-1");
+        request.setEmail(""); // Valid (empty allowed)
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId("cart-1");
+
+        when(cartService.getOrCreateCart(eq("cart-1"), any())).thenReturn(cartDto);
+        when(cartService.save(any(CartDto.class))).thenReturn(cartDto);
+        when(cartClientApiMapper.toUpdateResponse(any(CartDto.class))).thenReturn(new CartClientUpdateResponse());
+
+        mockMvc.perform(put("/api/cart")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void updateCart_WhenEmailHasPlusAndLongTld_ShouldReturnOk() throws Exception {
+        CartClientUpdateRequest request = new CartClientUpdateRequest();
+        request.setCartId("cart-1");
+        request.setEmail("test+tag@example.online"); // Valid complex email
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId("cart-1");
+
+        when(cartService.getOrCreateCart(eq("cart-1"), any())).thenReturn(cartDto);
+        when(cartService.save(any(CartDto.class))).thenReturn(cartDto);
+        when(cartClientApiMapper.toUpdateResponse(any(CartDto.class))).thenReturn(new CartClientUpdateResponse());
+
+        mockMvc.perform(put("/api/cart")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -98,21 +140,28 @@ class CartClientControllerValidationTest {
 
     @Test
     @WithMockUser
-    void updateCart_WhenAddressIsInvalid_ShouldReturnBadRequest() throws Exception {
+    void updateCart_WhenAddressHasEmptyFields_ShouldReturnOk() throws Exception {
         CartClientUpdateRequest request = new CartClientUpdateRequest();
         request.setCartId("cart-1");
         AddressDto address = new AddressDto();
-        address.setStreet(""); // Invalid
+        address.setStreet(""); // Would be invalid if validated
         address.setCity("City");
         address.setZip("12345");
         address.setCountry("Country");
         request.setInvoiceAddress(address);
 
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId("cart-1");
+
+        when(cartService.getOrCreateCart(eq("cart-1"), any())).thenReturn(cartDto);
+        when(cartService.save(any(CartDto.class))).thenReturn(cartDto);
+        when(cartClientApiMapper.toUpdateResponse(any(CartDto.class))).thenReturn(new CartClientUpdateResponse());
+
         mockMvc.perform(put("/api/cart")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isOk());
     }
 
     @Test

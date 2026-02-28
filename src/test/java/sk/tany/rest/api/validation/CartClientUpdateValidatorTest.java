@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateRequest;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateRequest.CartItem;
+import sk.tany.rest.api.service.HtmlSanitizerService;
 
 import java.util.List;
 
@@ -30,9 +31,12 @@ class CartClientUpdateValidatorTest {
     private ConstraintValidatorContext.ConstraintViolationBuilder builder;
     @Mock
     private ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext nodeBuilder;
+    @Mock
+    private HtmlSanitizerService htmlSanitizerService;
 
     @BeforeEach
     void setUp() {
+        lenient().when(htmlSanitizerService.sanitize(anyString())).thenAnswer(i -> i.getArgument(0));
         lenient().when(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(builder);
         lenient().when(builder.addPropertyNode(anyString())).thenReturn(nodeBuilder);
         lenient().when(nodeBuilder.addConstraintViolation()).thenReturn(context);
@@ -119,8 +123,11 @@ class CartClientUpdateValidatorTest {
     void isValid_ShouldReturnFalse_WhenAddressContainsXSS() {
         CartClientUpdateRequest request = new CartClientUpdateRequest();
         request.setCartId("cart-123");
-        AddressDto address = new AddressDto("<script>alert(1)</script>", "City", "Zip", "Country");
+        String dangerous = "<script>alert(1)</script>";
+        AddressDto address = new AddressDto(dangerous, "City", "Zip", "Country");
         request.setInvoiceAddress(address);
+
+        when(htmlSanitizerService.sanitize(dangerous)).thenReturn("");
 
         boolean result = validator.isValid(request, context);
 
@@ -131,7 +138,10 @@ class CartClientUpdateValidatorTest {
     void isValid_ShouldReturnFalse_WhenGlobalFieldContainsXSS() {
         CartClientUpdateRequest request = new CartClientUpdateRequest();
         request.setCartId("cart-123");
-        request.setFirstname("<script>alert(1)</script>");
+        String dangerous = "<script>alert(1)</script>";
+        request.setFirstname(dangerous);
+
+        when(htmlSanitizerService.sanitize(dangerous)).thenReturn("");
 
         boolean result = validator.isValid(request, context);
 
@@ -141,7 +151,10 @@ class CartClientUpdateValidatorTest {
     @Test
     void isValid_ShouldReturnFalse_WhenCartIdContainsXSS() {
         CartClientUpdateRequest request = new CartClientUpdateRequest();
-        request.setCartId("<script>alert(1)</script>");
+        String dangerous = "<script>alert(1)</script>";
+        request.setCartId(dangerous);
+
+        when(htmlSanitizerService.sanitize(dangerous)).thenReturn("");
 
         boolean result = validator.isValid(request, context);
 
@@ -153,8 +166,11 @@ class CartClientUpdateValidatorTest {
         CartClientUpdateRequest request = new CartClientUpdateRequest();
         request.setCartId("cart-123");
 
-        CartItem item = new CartItem("<script>alert(1)</script>", 1);
+        String dangerous = "<script>alert(1)</script>";
+        CartItem item = new CartItem(dangerous, 1);
         request.setItems(List.of(item));
+
+        when(htmlSanitizerService.sanitize(dangerous)).thenReturn("");
 
         boolean result = validator.isValid(request, context);
 

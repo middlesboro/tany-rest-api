@@ -16,12 +16,14 @@ import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
 import sk.tany.rest.api.dto.client.review.ReviewClientCreateRequest;
 import sk.tany.rest.api.dto.client.review.ReviewClientProductResponse;
+import sk.tany.rest.api.service.HtmlSanitizerService;
 import sk.tany.rest.api.service.client.ReviewClientService;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -62,8 +64,13 @@ class ReviewClientControllerTest {
     @MockitoBean
     private sk.tany.rest.api.config.CorsConfig corsConfig;
 
+    @MockitoBean
+    private HtmlSanitizerService htmlSanitizerService;
+
     @org.junit.jupiter.api.BeforeEach
     void setUp() throws Exception {
+        when(htmlSanitizerService.sanitize(anyString())).thenAnswer(i -> i.getArgument(0));
+
         org.mockito.Mockito.doAnswer(invocation -> {
             jakarta.servlet.FilterChain chain = invocation.getArgument(2);
             chain.doFilter(invocation.getArgument(0), invocation.getArgument(1));
