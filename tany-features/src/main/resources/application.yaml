@@ -1,0 +1,28 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: tany-features
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/tany}
+      auto-index-creation: true
+
+tany:
+  features:
+    api-key: ${TANY_FEATURES_API_KEY}
+  ai:
+    provider: ${TANY_AI_PROVIDER:gemini}
+    cross-sell:
+      provider: ${TANY_AI_CROSS_SELL_PROVIDER:java}
+
+langchain4j:
+  google-ai-gemini:
+    api-key: ${GOOGLE_AI_GEMINI_API_KEY:}
+  mistral:
+    api-key: ${MISTRAL_API_KEY:}
+
+logging:
+  level:
+    sk.tany: DEBUG
