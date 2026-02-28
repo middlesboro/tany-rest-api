@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
+import sk.tany.rest.api.dto.CrossSellProductDto;
 import sk.tany.rest.api.dto.CrossSellProductsResponse;
 import sk.tany.rest.api.dto.CrossSellResponse;
 import sk.tany.rest.api.dto.client.cart.add.CartClientAddItemRequest;
@@ -31,7 +32,9 @@ import sk.tany.rest.api.service.chat.CrossSellAssistant;
 import sk.tany.rest.api.service.client.CartClientService;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -144,13 +147,21 @@ public class CartClientController {
                 .map(CartItem::getProductId)
                 .collect(Collectors.toList());
 
+        Set<String> seenProductIds = new HashSet<>();
         List<CrossSellResponse> responses = new ArrayList<>();
 
         for (CartItem item : cartDto.getItems()) {
             CrossSellProductsResponse assistantResponse = crossSellAssistant.findCrossSellProducts(item.getTitle(), excludeIds);
+
+            List<CrossSellProductDto> uniqueProducts = assistantResponse.getProducts().stream()
+                    .filter(p -> !seenProductIds.contains(p.getId()))
+                    .toList();
+
+            seenProductIds.addAll(assistantResponse.getProducts().stream().map(CrossSellProductDto::getId).collect(Collectors.toSet()));
+
             CrossSellResponse response = new CrossSellResponse();
             response.setSourceProductId(item.getProductId());
-            response.setCrossSellProducts(assistantResponse.getProducts());
+            response.setCrossSellProducts(uniqueProducts);
             responses.add(response);
         }
 
