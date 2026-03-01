@@ -95,6 +95,9 @@ isklad:
   incoming-api-key: ${ISKLAD_INCOMING_API_KEY}
 
 tany:
+  features:
+    url: ${TANY_FEATURES_URL:http://localhost:8081}
+    api-key: ${TANY_FEATURES_API_KEY:}
   ai:
     provider: ${TANY_AI_PROVIDER:gemini}
     cross-sell:
