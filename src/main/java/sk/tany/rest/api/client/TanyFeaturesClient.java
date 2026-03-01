@@ -54,6 +54,21 @@ public class TanyFeaturesClient {
         }
     }
 
+    public java.util.List<sk.tany.rest.api.dto.client.product.ProductClientDto> getRelatedProducts(String productId) {
+        log.debug("Calling tany-features to get related products for {}", productId);
+        try {
+            ResponseEntity<java.util.List<sk.tany.rest.api.dto.client.product.ProductClientDto>> response = restClient.get()
+                    .uri(config.getUrl() + "/api/features/embeddings/related/" + productId)
+                    .headers(h -> h.addAll(getHeaders()))
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<java.util.List<sk.tany.rest.api.dto.client.product.ProductClientDto>>() {});
+            return response.getBody() != null ? response.getBody() : Collections.emptyList();
+        } catch (Exception e) {
+            log.error("Failed to get related products for {} via tany-features", productId, e);
+            return Collections.emptyList();
+        }
+    }
+
     public String chatMessage(CustomerMessageCreateRequest request) {
         log.debug("Calling tany-features AI assistant...");
         ResponseEntity<String> response = restClient.post()

@@ -35,7 +35,6 @@ public class ProductEmbeddingService {
     }
 
     public List<ProductClientDto> findRelatedProducts(String productId) {
-        log.warn("findRelatedProducts is not supported directly when extracting embeddings to tany-features. Ensure the caller implementation is updated or an endpoint is provided.");
-        return Collections.emptyList();
+        return tanyFeaturesClient.getRelatedProducts(productId);
     }
 }
