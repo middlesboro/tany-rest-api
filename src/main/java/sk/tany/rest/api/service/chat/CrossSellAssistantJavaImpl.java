@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.dto.CrossSellProductDto;
 import sk.tany.rest.api.dto.CrossSellProductsResponse;
 
@@ -18,7 +20,7 @@ import java.util.Set;
 @ConditionalOnProperty(name = "tany.ai.cross-sell.provider", havingValue = "java", matchIfMissing = true)
 public class CrossSellAssistantJavaImpl implements CrossSellAssistant {
 
-    private final CrossSellTools crossSellTools;
+    private final ProductSearchEngine productSearchEngine;
 
     @Override
     public CrossSellProductsResponse findCrossSellProducts(String productTitle, List<String> excludeIds) {
@@ -62,7 +64,7 @@ public class CrossSellAssistantJavaImpl implements CrossSellAssistant {
             return;
         }
 
-        List<CrossSellProductDto> foundProducts = crossSellTools.searchProducts(query, new ArrayList<>(excludedProductIds));
+        List<CrossSellProductDto> foundProducts = searchProducts(query, new ArrayList<>(excludedProductIds));
 
         for (CrossSellProductDto product : foundProducts) {
             if (resultProducts.size() >= 3) {
@@ -73,5 +75,25 @@ public class CrossSellAssistantJavaImpl implements CrossSellAssistant {
                 excludedProductIds.add(product.getId());
             }
         }
+    }
+
+    private List<CrossSellProductDto> searchProducts(String query, List<String> excludeIds) {
+        List<Product> products = productSearchEngine.searchAndSort(query, true).stream()
+                .filter(p -> p.getQuantity() != null && p.getQuantity() > 0 && !excludeIds.contains(p.getId()))
+                .toList();
+
+        return products.stream()
+                .map(p -> {
+                    CrossSellProductDto dto = new CrossSellProductDto();
+                    dto.setId(p.getId());
+                    dto.setTitle(p.getTitle());
+                    dto.setSlug(p.getSlug());
+                    dto.setPrice(p.getDiscountPrice() != null ? p.getDiscountPrice() : p.getPrice());
+                    if (p.getImages() != null && !p.getImages().isEmpty()) {
+                        dto.setImage(p.getImages().getFirst());
+                    }
+                    return dto;
+                })
+                .toList();
     }
 }
