@@ -51,6 +51,9 @@ public class InvoiceServiceTest {
     @Mock
     private ShopSettingsRepository shopSettingsRepository;
 
+    @Mock
+    private sk.tany.rest.api.client.TanyFeaturesClient tanyFeaturesClient;
+
     @InjectMocks
     private InvoiceServiceImpl invoiceService;
 
@@ -96,13 +99,14 @@ public class InvoiceServiceTest {
         Customer customer = new Customer();
         customer.setFirstname("John");
         customer.setLastname("Doe");
-        when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
 
         Product product = new Product();
         product.setId("prod1");
         product.setProductCode("CODE123");
         product.setEan("EAN123");
         when(productRepository.findAllById(anyList())).thenReturn(List.of(product));
+        when(tanyFeaturesClient.generateInvoice(org.mockito.ArgumentMatchers.any())).thenReturn("%PDFdummy-pdf".getBytes());
+        when(tanyFeaturesClient.generateInvoice(org.mockito.ArgumentMatchers.any())).thenReturn("%PDFdummy-pdf".getBytes());
 
         byte[] result = invoiceService.generateInvoice(orderId);
 
@@ -158,13 +162,14 @@ public class InvoiceServiceTest {
         Customer customer = new Customer();
         customer.setFirstname("John");
         customer.setLastname("Doe");
-        when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
+
 
         Product product = new Product();
         product.setId("prod1");
         product.setProductCode("CODE123");
         product.setEan("EAN123");
         when(productRepository.findAllById(anyList())).thenReturn(List.of(product));
+        when(tanyFeaturesClient.generateInvoice(org.mockito.ArgumentMatchers.any())).thenReturn("%PDFdummy-pdf".getBytes());
 
         byte[] result = invoiceService.generateInvoice(orderId);
 

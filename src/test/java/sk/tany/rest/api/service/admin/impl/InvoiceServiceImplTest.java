@@ -1,8 +1,8 @@
 package sk.tany.rest.api.service.admin.impl;
 
-import org.openpdf.text.pdf.PdfReader;
-import org.openpdf.text.pdf.parser.PdfTextExtractor;
 import org.junit.jupiter.api.Assertions;
+import org.mockito.ArgumentCaptor;
+import sk.tany.rest.api.dto.features.InvoiceDataDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -43,6 +43,9 @@ class InvoiceServiceImplTest {
     @Mock
     private ShopSettingsRepository shopSettingsRepository;
 
+    @Mock
+    private sk.tany.rest.api.client.TanyFeaturesClient tanyFeaturesClient;
+
     @InjectMocks
     private InvoiceServiceImpl invoiceService;
 
@@ -71,18 +74,14 @@ class InvoiceServiceImplTest {
         when(carrierRepository.findById("carrier-1")).thenReturn(Optional.empty());
         when(paymentRepository.findById("payment-1")).thenReturn(Optional.empty());
 
+        when(tanyFeaturesClient.generateInvoice(org.mockito.ArgumentMatchers.any())).thenReturn(new byte[]{1, 2, 3});
 
         byte[] pdfBytes = invoiceService.generateInvoice(orderId);
 
         Assertions.assertNotNull(pdfBytes);
         Assertions.assertTrue(pdfBytes.length > 0);
 
-        PdfReader reader = new PdfReader(pdfBytes);
-        PdfTextExtractor extractor = new PdfTextExtractor(reader);
-        String text = extractor.getTextFromPage(1);
-
-        Assertions.assertTrue(text.contains("Faktúra je už uhradená") || text.contains("FAKTÚRA JE UŽ UHRADEN"),
-            "PDF should contain text about invoice being paid. Found content: " + text);
+        org.mockito.Mockito.verify(tanyFeaturesClient).generateInvoice(org.mockito.ArgumentMatchers.argThat(dto -> "PAID".equals(dto.getStatus())));
     }
 
     @Test
@@ -111,13 +110,11 @@ class InvoiceServiceImplTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
-        byte[] pdfBytes = invoiceService.generateInvoice(orderId);
-        PdfReader reader = new PdfReader(pdfBytes);
-        PdfTextExtractor extractor = new PdfTextExtractor(reader);
-        String text = extractor.getTextFromPage(1);
+        when(tanyFeaturesClient.generateInvoice(org.mockito.ArgumentMatchers.any())).thenReturn(new byte[]{1, 2, 3});
 
-        // Expected format: 2026000003
-        Assertions.assertTrue(text.contains("2026000003"), "PDF should contain document number 2026000003. Found content: " + text);
+        byte[] pdfBytes = invoiceService.generateInvoice(orderId);
+
+        org.mockito.Mockito.verify(tanyFeaturesClient).generateInvoice(org.mockito.ArgumentMatchers.argThat(dto -> dto.getOrderIdentifier() != null && dto.getOrderIdentifier().equals(3L)));
     }
 
     @Test
@@ -158,18 +155,11 @@ class InvoiceServiceImplTest {
         when(carrierRepository.findById("carrier-1")).thenReturn(Optional.empty());
         when(paymentRepository.findById("payment-1")).thenReturn(Optional.empty());
 
+        when(tanyFeaturesClient.generateCreditNote(org.mockito.ArgumentMatchers.any())).thenReturn(new byte[]{1, 2, 3});
+
         byte[] pdfBytes = invoiceService.generateCreditNote(orderId);
-        PdfReader reader = new PdfReader(pdfBytes);
-        PdfTextExtractor extractor = new PdfTextExtractor(reader);
-        String text = extractor.getTextFromPage(1);
 
-        // Document number check: 2026000050
-        Assertions.assertTrue(text.contains("2026000050"), "PDF should contain credit note number 2026000050. Found: " + text);
-
-        // Discount check: Should be "-10.00"
-        // Since we force multiplier 1 for discount in credit note, -10 * 1 = -10.
-        // It should appear as "-10.00 €"
-        Assertions.assertTrue(text.contains("-10.00 €"), "PDF should contain negative discount value. Found: " + text);
+        org.mockito.Mockito.verify(tanyFeaturesClient).generateCreditNote(org.mockito.ArgumentMatchers.argThat(dto -> dto.getOrderIdentifier() != null && dto.getOrderIdentifier().equals(50L)));
     }
 
     @Test
@@ -198,19 +188,11 @@ class InvoiceServiceImplTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
+        when(tanyFeaturesClient.generateInvoice(org.mockito.ArgumentMatchers.any())).thenReturn(new byte[]{1, 2, 3});
+
         byte[] pdfBytes = invoiceService.generateInvoice(orderId);
 
-        PdfReader reader = new PdfReader(pdfBytes);
-        PdfTextExtractor extractor = new PdfTextExtractor(reader);
-        String text = extractor.getTextFromPage(1);
-
-        // Should be FAKTÚRA, not DOBROPIS
-        Assertions.assertTrue(text.contains("FAKTÚRA") || text.contains("Faktúra"), "Should contain Invoice title");
-        Assertions.assertFalse(text.contains("DOBROPIS"), "Should NOT contain Credit Note title");
-
-        // Should use OrderIdentifier (100) not CreditNoteIdentifier (null/0)
-        // 2026000100
-        Assertions.assertTrue(text.contains("2026000100"), "Should contain order identifier in doc number");
+        org.mockito.Mockito.verify(tanyFeaturesClient).generateInvoice(org.mockito.ArgumentMatchers.argThat(dto -> dto.getOrderIdentifier() != null && dto.getOrderIdentifier().equals(100L)));
     }
 
     @Test
@@ -238,16 +220,10 @@ class InvoiceServiceImplTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
-        byte[] pdfBytes = invoiceService.generateInvoice(orderId);
-        PdfReader reader = new PdfReader(pdfBytes);
-        PdfTextExtractor extractor = new PdfTextExtractor(reader);
-        String text = extractor.getTextFromPage(1);
+        when(tanyFeaturesClient.generateInvoice(org.mockito.ArgumentMatchers.any())).thenReturn(new byte[]{1, 2, 3});
 
-        // Check for footer content
-        // Note: PdfTextExtractor might merge lines, so we check for substrings
-        Assertions.assertTrue(text.contains("info@tany.sk"), "PDF should contain footer email. Found: " + text);
-        // Clean up text for check because extraction might have artifacts
-        Assertions.assertTrue(text.replace(" ", "").contains("421944432457"), "PDF should contain footer phone. Found: " + text);
-        Assertions.assertTrue(text.contains("Tany.sk"), "PDF should contain footer eshop name. Found: " + text);
+        byte[] pdfBytes = invoiceService.generateInvoice(orderId);
+
+        org.mockito.Mockito.verify(tanyFeaturesClient).generateInvoice(org.mockito.ArgumentMatchers.argThat(dto -> "info@tany.sk".equals(dto.getShopEmail()) && "421944432457".equals(dto.getShopPhone())));
     }
 }
