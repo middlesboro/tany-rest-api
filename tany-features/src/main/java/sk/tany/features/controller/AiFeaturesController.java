@@ -42,6 +42,12 @@ public class AiFeaturesController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/chat/assistant")
+    public ResponseEntity<String> chatAssistant(@RequestBody String message) {
+        String response = orderAssistant.chat(message);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/embeddings/related/{productId}")
     public ResponseEntity<java.util.List<sk.tany.features.dto.ProductClientDto>> getRelatedProducts(@PathVariable String productId) {
         return ResponseEntity.ok(productEmbeddingService.findRelatedProducts(productId));

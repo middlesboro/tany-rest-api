@@ -80,6 +80,17 @@ public class TanyFeaturesClient {
         return response.getBody();
     }
 
+    public String chatAssistant(String message) {
+        log.debug("Calling tany-features AI order assistant...");
+        ResponseEntity<String> response = restClient.post()
+                .uri(config.getUrl() + "/api/features/chat/assistant")
+                .headers(h -> h.addAll(getHeaders()))
+                .body(message)
+                .retrieve()
+                .toEntity(String.class);
+        return response.getBody();
+    }
+
     public byte[] generateInvoice(InvoiceDataDto invoiceData) {
         log.info("Calling tany-features to generate invoice for order {}", invoiceData.getOrderIdentifier());
         ResponseEntity<byte[]> response = restClient.post()
