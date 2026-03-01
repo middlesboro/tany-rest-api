@@ -1,6 +1,8 @@
 package sk.tany.features.service.admin;
 
+import sk.tany.features.dto.InvoiceDataDto;
+
 public interface InvoiceService {
-    byte[] generateInvoice(String orderId);
-    byte[] generateCreditNote(String orderId);
+    byte[] generateInvoice(InvoiceDataDto invoiceData);
+    byte[] generateCreditNote(InvoiceDataDto invoiceData);
 }
