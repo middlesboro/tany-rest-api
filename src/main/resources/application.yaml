@@ -108,3 +108,7 @@ langchain4j:
     api-key: ${GOOGLE_AI_GEMINI_API_KEY}
   mistral:
     api-key: ${MISTRAL_API_KEY}
+
+springdoc:
+  api-docs:
+    enabled: false
