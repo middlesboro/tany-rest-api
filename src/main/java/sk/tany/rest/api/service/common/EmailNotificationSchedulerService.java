@@ -32,8 +32,7 @@ public class EmailNotificationSchedulerService {
     private final EmailService emailService;
     private final ShopSettingsRepository shopSettingsRepository;
 
-    @Value("${eshop.frontend-url}")
-    private String frontendUrl;
+    private final sk.tany.rest.api.config.EshopConfig eshopConfig;
 
     @Scheduled(cron = "0 */30 * * * *")
     public void processBackInStockNotifications() {
@@ -86,7 +85,7 @@ public class EmailNotificationSchedulerService {
                 java.math.BigDecimal price = product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(java.math.BigDecimal.ZERO) >= 0
                         ? product.getDiscountPrice()
                         : product.getPrice();
-                String productUrl = frontendUrl + "/produkt/" + product.getSlug();
+                String productUrl = eshopConfig.getFrontendUrl() + "/produkt/" + product.getSlug();
                 productsListHtml.append("<tr>")
                         .append("<td><a href='").append(productUrl).append("'>").append(product.getTitle()).append("</a></td>")
                         .append("<td>").append(price).append(" €</td>")

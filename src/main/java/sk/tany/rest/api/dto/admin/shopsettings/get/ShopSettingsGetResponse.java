@@ -22,6 +22,6 @@ public class ShopSettingsGetResponse {
     private String vatNumber;
     private BigDecimal vat;
     private String defaultCountry;
-    private Instant createdDate;
+    private Instant createDate;
     private Instant updateDate;
 }

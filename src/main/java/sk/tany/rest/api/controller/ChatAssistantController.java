@@ -1,0 +1,54 @@
+package sk.tany.rest.api.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import sk.tany.rest.api.client.TanyFeaturesClient;
+import sk.tany.rest.api.domain.customermessage.CustomerMessage;
+import sk.tany.rest.api.domain.customermessage.CustomerMessageRepository;
+import sk.tany.rest.api.domain.customermessage.MessageType;
+import sk.tany.rest.api.dto.client.customermessage.CustomerMessageCreateRequest;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/chat")
+@RequiredArgsConstructor
+@Tag(name = "Chat Assistant", description = "Endpoints for AI Chat Assistant")
+public class ChatAssistantController {
+
+    private final TanyFeaturesClient tanyFeaturesClient;
+    private final CustomerMessageRepository customerMessageRepository;
+
+    @PostMapping("/assistant")
+    @Operation(summary = "Chat with the AI assistant")
+    public ChatResponse chat(@RequestBody ChatRequest request) {
+        String response = tanyFeaturesClient.chatAssistant(request.message());
+
+        customerMessageRepository.save(CustomerMessage.builder()
+                .message(request.message() + " Assistant response: " + response)
+                .type(MessageType.ORDER_STATUS)
+                .build());
+
+        return new ChatResponse(response);
+    }
+
+    @PostMapping("/message")
+    @Operation(summary = "Send a customer message")
+    public void sendMessage(@Valid @RequestBody CustomerMessageCreateRequest request) {
+        customerMessageRepository.save(CustomerMessage.builder()
+                .message(request.getMessage())
+                .email(request.getEmail())
+                .type(MessageType.MESSAGE_REQUEST)
+                .build());
+    }
+
+    public record ChatRequest(String message) {}
+    public record ChatResponse(String response) {}
+}

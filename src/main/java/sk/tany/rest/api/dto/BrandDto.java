@@ -14,6 +14,6 @@ public class BrandDto {
     private String metaDescription;
     private boolean active;
     private String image;
-    private Instant createdDate;
+    private Instant createDate;
     private Instant updateDate;
 }

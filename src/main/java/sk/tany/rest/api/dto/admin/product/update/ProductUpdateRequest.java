@@ -1,5 +1,6 @@
 package sk.tany.rest.api.dto.admin.product.update;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import sk.tany.rest.api.domain.product.ProductStatus;
 import sk.tany.rest.api.dto.ProductFilterParameterDto;
@@ -9,6 +10,8 @@ import java.util.List;
 
 @Data
 public class ProductUpdateRequest {
+    @NotNull
+    private Long productIdentifier;
     private String title;
     private String shortDescription;
     private String description;

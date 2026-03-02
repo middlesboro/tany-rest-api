@@ -7,6 +7,9 @@ import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.cartdiscount.DiscountType;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
+import sk.tany.rest.api.dto.AddressDto;
 import sk.tany.rest.api.dto.CarrierDto;
 import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
@@ -38,6 +41,7 @@ public class CustomerClientServiceImpl implements CustomerClientService {
     private final ProductClientService productService;
     private final CarrierClientService carrierService;
     private final PaymentClientService paymentService;
+    private final ShopSettingsRepository shopSettingsRepository;
     private final SecurityUtil securityUtil;
 
     public CustomerContextDto getCustomerContext(String cartId) {
@@ -78,6 +82,23 @@ public class CustomerClientServiceImpl implements CustomerClientService {
                 cartDto.setDeliveryAddress(customerDto.getDeliveryAddress());
             } // save just in case if something was changed
             cartDto = cartService.save(cartDto);
+        } else {
+            if (cartDto.getDeliveryAddress() == null) {
+                AddressDto addressDto = new AddressDto();
+                cartDto.setDeliveryAddress(addressDto);
+            }
+            if (cartDto.getInvoiceAddress() == null) {
+                AddressDto addressDto = new AddressDto();
+                cartDto.setInvoiceAddress(addressDto);
+            }
+
+            ShopSettings shopSettings = shopSettingsRepository.getFirstShopSettings();
+            if (cartDto.getDeliveryAddress().getCountry() == null) {
+                cartDto.getDeliveryAddress().setCountry(shopSettings.getDefaultCountry());
+            }
+            if (cartDto.getInvoiceAddress().getCountry() == null) {
+                cartDto.getInvoiceAddress().setCountry(shopSettings.getDefaultCountry());
+            }
         }
 
         CustomerContextCartDto customerContextCartDto = new CustomerContextCartDto();
@@ -233,19 +254,24 @@ public class CustomerClientServiceImpl implements CustomerClientService {
         if (customerDto.getPhone() != null) {
             customer.setPhone(customerDto.getPhone());
         }
-        // Email update might require verification in a real scenario, but based on requirements "edit all fields", we allow it.
-        // However, if email changes, the principal might become invalid for future requests if not handled.
-        // But simply updating the field is what is asked.
-        if (customerDto.getEmail() != null) {
-            customer.setEmail(customerDto.getEmail());
-        }
         if (customerDto.getInvoiceAddress() != null) {
             customer.setInvoiceAddress(addressMapper.toEntity(customerDto.getInvoiceAddress()));
         }
         if (customerDto.getDeliveryAddress() != null) {
             customer.setDeliveryAddress(addressMapper.toEntity(customerDto.getDeliveryAddress()));
         }
-
+        if (customerDto.getPreferredPacketaBranchId() != null) {
+            customer.setPreferredPacketaBranchId(customerDto.getPreferredPacketaBranchId());
+        }
+        if (customerDto.getPreferredPacketaBranchName() != null) {
+            customer.setPreferredPacketaBranchName(customerDto.getPreferredPacketaBranchName());
+        }
+        if (customerDto.getPreferredBalikovoBranchId() != null) {
+            customer.setPreferredBalikovoBranchId(customerDto.getPreferredBalikovoBranchId());
+        }
+        if (customerDto.getPreferredBalikovoBranchName() != null) {
+            customer.setPreferredBalikovoBranchName(customerDto.getPreferredBalikovoBranchName());
+        }
         return customerMapper.toDto(customerRepository.save(customer));
     }
 

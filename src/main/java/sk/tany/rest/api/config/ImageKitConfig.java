@@ -2,26 +2,24 @@ package sk.tany.rest.api.config;
 
 import io.imagekit.sdk.ImageKit;
 import io.imagekit.sdk.config.Configuration;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class ImageKitConfig {
 
-    @Value("${imagekit.url-endpoint}")
-    private String urlEndpoint;
-
-    @Value("${imagekit.public-key}")
-    private String publicKey;
-
-    @Value("${imagekit.private-key}")
-    private String privateKey;
+    private final ImageKitProperties imageKitProperties;
 
     @Bean
     public ImageKit imageKit() {
         ImageKit imageKit = ImageKit.getInstance();
-        Configuration config = new Configuration(publicKey, privateKey, urlEndpoint);
+        Configuration config = new Configuration(
+                imageKitProperties.getPublicKey(),
+                imageKitProperties.getPrivateKey(),
+                imageKitProperties.getUrlEndpoint()
+        );
         imageKit.setConfig(config);
         return imageKit;
     }

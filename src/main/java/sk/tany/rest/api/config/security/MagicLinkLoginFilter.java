@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,7 +21,7 @@ public class MagicLinkLoginFilter extends OncePerRequestFilter {
 
     private final MagicLinkAuthenticationProvider authenticationProvider;
     private final SecurityContextRepository securityContextRepository;
-    private final RequestMatcher requestMatcher = new AntPathRequestMatcher("/oauth2/authorize");
+    private final RequestMatcher requestMatcher = new RegexRequestMatcher("/oauth2/authorize.*", null);
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {

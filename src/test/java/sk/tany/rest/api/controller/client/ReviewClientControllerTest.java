@@ -1,24 +1,29 @@
 package sk.tany.rest.api.controller.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
+import sk.tany.rest.api.config.security.MagicLinkLoginFilter;
+import sk.tany.rest.api.domain.auth.MagicLinkTokenRepository;
+import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
 import sk.tany.rest.api.dto.client.review.ReviewClientCreateRequest;
 import sk.tany.rest.api.dto.client.review.ReviewClientProductResponse;
+import sk.tany.rest.api.service.HtmlSanitizerService;
 import sk.tany.rest.api.service.client.ReviewClientService;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -35,17 +40,43 @@ class ReviewClientControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private ReviewClientService reviewClientService;
 
-    @MockBean
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
-    @MockBean
+    @MockitoBean
     private JwkKeyRepository jwkKeyRepository;
 
-    @MockBean
+    @MockitoBean
     private SecurityContextRepository securityContextRepository;
+
+    @MockitoBean
+    private MagicLinkTokenRepository magicLinkTokenRepository;
+
+    @MockitoBean
+    private CustomerRepository customerRepository;
+
+    @MockitoBean
+    private MagicLinkLoginFilter magicLinkLoginFilter;
+
+    @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
+    @MockitoBean
+    private HtmlSanitizerService htmlSanitizerService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() throws Exception {
+        when(htmlSanitizerService.sanitize(anyString())).thenAnswer(i -> i.getArgument(0));
+
+        org.mockito.Mockito.doAnswer(invocation -> {
+            jakarta.servlet.FilterChain chain = invocation.getArgument(2);
+            chain.doFilter(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        }).when(magicLinkLoginFilter).doFilter(any(), any(), any());
+    }
 
     @Test
     @WithMockUser

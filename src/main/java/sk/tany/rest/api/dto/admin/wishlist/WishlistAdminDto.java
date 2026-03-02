@@ -8,5 +8,5 @@ public class WishlistAdminDto {
     private String id;
     private String customerId;
     private String productId;
-    private Instant createdDate;
+    private Instant createDate;
 }

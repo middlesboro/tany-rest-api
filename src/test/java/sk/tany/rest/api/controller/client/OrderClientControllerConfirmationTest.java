@@ -62,7 +62,7 @@ class OrderClientControllerConfirmationTest {
         order.setCreateDate(Instant.now().minus(21, ChronoUnit.MINUTES));
 
         when(orderClientService.getOrder("order-123")).thenReturn(order);
-        when(securityUtil.getLoggedInUserId()).thenReturn(null);
+        when(securityUtil.getLoggedInUser()).thenReturn(null);
 
         assertThrows(AuthenticationException.InvalidToken.class, () ->
             orderClientController.getOrderConfirmation("order-123")
@@ -72,9 +72,10 @@ class OrderClientControllerConfirmationTest {
     @Test
     void shouldAllowAccessAfter20MinutesWithCorrectAuthentication() {
         order.setCreateDate(Instant.now().minus(30, ChronoUnit.MINUTES));
+        order.setEmail("user@example.com");
 
         when(orderClientService.getOrder("order-123")).thenReturn(order);
-        when(securityUtil.getLoggedInUserId()).thenReturn("user-1");
+        when(securityUtil.getLoggedInUser()).thenReturn(new SecurityUtil.User("user-1", "user@example.com"));
         when(orderClientApiMapper.toGetResponse(order)).thenReturn(new OrderClientGetResponse());
 
         OrderClientGetResponse response = orderClientController.getOrderConfirmation("order-123");
@@ -85,9 +86,10 @@ class OrderClientControllerConfirmationTest {
     @Test
     void shouldDenyAccessAfter20MinutesWithIncorrectAuthentication() {
         order.setCreateDate(Instant.now().minus(30, ChronoUnit.MINUTES));
+        order.setEmail("user@example.com");
 
         when(orderClientService.getOrder("order-123")).thenReturn(order);
-        when(securityUtil.getLoggedInUserId()).thenReturn("user-2"); // Different user
+        when(securityUtil.getLoggedInUser()).thenReturn(new SecurityUtil.User("user-2", "other@example.com"));
 
         assertThrows(AuthenticationException.InvalidToken.class, () ->
             orderClientController.getOrderConfirmation("order-123")
@@ -100,7 +102,7 @@ class OrderClientControllerConfirmationTest {
         order.setCreateDate(Instant.now().minus(20, ChronoUnit.MINUTES).minus(1, ChronoUnit.SECONDS));
 
         when(orderClientService.getOrder("order-123")).thenReturn(order);
-        when(securityUtil.getLoggedInUserId()).thenReturn(null);
+        when(securityUtil.getLoggedInUser()).thenReturn(null);
 
         assertThrows(AuthenticationException.InvalidToken.class, () ->
             orderClientController.getOrderConfirmation("order-123")
@@ -111,9 +113,10 @@ class OrderClientControllerConfirmationTest {
     void shouldDenyAccessToGuestOrderAfter20MinutesEvenIfAuthenticated() {
         order.setCustomerId(null); // Guest order
         order.setCreateDate(Instant.now().minus(30, ChronoUnit.MINUTES));
+        order.setEmail("guest@example.com");
 
         when(orderClientService.getOrder("order-123")).thenReturn(order);
-        when(securityUtil.getLoggedInUserId()).thenReturn("some-user-id");
+        when(securityUtil.getLoggedInUser()).thenReturn(new SecurityUtil.User("user-1", "user@example.com"));
 
         assertThrows(AuthenticationException.InvalidToken.class, () ->
             orderClientController.getOrderConfirmation("order-123")

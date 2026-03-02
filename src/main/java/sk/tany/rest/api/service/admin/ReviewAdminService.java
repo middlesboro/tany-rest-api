@@ -19,4 +19,6 @@ public interface ReviewAdminService {
     void delete(String id);
 
     void importReviews();
+
+    void recalculateAllProductRatings();
 }

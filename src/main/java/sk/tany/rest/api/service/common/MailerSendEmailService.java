@@ -4,29 +4,29 @@ import com.mailersend.sdk.MailerSend;
 import com.mailersend.sdk.MailerSendResponse;
 import com.mailersend.sdk.emails.Email;
 import com.mailersend.sdk.exceptions.MailerSendException;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.config.MailerSendConfig;
 import sk.tany.rest.api.exception.EmailException;
 
 import java.io.File;
 
-@Service
-public class EmailServiceImpl implements EmailService {
+@Service("mailerSendEmailService")
+@RequiredArgsConstructor
+public class MailerSendEmailService implements PlatformEmailService {
 
-    @Value("${mailersend.api-token}")
-    private String apiToken;
+    private final MailerSendConfig mailerSendConfig;
 
-    @Value("${mailersend.from-email}")
-    private String fromEmail;
-
-    @Value("${mailersend.from-name}")
-    private String fromName;
+    @Override
+    public sk.tany.rest.api.domain.mailplatform.MailPlatformType getPlatformType() {
+        return sk.tany.rest.api.domain.mailplatform.MailPlatformType.MAILER_SEND;
+    }
 
     @Override
     public void sendEmail(String to, String subject, String body, boolean isHtml, File... attachments) {
         Email email = new Email();
 
-        email.setFrom(fromName, fromEmail);
+        email.setFrom(mailerSendConfig.getFromName(), mailerSendConfig.getFromEmail());
         email.addRecipient("", to);
 
         if (subject != null && !subject.endsWith(" - Tany.sk")) {
@@ -53,7 +53,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         MailerSend ms = new MailerSend();
-        ms.setToken(apiToken);
+        ms.setToken(mailerSendConfig.getApiToken());
 
         try {
             MailerSendResponse response = ms.emails().send(email);

@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.homepage.HomepageGridRepository;
 import sk.tany.rest.api.dto.admin.homepage.HomepageGridAdminDto;
+import sk.tany.rest.api.dto.admin.homepage.patch.HomepageGridPatchRequest;
+import sk.tany.rest.api.exception.HomepageGridException;
 import sk.tany.rest.api.mapper.HomepageGridMapper;
 import sk.tany.rest.api.service.admin.HomepageGridAdminService;
 
@@ -37,9 +39,17 @@ public class HomepageGridAdminServiceImpl implements HomepageGridAdminService {
 
     @Override
     public HomepageGridAdminDto update(String id, HomepageGridAdminDto dto) {
-        var existing = homepageGridRepository.findById(id).orElseThrow(() -> new RuntimeException("HomepageGrid not found"));
+        var existing = homepageGridRepository.findById(id).orElseThrow(() -> new HomepageGridException.NotFound("HomepageGrid not found"));
         dto.setId(id);
         homepageGridMapper.updateEntityFromDto(dto, existing);
+        var saved = homepageGridRepository.save(existing);
+        return homepageGridMapper.toAdminDto(saved);
+    }
+
+    @Override
+    public HomepageGridAdminDto patch(String id, HomepageGridPatchRequest dto) {
+        var existing = homepageGridRepository.findById(id).orElseThrow(() -> new HomepageGridException.NotFound("HomepageGrid not found"));
+        homepageGridMapper.updateEntityFromPatch(dto, existing);
         var saved = homepageGridRepository.save(existing);
         return homepageGridMapper.toAdminDto(saved);
     }

@@ -45,7 +45,6 @@ class ISkladWebhookServiceImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        ReflectionTestUtils.setField(webhookService, "frontendUrl", "http://localhost:3000");
 
         ShopSettings settings = new ShopSettings();
         settings.setShopEmail("test@test.com");

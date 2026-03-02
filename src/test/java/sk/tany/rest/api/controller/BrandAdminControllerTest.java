@@ -2,26 +2,23 @@ package sk.tany.rest.api.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
+import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
 import sk.tany.rest.api.controller.admin.BrandAdminController;
+import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
 import sk.tany.rest.api.dto.BrandDto;
+import sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest;
 import sk.tany.rest.api.service.admin.BrandAdminService;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.common.ImageService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.context.annotation.Import;
-import sk.tany.rest.api.config.SecurityConfig;
-import sk.tany.rest.api.config.SecurityProperties;
-import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
-import sk.tany.rest.api.domain.jwk.JwkKeyRepository;
-import sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Optional;
 
@@ -35,7 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BrandAdminController.class)
-@Import({SecurityConfig.class, SecurityProperties.class})
 class BrandAdminControllerTest {
 
     @Autowired
@@ -44,23 +40,29 @@ class BrandAdminControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private BrandAdminService brandService;
 
-    @MockBean
+    @MockitoBean
     private ImageService imageService;
 
-    @MockBean
+    @MockitoBean
     private PrestaShopImportService prestaShopImportService;
 
-    @MockBean
+    @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
+
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
-    @MockBean
+    @MockitoBean
     private JwkKeyRepository jwkKeyRepository;
 
-    @MockBean
+    @MockitoBean
     private AuthorizationServerSettings authorizationServerSettings;
+
+    @MockitoBean
+    private SecurityContextRepository securityContextRepository;
 
     @Test
     @WithMockUser(roles = "ADMIN")

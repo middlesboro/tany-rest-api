@@ -28,4 +28,25 @@ public class SecurityUtil {
         return null;
     }
 
+    public User getLoggedInUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AuthenticationException.InvalidToken("User not authenticated");
+        }
+
+        if (authentication instanceof JwtAuthenticationToken jwtAuthToken) {
+            Jwt jwt = jwtAuthToken.getToken();
+            return new User(jwt.getClaimAsString("customerId"), jwtAuthToken.getName());
+        }
+
+        if (authentication instanceof Jwt jwt) {
+            return new User(jwt.getClaimAsString("customerId"), jwt.getSubject());
+        }
+
+        return null;
+    }
+
+    public record User(String userId, String email) {
+    }
+
 }

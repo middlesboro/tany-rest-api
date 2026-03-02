@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
+import sk.tany.rest.api.domain.carrier.CarrierType;
 import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.customer.Address;
 import sk.tany.rest.api.domain.customer.Customer;
@@ -36,11 +37,13 @@ import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.client.OrderClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.SequenceService;
+import sk.tany.rest.api.validation.CartOrderValidator;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +63,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final CartRepository cartRepository;
     private final sk.tany.rest.api.service.client.CartClientService cartService;
     private final ApplicationEventPublisher eventPublisher;
+    private final CartOrderValidator cartOrderValidator;
 
     private String getCurrentCustomerId() {
         try {
@@ -87,6 +91,8 @@ public class OrderClientServiceImpl implements OrderClientService {
         if (cartDto == null || cartDto.getItems() == null || cartDto.getItems().isEmpty()) {
             throw new OrderException.BadRequest("Cart is empty or not found");
         }
+
+        cartOrderValidator.validate(cartDto, orderDto.getNote());
 
         Order order = new Order();
         order.setStatus(OrderStatus.CREATED);
@@ -138,10 +144,6 @@ public class OrderClientServiceImpl implements OrderClientService {
             order.setAppliedDiscountCodes(codes);
         }
 
-        Carrier carrier = null;
-        if (order.getCarrierId() != null) {
-            carrier = carrierRepository.findById(order.getCarrierId()).orElse(null);
-        }
         // Extract carrier price from breakdown if possible or calculate?
         // CartDto does not expose carrier price directly as a field except inside breakdown or implicitly in final price.
         // However, we can find it in breakdown.
@@ -240,6 +242,22 @@ public class OrderClientServiceImpl implements OrderClientService {
                 changed = true;
             }
 
+            Optional<Carrier> carrierOptional = carrierRepository.findById(order.getCarrierId());
+            if (carrierOptional.isPresent()) {
+                Carrier carrier = carrierOptional.get();
+                if (StringUtils.isBlank(customer.getPreferredPacketaBranchId()) &&  StringUtils.isNotBlank(order.getSelectedPickupPointId())
+                        && CarrierType.PACKETA == carrier.getType()) {
+                    customer.setPreferredPacketaBranchId(order.getSelectedPickupPointId());
+                    customer.setPreferredPacketaBranchName(order.getSelectedPickupPointName());
+                    changed = true;
+                }
+                if (StringUtils.isBlank(customer.getPreferredBalikovoBranchId()) &&  StringUtils.isNotBlank(order.getSelectedPickupPointId())
+                        && CarrierType.BALIKOVO == carrier.getType()) {
+                    customer.setPreferredBalikovoBranchId(order.getSelectedPickupPointId());
+                    customer.setPreferredBalikovoBranchName(order.getSelectedPickupPointName());
+                    changed = true;
+                }
+            }
             if (changed) {
                 customerRepository.save(customer);
             }

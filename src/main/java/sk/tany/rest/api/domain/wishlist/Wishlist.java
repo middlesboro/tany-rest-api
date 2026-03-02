@@ -11,16 +11,7 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Wishlist implements BaseEntity {
-
-    @Id
-    private String id;
+public class Wishlist extends BaseEntity {
     private String customerId;
     private String productId;
-    private Instant createdDate;
-
-    @Override
-    public void setLastModifiedDate(Instant date) { }
-    @Override
-    public Instant getLastModifiedDate() { return null; }
 }

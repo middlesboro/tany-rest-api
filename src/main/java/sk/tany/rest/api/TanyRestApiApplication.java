@@ -6,6 +6,7 @@ import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import sk.tany.rest.api.config.ApiRuntimeHints;
 
+@ImportRuntimeHints(ApiRuntimeHints.class)
 @EnableScheduling
 @SpringBootApplication
 @ImportRuntimeHints(ApiRuntimeHints.class)

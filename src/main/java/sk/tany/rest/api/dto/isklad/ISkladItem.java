@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ISkladItem {
     @JsonProperty("item_id")
-    private Integer itemId;
+    private Long itemId;
 
     @JsonProperty("catalog_id")
     private String catalogId;

@@ -59,12 +59,15 @@ class OrderEventHandlerTest {
     private ProductClientService productClientService;
     @Mock
     private ShopSettingsRepository shopSettingsRepository;
+    @Mock
+    private sk.tany.rest.api.config.EshopConfig eshopConfig;
 
     @InjectMocks
     private OrderEventHandler orderEventHandler;
 
     @BeforeEach
     void setUp() {
+        lenient().when(eshopConfig.getFrontendUrl()).thenReturn("http://localhost:3000");
         // Mock ResourceLoader for template and files
         Resource templateResource = new ByteArrayResource("<html>{{firstname}} {{orderIdentifier}}</html>".getBytes());
         Resource pdfResource = new ByteArrayResource("dummy pdf".getBytes());
@@ -156,7 +159,7 @@ class OrderEventHandlerTest {
 
     @Test
     void handleOrderStatusChanged_shouldIncludeConfirmationLink_whenCreated() {
-        ReflectionTestUtils.setField(orderEventHandler, "frontendUrl", "http://localhost:3000");
+        when(eshopConfig.getFrontendUrl()).thenReturn("http://localhost:3000");
 
         Order order = new Order();
         order.setId("order1");

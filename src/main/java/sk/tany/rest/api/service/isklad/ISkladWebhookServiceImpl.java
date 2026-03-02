@@ -31,9 +31,7 @@ public class ISkladWebhookServiceImpl implements ISkladWebhookService {
     private final SequenceService sequenceService;
     private final EmailService emailService;
     private final ShopSettingsRepository shopSettingsRepository;
-
-    @Value("${eshop.frontend-url}")
-    private String frontendUrl;
+    private final sk.tany.rest.api.config.EshopConfig eshopConfig;
 
     private String emailTemplate;
 

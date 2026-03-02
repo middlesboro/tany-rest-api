@@ -35,8 +35,7 @@ public class HeurekaFeedServiceImpl implements HeurekaFeedService {
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
 
-    @Value("${eshop.frontend-url}")
-    private String frontendUrl;
+    private final sk.tany.rest.api.config.EshopConfig eshopConfig;
 
     private static final String FEED_DIR = "heureka-feeds";
     private static final String PRODUCT_FEED_FILE = "heureka_products.xml";
@@ -69,7 +68,7 @@ public class HeurekaFeedServiceImpl implements HeurekaFeedService {
                     appendTag(writer, "PRODUCTNAME", product.getTitle());
                     appendTag(writer, "PRODUCT", product.getTitle());
                     appendTag(writer, "DESCRIPTION", product.getDescription() != null ? product.getDescription() : product.getShortDescription());
-                    appendTag(writer, "URL", frontendUrl + "/produkt/" + product.getSlug());
+                    appendTag(writer, "URL", eshopConfig.getFrontendUrl() + "/produkt/" + product.getSlug());
 
                     if (product.getImages() != null && !product.getImages().isEmpty()) {
                          appendTag(writer, "IMGURL", product.getImages().get(0));

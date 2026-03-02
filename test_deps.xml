@@ -1,0 +1,13 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>test</groupId>
+  <artifactId>test</artifactId>
+  <version>1.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>com.sendinblue</groupId>
+      <artifactId>sib-api-v3-sdk</artifactId>
+      <version>7.0.0</version>
+    </dependency>
+  </dependencies>
+</project>

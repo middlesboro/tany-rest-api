@@ -13,8 +13,8 @@ import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
-import sk.tany.rest.api.dto.client.review.ProductRatingDto;
 import sk.tany.rest.api.mapper.ProductMapper;
+import sk.tany.rest.api.service.common.ProductEmbeddingService;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -35,10 +35,8 @@ class ProductClientServiceImplTest {
     private ProductSearchEngine productSearchEngine;
     @Mock
     private WishlistClientService wishlistClientService;
-//    @Mock
-//    private ProductEmbeddingService productEmbeddingService;
     @Mock
-    private ReviewClientService reviewClientService;
+    private ProductEmbeddingService productEmbeddingService;
 
     @InjectMocks
     private ProductClientServiceImpl service;
@@ -57,12 +55,12 @@ class ProductClientServiceImplTest {
 
     @Test
     void findAll_shouldPopulateRating() {
-        when(wishlistClientService.getWishlistProductIds()).thenReturn(Collections.emptyList());
-        when(productRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(product)));
-        when(productMapper.toClientDto(product)).thenReturn(productClientDto);
+        product.setAverageRating(BigDecimal.valueOf(4.5));
+        product.setReviewsCount(10);
 
-        ProductRatingDto ratingDto = new ProductRatingDto(BigDecimal.valueOf(4.5), 10);
-        when(reviewClientService.getProductRatings(List.of("product1"))).thenReturn(java.util.Map.of("product1", ratingDto));
+        when(wishlistClientService.getWishlistProductIds()).thenReturn(Collections.emptyList());
+        when(productSearchEngine.findAll(any(Pageable.class), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(new PageImpl<>(List.of(product)));
+        when(productMapper.toClientDto(product)).thenReturn(productClientDto);
 
         Page<ProductClientDto> result = service.findAll(Pageable.unpaged());
 

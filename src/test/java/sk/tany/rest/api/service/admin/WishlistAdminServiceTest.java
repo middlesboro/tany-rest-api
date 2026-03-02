@@ -49,7 +49,8 @@ class WishlistAdminServiceTest {
     @Test
     void findAll_ShouldReturnPageOfWishlistAdminListResponse() {
         Pageable pageable = PageRequest.of(0, 10);
-        Wishlist wishlist = new Wishlist("1", "cust1", "prod1", null);
+        Wishlist wishlist = new Wishlist("cust1", "prod1");
+        wishlist.setId("1");
 
         when(wishlistRepository.findAll()).thenReturn(Collections.singletonList(wishlist));
 

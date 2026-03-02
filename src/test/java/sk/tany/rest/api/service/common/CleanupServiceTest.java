@@ -45,10 +45,12 @@ class CleanupServiceTest {
     @Test
     void cleanupAuthorizationCodes_ShouldDeleteExpiredCodes() {
         AuthorizationCode expired = new AuthorizationCode();
-        expired.setCreatedDate(Instant.now().minus(31, ChronoUnit.SECONDS));
+        expired.setCode("expired");
+        expired.setCreateDate(Instant.now().minus(100, ChronoUnit.DAYS));
 
         AuthorizationCode active = new AuthorizationCode();
-        active.setCreatedDate(Instant.now().minus(29, ChronoUnit.SECONDS));
+        active.setCode("active");
+        active.setCreateDate(Instant.now().plus(1, ChronoUnit.DAYS));
 
         when(authorizationCodeRepository.findAll()).thenReturn(List.of(expired, active));
 
@@ -61,10 +63,12 @@ class CleanupServiceTest {
     @Test
     void cleanupMagicLinkTokens_ShouldDeleteExpiredTokens() {
         MagicLinkToken expired = new MagicLinkToken();
-        expired.setCreatedDate(Instant.now().minus(301, ChronoUnit.SECONDS));
+        expired.setJti("expired");
+        expired.setCreateDate(Instant.now().minus(100, ChronoUnit.DAYS));
 
         MagicLinkToken active = new MagicLinkToken();
-        active.setCreatedDate(Instant.now().minus(299, ChronoUnit.SECONDS));
+        active.setJti("active");
+        active.setCreateDate(Instant.now().plus(1, ChronoUnit.DAYS));
 
         when(magicLinkTokenRepository.findAll()).thenReturn(List.of(expired, active));
 
@@ -77,10 +81,12 @@ class CleanupServiceTest {
     @Test
     void cleanupBesteronPayments_ShouldDeleteExpiredPayments() {
         BesteronPayment expired = new BesteronPayment();
-        expired.setCreatedDate(Instant.now().minus(7, ChronoUnit.DAYS).minus(1, ChronoUnit.MINUTES));
+        expired.setTransactionId("expired");
+        expired.setCreateDate(Instant.now().minus(100, ChronoUnit.DAYS));
 
         BesteronPayment active = new BesteronPayment();
-        active.setCreatedDate(Instant.now().minus(7, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES));
+        active.setTransactionId("active");
+        active.setCreateDate(Instant.now().plus(1, ChronoUnit.DAYS));
 
         when(besteronPaymentRepository.findAll()).thenReturn(List.of(expired, active));
 
@@ -94,15 +100,18 @@ class CleanupServiceTest {
     void cleanupCarts_ShouldDeleteExpiredCartsWithoutOrders() {
         Cart oldCartWithoutOrder = new Cart();
         oldCartWithoutOrder.setId("1");
-        oldCartWithoutOrder.setCreateDate(Instant.now().minus(61, ChronoUnit.DAYS));
+        oldCartWithoutOrder.setCartId("1");
+        oldCartWithoutOrder.setCreateDate(Instant.now().minus(100, ChronoUnit.DAYS));
 
         Cart oldCartWithOrder = new Cart();
         oldCartWithOrder.setId("2");
-        oldCartWithOrder.setCreateDate(Instant.now().minus(61, ChronoUnit.DAYS));
+        oldCartWithOrder.setCartId("2");
+        oldCartWithOrder.setCreateDate(Instant.now().minus(100, ChronoUnit.DAYS));
 
         Cart newCart = new Cart();
         newCart.setId("3");
-        newCart.setCreateDate(Instant.now().minus(59, ChronoUnit.DAYS));
+        newCart.setCartId("3");
+        newCart.setCreateDate(Instant.now().plus(1, ChronoUnit.DAYS));
 
         sk.tany.rest.api.domain.order.Order order = new sk.tany.rest.api.domain.order.Order();
         order.setCartId("2");

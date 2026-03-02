@@ -7,7 +7,6 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -17,7 +16,9 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
@@ -29,8 +30,6 @@ import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
@@ -69,11 +68,7 @@ public class SecurityConfig {
     private final JwkKeyRepository jwkKeyRepository;
     private final SecurityProperties securityProperties;
 
-    @Value("${eshop.frontend-url}")
-    private String frontendUrl;
-
-    @Value("${eshop.frontend-admin-url}")
-    private String frontendAdminUrl;
+    private final EshopConfig eshopConfig;
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -82,16 +77,20 @@ public class SecurityConfig {
             MagicLinkLoginFilter magicLinkLoginFilter,
             SecurityContextRepository repo) throws Exception {
 
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+                new OAuth2AuthorizationServerConfigurer();
 
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-                .oidc(Customizer.withDefaults());
+        http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher());
 
-        // Integrácia tvojho Magic Linku priamo do Auth procesu
+        http.with(authorizationServerConfigurer, (authorizationServer) ->
+                authorizationServer
+                        .oidc(Customizer.withDefaults()) // Povolenie OpenID Connect
+        );
+
         http.addFilterBefore(magicLinkLoginFilter, SecurityContextHolderFilter.class);
 
         http.exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint(frontendUrl + "/login"))
+                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint(eshopConfig.getFrontendUrl() + "/login"))
         );
 
         http.securityContext(context -> context.securityContextRepository(repo));
@@ -99,6 +98,9 @@ public class SecurityConfig {
         http.sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
         );
+
+        http.oauth2ResourceServer((resourceServer) -> resourceServer
+                .jwt(Customizer.withDefaults()));
 
         return http.build();
     }
@@ -141,8 +143,8 @@ public class SecurityConfig {
 
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient publicClient = createClient("public-client", frontendUrl, "openid", "profile");
-        RegisteredClient adminClient = createClient("admin-client", frontendAdminUrl, "openid", "profile");
+        RegisteredClient publicClient = createClient("public-client", eshopConfig.getFrontendUrl(), "openid", "profile");
+        RegisteredClient adminClient = createClient("admin-client", eshopConfig.getFrontendAdminUrl(), "openid", "profile");
         return new InMemoryRegisteredClientRepository(publicClient, adminClient);
     }
 

@@ -19,8 +19,16 @@ public interface BrandMapper {
     @Mapping(target = "productIds", source = "productIds")
     BrandAdminGetResponse toAdminDetailDto(Brand brand, List<String> productIds);
 
+    @Mapping(target = "createDate", ignore = true)
+    @Mapping(target = "updateDate", ignore = true)
     Brand toEntity(BrandDto brandDto);
+
+    @Mapping(target = "createDate", ignore = true)
+    @Mapping(target = "updateDate", ignore = true)
     void updateEntityFromDto(BrandDto brandDto, @MappingTarget Brand brand);
+
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "createDate", ignore = true)
+    @Mapping(target = "updateDate", ignore = true)
     void updateEntityFromPatch(BrandPatchRequest patch, @MappingTarget Brand brand);
 }

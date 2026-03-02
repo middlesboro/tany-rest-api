@@ -2,18 +2,18 @@ package sk.tany.rest.api.controller.admin;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import sk.tany.rest.api.config.PageSerializationAdvice;
 import sk.tany.rest.api.config.security.MagicLinkAuthenticationProvider;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminCreateRequest;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminDetailResponse;
-import sk.tany.rest.api.dto.admin.review.ReviewAdminListResponse;
 import sk.tany.rest.api.dto.admin.review.ReviewAdminUpdateRequest;
 import sk.tany.rest.api.service.admin.ReviewAdminService;
 
@@ -29,19 +29,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ReviewAdminController.class)
+@Import(PageSerializationAdvice.class)
 class ReviewAdminControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private ReviewAdminService reviewAdminService;
 
-    @MockBean
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
-    @MockBean
+    @MockitoBean
     private SecurityContextRepository securityContextRepository;
+
+    @MockitoBean
+    private sk.tany.rest.api.config.CorsConfig corsConfig;
 
     @Test
     @WithMockUser(roles = "ADMIN")

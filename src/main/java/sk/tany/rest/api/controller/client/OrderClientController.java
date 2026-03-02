@@ -50,8 +50,8 @@ public class OrderClientController {
         OrderDto order = orderClientService.getOrder(id);
 
         if (order.getCreateDate().plus(20, ChronoUnit.MINUTES).isBefore(Instant.now())) {
-            String loggedInUserId = securityUtil.getLoggedInUserId();
-            if (order.getCustomerId() == null || !order.getCustomerId().equals(loggedInUserId)) {
+            SecurityUtil.User loggedInUser = securityUtil.getLoggedInUser();
+            if (order.getEmail() == null || loggedInUser == null || !order.getEmail().equalsIgnoreCase(loggedInUser.email())) {
                 throw new AuthenticationException.InvalidToken("Access denied");
             }
         }

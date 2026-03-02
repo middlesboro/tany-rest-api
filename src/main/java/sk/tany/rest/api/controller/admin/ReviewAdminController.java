@@ -57,4 +57,10 @@ public class ReviewAdminController {
     public void importReviews() {
         service.importReviews();
     }
+
+    @PostMapping("/recalculate-ratings")
+    @Operation(summary = "Recalculate ratings for all products")
+    public void recalculateRatings() {
+        service.recalculateAllProductRatings();
+    }
 }

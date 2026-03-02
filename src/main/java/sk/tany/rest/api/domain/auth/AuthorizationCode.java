@@ -12,31 +12,16 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthorizationCode implements BaseEntity {
-
-    @Id
-    private String id;
+public class AuthorizationCode extends BaseEntity {
     private String code;
     private String email;
     private String jwt;
     private Instant expiration;
-    private Instant createdDate;
-    private Instant updateDate;
-
     public AuthorizationCode(String code, String email, Date expiration) {
         this.code = code;
         this.email = email;
         if (expiration != null) {
             this.expiration = expiration.toInstant();
         }
-    }
-
-    @Override
-    public void setLastModifiedDate(Instant date) {
-        this.updateDate = date;
-    }
-    @Override
-    public Instant getLastModifiedDate() {
-        return this.updateDate;
     }
 }

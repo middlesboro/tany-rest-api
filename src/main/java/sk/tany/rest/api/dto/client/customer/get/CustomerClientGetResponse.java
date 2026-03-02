@@ -35,6 +35,10 @@ public class CustomerClientGetResponse {
         private Role role;
         private AddressDto invoiceAddress;
         private AddressDto deliveryAddress;
+        private String preferredPacketaBranchId;
+        private String preferredPacketaBranchName;
+        private String preferredBalikovoBranchId;
+        private String preferredBalikovoBranchName;
     }
 
     @Data
@@ -112,7 +116,7 @@ public class CustomerClientGetResponse {
         private BigDecimal price;
         @JsonInclude(JsonInclude.Include.NON_NULL)
         private List<CarrierPriceRangeDto> ranges;
-        private Instant createdDate;
+        private Instant createDate;
         private Instant updateDate;
         private boolean selected;
     }
@@ -140,7 +144,7 @@ public class CustomerClientGetResponse {
         private BigDecimal priceWithoutVat;
         private BigDecimal vatValue;
         private PaymentType type;
-        private Instant createdDate;
+        private Instant createDate;
         private Instant updateDate;
         private boolean selected;
     }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import sk.tany.rest.api.exception.AuthenticationException;
 import sk.tany.rest.api.exception.BaseException;
 import sk.tany.rest.api.exception.CartDiscountException;
 import sk.tany.rest.api.exception.CartException;
@@ -22,34 +23,34 @@ public class ExceptionHandlerControllerAdvice {
     @ExceptionHandler({
             BaseException.class,
     })
-    public ResponseEntity<ErrorResponse> handleBaseException(BaseException ex) {
+    public ResponseEntity<Object> handleBaseException(BaseException ex) {
         log.error(ex.getMessage(), ex);
 
         HttpStatus status = ex.getHttpStatus();
         ErrorResponse error = new ErrorResponseException(status, ProblemDetail.forStatus(status.value()), ex);
-        return new ResponseEntity<>(error, status);
+        return new ResponseEntity<>(error.getBody(), status);
     }
 
     @ExceptionHandler({
             MethodArgumentTypeMismatchException.class,
     })
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentTypeMismatchException ex) {
+    public ResponseEntity<Object> handleValidationException(MethodArgumentTypeMismatchException ex) {
         log.error(ex.getMessage(), ex);
 
         HttpStatus status = HttpStatus.BAD_REQUEST;
         ErrorResponse error = new ErrorResponseException(status, ProblemDetail.forStatus(status.value()), ex);
-        return new ResponseEntity<>(error, status);
+        return new ResponseEntity<>(error.getBody(), status);
     }
 
     @ExceptionHandler({
             MethodArgumentNotValidException.class,
     })
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Object> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         log.error(ex.getMessage(), ex);
 
         HttpStatus status = HttpStatus.BAD_REQUEST;
         ErrorResponse error = new ErrorResponseException(status, ProblemDetail.forStatus(status.value()), ex);
-        return new ResponseEntity<>(error, status);
+        return new ResponseEntity<>(error.getBody(), status);
     }
 
     // todo add all not found exceptions
@@ -57,25 +58,33 @@ public class ExceptionHandlerControllerAdvice {
             CartException.NotFound.class,
             CartDiscountException.NotFound.class,
     })
-    public ResponseEntity<ErrorResponse> handleNotFoundException(Exception ex) {
+    public ResponseEntity<Object> handleNotFoundException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
     @ExceptionHandler({
             AuthorizationDeniedException.class,
     })
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception ex) {
+    public ResponseEntity<Object> handleAccessDeniedException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+    }
+
+    @ExceptionHandler({
+            AuthenticationException.class,
+    })
+    public ResponseEntity<Object> handleUnauthorizedException(Exception ex) {
+        log.error(ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
 
     @ExceptionHandler({
             Exception.class,
     })
-    public ResponseEntity<ErrorResponse> handleInternalServerErrorException(Exception ex) {
+    public ResponseEntity<Object> handleInternalServerErrorException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
 
 }

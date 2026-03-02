@@ -11,6 +11,6 @@ public class SupplierDto {
     private String name;
     private String metaTitle;
     private String metaDescription;
-    private Instant createdDate;
+    private Instant createDate;
     private Instant updateDate;
 }

@@ -1,7 +1,6 @@
 package sk.tany.rest.api.domain.cartdiscount;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,9 +15,7 @@ public interface CartDiscountRepository extends MongoRepository<CartDiscount, St
 
     Optional<CartDiscount> findByCodeAndActiveTrue(String code);
 
-    List<CartDiscount> findAllByCodeIsNullAndActiveTrue();
-
-    List<CartDiscount> findAllByAutomaticTrueAndActiveTrue();
+    List<CartDiscount> findAll();
 
     // Logic: Active, Automatic, and matches criteria
     // Since we can't easily express "collection intersection" in a derived query name that handles "empty collection in DB means apply to all",
@@ -30,7 +27,9 @@ public interface CartDiscountRepository extends MongoRepository<CartDiscount, St
     // Let's implement it as a default method that fetches all automatic discounts and filters them.
 
     default List<CartDiscount> findApplicableAutomaticDiscounts(Set<String> productIds, Set<String> categoryIds, Set<String> brandIds) {
-        List<CartDiscount> candidates = findAllByAutomaticTrueAndActiveTrue();
+        List<CartDiscount> candidates = findAll().stream()
+                .filter(cd -> cd.getCode() == null || cd.getCode().isBlank())
+                .toList();
         return candidates.stream().filter(d -> isApplicable(d, productIds, categoryIds, brandIds)).toList();
     }
 

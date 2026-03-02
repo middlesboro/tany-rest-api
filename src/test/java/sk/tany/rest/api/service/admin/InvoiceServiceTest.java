@@ -17,6 +17,8 @@ import sk.tany.rest.api.domain.payment.Payment;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PriceBreakDown;
 import sk.tany.rest.api.dto.PriceItem;
 import sk.tany.rest.api.dto.PriceItemType;
@@ -46,12 +48,18 @@ public class InvoiceServiceTest {
     private ProductRepository productRepository;
     @Mock
     private CustomerRepository customerRepository;
+    @Mock
+    private ShopSettingsRepository shopSettingsRepository;
+
+    @Mock
+    private sk.tany.rest.api.client.TanyFeaturesClient tanyFeaturesClient;
 
     @InjectMocks
     private InvoiceServiceImpl invoiceService;
 
     @Test
     public void generateInvoice_shouldReturnPdfBytes() {
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
         String orderId = "order123";
         Order order = new Order();
         order.setId(orderId);
@@ -91,13 +99,14 @@ public class InvoiceServiceTest {
         Customer customer = new Customer();
         customer.setFirstname("John");
         customer.setLastname("Doe");
-        when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
 
         Product product = new Product();
         product.setId("prod1");
         product.setProductCode("CODE123");
         product.setEan("EAN123");
         when(productRepository.findAllById(anyList())).thenReturn(List.of(product));
+        when(tanyFeaturesClient.generateInvoice(org.mockito.ArgumentMatchers.any())).thenReturn("%PDFdummy-pdf".getBytes());
+        when(tanyFeaturesClient.generateInvoice(org.mockito.ArgumentMatchers.any())).thenReturn("%PDFdummy-pdf".getBytes());
 
         byte[] result = invoiceService.generateInvoice(orderId);
 
@@ -110,6 +119,7 @@ public class InvoiceServiceTest {
 
     @Test
     public void generateInvoice_shouldReturnPdfBytes_whenOrderCanceled() {
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(new ShopSettings());
         String orderId = "orderCanceled";
         Order order = new Order();
         order.setId(orderId);
@@ -152,13 +162,14 @@ public class InvoiceServiceTest {
         Customer customer = new Customer();
         customer.setFirstname("John");
         customer.setLastname("Doe");
-        when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
+
 
         Product product = new Product();
         product.setId("prod1");
         product.setProductCode("CODE123");
         product.setEan("EAN123");
         when(productRepository.findAllById(anyList())).thenReturn(List.of(product));
+        when(tanyFeaturesClient.generateInvoice(org.mockito.ArgumentMatchers.any())).thenReturn("%PDFdummy-pdf".getBytes());
 
         byte[] result = invoiceService.generateInvoice(orderId);
 

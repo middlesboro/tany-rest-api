@@ -9,15 +9,14 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
-import sk.tany.rest.api.dto.client.review.ProductRatingDto;
 import sk.tany.rest.api.exception.ProductException;
 import sk.tany.rest.api.mapper.ProductMapper;
+import sk.tany.rest.api.service.common.ProductEmbeddingService;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -29,8 +28,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     private final ProductMapper productMapper;
     private final ProductSearchEngine productSearchEngine;
     private final WishlistClientService wishlistClientService;
-//    private final ProductEmbeddingService productEmbeddingService;
-    private final ReviewClientService reviewClientService;
+    private final ProductEmbeddingService productEmbeddingService;
 
     @Override
     public Page<ProductClientDto> findAll(Pageable pageable) {
@@ -46,9 +44,8 @@ public class ProductClientServiceImpl implements ProductClientService {
             ProductClientDto dto = productMapper.toClientDto(product);
             dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-            ProductRatingDto rating = reviewClientService.getProductRating(product.getId());
-            dto.setAverageRating(rating.getAverageRating());
-            dto.setReviewsCount(rating.getReviewsCount());
+            dto.setAverageRating(product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO);
+            dto.setReviewsCount(product.getReviewsCount() != null ? product.getReviewsCount() : 0);
             return dto;
         });
     }
@@ -60,9 +57,8 @@ public class ProductClientServiceImpl implements ProductClientService {
             ProductClientDto dto = productMapper.toClientDto(product);
             dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-            ProductRatingDto rating = reviewClientService.getProductRating(product.getId());
-            dto.setAverageRating(rating.getAverageRating());
-            dto.setReviewsCount(rating.getReviewsCount());
+            dto.setAverageRating(product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO);
+            dto.setReviewsCount(product.getReviewsCount() != null ? product.getReviewsCount() : 0);
             return dto;
         });
     }
@@ -87,17 +83,14 @@ public class ProductClientServiceImpl implements ProductClientService {
             pageContent = java.util.Collections.emptyList();
         } else {
             List<Product> subList = products.subList(start, end);
-            List<String> productIds = subList.stream().map(Product::getId).toList();
-            Map<String, ProductRatingDto> ratings = reviewClientService.getProductRatings(productIds);
 
             pageContent = subList.stream()
                     .map(product -> {
                         ProductClientDto dto = productMapper.toClientDto(product);
                         dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
                         dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-                        ProductRatingDto rating = ratings.getOrDefault(product.getId(), new ProductRatingDto(BigDecimal.ZERO, 0));
-                        dto.setAverageRating(rating.getAverageRating());
-                        dto.setReviewsCount(rating.getReviewsCount());
+                        dto.setAverageRating(product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO);
+                        dto.setReviewsCount(product.getReviewsCount() != null ? product.getReviewsCount() : 0);
                         return dto;
                     })
                     .toList();
@@ -111,9 +104,11 @@ public class ProductClientServiceImpl implements ProductClientService {
     }
 
     @Override
-    public java.util.List<ProductClientDto> findAllByIds(Iterable<String> ids) {
+    public java.util.List<ProductClientDto> findAllByIds(List<String> ids) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
         List<Product> products = productRepository.findAllById(ids);
+        // sorting products by the order of ids in the input list. spring data does not guarantee order when using findAllById, so we need to sort manually
+        products.sort(Comparator.comparingInt(p -> ids.indexOf(p.getId())));
         return mapToEnhancedDtos(products, wishlistProductIds);
     }
 
@@ -126,41 +121,36 @@ public class ProductClientServiceImpl implements ProductClientService {
 
     @Override
     public java.util.List<ProductClientDto> getRelatedProducts(String productId) {
-        java.util.List<String> relatedIds =  new ArrayList<>(); //productEmbeddingService.findRelatedProducts(productId);
-        if (relatedIds.isEmpty()) {
+        java.util.List<ProductClientDto> relatedProducts = productEmbeddingService.findRelatedProducts(productId);
+        if (relatedProducts.isEmpty()) {
             return java.util.Collections.emptyList();
         }
 
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        List<Product> products = productRepository.findAllById(relatedIds);
-        return mapToEnhancedDtos(products, wishlistProductIds);
+        for (ProductClientDto dto : relatedProducts) {
+            dto.setInWishlist(wishlistProductIds.contains(dto.getId()));
+        }
+        return relatedProducts;
     }
 
     private Page<ProductClientDto> mapToEnhancedDtos(Page<Product> productsPage, Set<String> wishlistProductIds) {
-        List<String> productIds = productsPage.getContent().stream().map(Product::getId).toList();
-        Map<String, ProductRatingDto> ratings = reviewClientService.getProductRatings(productIds);
-
         return productsPage.map(product -> {
             ProductClientDto dto = productMapper.toClientDto(product);
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-            ProductRatingDto rating = ratings.getOrDefault(product.getId(), new ProductRatingDto(BigDecimal.ZERO, 0));
-            dto.setAverageRating(rating.getAverageRating());
-            dto.setReviewsCount(rating.getReviewsCount());
+            dto.setAverageRating(product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO);
+            dto.setReviewsCount(product.getReviewsCount() != null ? product.getReviewsCount() : 0);
             return dto;
         });
     }
 
     private List<ProductClientDto> mapToEnhancedDtos(List<Product> products, Set<String> wishlistProductIds) {
         if (products.isEmpty()) return java.util.Collections.emptyList();
-        List<String> productIds = products.stream().map(Product::getId).toList();
-        Map<String, ProductRatingDto> ratings = reviewClientService.getProductRatings(productIds);
 
         return products.stream().map(product -> {
             ProductClientDto dto = productMapper.toClientDto(product);
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
-            ProductRatingDto rating = ratings.getOrDefault(product.getId(), new ProductRatingDto(BigDecimal.ZERO, 0));
-            dto.setAverageRating(rating.getAverageRating());
-            dto.setReviewsCount(rating.getReviewsCount());
+            dto.setAverageRating(product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO);
+            dto.setReviewsCount(product.getReviewsCount() != null ? product.getReviewsCount() : 0);
             return dto;
         }).toList();
     }

@@ -9,6 +9,6 @@ public class PageContentAdminListResponse {
     private String title;
     private String slug;
     private boolean visible;
-    private Instant createdDate;
+    private Instant createDate;
     private Instant updateDate;
 }

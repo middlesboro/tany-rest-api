@@ -14,8 +14,4 @@ public interface ReviewClientService {
     ReviewClientProductResponse findAllByBrandIds(Collection<String> brandIds, Pageable pageable);
 
     void create(ReviewClientCreateRequest request);
-
-    ProductRatingDto getProductRating(String productId);
-
-    Map<String, ProductRatingDto> getProductRatings(Collection<String> productIds);
 }
