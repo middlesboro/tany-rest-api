@@ -13,7 +13,7 @@ COPY src src
 RUN ./mvnw clean package -DskipTests
 
 # 2. Fáza: Runtime (JRE)
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 RUN addgroup -S spring && adduser -S spring -G spring \
