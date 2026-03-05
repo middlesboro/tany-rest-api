@@ -69,6 +69,7 @@ security:
     - /swagger-ui/**
     - /auth/magic-link/**
     - /api/chat/**
+    - /actuator/info
 
 cors:
   configs:
@@ -105,3 +106,24 @@ langchain4j:
     api-key: ${GOOGLE_AI_GEMINI_API_KEY}
   mistral:
     api-key: ${MISTRAL_API_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: false
+    os:
+      enabled: false
+  health:
+    mongodb:
+      enabled: false
+
+info:
+  app:
+    version: '@project.version@'
+  status: UP
