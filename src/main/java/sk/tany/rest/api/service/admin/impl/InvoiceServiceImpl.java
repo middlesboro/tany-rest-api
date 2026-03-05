@@ -181,6 +181,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         supplierCell.addElement(new Paragraph("\nIČO: " + shopSettings.getIco(), getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("DIČ: " + shopSettings.getDic(), getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("IČ DPH: " + shopSettings.getVatNumber(), getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("\nČíslo živnostenského registra 470-18777", getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("\nEmail: " + shopSettings.getShopEmail(), getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("Tel: " + shopSettings.getShopPhoneNumber(), getSlovakFont(10, Font.NORMAL)));
 
