@@ -15,6 +15,8 @@ import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateRequest;
 import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateResponse;
 import sk.tany.rest.api.mapper.CartClientApiMapper;
+import sk.tany.rest.api.service.chat.CrossSellAssistant;
+import sk.tany.rest.api.service.HtmlSanitizerService;
 import sk.tany.rest.api.service.client.CartClientService;
 import tools.jackson.databind.ObjectMapper;
 
@@ -53,6 +55,18 @@ class CartClientControllerValidationTest {
 
     @MockitoBean
     private SecurityContextRepository securityContextRepository;
+
+    @MockitoBean
+    private CrossSellAssistant crossSellAssistant;
+
+    @MockitoBean
+    private HtmlSanitizerService htmlSanitizerService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        org.mockito.Mockito.when(htmlSanitizerService.sanitize(org.mockito.ArgumentMatchers.anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+    }
 
     @Test
     @WithMockUser
