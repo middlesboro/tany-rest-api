@@ -51,7 +51,7 @@ public class IskladAdminServiceImpl implements IskladAdminService {
         InventoryDetailRequest request = InventoryDetailRequest.builder()
                 .itemIdList(new ArrayList<>()) // All
                 .cached(0)
-                .onlyOnStock(0)
+                .onlyOnStock(1)
                 .build();
         ISkladResponse<InventoryDetailResult> iskladResponse = iskladService.getInventory(request);
 
