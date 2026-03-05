@@ -119,6 +119,9 @@ management:
       enabled: false
     os:
       enabled: false
+  health:
+    mongodb:
+      enabled: false
 
 info:
   app:
