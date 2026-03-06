@@ -1,12 +1,12 @@
 package sk.tany.rest.api.service.common;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.config.BrevoConfig;
 import sk.tany.rest.api.domain.mailplatform.MailPlatformType;
 import sk.tany.rest.api.exception.EmailException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.net.URI;
