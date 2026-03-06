@@ -3,6 +3,7 @@ spring:
     uri: ${MONGODB_URI:mongodb://localhost:27017/tany}
     database: ${MONGODB_DATABASE:tany}
     master-key: ${MONGO_MASTER_KEY:}
+    crypt-lib-path: ${MONGO_CRYPT_LIB_PATH}
   servlet:
     multipart:
       max-file-size: 3MB
