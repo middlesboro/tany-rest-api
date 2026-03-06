@@ -164,7 +164,7 @@ public class ProductEmbeddingService {
                     EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
                             .queryEmbedding(embeddingResponse.content())
                             .maxResults(12)
-                            .filter(MetadataFilterBuilder.metadataKey("quantity").isGreaterThan(0))
+                            .filter(MetadataFilterBuilder.metadataKey("quantity").isNotEqualTo("0"))
                             .build();
                     EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(searchRequest);
                     List<EmbeddingMatch<TextSegment>> relevant = searchResult.matches();
