@@ -11,6 +11,7 @@ import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.filter.MetadataFilterBuilder;
 import dev.langchain4j.store.embedding.mongodb.MongoDbEmbeddingStore;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -159,10 +160,11 @@ public class ProductEmbeddingService {
 
                     Response<dev.langchain4j.data.embedding.Embedding> embeddingResponse = embeddingModel.embed(text);
 
-                    // Find 6 relevant to include self (potentially) and get 5 others
+                    // Fetch 12 related to include self (potentially) and get 5 others after filtering
                     EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
                             .queryEmbedding(embeddingResponse.content())
-                            .maxResults(6)
+                            .maxResults(12)
+                            .filter(MetadataFilterBuilder.metadataKey("quantity").isNotEqualTo("0"))
                             .build();
                     EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(searchRequest);
                     List<EmbeddingMatch<TextSegment>> relevant = searchResult.matches();
@@ -172,24 +174,28 @@ public class ProductEmbeddingService {
                         String matchId = match.embeddingId();
                         if (matchId != null && !matchId.equals(productId)) {
                             Metadata m = match.embedded().metadata();
-                            ProductClientDto dto = new ProductClientDto();
-                            dto.setId(m.getString("id"));
-                            dto.setTitle(m.getString("title"));
-                            if (m.getString("price") != null) dto.setPrice(new BigDecimal(m.getString("price")));
-                            if (m.getString("discountPrice") != null) dto.setDiscountPrice(new BigDecimal(m.getString("discountPrice")));
-                            if (m.getString("quantity") != null) dto.setQuantity(Integer.parseInt(m.getString("quantity")));
-                            if (m.getString("slug") != null) dto.setSlug(m.getString("slug"));
-                            if (m.getString("averageRating") != null) dto.setAverageRating(new BigDecimal(m.getString("averageRating")));
-                            if (m.getString("reviewsCount") != null) dto.setReviewsCount(Integer.parseInt(m.getString("reviewsCount")));
-                            if (m.getString("image") != null) dto.setImages(List.of(m.getString("image")));
-                            results.add(dto);
+
+                            int quantity = m.getString("quantity") != null ? Integer.parseInt(m.getString("quantity")) : 0;
+                            if (quantity > 0) {
+                                ProductClientDto dto = new ProductClientDto();
+                                dto.setId(m.getString("id"));
+                                dto.setTitle(m.getString("title"));
+                                if (m.getString("price") != null) dto.setPrice(new BigDecimal(m.getString("price")));
+                                if (m.getString("discountPrice") != null) dto.setDiscountPrice(new BigDecimal(m.getString("discountPrice")));
+                                dto.setQuantity(quantity);
+                                if (m.getString("slug") != null) dto.setSlug(m.getString("slug"));
+                                if (m.getString("averageRating") != null) dto.setAverageRating(new BigDecimal(m.getString("averageRating")));
+                                if (m.getString("reviewsCount") != null) dto.setReviewsCount(Integer.parseInt(m.getString("reviewsCount")));
+                                if (m.getString("image") != null) dto.setImages(List.of(m.getString("image")));
+                                results.add(dto);
+
+                                if (results.size() == 5) {
+                                    break;
+                                }
+                            }
                         }
                     }
 
-                    // limit to 5 just in case
-                    if (results.size() > 5) {
-                        return results.subList(0, 5);
-                    }
                     return results;
                 })
                 .orElse(List.of());

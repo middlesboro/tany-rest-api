@@ -59,6 +59,9 @@ class CustomerClientControllerValidationTest {
     @MockitoBean
     private SecurityContextRepository securityContextRepository;
 
+    @MockitoBean
+    private sk.tany.rest.api.service.HtmlSanitizerService htmlSanitizerService;
+
     @Test
     @WithMockUser
     void updateCustomer_WhenAddressIsInvalid_ShouldReturnBadRequest() throws Exception {

@@ -196,6 +196,20 @@ public class OrderEventHandler {
             BigDecimal finalPrice = order.getPriceBreakDown() != null ? order.getPriceBreakDown().getTotalPrice() : BigDecimal.ZERO;
             template = template.replace("{{finalPrice}}", String.format("%.2f&nbsp;€", finalPrice));
 
+            // Bank Transfer Info
+            if (payment != null && payment.getType() == sk.tany.rest.api.domain.payment.PaymentType.BANK_TRANSFER) {
+                StringBuilder bankTransferHtml = new StringBuilder();
+                bankTransferHtml.append("<div class=\"section-title\">Údaje pre platbu prevodom</div>");
+                bankTransferHtml.append("<div class=\"address-box\">");
+                bankTransferHtml.append("<p><strong>IBAN:</strong> ").append(HtmlUtils.htmlEscape(settings.getBankAccount())).append("</p>");
+                bankTransferHtml.append("<p><strong>Suma na úhradu:</strong> ").append(String.format("%.2f&nbsp;€", finalPrice)).append("</p>");
+                bankTransferHtml.append("<p><strong>Variabilný symbol:</strong> ").append(order.getOrderIdentifier()).append("</p>");
+                bankTransferHtml.append("</div>");
+                template = template.replace("{{bankTransferInfo}}", bankTransferHtml.toString());
+            } else {
+                template = template.replace("{{bankTransferInfo}}", "");
+            }
+
             byte[] invoiceBytes = invoiceService.generateInvoice(order.getId());
             File invoiceFile = File.createTempFile("faktura_" + order.getOrderIdentifier(), ".pdf");
             File odstupenieFile = createTempFileFromResource("classpath:formular-na-odstupenie-od-zmluvy-tany.sk.pdf", "odstupenie", ".pdf");

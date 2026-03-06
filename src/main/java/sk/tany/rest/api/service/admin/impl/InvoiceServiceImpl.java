@@ -181,6 +181,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         supplierCell.addElement(new Paragraph("\nIČO: " + shopSettings.getIco(), getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("DIČ: " + shopSettings.getDic(), getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("IČ DPH: " + shopSettings.getVatNumber(), getSlovakFont(10, Font.NORMAL)));
+        supplierCell.addElement(new Paragraph("\nČíslo živnostenského registra 470-18777", getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("\nEmail: " + shopSettings.getShopEmail(), getSlovakFont(10, Font.NORMAL)));
         supplierCell.addElement(new Paragraph("Tel: " + shopSettings.getShopPhoneNumber(), getSlovakFont(10, Font.NORMAL)));
 
@@ -268,14 +269,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 
             for (PriceItem item : order.getPriceBreakDown().getItems()) {
                 String name = item.getName();
-                String code = "";
-
-                if (item.getType() == PriceItemType.PRODUCT) {
-                    Product product = productMap.get(item.getId());
-                    if (product != null) {
-                        code = product.getProductCode();
-                    }
-                }
 
                 BigDecimal itemMultiplier = globalMultiplier;
                 if (isCreditNote && item.getType() == PriceItemType.DISCOUNT) {
@@ -304,9 +297,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 nameCell.setBackgroundColor(rowColor);
                 nameCell.setPadding(8);
                 nameCell.addElement(new Paragraph(name, getSlovakFont(9, Font.NORMAL)));
-                if (!code.isEmpty()) {
-                    nameCell.addElement(new Paragraph(code, getSlovakFont(8, Font.NORMAL, Color.GRAY)));
-                }
                 itemsTable.addCell(nameCell);
 
                 itemsTable.addCell(createItemCell(unitPriceBase.toString() + " €", rowColor));

@@ -2,6 +2,8 @@ spring:
   mongodb:
     uri: ${MONGODB_URI:mongodb://localhost:27017/tany}
     database: ${MONGODB_DATABASE:tany}
+    master-key: ${MONGO_MASTER_KEY:}
+    crypt-lib-path: ${MONGO_CRYPT_LIB_PATH}
   servlet:
     multipart:
       max-file-size: 3MB
@@ -69,6 +71,7 @@ security:
     - /swagger-ui/**
     - /auth/magic-link/**
     - /api/chat/**
+    - /actuator/info
 
 cors:
   configs:
@@ -105,3 +108,24 @@ langchain4j:
     api-key: ${GOOGLE_AI_GEMINI_API_KEY}
   mistral:
     api-key: ${MISTRAL_API_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: false
+    os:
+      enabled: false
+  health:
+    mongodb:
+      enabled: false
+
+info:
+  app:
+    version: '@project.version@'
+  status: UP
