@@ -39,6 +39,9 @@ public class CartClientControllerTest {
     private CartClientService cartService;
 
     @MockitoBean
+    private sk.tany.rest.api.service.chat.CrossSellAssistant crossSellAssistant;
+
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
     @MockitoBean
