@@ -41,6 +41,7 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.web.cors.CorsConfigurationSource;
 import sk.tany.rest.api.config.security.MagicLinkLoginFilter;
 import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.jwk.JwkKey;
@@ -75,12 +76,15 @@ public class SecurityConfig {
     public SecurityFilterChain authorizationServerSecurityFilterChain(
             HttpSecurity http,
             MagicLinkLoginFilter magicLinkLoginFilter,
-            SecurityContextRepository repo) throws Exception {
+            SecurityContextRepository repo,
+            CorsConfigurationSource corsConfigurationSource) {
 
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer();
 
         http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher());
+
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource));
 
         http.with(authorizationServerConfigurer, (authorizationServer) ->
                 authorizationServer
