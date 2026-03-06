@@ -21,9 +21,9 @@ RUN apt-get update && apt-get install -y curl && \
     curl -L "https://downloads.mongodb.com/linux/mongo_crypt_shared_v1-linux-x86_64-enterprise-ubuntu2204-8.0.4.tgz" \
     -o /tmp/crypt.tgz && \
     tar -xzf /tmp/crypt.tgz -C /tmp && \
-    mv /tmp/mongo_crypt_shared_v1-*/lib/mongo_crypt_v1.so /usr/local/lib/ && \
+    find /tmp -name "mongo_crypt_v1.so" -exec mv {} /usr/local/lib/ \; && \
     rm -rf /tmp/crypt.tgz /tmp/mongo_crypt_shared_v1-* && \
-    apt-get clean \
+    apt-get clean
 
 RUN groupadd -r spring && useradd -r -g spring spring \
     && mkdir -p /data \
