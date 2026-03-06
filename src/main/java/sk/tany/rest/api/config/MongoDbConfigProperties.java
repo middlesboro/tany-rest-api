@@ -9,4 +9,6 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "spring.data.mongodb")
 public class MongoDbConfigProperties {
     private String database = "tany";
+    private String uri = "mongodb://localhost:27017/tany";
+    private String masterKey = "";
 }

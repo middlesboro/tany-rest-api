@@ -3,7 +3,6 @@ package sk.tany.rest.api.config;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,17 +29,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EncryptionKeyInitializer implements ApplicationRunner {
 
-    @Value("${spring.data.mongodb.uri:mongodb://localhost:27017/tany}")
-    private String mongoUri;
-
-    @Value("${MONGO_MASTER_KEY:}")
-    private String masterKeyBase64;
+    private final MongoDbConfigProperties mongoProperties;
 
     private static final String KEY_VAULT_NAMESPACE = "encryption.__keyVault";
     private static final String KEY_ALT_NAME = "data-key";
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        String masterKeyBase64 = mongoProperties.getMasterKey();
         if (masterKeyBase64 == null || masterKeyBase64.isEmpty()) {
             log.warn("MONGO_MASTER_KEY environment variable is not set. Skipping CSFLE initialization.");
             return;
@@ -62,7 +58,7 @@ public class EncryptionKeyInitializer implements ApplicationRunner {
 
         // 1. Create a MongoClient to configure the KeyVault collection
         MongoClientSettings clientSettings = MongoClientSettings.builder()
-                .applyConnectionString(new ConnectionString(mongoUri))
+                .applyConnectionString(new ConnectionString(mongoProperties.getUri()))
                 .build();
 
         try (MongoClient mongoClient = MongoClients.create(clientSettings)) {

@@ -7,7 +7,6 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,19 +22,14 @@ import java.util.Map;
 @ConditionalOnProperty(name = "spring.data.mongodb.auditing.enabled", havingValue = "true", matchIfMissing = true)
 public class MongoConfig {
 
-    @Value("${spring.data.mongodb.uri:mongodb://localhost:27017/tany}")
-    private String mongoUri;
-
-    @Value("${MONGO_MASTER_KEY:}")
-    private String masterKeyBase64;
-
     private static final String KEY_VAULT_NAMESPACE = "encryption.__keyVault";
 
     @Bean
-    public MongoClient mongoClient() {
+    public MongoClient mongoClient(MongoDbConfigProperties mongoProperties) {
         MongoClientSettings.Builder settingsBuilder = MongoClientSettings.builder()
-                .applyConnectionString(new ConnectionString(mongoUri));
+                .applyConnectionString(new ConnectionString(mongoProperties.getUri()));
 
+        String masterKeyBase64 = mongoProperties.getMasterKey();
         if (masterKeyBase64 != null && !masterKeyBase64.isEmpty()) {
             byte[] localMasterKey = Base64.getDecoder().decode(masterKeyBase64);
             if (localMasterKey.length == 96) {
@@ -45,7 +39,7 @@ public class MongoConfig {
                 kmsProviders.put("local", localKeyMap);
 
                 String dbName = "tany"; // Fallback to 'tany' if not explicit in URI
-                ConnectionString cs = new ConnectionString(mongoUri);
+                ConnectionString cs = new ConnectionString(mongoProperties.getUri());
                 if (cs.getDatabase() != null) {
                     dbName = cs.getDatabase();
                 }
