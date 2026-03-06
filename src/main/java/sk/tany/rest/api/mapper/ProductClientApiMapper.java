@@ -1,8 +1,8 @@
 package sk.tany.rest.api.mapper;
 
 import org.mapstruct.Mapper;
-import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.ProductLabelDto;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
 import sk.tany.rest.api.dto.client.product.label.ProductLabelClientDto;
 import sk.tany.rest.api.dto.client.product.list.ProductClientListResponse;
@@ -17,6 +17,7 @@ public interface ProductClientApiMapper {
         if (dto == null) return null;
         sk.tany.rest.api.dto.client.product.ProductDto productDto = new sk.tany.rest.api.dto.client.product.ProductDto();
         productDto.setId(dto.getId());
+        productDto.setSlug(dto.getSlug());
         productDto.setTitle(dto.getTitle());
         productDto.setPrice(dto.getPrice());
         productDto.setDiscountPrice(dto.getDiscountPrice());
@@ -30,6 +31,7 @@ public interface ProductClientApiMapper {
         if (product == null) return null;
         sk.tany.rest.api.dto.client.product.ProductDto productDto = new sk.tany.rest.api.dto.client.product.ProductDto();
         productDto.setId(product.getId());
+        productDto.setSlug(product.getSlug());
         productDto.setTitle(product.getTitle());
         productDto.setPrice(product.getPrice());
         productDto.setDiscountPrice(product.getDiscountPrice());
