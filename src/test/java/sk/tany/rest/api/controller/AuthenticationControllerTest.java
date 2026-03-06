@@ -73,6 +73,11 @@ public class AuthenticationControllerTest {
 
     @Test
     public void testRequestMagicLinkUnknownEmailReturns200() throws Exception {
+        ShopSettings settings = new ShopSettings();
+        settings.setShopEmail("test@test.com");
+        settings.setShopPhoneNumber("123456789");
+        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
+
         when(customerRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/auth/magic-link/request")
@@ -80,7 +85,8 @@ public class AuthenticationControllerTest {
                 .param("email", "unknown@example.com"))
                 .andExpect(status().isOk());
 
-        verify(emailService, never()).sendEmail(anyString(), anyString(), anyString(), eq(true), any());
+        // We do actually send email since we auto-create the customer, so we verify email service
+        verify(emailService).sendEmail(anyString(), anyString(), anyString(), eq(true), any());
     }
 
     @Test
