@@ -2,10 +2,10 @@ package sk.tany.rest.api.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,7 +19,6 @@ import sk.tany.rest.api.domain.customer.Role;
 import sk.tany.rest.api.domain.shopsettings.ShopSettings;
 import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.service.common.EmailService;
-import org.springframework.util.FileCopyUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -55,29 +54,35 @@ public class AuthenticationController {
         rateLimitMap.put(email, Instant.now());
 
         Optional<Customer> customerOptional = customerRepository.findByEmail(email);
-        if (customerOptional.isPresent()) {
-            String exchangeToken = UUID.randomUUID().toString();
-            MagicLinkToken token = new MagicLinkToken();
-            token.setId(UUID.randomUUID().toString());
-            token.setJti(exchangeToken);
-            token.setCustomerEmail(email);
-            token.setState(MagicLinkTokenState.PENDING);
-            token.setCreateDate(Instant.now());
-            token.setExpiration(Instant.now().plus(5, ChronoUnit.MINUTES));
-            magicLinkTokenRepository.save(token);
-
-            Customer customer = customerOptional.get();
-            String baseUrl = customer.getRole() == Role.ADMIN ? eshopConfig.getFrontendAdminUrl() : eshopConfig.getFrontendUrl();
-            String link = baseUrl + "/magic-link?token=" + exchangeToken;
-
-            ShopSettings settings = shopSettingsRepository.getFirstShopSettings();
-            String body = loadTemplate()
-                    .replace("{{link}}", link)
-                    .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()))
-                    .replace("{{supportEmail}}", settings.getShopEmail() != null ? settings.getShopEmail() : "")
-                    .replace("{{supportPhone}}", settings.getShopPhoneNumber() != null ? settings.getShopPhoneNumber() : "");
-            emailService.sendEmail(email, "Odkaz pre prihlásenie", body, true, null);
+        if (customerOptional.isEmpty()) {
+            Customer customer = new Customer();
+            customer.setEmail(email);
+            customer.setRole(Role.CUSTOMER);
+            customerRepository.save(customer);
+            customerOptional = Optional.of(customer);
         }
+
+        String exchangeToken = UUID.randomUUID().toString();
+        MagicLinkToken token = new MagicLinkToken();
+        token.setId(UUID.randomUUID().toString());
+        token.setJti(exchangeToken);
+        token.setCustomerEmail(email);
+        token.setState(MagicLinkTokenState.PENDING);
+        token.setCreateDate(Instant.now());
+        token.setExpiration(Instant.now().plus(5, ChronoUnit.MINUTES));
+        magicLinkTokenRepository.save(token);
+
+        Customer customer = customerOptional.get();
+        String baseUrl = customer.getRole() == Role.ADMIN ? eshopConfig.getFrontendAdminUrl() : eshopConfig.getFrontendUrl();
+        String link = baseUrl + "/magic-link?token=" + exchangeToken;
+
+        ShopSettings settings = shopSettingsRepository.getFirstShopSettings();
+        String body = loadTemplate()
+                .replace("{{link}}", link)
+                .replace("{{currentYear}}", String.valueOf(java.time.Year.now().getValue()))
+                .replace("{{supportEmail}}", settings.getShopEmail() != null ? settings.getShopEmail() : "")
+                .replace("{{supportPhone}}", settings.getShopPhoneNumber() != null ? settings.getShopPhoneNumber() : "");
+        emailService.sendEmail(email, "Odkaz pre prihlásenie", body, true, null);
 
         // Always return 200 OK to prevent email enumeration
         return ResponseEntity.ok().build();
