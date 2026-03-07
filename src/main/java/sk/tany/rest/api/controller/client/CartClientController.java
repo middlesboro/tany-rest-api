@@ -1,8 +1,8 @@
 package sk.tany.rest.api.controller.client;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
+import sk.tany.rest.api.validation.MongoId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -131,21 +131,21 @@ public class CartClientController {
 
     @PostMapping("/{cartId}/discount")
     public ResponseEntity<CartDto> addDiscount(
-            @PathVariable @Pattern(regexp = "^[a-fA-F0-9]{24}$", message = "Invalid ID format") String cartId,
+            @PathVariable @MongoId String cartId,
             @RequestParam @SafeString String code) {
         return ResponseEntity.ok(cartService.addDiscount(cartId, code));
     }
 
     @DeleteMapping("/{cartId}/discount")
     public ResponseEntity<CartDto> removeDiscount(
-            @PathVariable @Pattern(regexp = "^[a-fA-F0-9]{24}$", message = "Invalid ID format") String cartId,
+            @PathVariable @MongoId String cartId,
             @RequestParam @SafeString String code) {
         return ResponseEntity.ok(cartService.removeDiscount(cartId, code));
     }
 
     @GetMapping("/cross-sell")
     public ResponseEntity<List<CrossSellResponse>> getCrossSell(
-            @RequestParam @Pattern(regexp = "^[a-fA-F0-9]{24}$", message = "Invalid ID format") String cartId) {
+            @RequestParam @MongoId String cartId) {
         CartDto cartDto = cartService.getOrCreateCart(cartId, null);
 
         if (cartDto.getItems() == null || cartDto.getItems().isEmpty()) {

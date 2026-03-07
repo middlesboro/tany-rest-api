@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import sk.tany.rest.api.validation.MongoId;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
 import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
@@ -24,6 +26,7 @@ import sk.tany.rest.api.service.client.ProductClientService;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
+@Validated
 public class ProductClientController {
 
     private final ProductClientService productService;
@@ -71,13 +74,18 @@ public class ProductClientController {
 
     // TODO can be removed
     @GetMapping("/category/{categoryId}")
-    public Page<ProductClientListResponse> getProductsByCategory(@PathVariable String categoryId, Pageable pageable) {
+    public Page<ProductClientListResponse> getProductsByCategory(
+            @PathVariable @MongoId String categoryId,
+            Pageable pageable) {
         return productService.search(categoryId, pageable)
                 .map(productClientApiMapper::toListResponse);
     }
 
     @PostMapping("/category/{categoryId}/search")
-    public ProductClientSearchResponse searchProductsByCategory(@PathVariable String categoryId, @RequestBody @Valid CategoryFilterRequest request, Pageable pageable) {
+    public ProductClientSearchResponse searchProductsByCategory(
+            @PathVariable @MongoId String categoryId,
+            @RequestBody @Valid CategoryFilterRequest request,
+            Pageable pageable) {
         ProductClientSearchDto result = productService.search(categoryId, request, pageable);
 
         ProductClientSearchResponse response = new ProductClientSearchResponse();

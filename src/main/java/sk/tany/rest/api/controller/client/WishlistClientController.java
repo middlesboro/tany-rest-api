@@ -1,7 +1,7 @@
 package sk.tany.rest.api.controller.client;
 
-import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
+import sk.tany.rest.api.validation.MongoId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -31,14 +31,14 @@ public class WishlistClientController {
     @PostMapping("/{productId}")
     @ResponseStatus(HttpStatus.CREATED)
     public void addToWishlist(
-            @PathVariable @Pattern(regexp = "^[a-fA-F0-9]{24}$", message = "Invalid ID format") String productId) {
+            @PathVariable @MongoId String productId) {
         wishlistClientService.addToWishlist(productId);
     }
 
     @DeleteMapping("/{productId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeFromWishlist(
-            @PathVariable @Pattern(regexp = "^[a-fA-F0-9]{24}$", message = "Invalid ID format") String productId) {
+            @PathVariable @MongoId String productId) {
         wishlistClientService.removeFromWishlist(productId);
     }
 
