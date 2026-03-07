@@ -1,10 +1,12 @@
 package sk.tany.rest.api.controller.client;
 
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +22,7 @@ import sk.tany.rest.api.service.client.WishlistClientService;
 @PreAuthorize("hasAnyRole('CUSTOMER')")
 @RequestMapping("/api/wishlist")
 @RequiredArgsConstructor
+@Validated
 public class WishlistClientController {
 
     private final WishlistClientService wishlistClientService;
@@ -27,13 +30,15 @@ public class WishlistClientController {
 
     @PostMapping("/{productId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public void addToWishlist(@PathVariable String productId) {
+    public void addToWishlist(
+            @PathVariable @Pattern(regexp = "^[a-fA-F0-9]{24}$", message = "Invalid ID format") String productId) {
         wishlistClientService.addToWishlist(productId);
     }
 
     @DeleteMapping("/{productId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeFromWishlist(@PathVariable String productId) {
+    public void removeFromWishlist(
+            @PathVariable @Pattern(regexp = "^[a-fA-F0-9]{24}$", message = "Invalid ID format") String productId) {
         wishlistClientService.removeFromWishlist(productId);
     }
 

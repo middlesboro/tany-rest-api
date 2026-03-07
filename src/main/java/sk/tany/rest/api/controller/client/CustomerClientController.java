@@ -59,7 +59,7 @@ public class CustomerClientController {
 
     @PostMapping("/email-notification")
     @Operation(summary = "Create email notification", description = "Creates a new email notification for a product back in stock.")
-    public void createNotification(@RequestBody EmailNotificationCreateRequest request) {
+    public void createNotification(@RequestBody @Valid EmailNotificationCreateRequest request) {
         emailNotificationClientService.createNotification(request);
     }
 
