@@ -71,10 +71,21 @@ public class BrandAdminController {
     public ResponseEntity<BrandDto> uploadImage(@PathVariable String id, @RequestParam("file") MultipartFile file) {
         return brandService.findById(id)
                 .map(brand -> {
-                    String imageUrl = imageService.upload(file, ImageKitType.BRAND);
-                    brand.setImage(imageUrl);
-                    BrandDto updatedBrand = brandService.update(id, brand);
-                    return ResponseEntity.ok(updatedBrand);
+                    try {
+                        String extension = org.springframework.util.StringUtils.getFilenameExtension(file.getOriginalFilename());
+                        if (org.apache.commons.lang3.StringUtils.isBlank(extension)) {
+                            extension = "jpg";
+                        }
+
+                        String filename = brand.getSlug() + "." + extension;
+
+                        String imageUrl = imageService.upload(file.getBytes(), filename, ImageKitType.BRAND);
+                        brand.setImage(imageUrl);
+                        BrandDto updatedBrand = brandService.update(id, brand);
+                        return ResponseEntity.ok(updatedBrand);
+                    } catch (java.io.IOException e) {
+                        throw new RuntimeException("Failed to read image file", e);
+                    }
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

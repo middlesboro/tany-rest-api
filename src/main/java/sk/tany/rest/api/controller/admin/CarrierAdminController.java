@@ -12,6 +12,7 @@ import sk.tany.rest.api.dto.CarrierDto;
 import sk.tany.rest.api.dto.admin.carrier.patch.CarrierPatchRequest;
 import sk.tany.rest.api.service.admin.CarrierAdminService;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.service.common.enums.ImageKitType;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -62,10 +63,22 @@ public class CarrierAdminController {
     public ResponseEntity<CarrierDto> uploadImage(@PathVariable String id, @RequestParam("file") MultipartFile file) {
         return carrierService.findById(id)
                 .map(carrier -> {
-                    String imageUrl = imageService.upload(file, null);
-                    carrier.setImage(imageUrl);
-                    CarrierDto updatedCarrier = carrierService.update(id, carrier);
-                    return ResponseEntity.ok(updatedCarrier);
+                    try {
+                        String extension = org.springframework.util.StringUtils.getFilenameExtension(file.getOriginalFilename());
+                        if (org.apache.commons.lang3.StringUtils.isBlank(extension)) {
+                            extension = "jpg";
+                        }
+
+                        String baseName = carrier.getName() != null ? carrier.getName().toLowerCase().replaceAll("[^a-z0-9-]", "-") : id;
+                        String filename = baseName + "." + extension;
+
+                        String imageUrl = imageService.upload(file.getBytes(), filename, ImageKitType.CARRIER);
+                        carrier.setImage(imageUrl);
+                        CarrierDto updatedCarrier = carrierService.update(id, carrier);
+                        return ResponseEntity.ok(updatedCarrier);
+                    } catch (java.io.IOException e) {
+                        throw new RuntimeException("Failed to read image file", e);
+                    }
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

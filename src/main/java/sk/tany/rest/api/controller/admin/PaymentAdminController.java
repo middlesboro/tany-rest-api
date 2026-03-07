@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.service.admin.PaymentAdminService;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.service.common.enums.ImageKitType;
 
 @RestController
 @PreAuthorize("hasAnyRole('ADMIN')")
@@ -63,10 +64,22 @@ public class PaymentAdminController {
     public ResponseEntity<PaymentDto> uploadImage(@PathVariable String id, @RequestParam("file") MultipartFile file) {
         return paymentService.findById(id)
                 .map(payment -> {
-                    String imageUrl = imageService.upload(file, null);
-                    payment.setImage(imageUrl);
-                    PaymentDto updatedPayment = paymentService.update(id, payment);
-                    return ResponseEntity.ok(updatedPayment);
+                    try {
+                        String extension = org.springframework.util.StringUtils.getFilenameExtension(file.getOriginalFilename());
+                        if (org.apache.commons.lang3.StringUtils.isBlank(extension)) {
+                            extension = "jpg";
+                        }
+
+                        String baseName = payment.getName() != null ? payment.getName().toLowerCase().replaceAll("[^a-z0-9-]", "-") : id;
+                        String filename = baseName + "." + extension;
+
+                        String imageUrl = imageService.upload(file.getBytes(), filename, ImageKitType.PAYMENT_METHOD);
+                        payment.setImage(imageUrl);
+                        PaymentDto updatedPayment = paymentService.update(id, payment);
+                        return ResponseEntity.ok(updatedPayment);
+                    } catch (java.io.IOException e) {
+                        throw new RuntimeException("Failed to read image file", e);
+                    }
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

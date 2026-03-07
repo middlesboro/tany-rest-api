@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateRequest;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
+import sk.tany.rest.api.dto.admin.product.create.ProductImportImagesRequest;
 import sk.tany.rest.api.dto.admin.product.create.ProductImportUrlRequest;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.admin.product.get.ProductGetResponse;
@@ -38,6 +39,7 @@ import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.ProductEmbeddingService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
 import sk.tany.rest.api.service.scheduler.InvoiceUploadScheduler;
+import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -138,13 +140,76 @@ public class ProductAdminController {
     public ResponseEntity<ProductUploadImageResponse> uploadImages(@PathVariable String id, @RequestParam("files") MultipartFile[] files) {
         return productService.findById(id)
                 .map(product -> {
-                    List<String> imageUrls = Arrays.stream(files)
-                            .map(file -> imageService.upload(file, ImageKitType.PRODUCT))
-                            .toList();
-
                     if (product.getImages() == null) {
                         product.setImages(new ArrayList<>());
                     }
+                    int currentImageCount = product.getImages().size();
+
+                    List<String> imageUrls = new ArrayList<>();
+                    for (int i = 0; i < files.length; i++) {
+                        MultipartFile file = files[i];
+                        try {
+                            String extension = org.springframework.util.StringUtils.getFilenameExtension(file.getOriginalFilename());
+                            if (org.apache.commons.lang3.StringUtils.isBlank(extension)) {
+                                extension = "jpg";
+                            }
+
+                            int imageIndex = currentImageCount + i + 1;
+                            String filename = product.getSlug() + (imageIndex > 1 ? "-" + imageIndex : "") + "." + extension;
+
+                            String uploadedUrl = imageService.upload(file.getBytes(), filename, ImageKitType.PRODUCT);
+                            imageUrls.add(uploadedUrl);
+                        } catch (java.io.IOException e) {
+                            throw new RuntimeException("Failed to read image file", e);
+                        }
+                    }
+
+                    product.getImages().addAll(imageUrls);
+
+                    ProductAdminDto updatedProduct = productService.update(id, product);
+                    return ResponseEntity.ok(productAdminApiMapper.toUploadImageResponse(updatedProduct));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/images/import")
+    public ResponseEntity<ProductUploadImageResponse> importImagesFromUrls(@PathVariable String id, @Valid @RequestBody ProductImportImagesRequest request) {
+        return productService.findById(id)
+                .map(product -> {
+                    if (product.getImages() == null) {
+                        product.setImages(new ArrayList<>());
+                    }
+                    int currentImageCount = product.getImages().size();
+
+                    List<String> imageUrls = new ArrayList<>();
+                    RestClient localRestClient = RestClient.create();
+
+                    for (int i = 0; i < request.getUrls().size(); i++) {
+                        String url = request.getUrls().get(i);
+                        try {
+                            byte[] imageBytes = localRestClient.get()
+                                    .uri(url)
+                                    .retrieve()
+                                    .body(byte[].class);
+
+                            if (imageBytes != null && imageBytes.length > 0) {
+                                String cleanUrl = url.split("\\?")[0].split("#")[0];
+                                String extension = org.springframework.util.StringUtils.getFilenameExtension(cleanUrl);
+                                if (org.apache.commons.lang3.StringUtils.isBlank(extension)) {
+                                    extension = "jpg";
+                                }
+
+                                int imageIndex = currentImageCount + i + 1;
+                                String filename = product.getSlug() + (imageIndex > 1 ? "-" + imageIndex : "") + "." + extension;
+
+                                String uploadedUrl = imageService.upload(imageBytes, filename, ImageKitType.PRODUCT);
+                                imageUrls.add(uploadedUrl);
+                            }
+                        } catch (Exception e) {
+                            // Log and skip failed images
+                        }
+                    }
+
                     product.getImages().addAll(imageUrls);
 
                     ProductAdminDto updatedProduct = productService.update(id, product);
