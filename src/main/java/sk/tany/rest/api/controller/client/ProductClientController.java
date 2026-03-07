@@ -1,5 +1,6 @@
 package sk.tany.rest.api.controller.client;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -76,7 +77,7 @@ public class ProductClientController {
     }
 
     @PostMapping("/category/{categoryId}/search")
-    public ProductClientSearchResponse searchProductsByCategory(@PathVariable String categoryId, @RequestBody CategoryFilterRequest request, Pageable pageable) {
+    public ProductClientSearchResponse searchProductsByCategory(@PathVariable String categoryId, @RequestBody @Valid CategoryFilterRequest request, Pageable pageable) {
         ProductClientSearchDto result = productService.search(categoryId, request, pageable);
 
         ProductClientSearchResponse response = new ProductClientSearchResponse();

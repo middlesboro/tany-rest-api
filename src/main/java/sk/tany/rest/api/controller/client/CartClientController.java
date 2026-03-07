@@ -1,8 +1,10 @@
 package sk.tany.rest.api.controller.client;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +32,7 @@ import sk.tany.rest.api.dto.client.cart.update.CartClientUpdateResponse;
 import sk.tany.rest.api.mapper.CartClientApiMapper;
 import sk.tany.rest.api.service.chat.CrossSellAssistant;
 import sk.tany.rest.api.service.client.CartClientService;
+import sk.tany.rest.api.validation.SafeString;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,6 +43,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
+@Validated
 public class CartClientController {
 
     private final CartClientService cartService;
@@ -99,12 +103,12 @@ public class CartClientController {
     }
 
     @PostMapping("/items")
-    public ResponseEntity<CartClientAddProductResponse> addProduct(@RequestBody CartClientAddItemRequest request) {
+    public ResponseEntity<CartClientAddProductResponse> addProduct(@RequestBody @Valid CartClientAddItemRequest request) {
         return ResponseEntity.ok(cartService.addProductToCart(request.getCartId(), request.getProductId(), request.getQuantity()));
     }
 
     @DeleteMapping("/items")
-    public ResponseEntity<CartClientRemoveItemResponse> removeProduct(@RequestBody CartClientRemoveItemRequest request) {
+    public ResponseEntity<CartClientRemoveItemResponse> removeProduct(@RequestBody @Valid CartClientRemoveItemRequest request) {
         String cartId = cartService.removeProductFromCart(request.getCartId(), request.getProductId());
         CartDto cartDto = cartService.getOrCreateCart(cartId, null);
         CartClientRemoveItemResponse response = new CartClientRemoveItemResponse();
@@ -114,29 +118,34 @@ public class CartClientController {
     }
 
     @PostMapping("/carrier")
-    public ResponseEntity<CartClientSetCarrierResponse> addCarrier(@RequestBody CartClientSetCarrierRequest request) {
+    public ResponseEntity<CartClientSetCarrierResponse> addCarrier(@RequestBody @Valid CartClientSetCarrierRequest request) {
         CartDto cartDto = cartService.addCarrier(request.getCartId(), request.getCarrierId());
         return ResponseEntity.ok(cartClientApiMapper.toSetCarrierResponse(cartDto));
     }
 
     @PostMapping("/payment")
-    public ResponseEntity<CartClientSetPaymentResponse> addPayment(@RequestBody CartClientSetPaymentRequest request) {
+    public ResponseEntity<CartClientSetPaymentResponse> addPayment(@RequestBody @Valid CartClientSetPaymentRequest request) {
         CartDto cartDto = cartService.addPayment(request.getCartId(), request.getPaymentId());
         return ResponseEntity.ok(cartClientApiMapper.toSetPaymentResponse(cartDto));
     }
 
     @PostMapping("/{cartId}/discount")
-    public ResponseEntity<CartDto> addDiscount(@PathVariable String cartId, @RequestParam String code) {
+    public ResponseEntity<CartDto> addDiscount(
+            @PathVariable @Pattern(regexp = "^[a-fA-F0-9]{24}$", message = "Invalid ID format") String cartId,
+            @RequestParam @SafeString String code) {
         return ResponseEntity.ok(cartService.addDiscount(cartId, code));
     }
 
     @DeleteMapping("/{cartId}/discount")
-    public ResponseEntity<CartDto> removeDiscount(@PathVariable String cartId, @RequestParam String code) {
+    public ResponseEntity<CartDto> removeDiscount(
+            @PathVariable @Pattern(regexp = "^[a-fA-F0-9]{24}$", message = "Invalid ID format") String cartId,
+            @RequestParam @SafeString String code) {
         return ResponseEntity.ok(cartService.removeDiscount(cartId, code));
     }
 
     @GetMapping("/cross-sell")
-    public ResponseEntity<List<CrossSellResponse>> getCrossSell(@RequestParam String cartId) {
+    public ResponseEntity<List<CrossSellResponse>> getCrossSell(
+            @RequestParam @Pattern(regexp = "^[a-fA-F0-9]{24}$", message = "Invalid ID format") String cartId) {
         CartDto cartDto = cartService.getOrCreateCart(cartId, null);
 
         if (cartDto.getItems() == null || cartDto.getItems().isEmpty()) {
