@@ -12,16 +12,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import sk.tany.rest.api.controller.client.ProductClientController;
-import sk.tany.rest.api.dto.client.product.ProductClientDto;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
+import sk.tany.rest.api.dto.client.product.ProductClientDto;
+import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
 import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
 import sk.tany.rest.api.dto.client.product.list.ProductClientListResponse;
+import sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse;
+import sk.tany.rest.api.dto.request.CategoryFilterRequest;
 import sk.tany.rest.api.mapper.ProductClientApiMapper;
 import sk.tany.rest.api.service.client.ProductClientService;
-import sk.tany.rest.api.dto.request.CategoryFilterRequest;
-import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
-import sk.tany.rest.api.dto.client.product.search.ProductClientSearchResponse;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -157,27 +157,6 @@ class ProductClientControllerTest {
         ResponseEntity<ProductClientGetResponse> response = productClientController.getProductBySlug(slug);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
-    void getProductsByCategory_ShouldReturnPagedProducts() {
-        Pageable pageable = PageRequest.of(0, 10);
-        String categoryId = "cat123";
-        ProductClientDto productDto = new ProductClientDto();
-        productDto.setTitle("Category Product");
-        Page<ProductClientDto> productPage = new PageImpl<>(Collections.singletonList(productDto));
-
-        ProductClientListResponse response = new ProductClientListResponse();
-        response.setTitle("Category Product");
-
-        when(productService.search(categoryId, pageable)).thenReturn(productPage);
-        when(productClientApiMapper.toListResponse(productDto)).thenReturn(response);
-
-        Page<ProductClientListResponse> result = productClientController.getProductsByCategory(categoryId, pageable);
-
-        assertEquals(1, result.getTotalElements());
-        assertEquals("Category Product", result.getContent().getFirst().getTitle());
-        verify(productService, times(1)).search(categoryId, pageable);
     }
 
     @Test

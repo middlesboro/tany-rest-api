@@ -6,8 +6,6 @@ import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.CategoryDto;
-import sk.tany.rest.api.dto.FilterParameterDto;
-import sk.tany.rest.api.dto.request.CategoryFilterRequest;
 import sk.tany.rest.api.mapper.CategoryMapper;
 
 import java.util.ArrayList;
@@ -60,8 +58,4 @@ public class CategoryClientServiceImpl implements CategoryClientService {
         return categoryRepository.findById(id).map(categoryMapper::toDto);
     }
 
-    @Override
-    public List<FilterParameterDto> getFilterParameters(String categoryId, CategoryFilterRequest request) {
-        return productSearchEngine.getFilterParametersForCategoryWithFilter(categoryId, request);
-    }
 }

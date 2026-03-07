@@ -12,7 +12,6 @@ public interface ProductClientService {
     Page<ProductClientDto> findAll(Pageable pageable);
     Optional<ProductClientDto> findById(String id);
     Optional<ProductClientDto> findBySlug(String slug);
-    Page<ProductClientDto> search(String categoryId, Pageable pageable);
     ProductClientSearchDto search(String categoryId, sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable);
     java.util.List<ProductClientDto> findAllByIds(List<String> ids);
     java.util.List<ProductClientDto> searchProducts(String query);

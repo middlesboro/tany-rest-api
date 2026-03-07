@@ -68,13 +68,6 @@ public class ProductClientController {
                 .toList();
     }
 
-    // TODO can be removed
-    @GetMapping("/category/{categoryId}")
-    public Page<ProductClientListResponse> getProductsByCategory(@PathVariable String categoryId, Pageable pageable) {
-        return productService.search(categoryId, pageable)
-                .map(productClientApiMapper::toListResponse);
-    }
-
     @PostMapping("/category/{categoryId}/search")
     public ProductClientSearchResponse searchProductsByCategory(@PathVariable String categoryId, @RequestBody CategoryFilterRequest request, Pageable pageable) {
         ProductClientSearchDto result = productService.search(categoryId, request, pageable);

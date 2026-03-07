@@ -64,13 +64,6 @@ public class ProductClientServiceImpl implements ProductClientService {
     }
 
     @Override
-    public Page<ProductClientDto> search(String categoryId, Pageable pageable) {
-        Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        Page<Product> products = productSearchEngine.findByCategoryIds(categoryId, pageable, true);
-        return mapToEnhancedDtos(products, wishlistProductIds);
-    }
-
-    @Override
     public ProductClientSearchDto search(String categoryId, sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable) {
         java.util.List<Product> products = productSearchEngine.search(categoryId, request);
         java.util.List<sk.tany.rest.api.dto.FilterParameterDto> filters = productSearchEngine.getFilterParametersForCategoryWithFilter(categoryId, request);
