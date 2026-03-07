@@ -66,6 +66,8 @@ public class ProductAdminController {
         ProductAdminDto savedProduct = productService.save(productDto);
 
         if (product.getImages() != null && !product.getImages().isEmpty()) {
+            // clear the raw URLs from the product, we only want the newly uploaded ImageKit URLs
+            savedProduct.setImages(new ArrayList<>());
             importAndUploadImages(product.getImages(), savedProduct);
             savedProduct = productService.update(savedProduct.getId(), savedProduct);
         }

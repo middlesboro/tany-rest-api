@@ -10,6 +10,7 @@ import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
 import sk.tany.rest.api.dto.admin.product.create.ProductImportUrlAiResponse;
 import sk.tany.rest.api.dto.admin.product.create.ProductImportUrlRequest;
 import sk.tany.rest.api.service.chat.ProductImportAiAgent;
+import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
 
 import java.io.IOException;
 
@@ -40,8 +41,14 @@ public class ProductImportUrlService {
 
             log.info("Extracted html length from URL {}: {}", request.getUrl(), cleanHtml.length());
 
+            // Convert to Markdown to save tokens and give structured text to the AI
+            FlexmarkHtmlConverter converter = FlexmarkHtmlConverter.builder().build();
+            String markdown = converter.convert(cleanHtml);
+
+            log.info("Converted Markdown length from URL {}: {}", request.getUrl(), markdown.length());
+
             // 3. Send to AI to extract data
-            ProductImportUrlAiResponse aiResponse = productImportAiAgent.extractProductData(cleanHtml);
+            ProductImportUrlAiResponse aiResponse = productImportAiAgent.extractProductData(markdown);
 
             // 4. Map to ProductCreateResponse
             return mapToCreateResponse(aiResponse, request);
