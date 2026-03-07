@@ -64,6 +64,12 @@ public class ProductAdminController {
     public ResponseEntity<ProductCreateResponse> createProduct(@RequestBody ProductCreateRequest product) {
         ProductAdminDto productDto = productAdminApiMapper.toDto(product);
         ProductAdminDto savedProduct = productService.save(productDto);
+
+        if (product.getImages() != null && !product.getImages().isEmpty()) {
+            importAndUploadImages(product.getImages(), savedProduct);
+            savedProduct = productService.update(savedProduct.getId(), savedProduct);
+        }
+
         return new ResponseEntity<>(productAdminApiMapper.toCreateResponse(savedProduct), HttpStatus.CREATED);
     }
 
@@ -176,46 +182,53 @@ public class ProductAdminController {
     public ResponseEntity<ProductUploadImageResponse> importImagesFromUrls(@PathVariable String id, @Valid @RequestBody ProductImportImagesRequest request) {
         return productService.findById(id)
                 .map(product -> {
-                    if (product.getImages() == null) {
-                        product.setImages(new ArrayList<>());
-                    }
-                    int currentImageCount = product.getImages().size();
-
-                    List<String> imageUrls = new ArrayList<>();
-                    RestClient localRestClient = RestClient.create();
-
-                    for (int i = 0; i < request.getUrls().size(); i++) {
-                        String url = request.getUrls().get(i);
-                        try {
-                            byte[] imageBytes = localRestClient.get()
-                                    .uri(url)
-                                    .retrieve()
-                                    .body(byte[].class);
-
-                            if (imageBytes != null && imageBytes.length > 0) {
-                                String cleanUrl = url.split("\\?")[0].split("#")[0];
-                                String extension = org.springframework.util.StringUtils.getFilenameExtension(cleanUrl);
-                                if (org.apache.commons.lang3.StringUtils.isBlank(extension)) {
-                                    extension = "jpg";
-                                }
-
-                                int imageIndex = currentImageCount + i + 1;
-                                String filename = product.getSlug() + (imageIndex > 1 ? "-" + imageIndex : "") + "." + extension;
-
-                                String uploadedUrl = imageService.upload(imageBytes, filename, ImageKitType.PRODUCT);
-                                imageUrls.add(uploadedUrl);
-                            }
-                        } catch (Exception e) {
-                            // Log and skip failed images
-                        }
-                    }
-
-                    product.getImages().addAll(imageUrls);
-
+                    importAndUploadImages(request.getUrls(), product);
                     ProductAdminDto updatedProduct = productService.update(id, product);
                     return ResponseEntity.ok(productAdminApiMapper.toUploadImageResponse(updatedProduct));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    private void importAndUploadImages(List<String> urls, ProductAdminDto product) {
+        if (urls == null || urls.isEmpty()) {
+            return;
+        }
+
+        if (product.getImages() == null) {
+            product.setImages(new ArrayList<>());
+        }
+        int currentImageCount = product.getImages().size();
+
+        List<String> imageUrls = new ArrayList<>();
+        RestClient localRestClient = RestClient.create();
+
+        for (int i = 0; i < urls.size(); i++) {
+            String url = urls.get(i);
+            try {
+                byte[] imageBytes = localRestClient.get()
+                        .uri(url)
+                        .retrieve()
+                        .body(byte[].class);
+
+                if (imageBytes != null && imageBytes.length > 0) {
+                    String cleanUrl = url.split("\\?")[0].split("#")[0];
+                    String extension = org.springframework.util.StringUtils.getFilenameExtension(cleanUrl);
+                    if (org.apache.commons.lang3.StringUtils.isBlank(extension)) {
+                        extension = "jpg";
+                    }
+
+                    int imageIndex = currentImageCount + i + 1;
+                    String filename = product.getSlug() + (imageIndex > 1 ? "-" + imageIndex : "") + "." + extension;
+
+                    String uploadedUrl = imageService.upload(imageBytes, filename, ImageKitType.PRODUCT);
+                    imageUrls.add(uploadedUrl);
+                }
+            } catch (Exception e) {
+                // Log and skip failed images
+            }
+        }
+
+        product.getImages().addAll(imageUrls);
     }
 
     @DeleteMapping("/{id}/images")
