@@ -14,6 +14,7 @@ import sk.tany.rest.api.service.chat.CrossSellAssistant;
 import sk.tany.rest.api.service.chat.CrossSellTools;
 import sk.tany.rest.api.service.chat.OrderAssistant;
 import sk.tany.rest.api.service.chat.OrderTools;
+import sk.tany.rest.api.service.chat.ProductImportAiAgent;
 
 @Configuration
 public class AiConfig {
@@ -57,6 +58,13 @@ public class AiConfig {
                 .chatModel(chatModel)
                 .tools(crossSellTools)
                 .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
+                .build();
+    }
+
+    @Bean
+    public ProductImportAiAgent productImportAiAgent(ChatModel chatModel) {
+        return AiServices.builder(ProductImportAiAgent.class)
+                .chatModel(chatModel)
                 .build();
     }
 }

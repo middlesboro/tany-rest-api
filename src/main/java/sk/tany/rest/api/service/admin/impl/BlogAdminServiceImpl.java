@@ -76,10 +76,21 @@ public class BlogAdminServiceImpl implements BlogAdminService {
             imageService.delete(blog.getImage());
         }
 
-        String imageUrl = imageService.upload(file, ImageKitType.BLOG);
-        blog.setImage(imageUrl);
-        Blog updatedBlog = blogRepository.save(blog);
-        return blogMapper.toDto(updatedBlog);
+        try {
+            String extension = org.springframework.util.StringUtils.getFilenameExtension(file.getOriginalFilename());
+            if (StringUtils.isBlank(extension)) {
+                extension = "jpg";
+            }
+
+            String filename = blog.getSlug() + "." + extension;
+
+            String imageUrl = imageService.upload(file.getBytes(), filename, ImageKitType.BLOG);
+            blog.setImage(imageUrl);
+            Blog updatedBlog = blogRepository.save(blog);
+            return blogMapper.toDto(updatedBlog);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to read image file", e);
+        }
     }
 
     @Override
