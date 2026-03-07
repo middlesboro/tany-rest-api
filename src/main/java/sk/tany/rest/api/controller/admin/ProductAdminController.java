@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateRequest;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
+import sk.tany.rest.api.dto.admin.product.create.ProductImportUrlRequest;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.admin.product.get.ProductGetResponse;
 import sk.tany.rest.api.dto.admin.product.list.ProductListResponse;
@@ -32,6 +33,7 @@ import sk.tany.rest.api.dto.admin.product.upload.ProductUploadImageResponse;
 import sk.tany.rest.api.mapper.ProductAdminApiMapper;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
 import sk.tany.rest.api.service.admin.ProductAdminService;
+import sk.tany.rest.api.service.admin.ProductImportUrlService;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.ProductEmbeddingService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
@@ -54,6 +56,7 @@ public class ProductAdminController {
     private final PrestaShopImportService prestaShopImportService;
     private final InvoiceUploadScheduler invoiceUploadScheduler;
     private final ProductEmbeddingService productEmbeddingService;
+    private final ProductImportUrlService productImportUrlService;
 
     @PostMapping
     public ResponseEntity<ProductCreateResponse> createProduct(@RequestBody ProductCreateRequest product) {
@@ -173,6 +176,12 @@ public class ProductAdminController {
     public ResponseEntity<Void> importProduct(@PathVariable String id) {
         prestaShopImportService.importProduct(id);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/import/url")
+    public ResponseEntity<ProductCreateResponse> importProductFromUrl(@Valid @RequestBody ProductImportUrlRequest request) {
+        ProductCreateResponse response = productImportUrlService.importFromUrl(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/export/invoice/onedrive")
