@@ -6,11 +6,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sk.tany.rest.api.validation.client.payment.PaymentCallbackConstraint;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@PaymentCallbackConstraint
 public class PaymentCallbackRequest {
     @JsonProperty("OPERATION")
     private String operation;

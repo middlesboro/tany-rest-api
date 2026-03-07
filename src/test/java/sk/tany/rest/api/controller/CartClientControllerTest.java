@@ -1,5 +1,6 @@
 package sk.tany.rest.api.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -18,6 +19,7 @@ import sk.tany.rest.api.dto.client.cart.carrier.CartClientSetCarrierResponse;
 import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentRequest;
 import sk.tany.rest.api.dto.client.cart.payment.CartClientSetPaymentResponse;
 import sk.tany.rest.api.dto.client.cart.remove.CartClientRemoveItemRequest;
+import sk.tany.rest.api.service.HtmlSanitizerService;
 import sk.tany.rest.api.mapper.CartClientApiMapper;
 import sk.tany.rest.api.service.client.CartClientService;
 import tools.jackson.databind.ObjectMapper;
@@ -42,6 +44,14 @@ public class CartClientControllerTest {
     private sk.tany.rest.api.service.chat.CrossSellAssistant crossSellAssistant;
 
     @MockitoBean
+    private HtmlSanitizerService htmlSanitizerService;
+
+    @BeforeEach
+    public void setupHtmlSanitizer() {
+        given(htmlSanitizerService.sanitize(any(String.class))).willAnswer(invocation -> invocation.getArgument(0));
+    }
+
+    @MockitoBean
     private MagicLinkAuthenticationProvider magicLinkAuthenticationProvider;
 
     @MockitoBean
@@ -59,8 +69,8 @@ public class CartClientControllerTest {
     @Test
     @WithMockUser
     public void addProduct_shouldReturnCartId() throws Exception {
-        String cartId = "cart-123";
-        String productId = "prod-456";
+        String cartId = "648b26e133c66004b3cfb1b1";
+        String productId = "648b26e133c66004b3cfb1b2";
         Integer quantity = 1;
         CartClientAddItemRequest request = new CartClientAddItemRequest();
         request.setCartId(cartId);
@@ -77,14 +87,14 @@ public class CartClientControllerTest {
                 .content(objectMapper.writeValueAsString(request))
                 .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().json("{\"cartId\":\"cart-123\"}"));
+                .andExpect(content().json("{\"cartId\":\"648b26e133c66004b3cfb1b1\"}"));
     }
 
     @Test
     @WithMockUser
     public void removeProduct_shouldReturnCartId() throws Exception {
-        String cartId = "cart-123";
-        String productId = "prod-456";
+        String cartId = "648b26e133c66004b3cfb1b1";
+        String productId = "648b26e133c66004b3cfb1b2";
         CartClientRemoveItemRequest request = new CartClientRemoveItemRequest();
         request.setCartId(cartId);
         request.setProductId(productId);
@@ -99,14 +109,14 @@ public class CartClientControllerTest {
                         .content(objectMapper.writeValueAsString(request))
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().json("{\"cartId\":\"cart-123\"}"));
+                .andExpect(content().json("{\"cartId\":\"648b26e133c66004b3cfb1b1\"}"));
     }
 
     @Test
     @WithMockUser
     public void addCarrier_shouldReturnUpdatedCart() throws Exception {
-        String cartId = "cart-123";
-        String carrierId = "carrier-456";
+        String cartId = "648b26e133c66004b3cfb1b1";
+        String carrierId = "648b26e133c66004b3cfb1b3";
         CartClientSetCarrierRequest request = new CartClientSetCarrierRequest();
         request.setCartId(cartId);
         request.setCarrierId(carrierId);
@@ -134,8 +144,8 @@ public class CartClientControllerTest {
     @Test
     @WithMockUser
     public void addPayment_shouldReturnUpdatedCart() throws Exception {
-        String cartId = "cart-123";
-        String paymentId = "payment-789";
+        String cartId = "648b26e133c66004b3cfb1b1";
+        String paymentId = "648b26e133c66004b3cfb1b4";
         CartClientSetPaymentRequest request = new CartClientSetPaymentRequest();
         request.setCartId(cartId);
         request.setPaymentId(paymentId);

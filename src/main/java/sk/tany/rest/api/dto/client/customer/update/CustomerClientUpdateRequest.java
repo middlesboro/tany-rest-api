@@ -3,8 +3,10 @@ package sk.tany.rest.api.dto.client.customer.update;
 import jakarta.validation.Valid;
 import lombok.Data;
 import sk.tany.rest.api.dto.AddressDto;
+import sk.tany.rest.api.validation.client.customer.CustomerClientUpdateConstraint;
 
 @Data
+@CustomerClientUpdateConstraint
 public class CustomerClientUpdateRequest {
     private String firstname;
     private String lastname;
