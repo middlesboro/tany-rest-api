@@ -5,80 +5,153 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Objednávka zaplatená</title>
     <style>
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f4;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
             margin: 0;
-            padding: 0;
-            color: #333;
+            padding: 20px 0;
+            color: #334155;
+            line-height: 1.6;
         }
         .container {
             max-width: 600px;
-            margin: 20px auto;
+            margin: 0 auto;
             background-color: #ffffff;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             overflow: hidden;
+            border-top: 20px solid #3a8a64;
         }
         .header {
-            background-color: #3a8a64;
-            color: #ffffff;
-            padding: 20px;
+            padding: 30px 40px 20px;
             text-align: center;
         }
         .header h1 {
             margin: 0;
             font-size: 24px;
-            color: #ffffff !important;
+            color: #1e293b !important;
+            font-weight: 700;
         }
         .content {
-            padding: 20px;
-            text-align: center;
+            padding: 0 40px 30px;
         }
-
-        /* Tlačidlo - fix pre Gmail a Outlook */
+        .order-info {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 25px;
+        }
+        .order-info p {
+            margin: 8px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            color: #475569;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        td {
+            color: #334155;
+        }
+        a, a:visited, a:link {
+            color: #3a8a64 !important;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .totals {
+            text-align: right;
+            margin-top: 20px;
+            background-color: #f8fafc;
+            padding: 20px;
+            border-radius: 6px;
+        }
+        .totals p {
+            margin: 8px 0;
+            color: #475569;
+        }
+        .totals .final-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer {
+            background-color: #f1f5f9;
+            padding: 24px 40px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1e293b;
+            margin-top: 30px;
+        }
+        .address-box {
+            background-color: #f8fafc;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .address-box p {
+            margin: 5px 0;
+        }
         .btn {
             display: inline-block;
             background-color: #3a8a64;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            margin-top: 20px;
+            padding: 12px 28px;
+            text-decoration: none !important;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            transition: background-color 0.2s;
         }
-
         .btn, .btn:link, .btn:visited, .btn:active {
             color: #ffffff !important;
-            text-decoration: none !important;
         }
-
         .btn:hover {
             background-color: #2d6b4d;
         }
-
-        /* Odkazy v texte - aby ostali zelené aj po kliknutí */
         .link-text, .link-text:link, .link-text:visited {
             color: #3a8a64 !important;
             text-decoration: underline;
         }
+        p {
+            margin: 12px 0;
+        }
+        strong {
+            color: #1e293b;
+        }
 
-        .order-info {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-        }
-        .footer {
-            background-color: #f9f9f9;
-            padding: 15px;
-            text-align: center;
-            font-size: 12px;
-            color: #777;
-        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1 style="color: #ffffff !important;">Objednávka zaplatená</h1>
+        <div style="margin-bottom: 20px;"><img src="https://ik.imagekit.io/8grotfwks/logo_old.png" alt="Tany.sk" style="max-height: 50px; width: auto;"></div>
+        <h1 style="color: #1e293b !important;">Objednávka zaplatená</h1>
     </div>
     <div class="content">
         <p>Dobrý deň <strong>{{firstname}}</strong>,</p>
@@ -86,7 +159,7 @@
 
         <div class="order-info">
             <p>Potvrdenie objednávky si môžete pozrieť na odkaze nižšie:</p>
-            <a href="{{orderConfirmationLink}}" class="btn" style="color: #ffffff !important; text-decoration: none; background-color: #3a8a64;">
+            <a href="{{orderConfirmationLink}}" class="btn">
                 <span style="color: #ffffff;">Zobraziť objednávku</span>
             </a>
         </div>
