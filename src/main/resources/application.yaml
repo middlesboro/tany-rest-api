@@ -13,6 +13,14 @@ imagekit:
   public-key: ${IMAGEKIT_PUBLIC_KEY}
   private-key: ${IMAGEKIT_PRIVATE_KEY}
 
+email:
+  imap:
+    host: ${IMAP_HOST:}
+    port: ${IMAP_PORT:993}
+    username: ${IMAP_USERNAME:}
+    password: ${IMAP_PASSWORD:}
+    folder: ${IMAP_FOLDER:wflow}
+
 mailersend:
   api-token: ${MAILERSEND_API_TOKEN}
   from-email: ${MAILERSEND_FROM_EMAIL:info@tany.sk}
