@@ -5,16 +5,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.service.client.BrandClientService;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,12 +26,12 @@ class BrandClientControllerTest {
 
     @Test
     void getBrands() {
-        Page<BrandDto> brands = new PageImpl<>(Collections.singletonList(new BrandDto()));
-        when(brandService.findAll(any(Pageable.class))).thenReturn(brands);
+        List<BrandDto> brands = Collections.singletonList(new BrandDto());
+        when(brandService.findAll()).thenReturn(brands);
 
-        Page<BrandDto> response = brandClientController.getBrands(Pageable.unpaged());
+        List<BrandDto> response = brandClientController.getBrands();
 
         assertEquals(brands, response);
-        verify(brandService).findAll(any(Pageable.class));
+        verify(brandService).findAll();
     }
 }
