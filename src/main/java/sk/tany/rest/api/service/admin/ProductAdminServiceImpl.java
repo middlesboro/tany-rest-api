@@ -183,15 +183,15 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     @Override
     public void updateVonneTycinkyCategoryProducts() {
         Category category = categoryRepository.findAll().stream()
-                .filter(c -> "Vonné tyčinky".equalsIgnoreCase(c.getTitle()))
+                .filter(c -> "Ezoterika".equalsIgnoreCase(c.getTitle()))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Category 'Vonné tyčinky' not found"));
+                .orElseThrow(() -> new RuntimeException("Category 'Ezoterika' not found"));
 
         FilterParameter filterParameter = filterParameterRepository.findByName("Kategória")
                 .orElseThrow(() -> new RuntimeException("FilterParameter 'Kategória' not found"));
 
-        FilterParameterValue filterParameterValue = filterParameterValueRepository.findByNameAndFilterParameterId("Vonné tyčinky", filterParameter.getId())
-                .orElseThrow(() -> new RuntimeException("FilterParameterValue 'Vonné tyčinky' not found for filter parameter 'Kategória'"));
+        FilterParameterValue filterParameterValue = filterParameterValueRepository.findByNameAndFilterParameterId("Ezoterika", filterParameter.getId())
+                .orElseThrow(() -> new RuntimeException("FilterParameterValue 'Ezoterika' not found for filter parameter 'Kategória'"));
 
         List<Product> products = productRepository.findAllByCategoryIdsContaining(category.getId());
         for (Product product : products) {
