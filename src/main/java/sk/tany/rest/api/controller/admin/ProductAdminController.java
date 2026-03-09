@@ -79,6 +79,12 @@ public class ProductAdminController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/assign-all-products-category")
+    public ResponseEntity<Void> assignMissingAllProductsCategory() {
+        productService.assignMissingAllProductsCategory();
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping("/quantity")
     public ResponseEntity<Void> updateAllProductsQuantity(@RequestParam Integer value) {
         productService.updateAllProductsQuantity(value);

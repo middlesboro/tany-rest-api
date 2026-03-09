@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.component.SlugGenerator;
 import sk.tany.rest.api.domain.brand.BrandRepository;
+import sk.tany.rest.api.domain.category.Category;
+import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
@@ -43,6 +45,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final ISkladService iskladService;
     private final BrandRepository brandRepository;
     private final SupplierRepository supplierRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public Page<ProductAdminDto> findAll(Pageable pageable) {
@@ -167,6 +170,27 @@ public class ProductAdminServiceImpl implements ProductAdminService {
             product.setQuantity(quantity);
             var savedProduct = productRepository.save(product);
             productSearchEngine.updateProduct(savedProduct);
+        }
+    }
+
+    @Override
+    public void assignMissingAllProductsCategory() {
+        Optional<Category> optionalCategory = categoryRepository.findFirstByTitle("Všetky produkty");
+        if (optionalCategory.isEmpty()) {
+            throw new RuntimeException("Category 'Všetky produkty' not found");
+        }
+        Category category = optionalCategory.get();
+
+        List<Product> products = productRepository.findAll();
+        for (Product product : products) {
+            if (product.getCategoryIds() == null) {
+                product.setCategoryIds(new ArrayList<>());
+            }
+            if (!product.getCategoryIds().contains(category.getId())) {
+                product.getCategoryIds().add(category.getId());
+                var savedProduct = productRepository.save(product);
+                productSearchEngine.updateProduct(savedProduct);
+            }
         }
     }
 
