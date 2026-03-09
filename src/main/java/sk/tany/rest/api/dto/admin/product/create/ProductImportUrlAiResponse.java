@@ -1,9 +1,10 @@
 package sk.tany.rest.api.dto.admin.product.create;
 
+import dev.langchain4j.model.output.structured.Description;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.List;
-import dev.langchain4j.model.output.structured.Description;
 
 @Data
 public class ProductImportUrlAiResponse {
@@ -16,7 +17,7 @@ public class ProductImportUrlAiResponse {
     @Description("The full, detailed description of the product, could contain HTML formatting if appropriate")
     private String description;
 
-    @Description("The price of the product. If multiple prices exist, choose the main selling price.")
+    @Description("The price of the product. If multiple prices exist, choose the main selling price. e.g. €10,50")
     private BigDecimal price;
 
     @Description("The weight of the product if available")

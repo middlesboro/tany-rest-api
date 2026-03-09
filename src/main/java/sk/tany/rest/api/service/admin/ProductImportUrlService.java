@@ -1,5 +1,6 @@
 package sk.tany.rest.api.service.admin;
 
+import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -10,7 +11,6 @@ import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
 import sk.tany.rest.api.dto.admin.product.create.ProductImportUrlAiResponse;
 import sk.tany.rest.api.dto.admin.product.create.ProductImportUrlRequest;
 import sk.tany.rest.api.service.chat.ProductImportAiAgent;
-import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
 
 import java.io.IOException;
 
@@ -36,7 +36,7 @@ public class ProductImportUrlService {
             document.select("script, style, header, footer, nav, aside, noscript, iframe, link, meta").remove();
 
             // Keep basic formatting, links, and images so AI can extract descriptions and image URLs.
-            Safelist safelist = Safelist.basicWithImages().addTags("h1", "h2", "h3", "h4", "h5", "h6", "div", "span");
+            Safelist safelist = Safelist.basicWithImages().addTags("h1", "h2", "h3", "h4", "h5", "h6", "div", "span", "form");
             String cleanHtml = Jsoup.clean(document.body().html(), request.getUrl(), safelist);
 
             log.info("Extracted html length from URL {}: {}", request.getUrl(), cleanHtml.length());

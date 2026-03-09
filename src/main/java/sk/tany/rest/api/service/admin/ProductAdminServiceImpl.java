@@ -24,7 +24,7 @@ import sk.tany.rest.api.service.isklad.ISkladService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -256,9 +256,9 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                         .orElse(null);
             }
 
-            List<String> images = null;
+            List<UpdateInventoryCardRequest.Image> images = new ArrayList<>();
             if (product.getImages() != null && !product.getImages().isEmpty()) {
-                images = Collections.singletonList(product.getImages().get(0));
+                images.add(new UpdateInventoryCardRequest.Image(product.getImages().getFirst()));
             }
 
             var request = UpdateInventoryCardRequest.builder()

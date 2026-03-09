@@ -17,11 +17,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateRequest;
 import sk.tany.rest.api.dto.admin.product.create.ProductCreateResponse;
-import sk.tany.rest.api.dto.admin.product.create.ProductImportImagesRequest;
 import sk.tany.rest.api.dto.admin.product.create.ProductImportUrlRequest;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.admin.product.get.ProductGetResponse;
@@ -39,11 +39,9 @@ import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.ProductEmbeddingService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
 import sk.tany.rest.api.service.scheduler.InvoiceUploadScheduler;
-import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -174,17 +172,6 @@ public class ProductAdminController {
 
                     product.getImages().addAll(imageUrls);
 
-                    ProductAdminDto updatedProduct = productService.update(id, product);
-                    return ResponseEntity.ok(productAdminApiMapper.toUploadImageResponse(updatedProduct));
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping("/{id}/images/import")
-    public ResponseEntity<ProductUploadImageResponse> importImagesFromUrls(@PathVariable String id, @Valid @RequestBody ProductImportImagesRequest request) {
-        return productService.findById(id)
-                .map(product -> {
-                    importAndUploadImages(request.getUrls(), product);
                     ProductAdminDto updatedProduct = productService.update(id, product);
                     return ResponseEntity.ok(productAdminApiMapper.toUploadImageResponse(updatedProduct));
                 })
