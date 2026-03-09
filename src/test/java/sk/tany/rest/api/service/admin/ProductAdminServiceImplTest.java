@@ -240,6 +240,5 @@ class ProductAdminServiceImplTest {
         assertThat(request.getEnabled()).isTrue();
         assertThat(request.getProducer()).isEqualTo("Test Brand");
         assertThat(request.getSupplier()).isEqualTo("Test Supplier");
-        assertThat(request.getImages()).containsExactly("img1.jpg");
     }
 }

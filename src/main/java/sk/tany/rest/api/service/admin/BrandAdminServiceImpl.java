@@ -9,9 +9,9 @@ import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.BrandDto;
+import sk.tany.rest.api.dto.admin.brand.BrandAdminGetResponse;
 import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
 import sk.tany.rest.api.exception.BrandException;
-import sk.tany.rest.api.dto.admin.brand.BrandAdminGetResponse;
 import sk.tany.rest.api.mapper.BrandMapper;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.isklad.ISkladService;
@@ -84,7 +84,7 @@ public class BrandAdminServiceImpl implements BrandAdminService {
     public void deleteById(String id) {
         var brand = brandRepository.findById(id);
         if (brand.isPresent()) {
-            if (brand.get().getImage() != null) {
+            if (StringUtils.isNotBlank(brand.get().getImage())) {
                 imageService.delete(brand.get().getImage());
             }
             brandRepository.deleteById(id);
