@@ -17,6 +17,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,7 +31,7 @@ public class SupplierInvoiceAdminServiceImpl implements SupplierInvoiceAdminServ
     private final SupplierInvoiceAdminMapper mapper;
 
     @Override
-    public Page<SupplierInvoiceAdminDto> list(Pageable pageable, String query, Instant createDateFrom, Instant createDateTo) {
+    public Page<SupplierInvoiceAdminDto> list(Pageable pageable, String query, LocalDate createDateFrom, LocalDate createDateTo) {
         Page<SupplierInvoice> page;
 
         if (query != null && !query.trim().isEmpty()) {
@@ -37,7 +39,9 @@ public class SupplierInvoiceAdminServiceImpl implements SupplierInvoiceAdminServ
                 query, query, query, pageable
             );
         } else if (createDateFrom != null && createDateTo != null) {
-            page = repository.findByCreateDateBetween(createDateFrom, createDateTo, pageable);
+            Instant fromInstant = createDateFrom.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            Instant toInstant = createDateTo.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+            page = repository.findByCreateDateBetween(fromInstant, toInstant, pageable);
         } else {
             page = repository.findAll(pageable);
         }

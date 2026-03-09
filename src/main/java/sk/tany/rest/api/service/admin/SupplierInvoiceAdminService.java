@@ -5,9 +5,10 @@ import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.SupplierInvoiceAdminDto;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 public interface SupplierInvoiceAdminService {
-    Page<SupplierInvoiceAdminDto> list(Pageable pageable, String query, Instant createDateFrom, Instant createDateTo);
+    Page<SupplierInvoiceAdminDto> list(Pageable pageable, String query, LocalDate createDateFrom, LocalDate createDateTo);
     SupplierInvoiceAdminDto get(String id);
     SupplierInvoiceAdminDto create(SupplierInvoiceAdminDto dto);
     SupplierInvoiceAdminDto update(String id, SupplierInvoiceAdminDto dto);
