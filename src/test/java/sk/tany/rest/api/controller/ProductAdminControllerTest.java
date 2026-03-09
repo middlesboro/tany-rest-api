@@ -67,27 +67,31 @@ class ProductAdminControllerTest {
     }
 
     @Test
-    void uploadImages_ShouldReturnUpdatedProduct() {
+    void uploadImages_ShouldReturnUpdatedProduct() throws java.io.IOException {
         String id = "1";
         ProductAdminDto productDto = new ProductAdminDto();
         productDto.setId(id);
+        productDto.setSlug("test-slug");
         productDto.setImages(new ArrayList<>());
 
         org.springframework.web.multipart.MultipartFile file = mock(org.springframework.web.multipart.MultipartFile.class);
         org.springframework.web.multipart.MultipartFile[] files = {file};
         String imageUrl = "http://image.url";
+        byte[] fileBytes = "test".getBytes();
 
         ProductUploadImageResponse response = new ProductUploadImageResponse();
 
         when(productService.findById(id)).thenReturn(Optional.of(productDto));
-        when(imageService.upload(eq(file), eq(ImageKitType.PRODUCT))).thenReturn(imageUrl);
+        when(file.getOriginalFilename()).thenReturn("test.jpg");
+        when(file.getBytes()).thenReturn(fileBytes);
+        when(imageService.upload(eq(fileBytes), eq("test-slug.jpg"), eq(ImageKitType.PRODUCT))).thenReturn(imageUrl);
         when(productService.update(eq(id), any(ProductAdminDto.class))).thenReturn(productDto);
         when(productAdminApiMapper.toUploadImageResponse(productDto)).thenReturn(response);
 
         org.springframework.http.ResponseEntity<ProductUploadImageResponse> result = productAdminController.uploadImages(id, files);
 
         assertEquals(org.springframework.http.HttpStatus.OK, result.getStatusCode());
-        verify(imageService, times(1)).upload(file, ImageKitType.PRODUCT);
+        verify(imageService, times(1)).upload(eq(fileBytes), eq("test-slug.jpg"), eq(ImageKitType.PRODUCT));
     }
 
     @Test

@@ -43,5 +43,13 @@ public class UpdateInventoryCardRequest {
     private String supplier;
 
     @JsonProperty("images")
-    private List<String> images;
+    private List<Image> images;
+
+    @AllArgsConstructor
+    @Data
+    public static class Image {
+        @JsonProperty("url")
+        private String url;
+    }
+
 }

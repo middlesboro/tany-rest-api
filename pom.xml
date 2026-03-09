@@ -36,6 +36,7 @@
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <okhttp.version>4.12.0</okhttp.version>
         <jsoup.version>1.22.1</jsoup.version>
+        <flexmark.version>0.64.8</flexmark.version>
     </properties>
 
     <repositories>
@@ -212,6 +213,11 @@
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>${jsoup.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-html2md-converter</artifactId>
+            <version>${flexmark.version}</version>
         </dependency>
 
         <dependency>
