@@ -291,6 +291,14 @@ public class ProductSearchEngine {
         }
     }
 
+    public boolean hasActiveProductWithBrand(String brandId) {
+        if (brandId == null) {
+            return false;
+        }
+        return cachedProducts.stream()
+                .anyMatch(p -> brandId.equals(p.getBrandId()) && p.isActive());
+    }
+
     public List<Product> searchAndSort(String query) {
         return searchAndSort(query, false);
     }
