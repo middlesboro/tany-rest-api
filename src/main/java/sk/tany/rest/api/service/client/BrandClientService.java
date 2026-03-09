@@ -1,9 +1,8 @@
 package sk.tany.rest.api.service.client;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import java.util.List;
 import sk.tany.rest.api.dto.BrandDto;
 
 public interface BrandClientService {
-    Page<BrandDto> findAll(Pageable pageable);
+    List<BrandDto> findAll();
 }
