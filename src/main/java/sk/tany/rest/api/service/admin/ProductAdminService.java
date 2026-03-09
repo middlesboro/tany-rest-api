@@ -23,4 +23,6 @@ public interface ProductAdminService {
     void generateMissingSlugs();
 
     void updateAllProductsQuantity(Integer quantity);
+
+    void updateVonneTycinkyCategoryProducts();
 }

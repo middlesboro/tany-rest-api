@@ -9,7 +9,14 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.component.SlugGenerator;
 import sk.tany.rest.api.domain.brand.BrandRepository;
+import sk.tany.rest.api.domain.category.Category;
+import sk.tany.rest.api.domain.category.CategoryRepository;
+import sk.tany.rest.api.domain.filter.FilterParameter;
+import sk.tany.rest.api.domain.filter.FilterParameterRepository;
+import sk.tany.rest.api.domain.filter.FilterParameterValue;
+import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
 import sk.tany.rest.api.domain.review.ReviewRepository;
@@ -43,6 +50,9 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final ISkladService iskladService;
     private final BrandRepository brandRepository;
     private final SupplierRepository supplierRepository;
+    private final CategoryRepository categoryRepository;
+    private final FilterParameterRepository filterParameterRepository;
+    private final FilterParameterValueRepository filterParameterValueRepository;
 
     @Override
     public Page<ProductAdminDto> findAll(Pageable pageable) {
@@ -167,6 +177,45 @@ public class ProductAdminServiceImpl implements ProductAdminService {
             product.setQuantity(quantity);
             var savedProduct = productRepository.save(product);
             productSearchEngine.updateProduct(savedProduct);
+        }
+    }
+
+    @Override
+    public void updateVonneTycinkyCategoryProducts() {
+        Category category = categoryRepository.findAll().stream()
+                .filter(c -> "Vonné tyčinky".equalsIgnoreCase(c.getTitle()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Category 'Vonné tyčinky' not found"));
+
+        FilterParameter filterParameter = filterParameterRepository.findByName("Kategória")
+                .orElseThrow(() -> new RuntimeException("FilterParameter 'Kategória' not found"));
+
+        FilterParameterValue filterParameterValue = filterParameterValueRepository.findByNameAndFilterParameterId("Vonné tyčinky", filterParameter.getId())
+                .orElseThrow(() -> new RuntimeException("FilterParameterValue 'Vonné tyčinky' not found for filter parameter 'Kategória'"));
+
+        List<Product> products = productRepository.findAllByCategoryIdsContaining(category.getId());
+        for (Product product : products) {
+            boolean hasParameter = false;
+            if (product.getProductFilterParameters() == null) {
+                product.setProductFilterParameters(new ArrayList<>());
+            } else {
+                for (ProductFilterParameter pfp : product.getProductFilterParameters()) {
+                    if (filterParameter.getId().equals(pfp.getFilterParameterId()) &&
+                        filterParameterValue.getId().equals(pfp.getFilterParameterValueId())) {
+                        hasParameter = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasParameter) {
+                ProductFilterParameter pfp = new ProductFilterParameter();
+                pfp.setFilterParameterId(filterParameter.getId());
+                pfp.setFilterParameterValueId(filterParameterValue.getId());
+                product.getProductFilterParameters().add(pfp);
+                var savedProduct = productRepository.save(product);
+                productSearchEngine.updateProduct(savedProduct);
+            }
         }
     }
 
