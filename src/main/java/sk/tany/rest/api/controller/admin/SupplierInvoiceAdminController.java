@@ -22,6 +22,7 @@ import sk.tany.rest.api.service.admin.SupplierInvoiceAdminService;
 import sk.tany.rest.api.service.scheduler.InvoiceEmailScheduler;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/admin/supplier-invoices")
@@ -36,8 +37,8 @@ public class SupplierInvoiceAdminController {
     public ResponseEntity<Page<SupplierInvoiceAdminDto>> list(
             Pageable pageable,
             @RequestParam(required = false) String query,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createDateFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createDateTo) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createDateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createDateTo) {
         return ResponseEntity.ok(service.list(pageable, query, createDateFrom, createDateTo));
     }
 
