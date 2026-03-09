@@ -4,7 +4,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.SupplierInvoiceAdminDto;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
 public interface SupplierInvoiceAdminService {
@@ -13,5 +12,5 @@ public interface SupplierInvoiceAdminService {
     SupplierInvoiceAdminDto create(SupplierInvoiceAdminDto dto);
     SupplierInvoiceAdminDto update(String id, SupplierInvoiceAdminDto dto);
     void delete(String id);
-    byte[] exportCsv(Instant createDateFrom, Instant createDateTo);
+    byte[] exportCsv(LocalDate createDateFrom, LocalDate createDateTo);
 }

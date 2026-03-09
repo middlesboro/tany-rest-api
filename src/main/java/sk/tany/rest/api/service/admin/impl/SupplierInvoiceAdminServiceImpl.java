@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class SupplierInvoiceAdminServiceImpl implements SupplierInvoiceAdminService {
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private final SupplierInvoiceRepository repository;
     private final SupplierInvoiceAdminMapper mapper;
@@ -82,7 +85,7 @@ public class SupplierInvoiceAdminServiceImpl implements SupplierInvoiceAdminServ
     }
 
     @Override
-    public byte[] exportCsv(Instant createDateFrom, Instant createDateTo) {
+    public byte[] exportCsv(LocalDate createDateFrom, LocalDate createDateTo) {
         List<SupplierInvoice> invoices;
         if (createDateFrom != null && createDateTo != null) {
             invoices = repository.findByCreateDateBetween(createDateFrom, createDateTo);
@@ -97,22 +100,20 @@ public class SupplierInvoiceAdminServiceImpl implements SupplierInvoiceAdminServ
             baos.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 
             // Header
-            pw.println("ID;Supplier Name;Price with VAT;Price without VAT;VAT Value;Date Created;Supplier VAT ID;Tax Date;Invoice Number;Payment Reference;Record Create Date");
+            pw.println("Partner;Cislo faktury;Variabilny symbol;Cena bez DPH;DPH suma;Cena s DPH;Datum vystavenia;Datum zdanitelneho plnenia;IC DPH");
 
             // Data
             for (SupplierInvoice inv : invoices) {
-                pw.printf("%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s%n",
-                        escapeCsv(inv.getId()),
+                pw.printf("%s;%s;%s;%s;%s;%s;%s;%s;%s%n",
                         escapeCsv(inv.getSupplierName()),
-                        inv.getPriceWithVat() != null ? inv.getPriceWithVat().toString() : "",
-                        inv.getPriceWithoutVat() != null ? inv.getPriceWithoutVat().toString() : "",
-                        inv.getVatValue() != null ? inv.getVatValue().toString() : "",
-                        inv.getDateCreated() != null ? inv.getDateCreated().toString() : "",
-                        escapeCsv(inv.getSupplierVatIdentifier()),
-                        inv.getTaxDate() != null ? inv.getTaxDate().toString() : "",
                         escapeCsv(inv.getInvoiceNumber()),
                         escapeCsv(inv.getPaymentReference()),
-                        inv.getCreateDate() != null ? inv.getCreateDate().toString() : ""
+                        inv.getPriceWithoutVat() != null ? inv.getPriceWithoutVat().toString().replace(".", ",") : "",
+                        inv.getVatValue() != null ? inv.getVatValue().toString().replace(".", ",") : "",
+                        inv.getPriceWithVat() != null ? inv.getPriceWithVat().toString().replace(".", ",") : "",
+                        inv.getDateCreated() != null ? inv.getDateCreated().format(FORMATTER) : "",
+                        inv.getTaxDate() != null ? inv.getTaxDate().format(FORMATTER) : "",
+                        escapeCsv(inv.getSupplierVatIdentifier())
                 );
             }
             pw.flush();

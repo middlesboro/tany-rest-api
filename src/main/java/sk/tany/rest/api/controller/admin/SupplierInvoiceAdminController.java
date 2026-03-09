@@ -21,7 +21,6 @@ import sk.tany.rest.api.dto.SupplierInvoiceAdminDto;
 import sk.tany.rest.api.service.admin.SupplierInvoiceAdminService;
 import sk.tany.rest.api.service.scheduler.InvoiceEmailScheduler;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
 @RestController
@@ -65,8 +64,8 @@ public class SupplierInvoiceAdminController {
 
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportCsv(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createDateFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant createDateTo) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createDateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createDateTo) {
 
         byte[] csvData = service.exportCsv(createDateFrom, createDateTo);
 

@@ -1,9 +1,11 @@
 package sk.tany.rest.api.domain.supplier;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface SupplierInvoiceRepository extends MongoRepository<SupplierInvoice, String> {
@@ -13,5 +15,5 @@ public interface SupplierInvoiceRepository extends MongoRepository<SupplierInvoi
 
     Page<SupplierInvoice> findByCreateDateBetween(Instant from, Instant to, Pageable pageable);
 
-    List<SupplierInvoice> findByCreateDateBetween(Instant from, Instant to);
+    List<SupplierInvoice> findByCreateDateBetween(LocalDate from, LocalDate to);
 }

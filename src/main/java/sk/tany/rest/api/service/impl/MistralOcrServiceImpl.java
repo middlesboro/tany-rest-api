@@ -20,9 +20,7 @@ import sk.tany.rest.api.domain.supplier.SupplierInvoice;
 import sk.tany.rest.api.service.MistralOcrService;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Base64;
@@ -156,23 +154,16 @@ public class MistralOcrServiceImpl implements MistralOcrService {
         return invoice;
     }
 
-    private Instant parseDate(String dateStr) {
+    private LocalDate parseDate(String dateStr) {
         if (dateStr == null || dateStr.isBlank() || dateStr.equalsIgnoreCase("null")) {
             return null;
         }
         try {
-            LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
-            return date.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            return LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
         } catch (DateTimeParseException e) {
             log.warn("Failed to parse date: {}", dateStr);
             return null;
         }
-    }
-
-    @Data
-    public static class MistralFileResponse {
-        private String id;
-        private String object;
     }
 
     @Data

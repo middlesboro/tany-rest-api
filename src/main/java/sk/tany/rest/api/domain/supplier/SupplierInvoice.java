@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import sk.tany.rest.api.domain.BaseEntity;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -14,9 +14,9 @@ public class SupplierInvoice extends BaseEntity {
     private BigDecimal priceWithVat;
     private BigDecimal priceWithoutVat;
     private BigDecimal vatValue;
-    private Instant dateCreated;
+    private LocalDate dateCreated;
     private String supplierVatIdentifier;
-    private Instant taxDate;
+    private LocalDate taxDate;
     private String invoiceNumber;
     private String paymentReference;
 
