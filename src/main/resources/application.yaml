@@ -19,7 +19,7 @@ email:
     port: ${IMAP_PORT:993}
     username: ${IMAP_USERNAME:}
     password: ${IMAP_PASSWORD:}
-    folder: ${IMAP_FOLDER:wflow}
+    folder: ${IMAP_FOLDER:inbox.wflow}
 
 mailersend:
   api-token: ${MAILERSEND_API_TOKEN}

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.dto.SupplierInvoiceAdminDto;
 import sk.tany.rest.api.service.admin.SupplierInvoiceAdminService;
+import sk.tany.rest.api.service.scheduler.InvoiceEmailScheduler;
 
 import java.time.Instant;
 
@@ -29,6 +30,7 @@ import java.time.Instant;
 public class SupplierInvoiceAdminController {
 
     private final SupplierInvoiceAdminService service;
+    private final InvoiceEmailScheduler invoiceEmailScheduler;
 
     @GetMapping
     public ResponseEntity<Page<SupplierInvoiceAdminDto>> list(
@@ -74,5 +76,11 @@ public class SupplierInvoiceAdminController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(csvData);
+    }
+
+    @PostMapping("manual-process-emails")
+    public ResponseEntity<Void> manualProcessEmails() {
+        invoiceEmailScheduler.processEmails();
+        return ResponseEntity.ok().build();
     }
 }

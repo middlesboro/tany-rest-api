@@ -2,20 +2,19 @@ package sk.tany.rest.api.service.impl;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import sk.tany.rest.api.domain.supplier.SupplierInvoice;
 import sk.tany.rest.api.service.MistralOcrService;
@@ -26,6 +25,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -51,13 +51,7 @@ public class MistralOcrServiceImpl implements MistralOcrService {
 
     @Override
     public SupplierInvoice extractInvoiceData(byte[] pdfBytes, String fileName) {
-        String uploadedFileId = uploadFile(pdfBytes, fileName);
-        if (uploadedFileId == null) {
-            log.error("Failed to upload file to Mistral OCR API");
-            return null;
-        }
-
-        String markdown = performOcr(uploadedFileId);
+        String markdown = performOcr(pdfBytes);
         if (markdown == null || markdown.isBlank()) {
             log.error("Mistral OCR returned empty result");
             return null;
@@ -66,45 +60,23 @@ public class MistralOcrServiceImpl implements MistralOcrService {
         return extractDataFromMarkdown(markdown);
     }
 
-    private String uploadFile(byte[] pdfBytes, String fileName) {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-            headers.setBearerAuth(apiKey);
-
-            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("file", new ByteArrayResource(pdfBytes) {
-                @Override
-                public String getFilename() {
-                    return fileName;
-                }
-            });
-            body.add("purpose", "ocr");
-
-            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-            ResponseEntity<MistralFileResponse> response = restTemplate.exchange(
-                    "https://api.mistral.ai/v1/files",
-                    HttpMethod.POST,
-                    requestEntity,
-                    MistralFileResponse.class
-            );
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return response.getBody().getId();
-            }
-        } catch (Exception e) {
-            log.error("Exception uploading file to Mistral", e);
-        }
-        return null;
-    }
-
-    private String performOcr(String fileId) {
+    private String performOcr(byte[] pdfBytes) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(apiKey);
 
-            String requestBody = String.format("{\"model\":\"mistral-ocr-latest\",\"document\":{\"type\":\"document_url\",\"document_url\":\"mistral://%s\"}}", fileId);
+            String base64 = Base64.getEncoder().encodeToString(pdfBytes);
+
+            JsonObject document = new JsonObject();
+            document.addProperty("type", "document_url");
+            document.addProperty("document_url", "data:application/pdf;base64," + base64);
+
+            JsonObject body = new JsonObject();
+            body.addProperty("model", "mistral-ocr-latest");
+            body.add("document", document);
+
+            String requestBody = new Gson().toJson(body);
             HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
             ResponseEntity<MistralOcrResponse> response = restTemplate.exchange(
