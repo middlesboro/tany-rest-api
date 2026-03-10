@@ -59,6 +59,8 @@ class ProductSearchEngineTest {
     private sk.tany.rest.api.domain.brand.BrandRepository brandRepository;
     @Mock
     private sk.tany.rest.api.domain.productlabel.ProductLabelRepository productLabelRepository;
+    @Mock
+    private sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository contentSnippetRepository;
 
     @InjectMocks
     private ProductSearchEngine productSearchEngine;
@@ -78,6 +80,7 @@ class ProductSearchEngineTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient().when(contentSnippetRepository.findAll()).thenReturn(List.of());
         colorParam = new FilterParameter();
         colorParam.setId("color");
         colorParam.setName("Color");

@@ -268,4 +268,10 @@ public class ProductAdminController {
         productEmbeddingService.reEmbedAllProducts();
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/update-vonnetycinky-category")
+    public ResponseEntity<Void> updateVonneTycinkyCategoryProducts() {
+        productService.updateVonneTycinkyCategoryProducts();
+        return ResponseEntity.ok().build();
+    }
 }

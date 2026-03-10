@@ -36,6 +36,8 @@ public interface ProductRepository extends MongoRepository<Product, String> {
 
     List<Product> findAllByProductFilterParametersFilterParameterValueId(String filterParameterValueId);
 
+    List<Product> findAllByCategoryIdsContaining(String categoryId);
+
     // This method was used for complex category filtering, now delegated to ProductSearchEngine?
     // But if we want simple Mongo query:
     // Page<Product> findByCategoryIdsIn(Collection<String> categoryIds, Pageable pageable);

@@ -45,6 +45,8 @@ class ProductSearchEngineSalesPriorityTest {
     private FilterParameterValueMapper filterParameterValueMapper;
     @Mock
     private ProductLabelMapper productLabelMapper;
+    @Mock
+    private sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository contentSnippetRepository;
 
     @InjectMocks
     private ProductSearchEngine productSearchEngine;
@@ -118,6 +120,8 @@ class ProductSearchEngineSalesPriorityTest {
 
         // Only return s2
         when(productSalesRepository.findAll()).thenReturn(List.of(s2));
+        org.mockito.Mockito.lenient().when(contentSnippetRepository.findAll()).thenReturn(List.of());
+        org.mockito.Mockito.lenient().when(contentSnippetRepository.findAll()).thenReturn(List.of());
 
         // Act
         productSearchEngine.loadProducts();
