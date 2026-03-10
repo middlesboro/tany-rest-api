@@ -53,6 +53,9 @@ class ProductSearchEngineStockTest {
     @Mock
     private ProductLabelMapper productLabelMapper;
 
+    @Mock
+    private sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository contentSnippetRepository;
+
     @InjectMocks
     private ProductSearchEngine productSearchEngine;
 
@@ -63,6 +66,7 @@ class ProductSearchEngineStockTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient().when(contentSnippetRepository.findAll()).thenReturn(List.of());
         productInStock1 = new Product();
         productInStock1.setId("p1");
         productInStock1.setTitle("Alpha In Stock");
@@ -162,7 +166,15 @@ class ProductSearchEngineStockTest {
 
     @Test
     void searchAndSort_ShouldPrioritizeStock_WhenRequested() {
-        // Query "Stock" matches all
+        // Update product repository to return the products during test
+        productInStock1.setTitle("Stock Alpha");
+        productInStock2.setTitle("Stock Beta");
+        productNullStock.setTitle("Stock Delta");
+        productOutOfStock.setTitle("Stock Gamma");
+        when(productRepository.findAll()).thenReturn(List.of(productInStock1, productInStock2, productOutOfStock, productNullStock));
+        productSearchEngine.loadProducts();
+
+        // Product titles match "Stock" exactly as first word now, ensuring JaroWinkler score > 0.51
         List<Product> result = productSearchEngine.searchAndSort("Stock", true);
 
         assertEquals(4, result.size());

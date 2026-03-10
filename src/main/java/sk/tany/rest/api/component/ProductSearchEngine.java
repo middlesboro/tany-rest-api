@@ -19,6 +19,8 @@ import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.filter.FilterParameter;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValue;
+import sk.tany.rest.api.domain.contentsnippet.ContentSnippet;
+import sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductFilterParameter;
@@ -51,6 +53,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -65,6 +69,7 @@ public class ProductSearchEngine {
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
     private final ProductLabelRepository productLabelRepository;
+    private final ContentSnippetRepository contentSnippetRepository;
     private final FilterParameterMapper filterParameterMapper;
     private final FilterParameterValueMapper filterParameterValueMapper;
     private final ProductLabelMapper productLabelMapper;
@@ -79,6 +84,7 @@ public class ProductSearchEngine {
     private final Map<String, List<String>> cachedCategoryChildren = new ConcurrentHashMap<>();
     private final Map<String, ProductLabel> cachedProductLabels = new ConcurrentHashMap<>();
     private final Map<String, Brand> cachedBrands = new ConcurrentHashMap<>();
+    private final Map<String, ContentSnippet> cachedContentSnippets = new ConcurrentHashMap<>();
 
     private static final int MAX_EDIT_DISTANCE = 2;
 
@@ -137,6 +143,28 @@ public class ProductSearchEngine {
         cachedBrands.putAll(brandRepository.findAll().stream()
                 .collect(Collectors.toMap(Brand::getId, Function.identity())));
         log.info("Loaded {} brands into search engine.", cachedBrands.size());
+
+        log.info("Loading content snippets into search engine...");
+        cachedContentSnippets.clear();
+        cachedContentSnippets.putAll(contentSnippetRepository.findAll().stream()
+                .collect(Collectors.toMap(ContentSnippet::getId, Function.identity())));
+        log.info("Loaded {} content snippets into search engine.", cachedContentSnippets.size());
+    }
+
+    public void addContentSnippet(ContentSnippet snippet) {
+        if (snippet != null && snippet.getId() != null) {
+            cachedContentSnippets.put(snippet.getId(), snippet);
+        }
+    }
+
+    public void updateContentSnippet(ContentSnippet snippet) {
+        addContentSnippet(snippet);
+    }
+
+    public void removeContentSnippet(String snippetId) {
+        if (snippetId != null) {
+            cachedContentSnippets.remove(snippetId);
+        }
     }
 
     public List<ProductLabelDto> getProductLabels(List<String> ids) {
@@ -178,7 +206,31 @@ public class ProductSearchEngine {
         if (product.getId() != null) {
             removeProduct(product.getId());
         }
+        if (product.getDescription() != null) {
+            String updatedDescription = replacePlaceholders(product.getDescription());
+            product.setDescription(updatedDescription);
+        }
         cachedProducts.add(product);
+    }
+
+    private String replacePlaceholders(String text) {
+        if (StringUtils.isBlank(text)) {
+            return text;
+        }
+        Pattern pattern = Pattern.compile("\\{\\{([^}]+)\\}\\}");
+        Matcher matcher = pattern.matcher(text);
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            String placeholderMatch = matcher.group(0); // e.g. {{some_placeholder}}
+            String replacement = cachedContentSnippets.values().stream()
+                    .filter(snippet -> placeholderMatch.equals(snippet.getPlaceholder()))
+                    .map(ContentSnippet::getContent)
+                    .findFirst()
+                    .orElse(placeholderMatch);
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     public void updateProduct(Product product) {

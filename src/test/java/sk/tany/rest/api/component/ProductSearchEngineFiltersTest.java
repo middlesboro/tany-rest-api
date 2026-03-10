@@ -51,6 +51,8 @@ class ProductSearchEngineFiltersTest {
     private BrandRepository brandRepository;
     @Mock
     private ProductLabelMapper productLabelMapper;
+    @Mock
+    private sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository contentSnippetRepository;
 
     @InjectMocks
     private ProductSearchEngine productSearchEngine;
@@ -63,6 +65,7 @@ class ProductSearchEngineFiltersTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient().when(contentSnippetRepository.findAll()).thenReturn(List.of());
         brandNike = new Brand();
         brandNike.setId("b_nike");
         brandNike.setName("Nike");
