@@ -24,5 +24,7 @@ public interface ProductAdminService {
 
     void updateAllProductsQuantity(Integer quantity);
 
+    void assignMissingAllProductsCategory();
+
     void updateVonneTycinkyCategoryProducts();
 }

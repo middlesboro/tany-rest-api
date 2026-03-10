@@ -18,4 +18,6 @@ public interface CategoryRepository extends MongoRepository<Category, String> {
     // For now, let's assume ProductSearchEngine handles complex search or we use a simple regex.
     @Query("{ 'title': { $regex: ?0, $options: 'i' } }")
     Page<Category> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+
+    Optional<Category> findFirstByTitle(String title);
 }
