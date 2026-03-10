@@ -73,6 +73,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         if (StringUtils.isBlank(product.getSlug())) {
             product.setSlug(slugGenerator.generateSlug(product.getTitle(), null));
         }
+        ensureAllProductsCategory(product);
         var savedProduct = productRepository.save(product);
         productSearchEngine.addProduct(savedProduct);
         sendToIsklad(savedProduct);
@@ -88,6 +89,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         if (StringUtils.isBlank(product.getSlug())) {
             product.setSlug(slugGenerator.generateSlug(product.getTitle(), id));
         }
+        ensureAllProductsCategory(product);
         var savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
         sendToIsklad(savedProduct);
@@ -109,6 +111,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
         productMapper.updateEntityFromPatch(patchDto, product);
         calculateProductPrices(product);
+        ensureAllProductsCategory(product);
         var savedProduct = productRepository.save(product);
         productSearchEngine.updateProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
@@ -191,6 +194,21 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                 var savedProduct = productRepository.save(product);
                 productSearchEngine.updateProduct(savedProduct);
             }
+        }
+    }
+
+    private void ensureAllProductsCategory(Product product) {
+        Optional<Category> optionalCategory = categoryRepository.findFirstByTitle("Všetky produkty");
+        if (optionalCategory.isEmpty()) {
+            return;
+        }
+        Category category = optionalCategory.get();
+
+        if (product.getCategoryIds() == null) {
+            product.setCategoryIds(new ArrayList<>());
+        }
+        if (!product.getCategoryIds().contains(category.getId())) {
+            product.getCategoryIds().add(category.getId());
         }
     }
 

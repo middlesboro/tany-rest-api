@@ -54,6 +54,9 @@ class ProductAdminServiceImplTest {
     @Mock
     private SupplierRepository supplierRepository;
 
+    @Mock
+    private sk.tany.rest.api.domain.category.CategoryRepository categoryRepository;
+
     @InjectMocks
     private ProductAdminServiceImpl productAdminService;
 
