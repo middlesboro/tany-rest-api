@@ -101,20 +101,22 @@ class CarrierAdminControllerTest {
     }
 
     @Test
-    void uploadImage_ShouldReturnUpdatedCarrier() {
+    void uploadImage_ShouldReturnUpdatedCarrier() throws java.io.IOException {
         String id = "1";
         CarrierDto carrierDto = new CarrierDto();
         carrierDto.setId(id);
         org.springframework.web.multipart.MultipartFile file = mock(org.springframework.web.multipart.MultipartFile.class);
         String imageUrl = "http://image.url";
 
+        when(file.getOriginalFilename()).thenReturn("test.jpg");
+        when(file.getBytes()).thenReturn(new byte[]{});
         when(carrierService.findById(id)).thenReturn(Optional.of(carrierDto));
-        when(imageService.upload(eq(file), isNull())).thenReturn(imageUrl);
+        when(imageService.upload(any(byte[].class), any(String.class), eq(sk.tany.rest.api.service.common.enums.ImageKitType.CARRIER))).thenReturn(imageUrl);
         when(carrierService.update(eq(id), any(CarrierDto.class))).thenReturn(carrierDto);
 
         ResponseEntity<CarrierDto> result = carrierAdminController.uploadImage(id, file);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
-        verify(imageService, times(1)).upload(file, null);
+        verify(imageService, times(1)).upload(any(byte[].class), any(String.class), eq(sk.tany.rest.api.service.common.enums.ImageKitType.CARRIER));
     }
 }
