@@ -16,11 +16,11 @@ import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
+import sk.tany.rest.api.domain.contentsnippet.ContentSnippet;
+import sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository;
 import sk.tany.rest.api.domain.filter.FilterParameter;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValue;
-import sk.tany.rest.api.domain.contentsnippet.ContentSnippet;
-import sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductFilterParameter;
@@ -101,6 +101,8 @@ public class ProductSearchEngine {
         log.info("Loading products into search engine...");
         cachedProducts.clear();
         cachedProducts.addAll(productRepository.findAll());
+        cachedProducts.forEach(product -> replacePlaceholders(product.getDescription()));
+
         log.info("Loaded {} products into search engine.", cachedProducts.size());
 
         log.info("Loading categories into search engine...");
