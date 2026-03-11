@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -200,6 +201,24 @@ public class ProductSearchEngine {
         return cachedProducts.stream()
                 .filter(p -> idSet.contains(p.getId()))
                 .toList();
+    }
+
+    public Optional<Product> findById(String id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return cachedProducts.stream()
+                .filter(p -> id.equals(p.getId()))
+                .findFirst();
+    }
+
+    public Optional<Product> findBySlug(String slug) {
+        if (slug == null) {
+            return Optional.empty();
+        }
+        return cachedProducts.stream()
+                .filter(p -> slug.equals(p.getSlug()))
+                .findFirst();
     }
 
     public void addProduct(Product product) {

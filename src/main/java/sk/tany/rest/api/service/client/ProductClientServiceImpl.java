@@ -40,7 +40,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public Optional<ProductClientDto> findById(String id) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        return productRepository.findById(id).map(product -> {
+        return productSearchEngine.findById(id).map(product -> {
             ProductClientDto dto = productMapper.toClientDto(product);
             dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
@@ -53,7 +53,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public Optional<ProductClientDto> findBySlug(String slug) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        return productRepository.findBySlug(slug).map(product -> {
+        return productSearchEngine.findBySlug(slug).map(product -> {
             ProductClientDto dto = productMapper.toClientDto(product);
             dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
@@ -99,8 +99,9 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public java.util.List<ProductClientDto> findAllByIds(List<String> ids) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        List<Product> products = productRepository.findAllById(ids);
-        // sorting products by the order of ids in the input list. spring data does not guarantee order when using findAllById, so we need to sort manually
+        // Since we are moving from ProductRepository to ProductSearchEngine, we need to collect the filtered results back to a mutable List before sorting
+        List<Product> products = new java.util.ArrayList<>(productSearchEngine.findAllById(ids));
+        // sorting products by the order of ids in the input list.
         products.sort(Comparator.comparingInt(p -> ids.indexOf(p.getId())));
         return mapToEnhancedDtos(products, wishlistProductIds);
     }
