@@ -434,8 +434,19 @@ public class ProductSearchEngine {
             return 0.0;
         }
         String normalizedName = StringUtils.stripAccents(productName.toLowerCase());
+        normalizedQuery = normalizedQuery.toLowerCase();
         // Jaro-Winkler vráti hodnotu medzi 0.0 a 1.0
-        return jaroWinkler.apply(normalizedName, normalizedQuery);
+        if (normalizedName.toLowerCase().contains(normalizedQuery.toLowerCase())) {
+            return 1.0;
+        }
+
+        String finalNormalizedQuery = normalizedQuery;
+        return Arrays.stream(normalizedName.split("\\s+"))
+                .mapToDouble(word -> jaroWinkler.apply(
+                        word.toLowerCase(), finalNormalizedQuery
+                ))
+                .max()
+                .orElse(0.0);
     }
 
     public List<FilterParameterDto> getFilterParametersForCategory(String categoryId) {
