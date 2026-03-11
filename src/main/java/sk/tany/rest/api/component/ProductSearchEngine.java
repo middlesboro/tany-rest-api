@@ -98,10 +98,22 @@ public class ProductSearchEngine {
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadProducts() {
+        log.info("Loading content snippets into search engine...");
+        cachedContentSnippets.clear();
+        cachedContentSnippets.putAll(contentSnippetRepository.findAll().stream()
+                .collect(Collectors.toMap(ContentSnippet::getId, Function.identity())));
+        log.info("Loaded {} content snippets into search engine.", cachedContentSnippets.size());
+
         log.info("Loading products into search engine...");
         cachedProducts.clear();
-        cachedProducts.addAll(productRepository.findAll());
-        cachedProducts.forEach(product -> replacePlaceholders(product.getDescription()));
+        cachedProducts.addAll(
+                productRepository.findAll().stream()
+                        .map(product -> {
+                            product.setDescription(replacePlaceholders(product.getDescription()));
+                            return product;
+                        })
+                        .collect(Collectors.toList())
+        );
 
         log.info("Loaded {} products into search engine.", cachedProducts.size());
 
@@ -146,12 +158,6 @@ public class ProductSearchEngine {
         cachedBrands.putAll(brandRepository.findAll().stream()
                 .collect(Collectors.toMap(Brand::getId, Function.identity())));
         log.info("Loaded {} brands into search engine.", cachedBrands.size());
-
-        log.info("Loading content snippets into search engine...");
-        cachedContentSnippets.clear();
-        cachedContentSnippets.putAll(contentSnippetRepository.findAll().stream()
-                .collect(Collectors.toMap(ContentSnippet::getId, Function.identity())));
-        log.info("Loaded {} content snippets into search engine.", cachedContentSnippets.size());
     }
 
     public void addContentSnippet(ContentSnippet snippet) {
