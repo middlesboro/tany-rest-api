@@ -16,11 +16,11 @@ import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
+import sk.tany.rest.api.domain.contentsnippet.ContentSnippet;
+import sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository;
 import sk.tany.rest.api.domain.filter.FilterParameter;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValue;
-import sk.tany.rest.api.domain.contentsnippet.ContentSnippet;
-import sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductFilterParameter;
@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -100,6 +101,8 @@ public class ProductSearchEngine {
         log.info("Loading products into search engine...");
         cachedProducts.clear();
         cachedProducts.addAll(productRepository.findAll());
+        cachedProducts.forEach(product -> replacePlaceholders(product.getDescription()));
+
         log.info("Loaded {} products into search engine.", cachedProducts.size());
 
         log.info("Loading categories into search engine...");
@@ -200,6 +203,24 @@ public class ProductSearchEngine {
         return cachedProducts.stream()
                 .filter(p -> idSet.contains(p.getId()))
                 .toList();
+    }
+
+    public Optional<Product> findById(String id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return cachedProducts.stream()
+                .filter(p -> id.equals(p.getId()))
+                .findFirst();
+    }
+
+    public Optional<Product> findBySlug(String slug) {
+        if (slug == null) {
+            return Optional.empty();
+        }
+        return cachedProducts.stream()
+                .filter(p -> slug.equals(p.getSlug()))
+                .findFirst();
     }
 
     public void addProduct(Product product) {
