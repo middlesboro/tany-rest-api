@@ -6,4 +6,6 @@ public enum ImageKitType {
     CARRIER,
     PAYMENT_METHOD,
     BLOG,
+    CATEGORY,
+    SNIPPET
 }

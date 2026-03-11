@@ -101,20 +101,22 @@ class PaymentAdminControllerTest {
     }
 
     @Test
-    void uploadImage_ShouldReturnUpdatedPayment() {
+    void uploadImage_ShouldReturnUpdatedPayment() throws java.io.IOException {
         String id = "1";
         PaymentDto paymentDto = new PaymentDto();
         paymentDto.setId(id);
         org.springframework.web.multipart.MultipartFile file = mock(org.springframework.web.multipart.MultipartFile.class);
         String imageUrl = "http://image.url";
 
+        when(file.getOriginalFilename()).thenReturn("test.jpg");
+        when(file.getBytes()).thenReturn(new byte[]{});
         when(paymentService.findById(id)).thenReturn(Optional.of(paymentDto));
-        when(imageService.upload(eq(file), isNull())).thenReturn(imageUrl);
+        when(imageService.upload(any(byte[].class), any(String.class), eq(sk.tany.rest.api.service.common.enums.ImageKitType.PAYMENT_METHOD))).thenReturn(imageUrl);
         when(paymentService.update(eq(id), any(PaymentDto.class))).thenReturn(paymentDto);
 
         ResponseEntity<PaymentDto> result = paymentAdminController.uploadImage(id, file);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
-        verify(imageService, times(1)).upload(file, null);
+        verify(imageService, times(1)).upload(any(byte[].class), any(String.class), eq(sk.tany.rest.api.service.common.enums.ImageKitType.PAYMENT_METHOD));
     }
 }
