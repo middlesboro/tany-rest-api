@@ -6,12 +6,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import sk.tany.rest.api.component.SecurityUtil;
 
 import java.io.IOException;
 
@@ -21,6 +21,7 @@ public class MagicLinkLoginFilter extends OncePerRequestFilter {
 
     private final MagicLinkAuthenticationProvider authenticationProvider;
     private final SecurityContextRepository securityContextRepository;
+    private final SecurityUtil securityUtil;
     private final RequestMatcher requestMatcher = new RegexRequestMatcher("/oauth2/authorize.*", null);
 
     @Override
@@ -31,14 +32,14 @@ public class MagicLinkLoginFilter extends OncePerRequestFilter {
         }
 
         String token = request.getParameter("token");
-        if (token != null && !token.isEmpty() && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (token != null && !token.isEmpty() && !securityUtil.isAuthenticated()) {
             try {
                 MagicLinkAuthenticationToken authRequest = new MagicLinkAuthenticationToken(token);
                 Authentication authResult = authenticationProvider.authenticate(authRequest);
-                SecurityContextHolder.getContext().setAuthentication(authResult);
-                securityContextRepository.saveContext(SecurityContextHolder.getContext(), request, response);
+                securityUtil.setAuthentication(authResult);
+                securityContextRepository.saveContext(securityUtil.getContext(), request, response);
             } catch (Exception e) {
-                SecurityContextHolder.clearContext();
+                securityUtil.clearContext();
             }
         }
 

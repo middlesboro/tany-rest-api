@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.carrier.CarrierType;
@@ -64,13 +64,11 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final sk.tany.rest.api.service.client.CartClientService cartService;
     private final ApplicationEventPublisher eventPublisher;
     private final CartOrderValidator cartOrderValidator;
+    private final SecurityUtil securityUtil;
 
     private String getCurrentCustomerId() {
         try {
-            String email = SecurityContextHolder.getContext().getAuthentication().getName();
-            return customerRepository.findByEmail(email)
-                    .map(Customer::getId)
-                    .orElse(null);
+            return securityUtil.getLoggedInUserId();
         } catch (Exception e) {
             return null;
         }

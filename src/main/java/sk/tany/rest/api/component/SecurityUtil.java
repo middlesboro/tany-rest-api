@@ -3,12 +3,30 @@ package sk.tany.rest.api.component;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import sk.tany.rest.api.exception.AuthenticationException;
 
 @Component
 public class SecurityUtil {
+
+    public boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.isAuthenticated();
+    }
+
+    public void setAuthentication(Authentication authentication) {
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    public void clearContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    public SecurityContext getContext() {
+        return SecurityContextHolder.getContext();
+    }
 
     public String getLoggedInUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

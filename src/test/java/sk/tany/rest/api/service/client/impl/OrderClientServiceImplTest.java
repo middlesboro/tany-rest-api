@@ -77,6 +77,9 @@ class OrderClientServiceImplTest {
     @Mock
     private CartOrderValidator cartOrderValidator;
 
+    @Mock
+    private sk.tany.rest.api.component.SecurityUtil securityUtil;
+
     @InjectMocks
     private OrderClientServiceImpl orderClientService;
 
@@ -242,7 +245,8 @@ class OrderClientServiceImplTest {
         customer.setEmail("user@example.com");
         // Missing firstname, lastname, phone
 
-        when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.of(customer));
+        when(securityUtil.getLoggedInUserId()).thenReturn("cust1");
+        when(securityUtil.getLoggedInUserId()).thenReturn("cust1");
         when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
 
         Order savedOrder = new Order();
@@ -287,7 +291,7 @@ class OrderClientServiceImplTest {
         customer.setLastname("User");
         customer.setPhone("987654321");
 
-        when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.of(customer));
+        when(securityUtil.getLoggedInUserId()).thenReturn("cust1");
         when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
 
         Order savedOrder = new Order();
@@ -325,7 +329,7 @@ class OrderClientServiceImplTest {
         // Mock authenticated user
         Customer customer = new Customer();
         customer.setId("cust1");
-        when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.of(customer));
+        when(securityUtil.getLoggedInUserId()).thenReturn("cust1");
 
         Order savedOrder = new Order();
         savedOrder.setId("order1");
@@ -350,7 +354,7 @@ class OrderClientServiceImplTest {
     @Test
     void createOrder_shouldSetAuthenticatedUserFalse_whenNotLoggedIn() {
         // Reset security context or return null email/customer
-        when(customerRepository.findByEmail("user@example.com")).thenReturn(Optional.empty());
+        when(securityUtil.getLoggedInUserId()).thenReturn(null);
 
         OrderDto orderDto = new OrderDto();
         orderDto.setCartId("cart1");
