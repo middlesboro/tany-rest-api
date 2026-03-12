@@ -26,6 +26,7 @@ public class ProductClientGetResponse {
     private String defaultCategoryId;
     private String supplierId;
     private String brandId;
+    private String brandName;
     private List<String> images;
     private ProductStatus status;
     private List<ProductLabelClientDto> productLabels;

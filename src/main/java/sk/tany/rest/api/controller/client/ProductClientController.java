@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientSearchDto;
 import sk.tany.rest.api.dto.client.product.get.ProductClientGetResponse;
@@ -28,6 +29,7 @@ public class ProductClientController {
     private final ProductClientService productService;
     private final ProductClientApiMapper productClientApiMapper;
     private final CategoryRepository categoryRepository;
+    private final BrandRepository brandRepository;
 
     @GetMapping
     public Page<ProductClientListResponse> getProducts(Pageable pageable) {
@@ -52,6 +54,12 @@ public class ProductClientController {
                         categoryRepository.findById(response.getDefaultCategoryId())
                                 .ifPresent(category -> {
                                     response.setDefaultCategoryTitle(category.getTitle());
+                                });
+                    }
+                    if (response.getBrandId() != null) {
+                        brandRepository.findById(response.getBrandId())
+                                .ifPresent(brand -> {
+                                    response.setBrandName(brand.getName());
                                 });
                     }
                     return response;
