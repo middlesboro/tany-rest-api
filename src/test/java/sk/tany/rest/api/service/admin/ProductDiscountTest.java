@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.ReviewRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
@@ -39,6 +40,8 @@ class ProductDiscountTest {
     private sk.tany.rest.api.service.common.SequenceService sequenceService;
     @Mock
     private sk.tany.rest.api.service.isklad.ISkladService iskladService;
+    @Mock
+    private CategoryRepository categoryRepository;
 
     @InjectMocks
     private ProductAdminServiceImpl productAdminService;
@@ -56,6 +59,7 @@ class ProductDiscountTest {
         when(productMapper.toEntity(dto)).thenReturn(product);
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
+        when(categoryRepository.findFirstByTitle(any(String.class))).thenReturn(java.util.Optional.empty());
 
         productAdminService.save(dto);
 
@@ -74,6 +78,7 @@ class ProductDiscountTest {
         when(productMapper.toEntity(dto)).thenReturn(product);
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
+        when(categoryRepository.findFirstByTitle(any(String.class))).thenReturn(java.util.Optional.empty());
 
         productAdminService.save(dto);
 
@@ -91,6 +96,7 @@ class ProductDiscountTest {
         when(productMapper.toEntity(dto)).thenReturn(product);
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
+        when(categoryRepository.findFirstByTitle(any(String.class))).thenReturn(java.util.Optional.empty());
 
         productAdminService.save(dto);
 

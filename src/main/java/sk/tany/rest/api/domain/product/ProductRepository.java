@@ -38,6 +38,8 @@ public interface ProductRepository extends MongoRepository<Product, String> {
 
     List<Product> findAllByCategoryIdsContaining(String categoryId);
 
+    java.util.stream.Stream<Product> findByDescriptionContaining(String text);
+
     // This method was used for complex category filtering, now delegated to ProductSearchEngine?
     // But if we want simple Mongo query:
     // Page<Product> findByCategoryIdsIn(Collection<String> categoryIds, Pageable pageable);
