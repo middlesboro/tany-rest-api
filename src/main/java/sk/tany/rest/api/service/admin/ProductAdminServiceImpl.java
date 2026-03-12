@@ -20,7 +20,6 @@ import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.Review;
 import sk.tany.rest.api.domain.review.ReviewRepository;
-import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
@@ -55,7 +54,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final CategoryRepository categoryRepository;
     private final FilterParameterRepository filterParameterRepository;
     private final FilterParameterValueRepository filterParameterValueRepository;
-    private final ShopSettingsRepository shopSettingsRepository;
+    private final PriceCalculator priceCalculator;
 
     @Override
     public Page<ProductAdminDto> findAll(Pageable pageable) {
@@ -271,8 +270,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
             return;
         }
 
-        BigDecimal vatPercentage = shopSettingsRepository.getFirstShopSettings().getVat();
-        product.setPriceWithoutVat(PriceCalculator.calculatePriceWithoutVat(product.getPrice(), vatPercentage));
+        product.setPriceWithoutVat(priceCalculator.calculatePriceWithoutVat(product.getPrice()));
 
         if (product.getDiscountValue() != null) {
             BigDecimal discountPrice = price.subtract(product.getDiscountValue());

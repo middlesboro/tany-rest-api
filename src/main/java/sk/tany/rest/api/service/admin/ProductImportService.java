@@ -69,7 +69,7 @@ public class ProductImportService {
     private final SequenceService sequenceService;
     private final ImageService imageService;
     private final RestClient restClient;
-    private final ShopSettingsRepository shopSettingsRepository;
+    private final PriceCalculator priceCalculator;
 
 
     public void importProducts() {
@@ -151,8 +151,7 @@ public class ProductImportService {
         }
         if (StringUtils.isNotBlank(baseData.getPriceTaxExcl())) {
             product.setPriceWithoutVat(new BigDecimal(baseData.getPriceTaxExcl()));
-            BigDecimal vatPercentage = shopSettingsRepository.getFirstShopSettings().getVat();
-            product.setPrice(PriceCalculator.calculatePriceWithVat(product.getPriceWithoutVat(), vatPercentage));
+            product.setPrice(priceCalculator.calculatePriceWithVat(product.getPriceWithoutVat()));
         }
         if (StringUtils.isNotBlank(baseData.getWholesalePrice())) {
             product.setWholesalePrice(new BigDecimal(baseData.getWholesalePrice()));

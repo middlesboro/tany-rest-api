@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
-import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.CarrierDto;
 import sk.tany.rest.api.dto.CarrierPriceRangeDto;
 import sk.tany.rest.api.mapper.CarrierMapper;
@@ -23,7 +22,7 @@ public class CarrierAdminServiceImpl implements CarrierAdminService {
     private final CarrierRepository carrierRepository;
     private final CarrierMapper carrierMapper;
     private final ImageService imageService;
-    private final ShopSettingsRepository shopSettingsRepository;
+    private final PriceCalculator priceCalculator;
 
     @Override
     public Page<CarrierDto> findAll(Pageable pageable) {
@@ -74,12 +73,11 @@ public class CarrierAdminServiceImpl implements CarrierAdminService {
 
     private void processPrices(List<CarrierPriceRangeDto> ranges) {
         if (ranges != null) {
-            BigDecimal vatPercentage = shopSettingsRepository.getFirstShopSettings().getVat();
             for (CarrierPriceRangeDto range : ranges) {
                 BigDecimal price = range.getPrice();
                 if (price != null && price.compareTo(BigDecimal.ZERO) > 0) {
                     range.setPrice(PriceCalculator.roundPrice(price));
-                    range.setPriceWithoutVat(PriceCalculator.calculatePriceWithoutVat(price, vatPercentage));
+                    range.setPriceWithoutVat(priceCalculator.calculatePriceWithoutVat(price));
                     range.setVatValue(PriceCalculator.roundPrice(range.getPrice().subtract(range.getPriceWithoutVat())));
                 } else {
                     range.setPrice(BigDecimal.ZERO);

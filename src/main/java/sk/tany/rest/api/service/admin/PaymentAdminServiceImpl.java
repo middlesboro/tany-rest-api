@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
-import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.mapper.PaymentMapper;
 import sk.tany.rest.api.service.common.ImageService;
@@ -21,7 +20,7 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
     private final ImageService imageService;
-    private final ShopSettingsRepository shopSettingsRepository;
+    private final PriceCalculator priceCalculator;
 
     @Override
     public Page<PaymentDto> findAll(Pageable pageable) {
@@ -63,9 +62,8 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
 
     private void processPrice(PaymentDto paymentDto) {
         if (paymentDto.getPrice() != null && paymentDto.getPrice().compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal vatPercentage = shopSettingsRepository.getFirstShopSettings().getVat();
             paymentDto.setPrice(PriceCalculator.roundPrice(paymentDto.getPrice()));
-            paymentDto.setPriceWithoutVat(PriceCalculator.calculatePriceWithoutVat(paymentDto.getPrice(), vatPercentage));
+            paymentDto.setPriceWithoutVat(priceCalculator.calculatePriceWithoutVat(paymentDto.getPrice()));
             paymentDto.setVatValue(PriceCalculator.roundPrice(paymentDto.getPrice().subtract(paymentDto.getPriceWithoutVat())));
         } else {
             paymentDto.setPrice(BigDecimal.ZERO);

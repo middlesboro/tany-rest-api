@@ -15,6 +15,7 @@ import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.util.PriceCalculator;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -45,7 +46,7 @@ class ProductDiscountTest {
     @Mock
     private CategoryRepository categoryRepository;
     @Mock
-    private ShopSettingsRepository shopSettingsRepository;
+    private PriceCalculator priceCalculator;
 
     @InjectMocks
     private ProductAdminServiceImpl productAdminService;
@@ -64,9 +65,7 @@ class ProductDiscountTest {
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
         when(categoryRepository.findFirstByTitle(any(String.class))).thenReturn(java.util.Optional.empty());
-        ShopSettings settings = new ShopSettings();
-        settings.setVat(new BigDecimal("23"));
-        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
+        when(priceCalculator.calculatePriceWithoutVat(any(BigDecimal.class))).thenReturn(BigDecimal.valueOf(97.56));
 
         productAdminService.save(dto);
 
@@ -86,9 +85,7 @@ class ProductDiscountTest {
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
         when(categoryRepository.findFirstByTitle(any(String.class))).thenReturn(java.util.Optional.empty());
-        ShopSettings settings = new ShopSettings();
-        settings.setVat(new BigDecimal("23"));
-        when(shopSettingsRepository.getFirstShopSettings()).thenReturn(settings);
+        when(priceCalculator.calculatePriceWithoutVat(any(BigDecimal.class))).thenReturn(BigDecimal.valueOf(97.56));
 
         productAdminService.save(dto);
 
