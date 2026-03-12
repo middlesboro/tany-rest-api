@@ -1,13 +1,15 @@
 package sk.tany.rest.api.component;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import sk.tany.rest.api.exception.AuthenticationException;
 
+@Slf4j
 @Component
 public class SecurityUtil {
 
@@ -44,6 +46,15 @@ public class SecurityUtil {
         }
 
         return null;
+    }
+
+    public String getLoggedInUserIdSafe() {
+        try {
+            return getLoggedInUserId();
+        } catch (Exception e) {
+            log.info("Error in get logged user id: ", e);
+            return null;
+        }
     }
 
     public User getLoggedInUser() {

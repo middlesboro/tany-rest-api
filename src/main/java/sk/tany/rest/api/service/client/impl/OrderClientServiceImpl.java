@@ -13,9 +13,7 @@ import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.carrier.CarrierType;
-import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.customer.Address;
-import sk.tany.rest.api.domain.customer.Customer;
 import sk.tany.rest.api.domain.customer.CustomerRepository;
 import sk.tany.rest.api.domain.order.Order;
 import sk.tany.rest.api.domain.order.OrderItem;
@@ -60,19 +58,10 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final ProductClientService productClientService;
     private final ProductSalesRepository productSalesRepository;
     private final ProductSearchEngine productSearchEngine;
-    private final CartRepository cartRepository;
     private final sk.tany.rest.api.service.client.CartClientService cartService;
     private final ApplicationEventPublisher eventPublisher;
     private final CartOrderValidator cartOrderValidator;
     private final SecurityUtil securityUtil;
-
-    private String getCurrentCustomerId() {
-        try {
-            return securityUtil.getLoggedInUserId();
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     private Address mapAddress(AddressDto dto) {
         if (dto == null) return null;
@@ -97,7 +86,7 @@ public class OrderClientServiceImpl implements OrderClientService {
         order.getStatusHistory().add(new OrderStatusHistory(OrderStatus.CREATED, Instant.now()));
         order.setCartId(orderDto.getCartId());
         order.setNote(orderDto.getNote());
-        order.setCustomerId(getCurrentCustomerId());
+        order.setCustomerId(securityUtil.getLoggedInUserIdSafe());
         order.setAuthenticatedUser(order.getCustomerId() != null);
 
         // Populate from Cart
