@@ -5,12 +5,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.PaymentDto;
 import sk.tany.rest.api.mapper.PaymentMapper;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.util.PriceCalculator;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Optional;
 
 @Service
@@ -20,6 +21,7 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
     private final ImageService imageService;
+    private final ShopSettingsRepository shopSettingsRepository;
 
     @Override
     public Page<PaymentDto> findAll(Pageable pageable) {
@@ -59,12 +61,12 @@ public class PaymentAdminServiceImpl implements PaymentAdminService {
         }
     }
 
-    // todo take vat from shop settings. create helper method
     private void processPrice(PaymentDto paymentDto) {
         if (paymentDto.getPrice() != null && paymentDto.getPrice().compareTo(BigDecimal.ZERO) > 0) {
-            paymentDto.setPrice(paymentDto.getPrice().setScale(2, RoundingMode.HALF_UP));
-            paymentDto.setPriceWithoutVat(paymentDto.getPrice().divide(new BigDecimal("1.23"), 2, RoundingMode.HALF_UP));
-            paymentDto.setVatValue(paymentDto.getPrice().subtract(paymentDto.getPriceWithoutVat()));
+            BigDecimal vatPercentage = shopSettingsRepository.getFirstShopSettings().getVat();
+            paymentDto.setPrice(PriceCalculator.roundPrice(paymentDto.getPrice()));
+            paymentDto.setPriceWithoutVat(PriceCalculator.calculatePriceWithoutVat(paymentDto.getPrice(), vatPercentage));
+            paymentDto.setVatValue(PriceCalculator.roundPrice(paymentDto.getPrice().subtract(paymentDto.getPriceWithoutVat())));
         } else {
             paymentDto.setPrice(BigDecimal.ZERO);
             paymentDto.setPriceWithoutVat(BigDecimal.ZERO);

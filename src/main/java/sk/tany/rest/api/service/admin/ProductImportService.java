@@ -24,6 +24,7 @@ import sk.tany.rest.api.domain.productlabel.ProductLabelPosition;
 import sk.tany.rest.api.domain.productlabel.ProductLabelRepository;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.domain.supplier.Supplier;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
@@ -32,6 +33,7 @@ import sk.tany.rest.api.exception.ImportException;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
+import sk.tany.rest.api.util.PriceCalculator;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
@@ -67,6 +69,7 @@ public class ProductImportService {
     private final SequenceService sequenceService;
     private final ImageService imageService;
     private final RestClient restClient;
+    private final ShopSettingsRepository shopSettingsRepository;
 
 
     public void importProducts() {
@@ -148,7 +151,8 @@ public class ProductImportService {
         }
         if (StringUtils.isNotBlank(baseData.getPriceTaxExcl())) {
             product.setPriceWithoutVat(new BigDecimal(baseData.getPriceTaxExcl()));
-            product.setPrice(product.getPriceWithoutVat().multiply(new BigDecimal("1.23")).setScale(2, RoundingMode.HALF_UP));
+            BigDecimal vatPercentage = shopSettingsRepository.getFirstShopSettings().getVat();
+            product.setPrice(PriceCalculator.calculatePriceWithVat(product.getPriceWithoutVat(), vatPercentage));
         }
         if (StringUtils.isNotBlank(baseData.getWholesalePrice())) {
             product.setWholesalePrice(new BigDecimal(baseData.getWholesalePrice()));
