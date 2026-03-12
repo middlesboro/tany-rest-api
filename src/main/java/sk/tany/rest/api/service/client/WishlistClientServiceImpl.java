@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.customer.Customer;
@@ -29,19 +28,9 @@ public class WishlistClientServiceImpl implements WishlistClientService {
     private final ProductMapper productMapper;
     private final SecurityUtil securityUtil;
 
-    private String getCurrentCustomerId() {
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            throw new ProductException.BadRequest("User not logged in");
-        }
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return customerRepository.findByEmail(email)
-                .map(Customer::getId)
-                .orElseThrow(() -> new ProductException.NotFound("Customer not found"));
-    }
-
     @Override
     public void addToWishlist(String productId) {
-        String customerId = getCurrentCustomerId();
+        String customerId = securityUtil.getLoggedInUserId();
         Optional<Wishlist> existing = wishlistRepository.findByCustomerIdAndProductId(customerId, productId);
         if (existing.isPresent()) {
             return; // Already in wishlist
@@ -54,7 +43,7 @@ public class WishlistClientServiceImpl implements WishlistClientService {
 
     @Override
     public void removeFromWishlist(String productId) {
-        String customerId = getCurrentCustomerId();
+        String customerId = securityUtil.getLoggedInUserId();
         wishlistRepository.findByCustomerIdAndProductId(customerId, productId)
                 .ifPresent(wishlistRepository::delete);
     }
