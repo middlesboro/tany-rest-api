@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import sk.tany.rest.api.controller.client.ProductClientController;
+import sk.tany.rest.api.domain.brand.Brand;
+import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
@@ -40,6 +42,9 @@ class ProductClientControllerTest {
 
     @Mock
     private CategoryRepository categoryRepository;
+
+    @Mock
+    private BrandRepository brandRepository;
 
     @InjectMocks
     private ProductClientController productClientController;
@@ -101,32 +106,42 @@ class ProductClientControllerTest {
     }
 
     @Test
-    void getProductBySlug_WhenFound_AndDefaultCategoryExists() {
+    void getProductBySlug_WhenFound_AndDefaultCategoryExists_AndBrandExists() {
         String slug = "some-product";
         String categoryId = "cat1";
         String defaultCategoryTitle = "Default Category";
+        String brandId = "brand1";
+        String brandName = "Test Brand";
 
         ProductClientDto dto = new ProductClientDto();
         dto.setCategoryIds(Collections.singletonList(categoryId));
         dto.setDefaultCategoryId(categoryId);
+        dto.setBrandId(brandId);
 
         ProductClientGetResponse responseDto = new ProductClientGetResponse();
         responseDto.setCategoryIds(Collections.singletonList(categoryId));
         responseDto.setDefaultCategoryId(categoryId);
+        responseDto.setBrandId(brandId);
 
         Category category = new Category();
         category.setId(categoryId);
         category.setTitle(defaultCategoryTitle);
         category.setDefaultCategory(true);
 
+        Brand brand = new Brand();
+        brand.setId(brandId);
+        brand.setName(brandName);
+
         when(productService.findBySlug(slug)).thenReturn(Optional.of(dto));
         when(productClientApiMapper.toGetResponse(dto)).thenReturn(responseDto);
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(brandRepository.findById(brandId)).thenReturn(Optional.of(brand));
 
         ResponseEntity<ProductClientGetResponse> response = productClientController.getProductBySlug(slug);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(defaultCategoryTitle, response.getBody().getDefaultCategoryTitle());
+        assertEquals(brandName, response.getBody().getBrandName());
     }
 
     @Test
