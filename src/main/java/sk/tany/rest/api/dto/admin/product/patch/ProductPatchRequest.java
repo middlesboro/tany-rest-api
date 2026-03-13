@@ -30,6 +30,7 @@ public class ProductPatchRequest {
     private BigDecimal discountValue;
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
+    private BigDecimal wholesalePrice;
     private String defaultCategoryId;
     private boolean externalStock;
 }

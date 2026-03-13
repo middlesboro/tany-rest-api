@@ -30,4 +30,5 @@ public class ProductCreateRequest {
     private BigDecimal discountValue;
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
+    private BigDecimal wholesalePrice;
 }

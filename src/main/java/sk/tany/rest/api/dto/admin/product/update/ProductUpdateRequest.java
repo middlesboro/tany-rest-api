@@ -33,6 +33,7 @@ public class ProductUpdateRequest {
     private BigDecimal discountValue;
     private BigDecimal discountPercentualValue;
     private BigDecimal discountPrice;
+    private BigDecimal wholesalePrice;
     private boolean externalStock;
     private String defaultCategoryId;
 }

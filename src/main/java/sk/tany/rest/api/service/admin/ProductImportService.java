@@ -24,7 +24,6 @@ import sk.tany.rest.api.domain.productlabel.ProductLabelPosition;
 import sk.tany.rest.api.domain.productlabel.ProductLabelRepository;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
-import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.domain.supplier.Supplier;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
@@ -40,7 +39,6 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -127,6 +125,9 @@ public class ProductImportService {
                 existingProduct.setProductIdentifier(productIdentifier);
                 if (StringUtils.isNotBlank(baseData.getExternalStock())) {
                     existingProduct.setExternalStock(baseData.getExternalStock().equals("1"));
+                }
+                if (StringUtils.isNotBlank(baseData.getWholesalePrice())) {
+                    existingProduct.setWholesalePrice(new BigDecimal(baseData.getWholesalePrice()));
                 }
                 Product savedProduct = productRepository.save(existingProduct);
                 productSearchEngine.updateProduct(savedProduct);
