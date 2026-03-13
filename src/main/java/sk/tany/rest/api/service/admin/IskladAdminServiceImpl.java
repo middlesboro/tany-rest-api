@@ -79,7 +79,7 @@ public class IskladAdminServiceImpl implements IskladAdminService {
         for (Product product : activeProducts) {
             boolean containsSkippedName = SKIPPED_NAMES.stream().anyMatch(skipped -> product.getTitle().toLowerCase().contains(skipped.toLowerCase()));
 
-            if (containsSkippedName || product.isExternalStock()) {
+            if (containsSkippedName) {
                 continue;
             }
 
@@ -117,6 +117,7 @@ public class IskladAdminServiceImpl implements IskladAdminService {
                         .productName(product.getTitle())
                         .dbQuantity(dbQuantity)
                         .iskladQuantity(iskladEffective)
+                        .externalStock(product.isExternalStock())
                         .build());
             }
         }

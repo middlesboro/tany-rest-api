@@ -14,4 +14,5 @@ public class InventoryDifferenceDto {
     private String productName;
     private Integer dbQuantity;
     private Integer iskladQuantity;
+    private boolean externalStock;
 }
