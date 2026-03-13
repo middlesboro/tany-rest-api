@@ -33,6 +33,7 @@ import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.common.EmailService;
 import sk.tany.rest.api.service.common.SequenceService;
 import sk.tany.rest.api.service.isklad.ISkladService;
+import sk.tany.rest.api.util.PriceCalculator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -125,9 +126,9 @@ public class OrderAdminServiceImpl implements OrderAdminService {
                 }
 
                 // Calculate Totals
-                BigDecimal priceWithVat = effectivePrice.multiply(quantity).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal priceWithoutVat = effectivePriceWithoutVat.multiply(quantity).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal vatValue = priceWithVat.subtract(priceWithoutVat).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal priceWithVat = PriceCalculator.roundPrice(effectivePrice.multiply(quantity));
+                BigDecimal priceWithoutVat = PriceCalculator.roundPrice(effectivePriceWithoutVat.multiply(quantity));
+                BigDecimal vatValue = PriceCalculator.roundPrice(priceWithVat.subtract(priceWithoutVat));
 
                 productsTotal = productsTotal.add(priceWithVat);
                 productsTotalWithoutVat = productsTotalWithoutVat.add(priceWithoutVat);
@@ -224,7 +225,7 @@ public class OrderAdminServiceImpl implements OrderAdminService {
                      totalDiscount = totalDiscount.add(discountAmount);
                      if (discount.getCode() != null) appliedCodes.add(discount.getCode());
 
-                     BigDecimal discWithVat = discountAmount.negate().setScale(2, RoundingMode.HALF_UP);
+                     BigDecimal discWithVat = PriceCalculator.roundPrice(discountAmount.negate());
                      // Approximate VAT split for discount
                      BigDecimal totalVatRatio = productsTotalWithoutVat.compareTo(BigDecimal.ZERO) > 0
                              ? productsTotal.divide(productsTotalWithoutVat, 4, RoundingMode.HALF_UP)

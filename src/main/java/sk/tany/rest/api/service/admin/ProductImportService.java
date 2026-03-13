@@ -32,13 +32,13 @@ import sk.tany.rest.api.exception.ImportException;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
 import sk.tany.rest.api.service.common.enums.ImageKitType;
+import sk.tany.rest.api.util.PriceCalculator;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -67,6 +67,7 @@ public class ProductImportService {
     private final SequenceService sequenceService;
     private final ImageService imageService;
     private final RestClient restClient;
+    private final PriceCalculator priceCalculator;
 
 
     public void importProducts() {
@@ -125,6 +126,9 @@ public class ProductImportService {
                 if (StringUtils.isNotBlank(baseData.getExternalStock())) {
                     existingProduct.setExternalStock(baseData.getExternalStock().equals("1"));
                 }
+                if (StringUtils.isNotBlank(baseData.getWholesalePrice())) {
+                    existingProduct.setWholesalePrice(new BigDecimal(baseData.getWholesalePrice()));
+                }
                 Product savedProduct = productRepository.save(existingProduct);
                 productSearchEngine.updateProduct(savedProduct);
             }
@@ -148,7 +152,7 @@ public class ProductImportService {
         }
         if (StringUtils.isNotBlank(baseData.getPriceTaxExcl())) {
             product.setPriceWithoutVat(new BigDecimal(baseData.getPriceTaxExcl()));
-            product.setPrice(product.getPriceWithoutVat().multiply(new BigDecimal("1.23")).setScale(2, RoundingMode.HALF_UP));
+            product.setPrice(priceCalculator.calculatePriceWithVat(product.getPriceWithoutVat()));
         }
         if (StringUtils.isNotBlank(baseData.getWholesalePrice())) {
             product.setWholesalePrice(new BigDecimal(baseData.getWholesalePrice()));

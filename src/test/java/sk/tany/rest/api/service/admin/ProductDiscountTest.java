@@ -10,9 +10,12 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.ReviewRepository;
+import sk.tany.rest.api.domain.shopsettings.ShopSettings;
+import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.util.PriceCalculator;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -42,6 +45,8 @@ class ProductDiscountTest {
     private sk.tany.rest.api.service.isklad.ISkladService iskladService;
     @Mock
     private CategoryRepository categoryRepository;
+    @Mock
+    private PriceCalculator priceCalculator;
 
     @InjectMocks
     private ProductAdminServiceImpl productAdminService;
@@ -60,11 +65,12 @@ class ProductDiscountTest {
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
         when(categoryRepository.findFirstByTitle(any(String.class))).thenReturn(java.util.Optional.empty());
+        when(priceCalculator.calculatePriceWithoutVat(any(BigDecimal.class))).thenReturn(BigDecimal.valueOf(97.56));
 
         productAdminService.save(dto);
 
         assertThat(product.getDiscountPriceWithoutVat()).isNotNull();
-        assertThat(product.getDiscountPriceWithoutVat()).isEqualByComparingTo(BigDecimal.valueOf(49.00));
+        assertThat(product.getDiscountPriceWithoutVat()).isEqualByComparingTo(BigDecimal.valueOf(48.78));
     }
 
     @Test
@@ -79,6 +85,7 @@ class ProductDiscountTest {
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(productMapper.toAdminDto(any(Product.class))).thenReturn(dto);
         when(categoryRepository.findFirstByTitle(any(String.class))).thenReturn(java.util.Optional.empty());
+        when(priceCalculator.calculatePriceWithoutVat(any(BigDecimal.class))).thenReturn(BigDecimal.valueOf(97.56));
 
         productAdminService.save(dto);
 

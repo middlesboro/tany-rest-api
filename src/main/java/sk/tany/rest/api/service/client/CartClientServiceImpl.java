@@ -10,6 +10,7 @@ import sk.tany.rest.api.domain.cartdiscount.CartDiscountRepository;
 import sk.tany.rest.api.domain.cartdiscount.DiscountType;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
 import sk.tany.rest.api.dto.CartDto;
+import sk.tany.rest.api.util.PriceCalculator;
 import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.PriceBreakDown;
 import sk.tany.rest.api.dto.PriceItem;
@@ -392,7 +393,7 @@ public class CartClientServiceImpl implements CartClientService {
 
                     if (originalPrice != null && originalPrice.compareTo(BigDecimal.ZERO) != 0) {
                         BigDecimal ratio = originalPriceWithoutVat.divide(originalPrice, 4, RoundingMode.HALF_UP);
-                        effectivePriceWithoutVat = effectivePrice.multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+                        effectivePriceWithoutVat = PriceCalculator.roundPrice(effectivePrice.multiply(ratio));
                     } else {
                         effectivePriceWithoutVat = effectivePrice;
                     }
@@ -402,10 +403,10 @@ public class CartClientServiceImpl implements CartClientService {
                 item.setImage((product.getImages() != null && !product.getImages().isEmpty()) ? product.getImages().getFirst() : null);
                 item.setTitle(product.getTitle());
 
-                BigDecimal priceWithVat = effectivePrice.multiply(BigDecimal.valueOf(item.getQuantity())).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal priceWithoutVat = effectivePriceWithoutVat
-                        .multiply(BigDecimal.valueOf(item.getQuantity())).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal vatValue = priceWithVat.subtract(priceWithoutVat).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal priceWithVat = PriceCalculator.roundPrice(effectivePrice.multiply(BigDecimal.valueOf(item.getQuantity())));
+                BigDecimal priceWithoutVat = PriceCalculator.roundPrice(effectivePriceWithoutVat
+                        .multiply(BigDecimal.valueOf(item.getQuantity())));
+                BigDecimal vatValue = PriceCalculator.roundPrice(priceWithVat.subtract(priceWithoutVat));
 
                 productsTotal = productsTotal.add(priceWithVat);
                 productsTotalWithoutVat = productsTotalWithoutVat.add(priceWithoutVat);
@@ -519,7 +520,7 @@ public class CartClientServiceImpl implements CartClientService {
                     actuallyAppliedDiscounts.add(discount);
 
                     if (discountAmount.compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal discWithVat = discountAmount.negate().setScale(2, RoundingMode.HALF_UP);
+                        BigDecimal discWithVat = PriceCalculator.roundPrice(discountAmount.negate());
                         // Approximate VAT split for discount. Assuming average VAT rate of the cart.
                         BigDecimal totalVatRatio = productsTotalWithoutVat.compareTo(BigDecimal.ZERO) > 0
                             ? productsTotal.divide(productsTotalWithoutVat, 4, RoundingMode.HALF_UP)

@@ -30,6 +30,7 @@ import sk.tany.rest.api.dto.admin.import_product.ProductImportDataDto;
 import sk.tany.rest.api.dto.admin.import_product.ProductImportEntryDto;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
+import sk.tany.rest.api.util.PriceCalculator;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
@@ -75,6 +76,9 @@ class ProductImportServiceTest {
     @Mock
     private ImageService imageService;
 
+    @Mock
+    private PriceCalculator priceCalculator;
+
     private ProductImportService productImportService;
     private MockRestServiceServer mockServer;
 
@@ -87,7 +91,7 @@ class ProductImportServiceTest {
                 productRepository, productSalesRepository, productLabelRepository,
                 filterParameterRepository, filterParameterValueRepository, categoryRepository,
                 supplierRepository, brandRepository, objectMapper, productSearchEngine,
-                slugGenerator, sequenceService, imageService, builder.build()
+                slugGenerator, sequenceService, imageService, builder.build(), priceCalculator
         );
     }
 

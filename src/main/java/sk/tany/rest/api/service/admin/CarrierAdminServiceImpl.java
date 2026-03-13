@@ -9,9 +9,9 @@ import sk.tany.rest.api.dto.CarrierDto;
 import sk.tany.rest.api.dto.CarrierPriceRangeDto;
 import sk.tany.rest.api.mapper.CarrierMapper;
 import sk.tany.rest.api.service.common.ImageService;
+import sk.tany.rest.api.util.PriceCalculator;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +22,7 @@ public class CarrierAdminServiceImpl implements CarrierAdminService {
     private final CarrierRepository carrierRepository;
     private final CarrierMapper carrierMapper;
     private final ImageService imageService;
+    private final PriceCalculator priceCalculator;
 
     @Override
     public Page<CarrierDto> findAll(Pageable pageable) {
@@ -75,10 +76,9 @@ public class CarrierAdminServiceImpl implements CarrierAdminService {
             for (CarrierPriceRangeDto range : ranges) {
                 BigDecimal price = range.getPrice();
                 if (price != null && price.compareTo(BigDecimal.ZERO) > 0) {
-                    // todo take vat from shop settings. create helper method
-                    range.setPrice(range.getPrice().setScale(2, RoundingMode.HALF_UP));
-                    range.setPriceWithoutVat(price.divide(new BigDecimal("1.23"), 2, RoundingMode.HALF_UP));
-                    range.setVatValue(price.subtract(range.getPriceWithoutVat()));
+                    range.setPrice(PriceCalculator.roundPrice(price));
+                    range.setPriceWithoutVat(priceCalculator.calculatePriceWithoutVat(price));
+                    range.setVatValue(PriceCalculator.roundPrice(range.getPrice().subtract(range.getPriceWithoutVat())));
                 } else {
                     range.setPrice(BigDecimal.ZERO);
                     range.setPriceWithoutVat(BigDecimal.ZERO);

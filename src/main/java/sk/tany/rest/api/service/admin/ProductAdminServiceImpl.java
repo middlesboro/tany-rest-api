@@ -28,6 +28,7 @@ import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.common.SequenceService;
 import sk.tany.rest.api.service.isklad.ISkladService;
+import sk.tany.rest.api.util.PriceCalculator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -53,6 +54,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final CategoryRepository categoryRepository;
     private final FilterParameterRepository filterParameterRepository;
     private final FilterParameterValueRepository filterParameterValueRepository;
+    private final PriceCalculator priceCalculator;
 
     @Override
     public Page<ProductAdminDto> findAll(Pageable pageable) {
@@ -268,8 +270,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
             return;
         }
 
-        // todo take vat from shop settings
-        product.setPriceWithoutVat(product.getPrice().divide(new BigDecimal("1.23"), RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP));
+        product.setPriceWithoutVat(priceCalculator.calculatePriceWithoutVat(product.getPrice()));
 
         if (product.getDiscountValue() != null) {
             BigDecimal discountPrice = price.subtract(product.getDiscountValue());
