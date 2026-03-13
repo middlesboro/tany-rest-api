@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.tany.rest.api.service.feed.HeurekaFeedService;
+import sk.tany.rest.api.service.feed.GoogleFeedService;
 
 import java.io.File;
 
@@ -21,6 +22,7 @@ import java.io.File;
 public class FeedController {
 
     private final HeurekaFeedService heurekaFeedService;
+    private final GoogleFeedService googleFeedService;
 
     @Operation(summary = "Get Heureka product feed")
     @GetMapping(value = "/heureka/products", produces = MediaType.APPLICATION_XML_VALUE)
@@ -47,6 +49,24 @@ public class FeedController {
         if (file == null || !file.exists()) {
             heurekaFeedService.generateAvailabilityFeed();
             file = heurekaFeedService.getAvailabilityFeedFile();
+        }
+
+        if (file == null || !file.exists()) {
+             return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_XML)
+                .body(new FileSystemResource(file));
+    }
+
+    @Operation(summary = "Get Google product feed")
+    @GetMapping(value = "/google/products", produces = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity<Resource> getGoogleProductFeed() {
+        File file = googleFeedService.getProductFeedFile();
+        if (file == null || !file.exists()) {
+            googleFeedService.generateProductFeed();
+            file = googleFeedService.getProductFeedFile();
         }
 
         if (file == null || !file.exists()) {
