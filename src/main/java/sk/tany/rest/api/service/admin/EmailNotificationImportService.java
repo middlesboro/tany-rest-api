@@ -10,8 +10,8 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.admin.import_email_notification.EmailNotificationImportDataDto;
 import sk.tany.rest.api.dto.admin.import_email_notification.EmailNotificationImportEntryDto;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
 import java.util.List;
