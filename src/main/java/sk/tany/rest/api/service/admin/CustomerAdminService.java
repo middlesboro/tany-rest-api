@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface CustomerAdminService {
     Page<CustomerDto> findAll(Pageable pageable);
+    Page<CustomerDto> search(String query, Pageable pageable);
     Optional<CustomerDto> findById(String id);
     CustomerDto save(CustomerDto customerDto);
     CustomerDto patch(String id, sk.tany.rest.api.dto.admin.customer.patch.CustomerPatchRequest patchDto);

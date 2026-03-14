@@ -56,4 +56,26 @@ class CustomerAdminControllerTest {
         assertEquals("Test", result.getContent().getFirst().getFirstname());
         verify(customerService, times(1)).findAll(pageable);
     }
+
+    @Test
+    void searchCustomers_ShouldReturnPagedCustomers() {
+        String query = "test";
+        Pageable pageable = PageRequest.of(0, 10);
+        CustomerDto customerDto = new CustomerDto();
+        customerDto.setFirstname("Test");
+        customerDto.setLastname("Customer");
+        Page<CustomerDto> customerPage = new PageImpl<>(Collections.singletonList(customerDto));
+
+        CustomerAdminListResponse response = new CustomerAdminListResponse();
+        response.setFirstname("Test");
+
+        when(customerService.search(query, pageable)).thenReturn(customerPage);
+        when(customerAdminApiMapper.toListResponse(customerDto)).thenReturn(response);
+
+        Page<CustomerAdminListResponse> result = customerAdminController.searchCustomers(query, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Test", result.getContent().getFirst().getFirstname());
+        verify(customerService, times(1)).search(query, pageable);
+    }
 }

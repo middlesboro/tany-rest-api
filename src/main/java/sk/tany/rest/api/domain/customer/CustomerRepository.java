@@ -2,6 +2,9 @@ package sk.tany.rest.api.domain.customer;
 
 import org.springframework.stereotype.Repository;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -10,4 +13,7 @@ public interface CustomerRepository extends MongoRepository<Customer, String> {
     public Optional<Customer> findByEmail(String email) ;
 
     public java.util.List<Customer> findAllByRole(Role role) ;
+
+    @Query("{ $or: [ { 'firstname': { $regex: ?0, $options: 'i' } }, { 'lastname': { $regex: ?0, $options: 'i' } }, { 'email': { $regex: ?0, $options: 'i' } }, { 'phone': { $regex: ?0, $options: 'i' } } ] }")
+    Page<Customer> search(String query, Pageable pageable);
 }

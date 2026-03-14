@@ -39,6 +39,12 @@ public class CustomerAdminController {
                 .map(customerAdminApiMapper::toListResponse);
     }
 
+    @GetMapping("/search")
+    public Page<CustomerAdminListResponse> searchCustomers(@RequestParam String query, Pageable pageable) {
+        return customerService.search(query, pageable)
+                .map(customerAdminApiMapper::toListResponse);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<CustomerAdminGetResponse> getCustomerById(@PathVariable String id) {
         return customerService.findById(id)
