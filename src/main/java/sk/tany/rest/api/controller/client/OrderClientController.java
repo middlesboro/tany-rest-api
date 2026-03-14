@@ -59,7 +59,6 @@ public class OrderClientController {
         return orderClientApiMapper.toGetResponse(order);
     }
 
-    // verify it's really customer order
     @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(summary = "Get order details")
     @GetMapping("/{id}")
@@ -68,7 +67,6 @@ public class OrderClientController {
         return orderClientApiMapper.toGetResponse(order);
     }
 
-    // return just really customer orders
     @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(summary = "Get all orders")
     @GetMapping

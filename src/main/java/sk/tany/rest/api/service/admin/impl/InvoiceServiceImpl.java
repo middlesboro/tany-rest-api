@@ -135,7 +135,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         int year = 2026;
         if (isCreditNote && order.getCancelDate() != null) {
-            year = java.time.LocalDateTime.ofInstant(order.getCancelDate(), ZoneId.systemDefault()).getYear();
+//            year = java.time.LocalDateTime.ofInstant(order.getCancelDate(), ZoneId.systemDefault()).getYear();
+            // for now i want to use allways 2024 because of compatibility with old credit notes system
+            year = 2024;
         } else if (order.getCreateDate() != null) {
             year = java.time.LocalDateTime.ofInstant(order.getCreateDate(), ZoneId.systemDefault()).getYear();
         }
