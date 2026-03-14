@@ -353,7 +353,6 @@ public class OrderAdminServiceImpl implements OrderAdminService {
 
         // Ensure Authenticated User
         if (order.getCustomerId() != null) {
-            order.setAuthenticatedUser(true);
         }
 
         Order savedOrder = orderRepository.save(order);

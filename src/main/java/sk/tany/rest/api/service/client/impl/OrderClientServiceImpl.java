@@ -87,7 +87,6 @@ public class OrderClientServiceImpl implements OrderClientService {
         order.setCartId(orderDto.getCartId());
         order.setNote(orderDto.getNote());
         order.setCustomerId(securityUtil.getLoggedInUserIdSafe());
-        order.setAuthenticatedUser(order.getCustomerId() != null);
 
         // Populate from Cart
         order.setFirstname(cartDto.getFirstname());
@@ -310,7 +309,15 @@ public class OrderClientServiceImpl implements OrderClientService {
 
     @Override
     public Page<OrderDto> getOrders(String customerId, Pageable pageable) {
-        return orderRepository.findAllByCustomerIdAndAuthenticatedUserTrue(customerId, pageable)
+        return orderRepository.findAllByCustomerId(customerId, pageable)
                 .map(orderMapper::toDto);
+    }
+
+    @Override
+    public void updateOrderCustomerId(String orderId, String customerId) {
+        orderRepository.findById(orderId).ifPresent(order -> {
+            order.setCustomerId(customerId);
+            orderRepository.save(order);
+        });
     }
 }

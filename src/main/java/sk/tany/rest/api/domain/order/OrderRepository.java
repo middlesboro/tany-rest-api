@@ -23,7 +23,6 @@ public interface OrderRepository extends MongoRepository<Order, String>, OrderRe
 
     Page<Order> findAllByCustomerId(String customerId, Pageable pageable);
 
-    Page<Order> findAllByCustomerIdAndAuthenticatedUserTrue(String customerId, Pageable pageable);
 
     List<Order> findByInvoiceUploadedToOneDriveFalse();
 

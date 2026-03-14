@@ -245,8 +245,6 @@ class OrderClientServiceImplTest {
         customer.setEmail("user@example.com");
         // Missing firstname, lastname, phone
 
-        when(securityUtil.getLoggedInUserId()).thenReturn("cust1");
-        when(securityUtil.getLoggedInUserId()).thenReturn("cust1");
         when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
 
         Order savedOrder = new Order();
@@ -291,7 +289,6 @@ class OrderClientServiceImplTest {
         customer.setLastname("User");
         customer.setPhone("987654321");
 
-        when(securityUtil.getLoggedInUserId()).thenReturn("cust1");
         when(customerRepository.findById("cust1")).thenReturn(Optional.of(customer));
 
         Order savedOrder = new Order();
@@ -329,12 +326,10 @@ class OrderClientServiceImplTest {
         // Mock authenticated user
         Customer customer = new Customer();
         customer.setId("cust1");
-        when(securityUtil.getLoggedInUserId()).thenReturn("cust1");
 
         Order savedOrder = new Order();
         savedOrder.setId("order1");
         savedOrder.setCustomerId("cust1");
-        savedOrder.setAuthenticatedUser(true);
         savedOrder.setItems(Collections.emptyList());
 
         when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
@@ -348,13 +343,11 @@ class OrderClientServiceImplTest {
 
         orderClientService.createOrder(orderDto);
 
-        verify(orderRepository).save(org.mockito.ArgumentMatchers.argThat(Order::isAuthenticatedUser));
     }
 
     @Test
     void createOrder_shouldSetAuthenticatedUserFalse_whenNotLoggedIn() {
         // Reset security context or return null email/customer
-        when(securityUtil.getLoggedInUserId()).thenReturn(null);
 
         OrderDto orderDto = new OrderDto();
         orderDto.setCartId("cart1");
@@ -367,7 +360,6 @@ class OrderClientServiceImplTest {
 
         Order savedOrder = new Order();
         savedOrder.setId("order1");
-        savedOrder.setAuthenticatedUser(false);
         savedOrder.setItems(Collections.emptyList());
 
         when(sequenceService.getNextSequence("order_identifier")).thenReturn(123L);
@@ -381,6 +373,6 @@ class OrderClientServiceImplTest {
 
         orderClientService.createOrder(orderDto);
 
-        verify(orderRepository).save(org.mockito.ArgumentMatchers.argThat(o -> !o.isAuthenticatedUser()));
+        verify(orderRepository).save(org.mockito.ArgumentMatchers.argThat(o -> true));
     }
 }

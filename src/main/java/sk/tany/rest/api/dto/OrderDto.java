@@ -42,7 +42,6 @@ public class OrderDto {
     private PriceBreakDown priceBreakDown;
     private List<OrderStatusHistoryDto> statusHistory;
     private String carrierOrderStateLink;
-    private boolean authenticatedUser;
     private Instant cancelDate;
     private Long creditNoteIdentifier;
     private Instant iskladImportDate;

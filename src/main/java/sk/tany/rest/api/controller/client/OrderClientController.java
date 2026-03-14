@@ -54,6 +54,10 @@ public class OrderClientController {
             if (order.getEmail() == null || loggedInUser == null || !order.getEmail().equalsIgnoreCase(loggedInUser.email())) {
                 throw new AuthenticationException.InvalidToken("Access denied");
             }
+            if (order.getCustomerId() == null) {
+                orderClientService.updateOrderCustomerId(order.getId(), loggedInUser.userId());
+                order.setCustomerId(loggedInUser.userId());
+            }
         }
 
         return orderClientApiMapper.toGetResponse(order);

@@ -36,5 +36,4 @@ public class OrderAdminCreateResponse {
     private OrderStatus status;
     private List<OrderStatusHistoryDto> statusHistory;
     private String carrierOrderStateLink;
-    private boolean authenticatedUser;
 }

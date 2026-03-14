@@ -27,7 +27,6 @@ public class OrderClientListResponse {
     private String customerId;
     private OrderStatus status;
     private String carrierOrderStateLink;
-    private boolean authenticatedUser;
 
     @Data
     @NoArgsConstructor
