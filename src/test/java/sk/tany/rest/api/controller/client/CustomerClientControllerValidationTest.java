@@ -73,6 +73,10 @@ class CustomerClientControllerValidationTest {
         address.setCountry("Country");
         request.setInvoiceAddress(address);
 
+        CustomerDto customerDto = new CustomerDto();
+        when(customerClientApiMapper.toDto(any(CustomerClientUpdateRequest.class))).thenReturn(customerDto);
+        when(securityUtil.getLoggedInUserId()).thenReturn("user-1");
+
         mockMvc.perform(put("/api/customer")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)

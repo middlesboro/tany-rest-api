@@ -68,6 +68,12 @@ public class OrderClientController {
     @GetMapping("/{id}")
     public OrderClientGetResponse getOrder(@PathVariable String id) {
         OrderDto order = orderClientService.getOrder(id);
+
+        String loggedInUserId = securityUtil.getLoggedInUserId();
+        if (order.getCustomerId() == null || !order.getCustomerId().equals(loggedInUserId)) {
+            throw new AuthenticationException.InvalidToken("Access denied");
+        }
+
         return orderClientApiMapper.toGetResponse(order);
     }
 
