@@ -40,8 +40,13 @@ public class CustomerAdminController {
     }
 
     @GetMapping("/search")
-    public Page<CustomerAdminListResponse> searchCustomers(@RequestParam String query, Pageable pageable) {
-        return customerService.search(query, pageable)
+    public Page<CustomerAdminListResponse> searchCustomers(
+            @RequestParam(required = false) String firstname,
+            @RequestParam(required = false) String lastname,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            Pageable pageable) {
+        return customerService.search(firstname, lastname, email, phone, pageable)
                 .map(customerAdminApiMapper::toListResponse);
     }
 

@@ -1,6 +1,8 @@
 package sk.tany.rest.api.service.admin;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,8 +26,18 @@ public class CustomerAdminServiceImpl implements CustomerAdminService {
     }
 
     @Override
-    public Page<CustomerDto> search(String query, Pageable pageable) {
-        return customerRepository.search(query, pageable).map(customerMapper::toDto);
+    public Page<CustomerDto> search(String firstname, String lastname, String email, String phone, Pageable pageable) {
+        Customer customer = new Customer();
+        customer.setFirstname(firstname);
+        customer.setLastname(lastname);
+        customer.setEmail(email);
+        customer.setPhone(phone);
+
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnoreNullValues()
+                .withStringMatcher(ExampleMatcher.StringMatcher.EXACT);
+
+        return customerRepository.findAll(Example.of(customer, matcher), pageable).map(customerMapper::toDto);
     }
 
     @Override
