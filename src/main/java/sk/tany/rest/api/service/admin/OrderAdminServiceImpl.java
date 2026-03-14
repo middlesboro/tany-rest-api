@@ -351,11 +351,6 @@ public class OrderAdminServiceImpl implements OrderAdminService {
         if (order.getStatusHistory() == null) order.setStatusHistory(new ArrayList<>());
         order.getStatusHistory().add(new OrderStatusHistory(order.getStatus(), Instant.now()));
 
-        // Ensure Authenticated User
-        if (order.getCustomerId() != null) {
-            order.setAuthenticatedUser(true);
-        }
-
         Order savedOrder = orderRepository.save(order);
         return orderMapper.toDto(savedOrder);
     }

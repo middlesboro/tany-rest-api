@@ -8,4 +8,5 @@ public interface OrderClientService {
     OrderDto createOrder(OrderDto orderDto);
     OrderDto getOrder(String id);
     Page<OrderDto> getOrders(String customerId, Pageable pageable);
+    void updateOrderCustomerId(String orderId, String customerId);
 }
