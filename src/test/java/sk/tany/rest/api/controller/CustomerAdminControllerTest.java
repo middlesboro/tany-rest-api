@@ -50,7 +50,7 @@ class CustomerAdminControllerTest {
         when(customerService.findAll(pageable)).thenReturn(customerPage);
         when(customerAdminApiMapper.toListResponse(customerDto)).thenReturn(response);
 
-        Page<CustomerAdminListResponse> result = customerAdminController.getAllCustomers(pageable);
+        Page<CustomerAdminListResponse> result = customerAdminController.getAllCustomers(null, null, null, null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test", result.getContent().getFirst().getFirstname());
@@ -75,7 +75,7 @@ class CustomerAdminControllerTest {
         when(customerService.search(firstname, lastname, email, phone, pageable)).thenReturn(customerPage);
         when(customerAdminApiMapper.toListResponse(customerDto)).thenReturn(response);
 
-        Page<CustomerAdminListResponse> result = customerAdminController.searchCustomers(firstname, lastname, email, phone, pageable);
+        Page<CustomerAdminListResponse> result = customerAdminController.getAllCustomers(firstname, lastname, email, phone, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test", result.getContent().getFirst().getFirstname());

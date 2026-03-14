@@ -34,19 +34,17 @@ public class CustomerAdminController {
     }
 
     @GetMapping
-    public Page<CustomerAdminListResponse> getAllCustomers(Pageable pageable) {
-        return customerService.findAll(pageable)
-                .map(customerAdminApiMapper::toListResponse);
-    }
-
-    @GetMapping("/search")
-    public Page<CustomerAdminListResponse> searchCustomers(
+    public Page<CustomerAdminListResponse> getAllCustomers(
             @RequestParam(required = false) String firstname,
             @RequestParam(required = false) String lastname,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String phone,
             Pageable pageable) {
-        return customerService.search(firstname, lastname, email, phone, pageable)
+        if (firstname != null || lastname != null || email != null || phone != null) {
+            return customerService.search(firstname, lastname, email, phone, pageable)
+                    .map(customerAdminApiMapper::toListResponse);
+        }
+        return customerService.findAll(pageable)
                 .map(customerAdminApiMapper::toListResponse);
     }
 
