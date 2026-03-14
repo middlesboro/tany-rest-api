@@ -16,13 +16,12 @@ import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
+import sk.tany.rest.api.dto.request.CategoryFilterRequest;
+import sk.tany.rest.api.dto.request.SortOption;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
 import sk.tany.rest.api.mapper.ProductLabelMapper;
-import sk.tany.rest.api.dto.request.CategoryFilterRequest;
-import sk.tany.rest.api.dto.request.SortOption;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ProductSearchEngineStockTest {
+class SearchEngineStockTest {
 
     @Mock
     private ProductRepository productRepository;
@@ -57,7 +56,7 @@ class ProductSearchEngineStockTest {
     private sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository contentSnippetRepository;
 
     @InjectMocks
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
 
     private Product productInStock1;
     private Product productInStock2;
@@ -99,13 +98,13 @@ class ProductSearchEngineStockTest {
         when(productLabelRepository.findAll()).thenReturn(Collections.emptyList());
         when(brandRepository.findAll()).thenReturn(Collections.emptyList());
 
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
     }
 
     @Test
     void findAll_ShouldPrioritizeStock_WhenRequested() {
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Product> result = productSearchEngine.findAll(pageable, true);
+        Page<Product> result = searchEngine.findAll(pageable, true);
 
         List<Product> content = result.getContent();
         assertEquals(4, content.size());
@@ -122,7 +121,7 @@ class ProductSearchEngineStockTest {
     @Test
     void findAll_ShouldNotPrioritizeStock_WhenNotRequested() {
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Product> result = productSearchEngine.findAll(pageable, false);
+        Page<Product> result = searchEngine.findAll(pageable, false);
 
         List<Product> content = result.getContent();
         assertEquals(4, content.size());
@@ -137,7 +136,7 @@ class ProductSearchEngineStockTest {
     @Test
     void findByCategoryIds_ShouldPrioritizeStock_WhenRequested() {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("title"));
-        Page<Product> result = productSearchEngine.findByCategoryIds("cat1", pageable, true);
+        Page<Product> result = searchEngine.findByCategoryIds("cat1", pageable, true);
 
         List<Product> content = result.getContent();
         assertEquals(4, content.size());
@@ -152,7 +151,7 @@ class ProductSearchEngineStockTest {
     @Test
     void findByCategoryIds_ShouldNotPrioritizeStock_WhenNotRequested() {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("title"));
-        Page<Product> result = productSearchEngine.findByCategoryIds("cat1", pageable, false);
+        Page<Product> result = searchEngine.findByCategoryIds("cat1", pageable, false);
 
         List<Product> content = result.getContent();
         assertEquals(4, content.size());
@@ -172,10 +171,10 @@ class ProductSearchEngineStockTest {
         productNullStock.setTitle("Stock Delta");
         productOutOfStock.setTitle("Stock Gamma");
         when(productRepository.findAll()).thenReturn(List.of(productInStock1, productInStock2, productOutOfStock, productNullStock));
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         // Product titles match "Stock" exactly as first word now, ensuring JaroWinkler score > 0.51
-        List<Product> result = productSearchEngine.searchAndSort("Stock", true);
+        List<Product> result = searchEngine.searchAndSort("Stock", true);
 
         assertEquals(4, result.size());
 
@@ -189,7 +188,7 @@ class ProductSearchEngineStockTest {
         CategoryFilterRequest request = new CategoryFilterRequest();
         request.setSort(SortOption.NAME_ASC);
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(4, result.size());
 

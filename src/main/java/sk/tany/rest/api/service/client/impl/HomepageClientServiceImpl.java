@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.homepage.HomepageGrid;
 import sk.tany.rest.api.domain.homepage.HomepageGridRepository;
 import sk.tany.rest.api.domain.homepage.SortField;
@@ -17,10 +17,8 @@ import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.client.homepage.HomepageGridDto;
 import sk.tany.rest.api.dto.client.homepage.HomepageGridResponse;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
-import sk.tany.rest.api.dto.client.review.ProductRatingDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.client.HomepageClientService;
-import sk.tany.rest.api.service.client.ReviewClientService;
 import sk.tany.rest.api.service.client.WishlistClientService;
 
 import java.math.BigDecimal;
@@ -28,7 +26,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -40,7 +37,7 @@ public class HomepageClientServiceImpl implements HomepageClientService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final WishlistClientService wishlistClientService;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
 
     @Override
     public HomepageGridResponse getHomepageGrids() {
@@ -57,11 +54,11 @@ public class HomepageClientServiceImpl implements HomepageClientService {
 
         if (StringUtils.hasText(grid.getBrandId())) {
             ProductFilter filter = new ProductFilter(null, null, null, grid.getBrandId(), null, null, null, null, null);
-            productStream = productSearchEngine.search(filter, Pageable.unpaged()).getContent().stream();
+            productStream = searchEngine.search(filter, Pageable.unpaged()).getContent().stream();
         } else if (StringUtils.hasText(grid.getCategoryId())) {
-            productStream = productSearchEngine.search(grid.getCategoryId(), null).stream();
+            productStream = searchEngine.search(grid.getCategoryId(), null).stream();
         } else if (grid.getProductIds() != null && !grid.getProductIds().isEmpty()) {
-            productStream = productSearchEngine.findAllById(grid.getProductIds()).stream();
+            productStream = searchEngine.findAllById(grid.getProductIds()).stream();
         }
 
         // Filter active
@@ -117,7 +114,7 @@ public class HomepageClientServiceImpl implements HomepageClientService {
 
         return products.stream().map(product -> {
             ProductClientDto dto = productMapper.toClientDto(product);
-            dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
+            dto.setProductLabels(searchEngine.getProductLabels(product.getProductLabelIds()));
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
             dto.setAverageRating(product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO);
             dto.setReviewsCount(product.getReviewsCount() != null ? product.getReviewsCount() : 0);

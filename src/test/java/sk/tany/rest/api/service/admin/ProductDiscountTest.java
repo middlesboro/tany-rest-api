@@ -5,20 +5,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sk.tany.rest.api.component.ProductSearchEngine;
-import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.category.CategoryRepository;
+import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.review.ReviewRepository;
-import sk.tany.rest.api.domain.shopsettings.ShopSettings;
-import sk.tany.rest.api.domain.shopsettings.ShopSettingsRepository;
 import sk.tany.rest.api.dto.admin.product.ProductAdminDto;
 import sk.tany.rest.api.mapper.ProductMapper;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.util.PriceCalculator;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,7 +29,7 @@ class ProductDiscountTest {
     @Mock
     private ProductMapper productMapper;
     @Mock
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
     @Mock
     private ImageService imageService;
     @Mock

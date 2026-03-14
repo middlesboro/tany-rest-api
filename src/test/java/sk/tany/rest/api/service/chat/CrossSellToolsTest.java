@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.dto.CrossSellProductDto;
 
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 class CrossSellToolsTest {
 
     @Mock
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
 
     @InjectMocks
     private CrossSellTools crossSellTools;
@@ -37,7 +37,7 @@ class CrossSellToolsTest {
         p3.setId("3");
         p3.setQuantity(null);
 
-        when(productSearchEngine.searchAndSort("query", true)).thenReturn(List.of(p1, p2, p3));
+        when(searchEngine.searchAndSort("query", true)).thenReturn(List.of(p1, p2, p3));
 
         List<CrossSellProductDto> result = crossSellTools.searchProducts("query", List.of());
 

@@ -25,11 +25,12 @@ import sk.tany.rest.api.mapper.ProductLabelMapper;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ProductSearchEngineFiltersTest {
+class SearchEngineFiltersTest {
 
     @Mock
     private ProductRepository productRepository;
@@ -55,7 +56,7 @@ class ProductSearchEngineFiltersTest {
     private sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository contentSnippetRepository;
 
     @InjectMocks
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
 
     private Product productNike;
     private Product productAdidas;
@@ -107,7 +108,7 @@ class ProductSearchEngineFiltersTest {
         when(productSalesRepository.findAll()).thenReturn(List.of());
         when(productLabelRepository.findAll()).thenReturn(List.of());
 
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
     }
 
     @Test
@@ -118,7 +119,7 @@ class ProductSearchEngineFiltersTest {
         brandFilter.setFilterParameterValueIds(List.of("Nike"));
         request.setFilterParameters(List.of(brandFilter));
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(1, result.size());
         assertEquals("Nike Shoe", result.getFirst().getTitle());
@@ -132,7 +133,7 @@ class ProductSearchEngineFiltersTest {
         brandFilter.setFilterParameterValueIds(List.of("Nike", "Adidas"));
         request.setFilterParameters(List.of(brandFilter));
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(2, result.size());
         assertTrue(result.stream().anyMatch(p -> p.getTitle().equals("Nike Shoe")));
@@ -147,7 +148,7 @@ class ProductSearchEngineFiltersTest {
         availFilter.setFilterParameterValueIds(List.of("ON_STOCK"));
         request.setFilterParameters(List.of(availFilter));
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(1, result.size());
         assertEquals("Nike Shoe", result.getFirst().getTitle());
@@ -161,7 +162,7 @@ class ProductSearchEngineFiltersTest {
         availFilter.setFilterParameterValueIds(List.of("SOLD_OUT"));
         request.setFilterParameters(List.of(availFilter));
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(2, result.size());
         assertTrue(result.stream().anyMatch(p -> p.getTitle().equals("Adidas Shoe")));
@@ -182,7 +183,7 @@ class ProductSearchEngineFiltersTest {
 
         request.setFilterParameters(List.of(brandFilter, availFilter));
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(1, result.size());
         assertEquals("Adidas Shoe", result.getFirst().getTitle());
@@ -192,7 +193,7 @@ class ProductSearchEngineFiltersTest {
     void getFilterParameters_ShouldReturnBrandAndAvailability() {
         CategoryFilterRequest request = new CategoryFilterRequest(); // Empty request
 
-        List<FilterParameterDto> facets = productSearchEngine.getFilterParametersForCategoryWithFilter("cat1", request);
+        List<FilterParameterDto> facets = searchEngine.getFilterParametersForCategoryWithFilter("cat1", request);
 
         // Check Brand
         FilterParameterDto brandFacet = facets.stream()

@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.component.SlugGenerator;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
@@ -62,7 +62,7 @@ public class ProductImportService {
     private final SupplierRepository supplierRepository;
     private final BrandRepository brandRepository;
     private final ObjectMapper objectMapper;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
     private final SlugGenerator slugGenerator;
     private final SequenceService sequenceService;
     private final ImageService imageService;
@@ -130,7 +130,7 @@ public class ProductImportService {
                     existingProduct.setWholesalePrice(new BigDecimal(baseData.getWholesalePrice()));
                 }
                 Product savedProduct = productRepository.save(existingProduct);
-                productSearchEngine.updateProduct(savedProduct);
+                searchEngine.updateProduct(savedProduct);
             }
             return;
         }
@@ -286,7 +286,7 @@ public class ProductImportService {
                             newParam.setActive(true);
                             newParam.setFilterParameterValueIds(new ArrayList<>());
                             FilterParameter saved = filterParameterRepository.save(newParam);
-                            productSearchEngine.addFilterParameter(saved);
+                            searchEngine.addFilterParameter(saved);
                             return saved;
                         });
 
@@ -297,7 +297,7 @@ public class ProductImportService {
                             newValue.setFilterParameterId(filterParam.getId());
                             newValue.setActive(true);
                             FilterParameterValue savedValue = filterParameterValueRepository.save(newValue);
-                            productSearchEngine.addFilterParameterValue(savedValue);
+                            searchEngine.addFilterParameterValue(savedValue);
 
                             // Add to parent param list
                             if (filterParam.getFilterParameterValueIds() == null) {
@@ -305,7 +305,7 @@ public class ProductImportService {
                             }
                             filterParam.getFilterParameterValueIds().add(savedValue.getId());
                             FilterParameter updatedParam = filterParameterRepository.save(filterParam);
-                            productSearchEngine.addFilterParameter(updatedParam);
+                            searchEngine.addFilterParameter(updatedParam);
 
                             return savedValue;
                         });
@@ -323,7 +323,7 @@ public class ProductImportService {
         }
 
         Product savedProduct = productRepository.save(product);
-        productSearchEngine.updateProduct(savedProduct);
+        searchEngine.updateProduct(savedProduct);
 
         if (baseData.getSoldQuantity() != null) {
             int soldQty = baseData.getSoldQuantity();
@@ -331,7 +331,7 @@ public class ProductImportService {
             ps.setProductId(savedProduct.getId());
             ps.setSalesCount(soldQty);
             ProductSales savedProductSales = productSalesRepository.save(ps);
-            productSearchEngine.updateSalesCount(savedProductSales.getProductId(), savedProductSales.getSalesCount());
+            searchEngine.updateSalesCount(savedProductSales.getProductId(), savedProductSales.getSalesCount());
         }
     }
 

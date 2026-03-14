@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.contentsnippet.ContentSnippet;
 import sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository;
 import sk.tany.rest.api.domain.product.Product;
@@ -14,7 +14,6 @@ import sk.tany.rest.api.exception.ContentSnippetException;
 import sk.tany.rest.api.mapper.ContentSnippetMapper;
 import sk.tany.rest.api.service.admin.ContentSnippetAdminService;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -23,7 +22,7 @@ public class ContentSnippetAdminServiceImpl implements ContentSnippetAdminServic
 
     private final ContentSnippetRepository repository;
     private final ContentSnippetMapper mapper;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
     private final ProductRepository productRepository;
 
     @Override
@@ -40,7 +39,7 @@ public class ContentSnippetAdminServiceImpl implements ContentSnippetAdminServic
     public ContentSnippetDto save(ContentSnippetDto dto) {
         ContentSnippet entity = mapper.toEntity(dto);
         ContentSnippet saved = repository.save(entity);
-        productSearchEngine.addContentSnippet(saved);
+        searchEngine.addContentSnippet(saved);
         updateProductsContainingSnippet(dto.getPlaceholder());
         return mapper.toDto(saved);
     }
@@ -51,7 +50,7 @@ public class ContentSnippetAdminServiceImpl implements ContentSnippetAdminServic
                 .orElseThrow(() -> new ContentSnippetException.NotFound("Content snippet not found"));
         mapper.updateEntity(dto, entity);
         ContentSnippet updated = repository.save(entity);
-        productSearchEngine.updateContentSnippet(updated);
+        searchEngine.updateContentSnippet(updated);
         updateProductsContainingSnippet(dto.getPlaceholder());
         return mapper.toDto(updated);
     }
@@ -63,7 +62,7 @@ public class ContentSnippetAdminServiceImpl implements ContentSnippetAdminServic
         try (java.util.stream.Stream<Product> products = productRepository.findByDescriptionContaining(placeholder)) {
             products.forEach(product -> {
                 productRepository.save(product);
-                productSearchEngine.updateProduct(product);
+                searchEngine.updateProduct(product);
             });
         }
     }
@@ -74,6 +73,6 @@ public class ContentSnippetAdminServiceImpl implements ContentSnippetAdminServic
             throw new ContentSnippetException.NotFound("Content snippet not found");
         }
         repository.deleteById(id);
-        productSearchEngine.removeContentSnippet(id);
+        searchEngine.removeContentSnippet(id);
     }
 }

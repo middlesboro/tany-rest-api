@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.dto.BrandDto;
@@ -25,7 +25,7 @@ class BrandClientServiceImplTest {
     private BrandRepository brandRepository;
 
     @Mock
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
 
     @Mock
     private BrandMapper brandMapper;
@@ -47,8 +47,8 @@ class BrandClientServiceImplTest {
         brandDto1.setId("id1");
 
         when(brandRepository.findAll(Sort.by(Sort.Direction.ASC, "name"))).thenReturn(Arrays.asList(brand1, brand2));
-        when(productSearchEngine.hasActiveProductWithBrand("id1")).thenReturn(true);
-        when(productSearchEngine.hasActiveProductWithBrand("id2")).thenReturn(false);
+        when(searchEngine.hasActiveProductWithBrand("id1")).thenReturn(true);
+        when(searchEngine.hasActiveProductWithBrand("id2")).thenReturn(false);
         when(brandMapper.toDto(brand1)).thenReturn(brandDto1);
 
         List<BrandDto> result = brandClientService.findAll();
@@ -57,8 +57,8 @@ class BrandClientServiceImplTest {
         assertEquals("id1", result.get(0).getId());
 
         verify(brandRepository).findAll(Sort.by(Sort.Direction.ASC, "name"));
-        verify(productSearchEngine).hasActiveProductWithBrand("id1");
-        verify(productSearchEngine).hasActiveProductWithBrand("id2");
+        verify(searchEngine).hasActiveProductWithBrand("id1");
+        verify(searchEngine).hasActiveProductWithBrand("id2");
         verify(brandMapper).toDto(brand1);
         verify(brandMapper, never()).toDto(brand2);
     }

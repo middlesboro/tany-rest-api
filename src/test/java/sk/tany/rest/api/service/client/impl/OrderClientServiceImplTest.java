@@ -10,8 +10,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import sk.tany.rest.api.component.ProductSearchEngine;
-import sk.tany.rest.api.domain.carrier.Carrier;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.customer.Customer;
@@ -27,12 +26,12 @@ import sk.tany.rest.api.dto.CartDto;
 import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.OrderDto;
 import sk.tany.rest.api.event.OrderStatusChangedEvent;
+import sk.tany.rest.api.exception.CartValidationException;
 import sk.tany.rest.api.mapper.OrderMapper;
 import sk.tany.rest.api.service.client.CartClientService;
 import sk.tany.rest.api.service.client.ProductClientService;
 import sk.tany.rest.api.service.common.SequenceService;
 import sk.tany.rest.api.validation.CartOrderValidator;
-import sk.tany.rest.api.exception.CartValidationException;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -40,12 +39,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderClientServiceImplTest {
@@ -67,7 +61,7 @@ class OrderClientServiceImplTest {
     @Mock
     private ProductSalesRepository productSalesRepository;
     @Mock
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
     @Mock
     private CartRepository cartRepository;
     @Mock
@@ -174,7 +168,7 @@ class OrderClientServiceImplTest {
 
         verify(eventPublisher, times(1)).publishEvent(any(OrderStatusChangedEvent.class));
         verify(productSalesRepository, times(1)).save(any(ProductSales.class));
-        verify(productSearchEngine, times(1)).updateSalesCount(any(), any(Integer.class));
+        verify(searchEngine, times(1)).updateSalesCount(any(), any(Integer.class));
     }
 
     @Test

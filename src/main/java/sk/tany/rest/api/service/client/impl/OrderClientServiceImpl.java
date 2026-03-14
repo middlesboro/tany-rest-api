@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.component.SecurityUtil;
 import sk.tany.rest.api.domain.carrier.Carrier;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
@@ -57,7 +57,7 @@ public class OrderClientServiceImpl implements OrderClientService {
     private final PaymentRepository paymentRepository;
     private final ProductClientService productClientService;
     private final ProductSalesRepository productSalesRepository;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
     private final sk.tany.rest.api.service.client.CartClientService cartService;
     private final ApplicationEventPublisher eventPublisher;
     private final CartOrderValidator cartOrderValidator;
@@ -186,7 +186,7 @@ public class OrderClientServiceImpl implements OrderClientService {
             int currentSales = productSales.getSalesCount() != null ? productSales.getSalesCount() : 0;
             productSales.setSalesCount(currentSales + item.getQuantity());
             productSalesRepository.save(productSales);
-            productSearchEngine.updateSalesCount(productSales.getProductId(), productSales.getSalesCount());
+            searchEngine.updateSalesCount(productSales.getProductId(), productSales.getSalesCount());
         });
 
         eventPublisher.publishEvent(new OrderStatusChangedEvent(savedOrder));

@@ -2,6 +2,7 @@ package sk.tany.rest.api.service.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.carrier.CarrierPriceRange;
 import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.cart.CartRepository;
@@ -9,8 +10,8 @@ import sk.tany.rest.api.domain.cartdiscount.CartDiscount;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscountRepository;
 import sk.tany.rest.api.domain.cartdiscount.DiscountType;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
+import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.dto.CartDto;
-import sk.tany.rest.api.util.PriceCalculator;
 import sk.tany.rest.api.dto.CartItem;
 import sk.tany.rest.api.dto.PriceBreakDown;
 import sk.tany.rest.api.dto.PriceItem;
@@ -25,8 +26,7 @@ import sk.tany.rest.api.exception.ProductException;
 import sk.tany.rest.api.mapper.CartDiscountMapper;
 import sk.tany.rest.api.mapper.CartMapper;
 import sk.tany.rest.api.mapper.ProductClientApiMapper;
-import sk.tany.rest.api.component.ProductSearchEngine;
-import sk.tany.rest.api.domain.product.Product;
+import sk.tany.rest.api.util.PriceCalculator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -51,7 +51,7 @@ public class CartClientServiceImpl implements CartClientService {
     private final CartDiscountMapper cartDiscountMapper;
     private final CarrierRepository carrierRepository;
     private final PaymentRepository paymentRepository;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
     private final ProductClientApiMapper productClientApiMapper;
 
     @Override
@@ -242,7 +242,7 @@ public class CartClientServiceImpl implements CartClientService {
 
         // Fetch products for all queries
         for (String query : queries) {
-            List<Product> products = productSearchEngine.searchAndSort(query, true);
+            List<Product> products = searchEngine.searchAndSort(query, true);
             // Filter only on-stock products
             List<Product> onStockProducts = products.stream()
                     .filter(p -> p.getQuantity() != null && p.getQuantity() > 0)

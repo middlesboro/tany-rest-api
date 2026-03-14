@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
@@ -26,23 +26,23 @@ public class ProductClientServiceImpl implements ProductClientService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
     private final WishlistClientService wishlistClientService;
     private final ProductEmbeddingService productEmbeddingService;
 
     @Override
     public Page<ProductClientDto> findAll(Pageable pageable) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        Page<Product> products = productSearchEngine.findAll(pageable, true);
+        Page<Product> products = searchEngine.findAll(pageable, true);
         return mapToEnhancedDtos(products, wishlistProductIds);
     }
 
     @Override
     public Optional<ProductClientDto> findById(String id) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        return productSearchEngine.findById(id).map(product -> {
+        return searchEngine.findById(id).map(product -> {
             ProductClientDto dto = productMapper.toClientDto(product);
-            dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
+            dto.setProductLabels(searchEngine.getProductLabels(product.getProductLabelIds()));
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
             dto.setAverageRating(product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO);
             dto.setReviewsCount(product.getReviewsCount() != null ? product.getReviewsCount() : 0);
@@ -53,9 +53,9 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public Optional<ProductClientDto> findBySlug(String slug) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        return productSearchEngine.findBySlug(slug).map(product -> {
+        return searchEngine.findBySlug(slug).map(product -> {
             ProductClientDto dto = productMapper.toClientDto(product);
-            dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
+            dto.setProductLabels(searchEngine.getProductLabels(product.getProductLabelIds()));
             dto.setInWishlist(wishlistProductIds.contains(product.getId()));
             dto.setAverageRating(product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO);
             dto.setReviewsCount(product.getReviewsCount() != null ? product.getReviewsCount() : 0);
@@ -65,8 +65,8 @@ public class ProductClientServiceImpl implements ProductClientService {
 
     @Override
     public ProductClientSearchDto search(String categoryId, sk.tany.rest.api.dto.request.CategoryFilterRequest request, Pageable pageable) {
-        java.util.List<Product> products = productSearchEngine.search(categoryId, request);
-        java.util.List<sk.tany.rest.api.dto.FilterParameterDto> filters = productSearchEngine.getFilterParametersForCategoryWithFilter(categoryId, request);
+        java.util.List<Product> products = searchEngine.search(categoryId, request);
+        java.util.List<sk.tany.rest.api.dto.FilterParameterDto> filters = searchEngine.getFilterParametersForCategoryWithFilter(categoryId, request);
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
 
         int start = (int) pageable.getOffset();
@@ -80,7 +80,7 @@ public class ProductClientServiceImpl implements ProductClientService {
             pageContent = subList.stream()
                     .map(product -> {
                         ProductClientDto dto = productMapper.toClientDto(product);
-                        dto.setProductLabels(productSearchEngine.getProductLabels(product.getProductLabelIds()));
+                        dto.setProductLabels(searchEngine.getProductLabels(product.getProductLabelIds()));
                         dto.setInWishlist(wishlistProductIds.contains(product.getId()));
                         dto.setAverageRating(product.getAverageRating() != null ? product.getAverageRating() : BigDecimal.ZERO);
                         dto.setReviewsCount(product.getReviewsCount() != null ? product.getReviewsCount() : 0);
@@ -100,7 +100,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     public java.util.List<ProductClientDto> findAllByIds(List<String> ids) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
         // Since we are moving from ProductRepository to ProductSearchEngine, we need to collect the filtered results back to a mutable List before sorting
-        List<Product> products = new java.util.ArrayList<>(productSearchEngine.findAllById(ids));
+        List<Product> products = new java.util.ArrayList<>(searchEngine.findAllById(ids));
         // sorting products by the order of ids in the input list.
         products.sort(Comparator.comparingInt(p -> ids.indexOf(p.getId())));
         return mapToEnhancedDtos(products, wishlistProductIds);
@@ -109,7 +109,7 @@ public class ProductClientServiceImpl implements ProductClientService {
     @Override
     public java.util.List<ProductClientDto> searchProducts(String query) {
         Set<String> wishlistProductIds = new HashSet<>(wishlistClientService.getWishlistProductIds());
-        List<Product> products = productSearchEngine.searchAndSort(query, true);
+        List<Product> products = searchEngine.searchAndSort(query, true);
         return mapToEnhancedDtos(products, wishlistProductIds);
     }
 
@@ -161,6 +161,6 @@ public class ProductClientServiceImpl implements ProductClientService {
         }
         product.setQuantity(newQuantity);
         productRepository.save(product);
-        productSearchEngine.updateProduct(product);
+        searchEngine.updateProduct(product);
     }
 }

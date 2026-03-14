@@ -1,16 +1,16 @@
 package sk.tany.rest.api.service.client;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import sk.tany.rest.api.component.SearchEngine;
+import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.cart.Cart;
 import sk.tany.rest.api.domain.cart.CartRepository;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscount;
-import sk.tany.rest.api.domain.carrier.CarrierRepository;
 import sk.tany.rest.api.domain.cartdiscount.CartDiscountRepository;
 import sk.tany.rest.api.domain.cartdiscount.DiscountType;
 import sk.tany.rest.api.domain.payment.PaymentRepository;
@@ -48,7 +48,7 @@ class CartClientServiceImplTest {
     @Mock
     private PaymentRepository paymentRepository;
     @Mock
-    private sk.tany.rest.api.component.ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
     @Mock
     private sk.tany.rest.api.mapper.ProductClientApiMapper productClientApiMapper;
 
@@ -94,7 +94,7 @@ class CartClientServiceImplTest {
         when(cartMapper.toDto(any(Cart.class))).thenReturn(new CartDto());
 
         // Mock productSearchEngine
-        when(productSearchEngine.searchAndSort(anyString(), anyBoolean())).thenReturn(Collections.emptyList());
+        when(searchEngine.searchAndSort(anyString(), anyBoolean())).thenReturn(Collections.emptyList());
 
         // When
         service.addProductToCart(null, productId, 1);
@@ -142,7 +142,7 @@ class CartClientServiceImplTest {
         when(cartMapper.toDto(any(Cart.class))).thenReturn(new CartDto());
 
         // Mock productSearchEngine
-        when(productSearchEngine.searchAndSort(anyString(), anyBoolean())).thenReturn(Collections.emptyList());
+        when(searchEngine.searchAndSort(anyString(), anyBoolean())).thenReturn(Collections.emptyList());
 
         // When
         service.addProductToCart(null, productId, 1);

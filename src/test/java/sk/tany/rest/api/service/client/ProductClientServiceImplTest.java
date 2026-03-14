@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.client.product.ProductClientDto;
@@ -32,7 +32,7 @@ class ProductClientServiceImplTest {
     @Mock
     private ProductMapper productMapper;
     @Mock
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
     @Mock
     private WishlistClientService wishlistClientService;
     @Mock
@@ -59,7 +59,7 @@ class ProductClientServiceImplTest {
         product.setReviewsCount(10);
 
         when(wishlistClientService.getWishlistProductIds()).thenReturn(Collections.emptyList());
-        when(productSearchEngine.findAll(any(Pageable.class), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(new PageImpl<>(List.of(product)));
+        when(searchEngine.findAll(any(Pageable.class), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(new PageImpl<>(List.of(product)));
         when(productMapper.toClientDto(product)).thenReturn(productClientDto);
 
         Page<ProductClientDto> result = service.findAll(Pageable.unpaged());

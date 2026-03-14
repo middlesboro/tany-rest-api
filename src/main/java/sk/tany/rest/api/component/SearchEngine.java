@@ -14,8 +14,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
-import sk.tany.rest.api.domain.supplier.Supplier;
-import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.contentsnippet.ContentSnippet;
@@ -32,6 +30,8 @@ import sk.tany.rest.api.domain.productlabel.ProductLabel;
 import sk.tany.rest.api.domain.productlabel.ProductLabelRepository;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
+import sk.tany.rest.api.domain.supplier.Supplier;
+import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
 import sk.tany.rest.api.dto.ProductLabelDto;
@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProductSearchEngine {
+public class SearchEngine {
 
     private final ProductRepository productRepository;
     private final FilterParameterRepository filterParameterRepository;

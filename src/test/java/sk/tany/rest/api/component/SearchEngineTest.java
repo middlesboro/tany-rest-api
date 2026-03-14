@@ -21,9 +21,9 @@ import sk.tany.rest.api.domain.product.ProductFilterParameter;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.domain.productsales.ProductSales;
 import sk.tany.rest.api.domain.productsales.ProductSalesRepository;
-import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
+import sk.tany.rest.api.dto.admin.product.filter.ProductFilter;
 import sk.tany.rest.api.dto.request.CategoryFilterRequest;
 import sk.tany.rest.api.dto.request.FilterParameterRequest;
 import sk.tany.rest.api.dto.request.SortOption;
@@ -39,7 +39,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ProductSearchEngineTest {
+class SearchEngineTest {
 
     @Mock
     private ProductRepository productRepository;
@@ -63,7 +63,7 @@ class ProductSearchEngineTest {
     private sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository contentSnippetRepository;
 
     @InjectMocks
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
 
     private Category category1;
     private Category category2;
@@ -197,9 +197,9 @@ class ProductSearchEngineTest {
 
     @Test
     void searchAndSort_ShouldReturnRelevantProducts() {
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
-        List<Product> result = productSearchEngine.searchAndSort("Nike");
+        List<Product> result = searchEngine.searchAndSort("Nike");
 
         assertEquals(1, result.size());
         assertEquals("Nike Red Shoe", result.getFirst().getTitle());
@@ -207,10 +207,10 @@ class ProductSearchEngineTest {
 
     @Test
     void searchAndSort_ShouldHandleTypo() {
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         // "Niek" instead of "Nike" (Levenshtein distance 2 should match)
-        List<Product> result = productSearchEngine.searchAndSort("Niek");
+        List<Product> result = searchEngine.searchAndSort("Niek");
 
         assertEquals(1, result.size());
         assertEquals("Nike Red Shoe", result.getFirst().getTitle());
@@ -219,9 +219,9 @@ class ProductSearchEngineTest {
     @Test
     void getFilterParametersForCategory_ShouldReturnAllParams() {
         setupMappers();
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
-        List<FilterParameterDto> result = productSearchEngine.getFilterParametersForCategory("cat1");
+        List<FilterParameterDto> result = searchEngine.getFilterParametersForCategory("cat1");
 
         assertEquals(2, result.size());
     }
@@ -229,7 +229,7 @@ class ProductSearchEngineTest {
     @Test
     void getFilterParametersForCategoryWithFilter_ShouldReturnFiltersWithSelectedState() {
         setupMappers();
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         CategoryFilterRequest request = new CategoryFilterRequest();
         FilterParameterRequest brandRequest = new FilterParameterRequest();
@@ -237,7 +237,7 @@ class ProductSearchEngineTest {
         brandRequest.setFilterParameterValueIds(List.of("nike"));
         request.setFilterParameters(List.of(brandRequest));
 
-        List<FilterParameterDto> result = productSearchEngine.getFilterParametersForCategoryWithFilter("cat1", request);
+        List<FilterParameterDto> result = searchEngine.getFilterParametersForCategoryWithFilter("cat1", request);
 
         assertEquals(3, result.size());
 
@@ -253,12 +253,12 @@ class ProductSearchEngineTest {
 
     @Test
     void search_ShouldSortByNameAsc() {
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         CategoryFilterRequest request = new CategoryFilterRequest();
         request.setSort(SortOption.NAME_ASC);
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
         assertEquals("Adidas Green Shoe", result.getFirst().getTitle());
@@ -268,12 +268,12 @@ class ProductSearchEngineTest {
 
     @Test
     void search_ShouldSortByNameDesc() {
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         CategoryFilterRequest request = new CategoryFilterRequest();
         request.setSort(SortOption.NAME_DESC);
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
         assertEquals("Nike Red Shoe", result.getFirst().getTitle());
@@ -283,12 +283,12 @@ class ProductSearchEngineTest {
 
     @Test
     void search_ShouldSortByPriceAsc() {
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         CategoryFilterRequest request = new CategoryFilterRequest();
         request.setSort(SortOption.PRICE_ASC);
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
         assertEquals("Best Seller Shoe", result.getFirst().getTitle()); // 10.00
@@ -298,12 +298,12 @@ class ProductSearchEngineTest {
 
     @Test
     void search_ShouldSortByPriceDesc() {
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         CategoryFilterRequest request = new CategoryFilterRequest();
         request.setSort(SortOption.PRICE_DESC);
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
         assertEquals("Nike Red Shoe", result.getFirst().getTitle()); // 100.00
@@ -313,12 +313,12 @@ class ProductSearchEngineTest {
 
     @Test
     void search_ShouldSortByBestSelling() {
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         CategoryFilterRequest request = new CategoryFilterRequest();
         request.setSort(SortOption.BEST_SELLING);
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
         assertEquals("Best Seller Shoe", result.getFirst().getTitle()); // 100 sales
@@ -328,12 +328,12 @@ class ProductSearchEngineTest {
 
     @Test
     void search_ShouldDefaultSortByNameAsc() {
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         CategoryFilterRequest request = new CategoryFilterRequest();
         request.setSort(null);
 
-        List<Product> result = productSearchEngine.search("cat1", request);
+        List<Product> result = searchEngine.search("cat1", request);
 
         assertEquals(3, result.size());
         assertEquals("Adidas Green Shoe", result.getFirst().getTitle());
@@ -375,11 +375,11 @@ class ProductSearchEngineTest {
         when(categoryRepository.findAll()).thenReturn(List.of(cat1, cat2));
 
         // We need to reload products because ProductSearchEngine loads them @EventListener
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         // Search for products in cat1 (parent)
         // Expected: p1 (direct) and p2 (indirect via cat2)
-        List<Product> result = productSearchEngine.search("cat1", null);
+        List<Product> result = searchEngine.search("cat1", null);
 
         assertEquals(2, result.size(), "Should return products from subcategories");
     }
@@ -396,10 +396,10 @@ class ProductSearchEngineTest {
 
         // We need to reload products because ProductSearchEngine loads them @EventListener
         when(categoryRepository.findAll()).thenReturn(List.of(cat1, cat2));
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Category> result = productSearchEngine.searchCategories("Elec", pageable);
+        Page<Category> result = searchEngine.searchCategories("Elec", pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Electronics", result.getContent().getFirst().getTitle());
@@ -417,10 +417,10 @@ class ProductSearchEngineTest {
 
         // We need to reload products because ProductSearchEngine loads them @EventListener
         when(categoryRepository.findAll()).thenReturn(List.of(cat1, cat2));
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Category> result = productSearchEngine.searchCategories("", pageable);
+        Page<Category> result = searchEngine.searchCategories("", pageable);
 
         assertEquals(2, result.getTotalElements());
     }
@@ -438,9 +438,9 @@ class ProductSearchEngineTest {
 
         when(categoryRepository.findAll()).thenReturn(List.of(cat1));
 
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
-        List<FilterParameterDto> result = productSearchEngine.getFilterParametersForCategory("cat1");
+        List<FilterParameterDto> result = searchEngine.getFilterParametersForCategory("cat1");
 
         assertEquals(1, result.size());
         assertEquals("brand", result.getFirst().getId());
@@ -459,11 +459,11 @@ class ProductSearchEngineTest {
 
         when(categoryRepository.findAll()).thenReturn(List.of(cat1));
 
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         CategoryFilterRequest request = new CategoryFilterRequest();
 
-        List<FilterParameterDto> result = productSearchEngine.getFilterParametersForCategoryWithFilter("cat1", request);
+        List<FilterParameterDto> result = searchEngine.getFilterParametersForCategoryWithFilter("cat1", request);
 
         // Expect "brand" and "AVAILABILITY". "color" should be excluded.
         assertEquals(2, result.size());
@@ -478,12 +478,12 @@ class ProductSearchEngineTest {
         product2.setProductIdentifier(200L);
         product3.setProductIdentifier(300L);
 
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         ProductFilter filter = new ProductFilter(null, null, null, null, null, null, null, 200L, null);
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Product> result = productSearchEngine.search(filter, pageable);
+        Page<Product> result = searchEngine.search(filter, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("p2", result.getContent().getFirst().getId());
@@ -495,12 +495,12 @@ class ProductSearchEngineTest {
         product2.setProductIdentifier(100L);
         product3.setProductIdentifier(200L);
 
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
 
         ProductFilter filter = new ProductFilter(null, null, null, null, null, null, null, null, null);
         Pageable pageable = PageRequest.of(0, 10, Sort.by("productIdentifier").ascending());
 
-        Page<Product> result = productSearchEngine.search(filter, pageable);
+        Page<Product> result = searchEngine.search(filter, pageable);
 
         assertEquals(3, result.getTotalElements());
         assertEquals("p2", result.getContent().get(0).getId()); // 100L

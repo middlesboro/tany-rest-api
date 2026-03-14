@@ -5,12 +5,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.admin.brand.BrandAdminGetResponse;
-import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
 import sk.tany.rest.api.exception.BrandException;
 import sk.tany.rest.api.mapper.BrandMapper;
@@ -26,7 +26,7 @@ public class BrandAdminServiceImpl implements BrandAdminService {
 
     private final BrandRepository brandRepository;
     private final ProductRepository productRepository;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
     private final BrandMapper brandMapper;
     private final ImageService imageService;
     private final ISkladService iSkladService;
@@ -38,7 +38,7 @@ public class BrandAdminServiceImpl implements BrandAdminService {
 
     @Override
     public List<BrandDto> searchByQuery(String query) {
-        return productSearchEngine.searchBrands(query).stream()
+        return searchEngine.searchBrands(query).stream()
                 .map(brandMapper::toDto)
                 .toList();
     }

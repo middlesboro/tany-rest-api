@@ -10,7 +10,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.category.Category;
@@ -68,7 +68,7 @@ class ProductImportServiceTest {
     @Mock
     private ObjectMapper objectMapper;
     @Mock
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
     @Mock
     private sk.tany.rest.api.component.SlugGenerator slugGenerator;
     @Mock
@@ -90,7 +90,7 @@ class ProductImportServiceTest {
         productImportService = new ProductImportService(
                 productRepository, productSalesRepository, productLabelRepository,
                 filterParameterRepository, filterParameterValueRepository, categoryRepository,
-                supplierRepository, brandRepository, objectMapper, productSearchEngine,
+                supplierRepository, brandRepository, objectMapper, searchEngine,
                 slugGenerator, sequenceService, imageService, builder.build(), priceCalculator
         );
     }
@@ -182,9 +182,9 @@ class ProductImportServiceTest {
         verify(filterParameterRepository, org.mockito.Mockito.atLeastOnce()).save(any(FilterParameter.class));
         verify(filterParameterValueRepository).save(any(FilterParameterValue.class));
 
-        verify(productSearchEngine).updateProduct(any(Product.class));
-        verify(productSearchEngine, org.mockito.Mockito.atLeastOnce()).addFilterParameter(any(FilterParameter.class));
-        verify(productSearchEngine).addFilterParameterValue(any(FilterParameterValue.class));
+        verify(searchEngine).updateProduct(any(Product.class));
+        verify(searchEngine, org.mockito.Mockito.atLeastOnce()).addFilterParameter(any(FilterParameter.class));
+        verify(searchEngine).addFilterParameterValue(any(FilterParameterValue.class));
         mockServer.verify();
     }
 
@@ -224,7 +224,7 @@ class ProductImportServiceTest {
                 p.getQuantity() == 50 &&
                         "Original Name".equals(p.getTitle()) // Name should NOT change
         ));
-        verify(productSearchEngine).updateProduct(any(Product.class));
+        verify(searchEngine).updateProduct(any(Product.class));
 
         // Ensure other repository interactions that happen during full import are NOT called
         verify(supplierRepository, org.mockito.Mockito.never()).save(any(Supplier.class));

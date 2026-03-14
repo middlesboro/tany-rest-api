@@ -1,18 +1,18 @@
 package sk.tany.rest.api.service.admin.impl;
 
 import lombok.RequiredArgsConstructor;
-import sk.tany.rest.api.service.admin.FilterParameterAdminService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.filter.FilterParameter;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.admin.filterparameter.patch.FilterParameterPatchRequest;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
-import sk.tany.rest.api.component.ProductSearchEngine;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+import sk.tany.rest.api.service.admin.FilterParameterAdminService;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +23,7 @@ public class FilterParameterAdminServiceImpl implements FilterParameterAdminServ
 
     private final FilterParameterRepository repository;
     private final FilterParameterMapper mapper;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
 
     @Override
     public FilterParameterDto save(FilterParameterDto dto) {
@@ -38,7 +38,7 @@ public class FilterParameterAdminServiceImpl implements FilterParameterAdminServ
 
     @Override
     public List<FilterParameterDto> searchByQuery(String query) {
-        return productSearchEngine.searchFilterParameters(query).stream()
+        return searchEngine.searchFilterParameters(query).stream()
                 .map(mapper::toDto)
                 .toList();
     }

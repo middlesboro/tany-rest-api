@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.SupplierDto;
-import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.mapper.ISkladMapper;
 import sk.tany.rest.api.mapper.SupplierMapper;
 import sk.tany.rest.api.service.isklad.ISkladService;
@@ -22,7 +22,7 @@ public class SupplierAdminServiceImpl implements SupplierAdminService {
 
     private final SupplierRepository supplierRepository;
     private final SupplierMapper supplierMapper;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
     private final ISkladService iskladService;
     private final ISkladProperties iskladProperties;
     private final ISkladMapper iskladMapper;
@@ -34,7 +34,7 @@ public class SupplierAdminServiceImpl implements SupplierAdminService {
 
     @Override
     public List<SupplierDto> searchByQuery(String query) {
-        return productSearchEngine.searchSuppliers(query).stream()
+        return searchEngine.searchSuppliers(query).stream()
                 .map(supplierMapper::toDto)
                 .toList();
     }

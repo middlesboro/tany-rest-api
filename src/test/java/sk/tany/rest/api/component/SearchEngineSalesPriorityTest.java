@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ProductSearchEngineSalesPriorityTest {
+class SearchEngineSalesPriorityTest {
 
     @Mock
     private ProductRepository productRepository;
@@ -49,7 +49,7 @@ class ProductSearchEngineSalesPriorityTest {
     private sk.tany.rest.api.domain.contentsnippet.ContentSnippetRepository contentSnippetRepository;
 
     @InjectMocks
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
 
     @Test
     void searchAndSort_ShouldPrioritizeHigherSales_WhenRelevanceIsEqual() {
@@ -83,8 +83,8 @@ class ProductSearchEngineSalesPriorityTest {
         when(productSalesRepository.findAll()).thenReturn(List.of(s1, s2));
 
         // Act
-        productSearchEngine.loadProducts();
-        List<Product> result = productSearchEngine.searchAndSort("Test Product");
+        searchEngine.loadProducts();
+        List<Product> result = searchEngine.searchAndSort("Test Product");
 
         // Assert
         assertEquals(2, result.size());
@@ -124,8 +124,8 @@ class ProductSearchEngineSalesPriorityTest {
         org.mockito.Mockito.lenient().when(contentSnippetRepository.findAll()).thenReturn(List.of());
 
         // Act
-        productSearchEngine.loadProducts();
-        List<Product> result = productSearchEngine.searchAndSort("Test Product");
+        searchEngine.loadProducts();
+        List<Product> result = searchEngine.searchAndSort("Test Product");
 
         // Assert
         assertEquals(2, result.size());

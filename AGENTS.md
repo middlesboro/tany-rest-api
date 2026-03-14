@@ -13,3 +13,4 @@
     import com.fasterxml.jackson.core.type.TypeReference;
     import com.fasterxml.jackson.databind.ObjectMapper;
     ```
+* **Rule**: In interface don't use `public` keyword.    

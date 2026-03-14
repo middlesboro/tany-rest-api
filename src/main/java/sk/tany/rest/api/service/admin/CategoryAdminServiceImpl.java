@@ -3,15 +3,15 @@ package sk.tany.rest.api.service.admin;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import org.springframework.web.server.ResponseStatusException;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.filter.FilterParameterRepository;
 import sk.tany.rest.api.dto.CategoryDto;
 import sk.tany.rest.api.mapper.CategoryMapper;
 import sk.tany.rest.api.mapper.FilterParameterMapper;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
     private final FilterParameterRepository filterParameterRepository;
     private final FilterParameterMapper filterParameterMapper;
 
@@ -34,7 +34,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
 
     @Override
     public Page<CategoryDto> findAll(String query, Pageable pageable) {
-        return productSearchEngine.searchCategories(query, pageable).map(categoryMapper::toDto);
+        return searchEngine.searchCategories(query, pageable).map(categoryMapper::toDto);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
     public CategoryDto save(CategoryDto categoryDto) {
         var category = categoryMapper.toEntity(categoryDto);
         var savedCategory = categoryRepository.save(category);
-        productSearchEngine.addCategory(savedCategory);
+        searchEngine.addCategory(savedCategory);
         return categoryMapper.toDto(savedCategory);
     }
 
@@ -55,7 +55,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         categoryDto.setId(id);
         var category = categoryMapper.toEntity(categoryDto);
         var savedCategory = categoryRepository.save(category);
-        productSearchEngine.updateCategory(savedCategory);
+        searchEngine.updateCategory(savedCategory);
         return categoryMapper.toDto(savedCategory);
     }
 
@@ -64,14 +64,14 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         var category = categoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Category not found"));
         categoryMapper.updateEntityFromPatch(patchDto, category);
         var savedCategory = categoryRepository.save(category);
-        productSearchEngine.updateCategory(savedCategory);
+        searchEngine.updateCategory(savedCategory);
         return categoryMapper.toDto(savedCategory);
     }
 
     @Override
     public void deleteById(String id) {
         categoryRepository.deleteById(id);
-        productSearchEngine.removeCategory(id);
+        searchEngine.removeCategory(id);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class CategoryAdminServiceImpl implements CategoryAdminService {
         }
 
         var savedCategory = categoryRepository.save(category);
-        productSearchEngine.updateCategory(savedCategory);
+        searchEngine.updateCategory(savedCategory);
         return categoryMapper.toDto(savedCategory);
     }
 }

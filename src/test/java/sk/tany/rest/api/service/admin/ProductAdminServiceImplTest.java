@@ -6,7 +6,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.product.Product;
@@ -38,7 +38,7 @@ class ProductAdminServiceImplTest {
     @Mock
     private ProductMapper productMapper;
     @Mock
-    private ProductSearchEngine productSearchEngine;
+    private SearchEngine searchEngine;
     @Mock
     private ImageService imageService;
     @Mock
@@ -156,14 +156,14 @@ class ProductAdminServiceImplTest {
         dto.setId("1");
         dto.setTitle("Test Product");
 
-        when(productSearchEngine.searchAndSort(eq(query), anyBoolean())).thenReturn(List.of(product));
+        when(searchEngine.searchAndSort(eq(query), anyBoolean())).thenReturn(List.of(product));
         when(productMapper.toAdminDto(product)).thenReturn(dto);
 
         List<ProductAdminDto> result = productAdminService.searchByQuery(query);
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getTitle()).isEqualTo("Test Product");
-        verify(productSearchEngine).searchAndSort(eq(query), anyBoolean());
+        verify(searchEngine).searchAndSort(eq(query), anyBoolean());
     }
 
     @Test
@@ -202,7 +202,7 @@ class ProductAdminServiceImplTest {
         assertThat(p1.getQuantity()).isEqualTo(quantity);
         assertThat(p2.getQuantity()).isEqualTo(quantity);
         verify(productRepository, times(2)).save(any(Product.class));
-        verify(productSearchEngine, times(2)).updateProduct(any(Product.class));
+        verify(searchEngine, times(2)).updateProduct(any(Product.class));
     }
 
     @Test

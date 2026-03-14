@@ -6,7 +6,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.service.admin.DatabaseAdminService;
 import tools.jackson.databind.ObjectMapper;
 
@@ -25,7 +25,7 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
 
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
 
     @Override
     public File exportDatabaseToJson() {
@@ -105,7 +105,7 @@ public class DatabaseAdminServiceImpl implements DatabaseAdminService {
                 log.warn("No repository found for entity type: {}", entityName);
             }
         }
-        productSearchEngine.loadProducts();
+        searchEngine.loadProducts();
     }
 
     private void zipDirectory(Path sourceDir, Path zipFile) throws IOException {

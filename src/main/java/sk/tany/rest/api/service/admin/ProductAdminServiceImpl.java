@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import sk.tany.rest.api.component.ProductSearchEngine;
+import sk.tany.rest.api.component.SearchEngine;
 import sk.tany.rest.api.component.SlugGenerator;
 import sk.tany.rest.api.domain.brand.BrandRepository;
 import sk.tany.rest.api.domain.category.Category;
@@ -43,7 +43,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-    private final ProductSearchEngine productSearchEngine;
+    private final SearchEngine searchEngine;
     private final ImageService imageService;
     private final ReviewRepository reviewRepository;
     private final SlugGenerator slugGenerator;
@@ -63,7 +63,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
     @Override
     public Page<ProductAdminDto> findAll(ProductFilter filter, Pageable pageable) {
-        return productSearchEngine.search(filter, pageable).map(productMapper::toAdminDto);
+        return searchEngine.search(filter, pageable).map(productMapper::toAdminDto);
     }
 
     @Override
@@ -84,7 +84,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         }
         ensureAllProductsCategory(product);
         var savedProduct = productRepository.save(product);
-        productSearchEngine.addProduct(savedProduct);
+        searchEngine.addProduct(savedProduct);
         sendToIsklad(savedProduct);
         return productMapper.toAdminDto(savedProduct);
     }
@@ -100,7 +100,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         }
         ensureAllProductsCategory(product);
         var savedProduct = productRepository.save(product);
-        productSearchEngine.updateProduct(savedProduct);
+        searchEngine.updateProduct(savedProduct);
         sendToIsklad(savedProduct);
         return productMapper.toAdminDto(savedProduct);
     }
@@ -122,7 +122,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         calculateProductPrices(product);
         ensureAllProductsCategory(product);
         var savedProduct = productRepository.save(product);
-        productSearchEngine.updateProduct(savedProduct);
+        searchEngine.updateProduct(savedProduct);
         return productMapper.toAdminDto(savedProduct);
     }
 
@@ -135,13 +135,13 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                 images.forEach(imageService::delete);
             }
             productRepository.deleteById(id);
-            productSearchEngine.removeProduct(id);
+            searchEngine.removeProduct(id);
         }
     }
 
     @Override
     public Page<ProductAdminDto> search(String categoryId, Pageable pageable) {
-        return productSearchEngine.findByCategoryIds(categoryId, pageable, false).map(productMapper::toAdminDto);
+        return searchEngine.findByCategoryIds(categoryId, pageable, false).map(productMapper::toAdminDto);
     }
 
     @Override
@@ -151,7 +151,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
     @Override
     public java.util.List<ProductAdminDto> searchByQuery(String query) {
-        return productSearchEngine.searchAndSort(query, false).stream()
+        return searchEngine.searchAndSort(query, false).stream()
                 .map(productMapper::toAdminDto)
                 .toList();
     }
@@ -170,7 +170,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
             if (StringUtils.isBlank(product.getSlug())) {
                 product.setSlug(slugGenerator.generateSlug(product.getTitle(), product.getId()));
                 productRepository.save(product);
-                productSearchEngine.updateProduct(product);
+                searchEngine.updateProduct(product);
             }
         }
     }
@@ -181,7 +181,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         for (Product product : products) {
             product.setQuantity(quantity);
             var savedProduct = productRepository.save(product);
-            productSearchEngine.updateProduct(savedProduct);
+            searchEngine.updateProduct(savedProduct);
         }
     }
 
@@ -219,7 +219,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                 pfp.setFilterParameterValueId(filterParameterValue.getId());
                 product.getProductFilterParameters().add(pfp);
                 var savedProduct = productRepository.save(product);
-                productSearchEngine.updateProduct(savedProduct);
+                searchEngine.updateProduct(savedProduct);
             }
         }
     }
@@ -240,7 +240,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
             if (!product.getCategoryIds().contains(category.getId())) {
                 product.getCategoryIds().add(category.getId());
                 var savedProduct = productRepository.save(product);
-                productSearchEngine.updateProduct(savedProduct);
+                searchEngine.updateProduct(savedProduct);
             }
         }
     }
