@@ -13,7 +13,4 @@ public interface CustomerRepository extends MongoRepository<Customer, String> {
     public Optional<Customer> findByEmail(String email) ;
 
     public java.util.List<Customer> findAllByRole(Role role) ;
-
-    @Query("{ $or: [ { 'firstname': { $regex: ?0, $options: 'i' } }, { 'lastname': { $regex: ?0, $options: 'i' } }, { 'email': { $regex: ?0, $options: 'i' } }, { 'phone': { $regex: ?0, $options: 'i' } } ] }")
-    Page<Customer> search(String query, Pageable pageable);
 }

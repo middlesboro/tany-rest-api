@@ -59,7 +59,10 @@ class CustomerAdminControllerTest {
 
     @Test
     void searchCustomers_ShouldReturnPagedCustomers() {
-        String query = "test";
+        String firstname = "Test";
+        String lastname = null;
+        String email = null;
+        String phone = null;
         Pageable pageable = PageRequest.of(0, 10);
         CustomerDto customerDto = new CustomerDto();
         customerDto.setFirstname("Test");
@@ -69,13 +72,13 @@ class CustomerAdminControllerTest {
         CustomerAdminListResponse response = new CustomerAdminListResponse();
         response.setFirstname("Test");
 
-        when(customerService.search(query, pageable)).thenReturn(customerPage);
+        when(customerService.search(firstname, lastname, email, phone, pageable)).thenReturn(customerPage);
         when(customerAdminApiMapper.toListResponse(customerDto)).thenReturn(response);
 
-        Page<CustomerAdminListResponse> result = customerAdminController.searchCustomers(query, pageable);
+        Page<CustomerAdminListResponse> result = customerAdminController.searchCustomers(firstname, lastname, email, phone, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Test", result.getContent().getFirst().getFirstname());
-        verify(customerService, times(1)).search(query, pageable);
+        verify(customerService, times(1)).search(firstname, lastname, email, phone, pageable);
     }
 }
