@@ -5,10 +5,12 @@ import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.admin.brand.BrandAdminGetResponse;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface BrandAdminService {
     Page<BrandDto> findAll(Pageable pageable);
+    List<BrandDto> searchByQuery(String query);
     Optional<BrandDto> findById(String id);
     Optional<BrandAdminGetResponse> findDetailById(String id);
     BrandDto save(BrandDto brandDto);

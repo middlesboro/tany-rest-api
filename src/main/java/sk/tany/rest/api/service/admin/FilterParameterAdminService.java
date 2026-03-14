@@ -5,11 +5,13 @@ import org.springframework.data.domain.Pageable;
 import sk.tany.rest.api.dto.FilterParameterDto;
 import sk.tany.rest.api.dto.admin.filterparameter.patch.FilterParameterPatchRequest;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface FilterParameterAdminService {
     FilterParameterDto save(FilterParameterDto dto);
     Page<FilterParameterDto> findAll(Pageable pageable);
+    List<FilterParameterDto> searchByQuery(String query);
     Optional<FilterParameterDto> findById(String id);
     FilterParameterDto update(String id, FilterParameterDto dto);
     FilterParameterDto patch(String id, FilterParameterPatchRequest patch);

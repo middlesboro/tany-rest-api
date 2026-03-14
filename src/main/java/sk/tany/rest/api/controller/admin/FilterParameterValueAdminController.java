@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
 import sk.tany.rest.api.dto.admin.filterparametervalue.patch.FilterParameterValuePatchRequest;
 import sk.tany.rest.api.service.admin.FilterParameterValueAdminService;
@@ -27,6 +28,11 @@ public class FilterParameterValueAdminController {
     @GetMapping
     public Page<FilterParameterValueDto> findAll(Pageable pageable) {
         return service.findAll(pageable);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<FilterParameterValueDto>> search(@RequestParam String query) {
+        return ResponseEntity.ok(service.searchByQuery(query));
     }
 
     @GetMapping("/{id}")

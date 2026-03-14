@@ -10,12 +10,14 @@ import sk.tany.rest.api.domain.product.Product;
 import sk.tany.rest.api.domain.product.ProductRepository;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.admin.brand.BrandAdminGetResponse;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.dto.isklad.CreateBrandRequest;
 import sk.tany.rest.api.exception.BrandException;
 import sk.tany.rest.api.mapper.BrandMapper;
 import sk.tany.rest.api.service.common.ImageService;
 import sk.tany.rest.api.service.isklad.ISkladService;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -24,6 +26,7 @@ public class BrandAdminServiceImpl implements BrandAdminService {
 
     private final BrandRepository brandRepository;
     private final ProductRepository productRepository;
+    private final ProductSearchEngine productSearchEngine;
     private final BrandMapper brandMapper;
     private final ImageService imageService;
     private final ISkladService iSkladService;
@@ -31,6 +34,13 @@ public class BrandAdminServiceImpl implements BrandAdminService {
     @Override
     public Page<BrandDto> findAll(Pageable pageable) {
         return brandRepository.findAll(pageable).map(brandMapper::toDto);
+    }
+
+    @Override
+    public List<BrandDto> searchByQuery(String query) {
+        return productSearchEngine.searchBrands(query).stream()
+                .map(brandMapper::toDto)
+                .toList();
     }
 
     @Override

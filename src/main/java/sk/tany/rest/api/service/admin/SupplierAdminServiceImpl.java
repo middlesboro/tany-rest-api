@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service;
 import sk.tany.rest.api.config.ISkladProperties;
 import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.dto.SupplierDto;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import sk.tany.rest.api.mapper.ISkladMapper;
 import sk.tany.rest.api.mapper.SupplierMapper;
 import sk.tany.rest.api.service.isklad.ISkladService;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -20,6 +22,7 @@ public class SupplierAdminServiceImpl implements SupplierAdminService {
 
     private final SupplierRepository supplierRepository;
     private final SupplierMapper supplierMapper;
+    private final ProductSearchEngine productSearchEngine;
     private final ISkladService iskladService;
     private final ISkladProperties iskladProperties;
     private final ISkladMapper iskladMapper;
@@ -27,6 +30,13 @@ public class SupplierAdminServiceImpl implements SupplierAdminService {
     @Override
     public Page<SupplierDto> findAll(Pageable pageable) {
         return supplierRepository.findAll(pageable).map(supplierMapper::toDto);
+    }
+
+    @Override
+    public List<SupplierDto> searchByQuery(String query) {
+        return productSearchEngine.searchSuppliers(query).stream()
+                .map(supplierMapper::toDto)
+                .toList();
     }
 
     @Override
