@@ -24,6 +24,11 @@ public class CustomerAdminServiceImpl implements CustomerAdminService {
     }
 
     @Override
+    public Page<CustomerDto> search(String query, Pageable pageable) {
+        return customerRepository.search(query, pageable).map(customerMapper::toDto);
+    }
+
+    @Override
     public Optional<CustomerDto> findById(String id) {
         return customerRepository.findById(id).map(customerMapper::toDto);
     }
