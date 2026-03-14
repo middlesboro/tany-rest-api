@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,12 +39,14 @@ public class ChatAssistantController {
 
     @PostMapping("/message")
     @Operation(summary = "Send a customer message")
-    public void sendMessage(@Valid @RequestBody CustomerMessageCreateRequest request) {
+    public ResponseEntity<Void> sendMessage(@Valid @RequestBody CustomerMessageCreateRequest request) {
         customerMessageRepository.save(CustomerMessage.builder()
                 .message(request.getMessage())
                 .email(request.getEmail())
                 .type(MessageType.MESSAGE_REQUEST)
                 .build());
+
+        return ResponseEntity.ok().build();
     }
 
     public record ChatRequest(String message) {}
