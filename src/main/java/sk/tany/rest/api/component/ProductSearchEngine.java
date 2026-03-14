@@ -14,6 +14,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import sk.tany.rest.api.domain.brand.Brand;
 import sk.tany.rest.api.domain.brand.BrandRepository;
+import sk.tany.rest.api.domain.supplier.Supplier;
+import sk.tany.rest.api.domain.supplier.SupplierRepository;
 import sk.tany.rest.api.domain.category.Category;
 import sk.tany.rest.api.domain.category.CategoryRepository;
 import sk.tany.rest.api.domain.contentsnippet.ContentSnippet;
@@ -69,6 +71,7 @@ public class ProductSearchEngine {
     private final ProductSalesRepository productSalesRepository;
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
+    private final SupplierRepository supplierRepository;
     private final ProductLabelRepository productLabelRepository;
     private final ContentSnippetRepository contentSnippetRepository;
     private final FilterParameterMapper filterParameterMapper;
@@ -85,6 +88,7 @@ public class ProductSearchEngine {
     private final Map<String, List<String>> cachedCategoryChildren = new ConcurrentHashMap<>();
     private final Map<String, ProductLabel> cachedProductLabels = new ConcurrentHashMap<>();
     private final Map<String, Brand> cachedBrands = new ConcurrentHashMap<>();
+    private final Map<String, Supplier> cachedSuppliers = new ConcurrentHashMap<>();
     private final Map<String, ContentSnippet> cachedContentSnippets = new ConcurrentHashMap<>();
 
     private static final int MAX_EDIT_DISTANCE = 2;
@@ -158,6 +162,12 @@ public class ProductSearchEngine {
         cachedBrands.putAll(brandRepository.findAll().stream()
                 .collect(Collectors.toMap(Brand::getId, Function.identity())));
         log.info("Loaded {} brands into search engine.", cachedBrands.size());
+
+        log.info("Loading suppliers into search engine...");
+        cachedSuppliers.clear();
+        cachedSuppliers.putAll(supplierRepository.findAll().stream()
+                .collect(Collectors.toMap(Supplier::getId, Function.identity())));
+        log.info("Loaded {} suppliers into search engine.", cachedSuppliers.size());
     }
 
     public void addContentSnippet(ContentSnippet snippet) {
@@ -356,6 +366,118 @@ public class ProductSearchEngine {
 
         List<Category> pageContent = filteredCategories.subList(start, end);
         return new PageImpl<>(pageContent, pageable, filteredCategories.size());
+    }
+
+    public List<Brand> searchBrands(String query) {
+        if (StringUtils.isBlank(query)) {
+            return new ArrayList<>(cachedBrands.values());
+        }
+
+        String normalizedQuery = StringUtils.stripAccents(query.toLowerCase()).trim();
+        String[] queryWords = normalizedQuery.split("\\s+");
+
+        return cachedBrands.values().stream()
+                .filter(b -> {
+                    if (b.getName() == null) return false;
+                    String normalizedName = StringUtils.stripAccents(b.getName().toLowerCase());
+                    String[] nameWords = normalizedName.split("\\s+");
+
+                    return Arrays.stream(queryWords).allMatch(qWord ->
+                            Arrays.stream(nameWords).anyMatch(nWord ->
+                                    nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
+                            )
+                    );
+                })
+                .sorted((b1, b2) -> {
+                    Double score1 = calculateRelevance(b1.getName(), normalizedQuery);
+                    Double score2 = calculateRelevance(b2.getName(), normalizedQuery);
+                    return score2.compareTo(score1);
+                })
+                .toList();
+    }
+
+    public List<Supplier> searchSuppliers(String query) {
+        if (StringUtils.isBlank(query)) {
+            return new ArrayList<>(cachedSuppliers.values());
+        }
+
+        String normalizedQuery = StringUtils.stripAccents(query.toLowerCase()).trim();
+        String[] queryWords = normalizedQuery.split("\\s+");
+
+        return cachedSuppliers.values().stream()
+                .filter(s -> {
+                    if (s.getName() == null) return false;
+                    String normalizedName = StringUtils.stripAccents(s.getName().toLowerCase());
+                    String[] nameWords = normalizedName.split("\\s+");
+
+                    return Arrays.stream(queryWords).allMatch(qWord ->
+                            Arrays.stream(nameWords).anyMatch(nWord ->
+                                    nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
+                            )
+                    );
+                })
+                .sorted((s1, s2) -> {
+                    Double score1 = calculateRelevance(s1.getName(), normalizedQuery);
+                    Double score2 = calculateRelevance(s2.getName(), normalizedQuery);
+                    return score2.compareTo(score1);
+                })
+                .toList();
+    }
+
+    public List<FilterParameter> searchFilterParameters(String query) {
+        if (StringUtils.isBlank(query)) {
+            return new ArrayList<>(cachedFilterParameters.values());
+        }
+
+        String normalizedQuery = StringUtils.stripAccents(query.toLowerCase()).trim();
+        String[] queryWords = normalizedQuery.split("\\s+");
+
+        return cachedFilterParameters.values().stream()
+                .filter(fp -> {
+                    if (fp.getName() == null) return false;
+                    String normalizedName = StringUtils.stripAccents(fp.getName().toLowerCase());
+                    String[] nameWords = normalizedName.split("\\s+");
+
+                    return Arrays.stream(queryWords).allMatch(qWord ->
+                            Arrays.stream(nameWords).anyMatch(nWord ->
+                                    nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
+                            )
+                    );
+                })
+                .sorted((fp1, fp2) -> {
+                    Double score1 = calculateRelevance(fp1.getName(), normalizedQuery);
+                    Double score2 = calculateRelevance(fp2.getName(), normalizedQuery);
+                    return score2.compareTo(score1);
+                })
+                .toList();
+    }
+
+    public List<FilterParameterValue> searchFilterParameterValues(String query) {
+        if (StringUtils.isBlank(query)) {
+            return new ArrayList<>(cachedFilterParameterValues.values());
+        }
+
+        String normalizedQuery = StringUtils.stripAccents(query.toLowerCase()).trim();
+        String[] queryWords = normalizedQuery.split("\\s+");
+
+        return cachedFilterParameterValues.values().stream()
+                .filter(fpv -> {
+                    if (fpv.getName() == null) return false;
+                    String normalizedName = StringUtils.stripAccents(fpv.getName().toLowerCase());
+                    String[] nameWords = normalizedName.split("\\s+");
+
+                    return Arrays.stream(queryWords).allMatch(qWord ->
+                            Arrays.stream(nameWords).anyMatch(nWord ->
+                                    nWord.contains(qWord) || levenshtein.apply(nWord, qWord) <= MAX_EDIT_DISTANCE
+                            )
+                    );
+                })
+                .sorted((fpv1, fpv2) -> {
+                    Double score1 = calculateRelevance(fpv1.getName(), normalizedQuery);
+                    Double score2 = calculateRelevance(fpv2.getName(), normalizedQuery);
+                    return score2.compareTo(score1);
+                })
+                .toList();
     }
 
     public void addFilterParameter(FilterParameter filterParameter) {

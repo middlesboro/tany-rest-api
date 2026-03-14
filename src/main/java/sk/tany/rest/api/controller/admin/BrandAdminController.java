@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
 import sk.tany.rest.api.dto.BrandDto;
 import sk.tany.rest.api.dto.admin.brand.BrandAdminGetResponse;
 import sk.tany.rest.api.dto.admin.brand.patch.BrandPatchRequest;
@@ -40,6 +41,11 @@ public class BrandAdminController {
     @GetMapping
     public Page<BrandDto> getBrands(Pageable pageable) {
         return brandService.findAll(pageable);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<BrandDto>> searchBrands(@RequestParam String query) {
+        return ResponseEntity.ok(brandService.searchByQuery(query));
     }
 
     @GetMapping("/{id}")

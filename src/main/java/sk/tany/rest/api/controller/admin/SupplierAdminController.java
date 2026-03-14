@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 import sk.tany.rest.api.dto.SupplierDto;
 import sk.tany.rest.api.dto.admin.supplier.patch.SupplierPatchRequest;
 import sk.tany.rest.api.service.admin.PrestaShopImportService;
@@ -35,6 +36,11 @@ public class SupplierAdminController {
     @GetMapping
     public Page<SupplierDto> getSuppliers(Pageable pageable) {
         return supplierService.findAll(pageable);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<SupplierDto>> searchSuppliers(@RequestParam String query) {
+        return ResponseEntity.ok(supplierService.searchByQuery(query));
     }
 
     @GetMapping("/{id}")

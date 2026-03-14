@@ -13,6 +13,7 @@ import sk.tany.rest.api.domain.filter.FilterParameterValueRepository;
 import sk.tany.rest.api.dto.FilterParameterValueDto;
 import sk.tany.rest.api.dto.admin.filterparametervalue.patch.FilterParameterValuePatchRequest;
 import sk.tany.rest.api.mapper.FilterParameterValueMapper;
+import sk.tany.rest.api.component.ProductSearchEngine;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,6 +27,7 @@ public class FilterParameterValueAdminServiceImpl implements FilterParameterValu
     private final FilterParameterValueRepository repository;
     private final FilterParameterRepository filterParameterRepository;
     private final FilterParameterValueMapper mapper;
+    private final ProductSearchEngine productSearchEngine;
 
     @Override
     public FilterParameterValueDto save(FilterParameterValueDto dto) {
@@ -36,6 +38,13 @@ public class FilterParameterValueAdminServiceImpl implements FilterParameterValu
     @Override
     public Page<FilterParameterValueDto> findAll(Pageable pageable) {
         return repository.findAll(pageable).map(mapper::toDto);
+    }
+
+    @Override
+    public List<FilterParameterValueDto> searchByQuery(String query) {
+        return productSearchEngine.searchFilterParameterValues(query).stream()
+                .map(mapper::toDto)
+                .toList();
     }
 
     @Override
